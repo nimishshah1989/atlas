@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from . import state_machine as sm
 from .state import StateStore
@@ -42,6 +42,39 @@ class PlanError(Exception):
     pass
 
 
+def _parse_chunk_entry(entry: Any, seen_ids: set[str]) -> ChunkSpec:
+    """Parse and validate a single chunk entry from plan.yaml."""
+    if not isinstance(entry, dict):
+        raise PlanError(f"chunk entry must be a mapping: {entry!r}")
+    cid = entry.get("id")
+    if not cid or not isinstance(cid, str):
+        raise PlanError(f"chunk missing string id: {entry!r}")
+    if cid in seen_ids:
+        raise PlanError(f"duplicate chunk id: {cid}")
+    seen_ids.add(cid)
+    status = entry.get("status") or sm.PENDING
+    if status not in sm.STATES:
+        raise PlanError(f"chunk {cid}: unknown status {status!r}")
+    return ChunkSpec(
+        id=cid,
+        title=str(entry.get("title") or cid),
+        status=status,
+        depends_on=list(entry.get("depends_on") or []),
+        bootstrap=bool(entry.get("bootstrap", False)),
+        quality_targets=dict(entry.get("quality_targets") or {}),
+        punch_list=list(entry.get("punch_list") or []),
+        artifacts=list(entry.get("artifacts") or []),
+    )
+
+
+def _validate_dependencies(chunks: list[ChunkSpec], seen_ids: set[str]) -> None:
+    """Ensure all dependency references point to known chunks."""
+    for chunk in chunks:
+        for dep in chunk.depends_on:
+            if dep not in seen_ids:
+                raise PlanError(f"chunk {chunk.id} depends on unknown chunk {dep}")
+
+
 def load_plan(plan_path: Path) -> Plan:
     raw = yaml.safe_load(Path(plan_path).read_text())
     if not isinstance(raw, dict):
@@ -58,39 +91,8 @@ def load_plan(plan_path: Path) -> Plan:
         raise PlanError("plan.yaml must contain a non-empty 'chunks' list")
 
     seen_ids: set[str] = set()
-    chunks: list[ChunkSpec] = []
-    for entry in chunks_raw:
-        if not isinstance(entry, dict):
-            raise PlanError(f"chunk entry must be a mapping: {entry!r}")
-        cid = entry.get("id")
-        if not cid or not isinstance(cid, str):
-            raise PlanError(f"chunk missing string id: {entry!r}")
-        if cid in seen_ids:
-            raise PlanError(f"duplicate chunk id: {cid}")
-        seen_ids.add(cid)
-        status = entry.get("status") or sm.PENDING
-        if status not in sm.STATES:
-            raise PlanError(f"chunk {cid}: unknown status {status!r}")
-        chunks.append(
-            ChunkSpec(
-                id=cid,
-                title=str(entry.get("title") or cid),
-                status=status,
-                depends_on=list(entry.get("depends_on") or []),
-                bootstrap=bool(entry.get("bootstrap", False)),
-                quality_targets=dict(entry.get("quality_targets") or {}),
-                punch_list=list(entry.get("punch_list") or []),
-                artifacts=list(entry.get("artifacts") or []),
-            )
-        )
-
-    # Validate dependency references.
-    for c in chunks:
-        for dep in c.depends_on:
-            if dep not in seen_ids:
-                raise PlanError(
-                    f"chunk {c.id} depends on unknown chunk {dep}"
-                )
+    chunks = [_parse_chunk_entry(entry, seen_ids) for entry in chunks_raw]
+    _validate_dependencies(chunks, seen_ids)
 
     return Plan(version=version, name=name, settings=settings, chunks=chunks)
 
@@ -114,14 +116,13 @@ def sync_plan_to_state(plan: Plan, store: StateStore) -> dict[str, str]:
             plan_version=plan.version,
             depends_on=spec.depends_on,
         )
-        if spec.bootstrap and (existing is None
-                               or existing["status"] != spec.status):
+        if spec.bootstrap and (existing is None or existing["status"] != spec.status):
             # Bootstrap chunks: plan wins.
             current = (existing or {}).get("status")
             if current != spec.status:
-                _force_status(store, spec.id, spec.status,
-                              reason="bootstrap sync")
-        final[spec.id] = store.get_chunk(spec.id)["status"]
+                _force_status(store, spec.id, spec.status, reason="bootstrap sync")
+        synced = store.get_chunk(spec.id)
+        final[spec.id] = synced["status"] if synced else "UNKNOWN"
     return final
 
 
@@ -130,6 +131,7 @@ def _force_status(
 ) -> None:
     """Bypass state machine validation for bootstrap reconciliation only."""
     from datetime import datetime, timezone
+
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with store.tx() as c:
         row = c.execute(

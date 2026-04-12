@@ -9,7 +9,6 @@ for planning + implementing + testing within that single session.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 from .plan_loader import ChunkSpec, Plan
@@ -71,21 +70,24 @@ def build_chunk_prompt(
             "overall", quality_report.get("overall_score", "?")
         )
         from .runner import _dims_to_dict
+
         dims_map = _dims_to_dict(quality_report.get("dimensions"))
-        dim_scores = ", ".join(
-            f"{k}={v}" for k, v in sorted(dims_map.items())
-        ) or "(none)"
+        dim_scores = (
+            ", ".join(f"{k}={v}" for k, v in sorted(dims_map.items())) or "(none)"
+        )
     else:
         overall = "(no prior run)"
         dim_scores = "(no prior run)"
 
     punch = (
-        "\n".join(f"- {item}" for item in spec.punch_list)
-        if spec.punch_list else "(none — see plan.yaml)"
+        "\n".join(f"- {punch_item}" for punch_item in spec.punch_list)
+        if spec.punch_list
+        else "(none — see plan.yaml)"
     )
     targets = (
         "\n".join(f"- {k}: ≥ {v}" for k, v in spec.quality_targets.items())
-        if spec.quality_targets else "(use global minimums only)"
+        if spec.quality_targets
+        else "(use global minimums only)"
     )
 
     return CHUNK_PROMPT.format(

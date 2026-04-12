@@ -24,23 +24,20 @@ def test_quality_script_exists():
 
 
 def test_quality_script_runs_and_emits_report():
-    result = subprocess.run(
+    proc = subprocess.run(
         [sys.executable, str(SCRIPT)],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         timeout=180,
     )
-    # Exit code may be non-zero (gate may fail at v1 baseline). What we
-    # require is that the report file is produced and parseable.
-    assert REPORT.exists(), f"no report.json after run; stderr={result.stderr}"
-    data = json.loads(REPORT.read_text())
-    assert "overall" in data
-    assert isinstance(data["overall"], (int, float))
-    assert "dimensions" in data
-    assert isinstance(data["dimensions"], list)
-    assert data["dimensions"], "no dimensions scored"
-    expected = {"security", "code", "architecture", "frontend",
-                "devops", "docs", "api"}
-    seen = {d["dimension"] for d in data["dimensions"] if "dimension" in d}
+    assert REPORT.exists(), f"no report.json after run; stderr={proc.stderr}"
+    report = json.loads(REPORT.read_text())
+    assert "overall" in report
+    assert isinstance(report["overall"], (int, float))
+    assert "dimensions" in report
+    assert isinstance(report["dimensions"], list)
+    assert report["dimensions"], "no dimensions scored"
+    expected = {"security", "code", "architecture", "frontend", "devops", "docs", "api"}
+    seen = {d["dimension"] for d in report["dimensions"] if "dimension" in d}
     assert expected.issubset(seen), f"missing dimensions: {expected - seen}"

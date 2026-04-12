@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from orchestrator import state_machine as sm
-from orchestrator.plan_loader import load_plan, sync_plan_to_state, PlanError
+from orchestrator.plan_loader import load_plan, PlanError
 from orchestrator.runner import Runner, _dims_to_dict
 from orchestrator.state import StateStore
 
@@ -57,9 +57,12 @@ def test_state_store_roundtrip(tmp_path: Path):
     store = StateStore(db)
     store.upsert_chunk("X1", "title", sm.PENDING, "1.0", [])
     chunk = store.get_chunk("X1")
+    assert chunk is not None
     assert chunk["status"] == sm.PENDING
     store.set_status("X1", sm.PLANNING, "go")
-    assert store.get_chunk("X1")["status"] == sm.PLANNING
+    updated_chunk = store.get_chunk("X1")
+    assert updated_chunk is not None
+    assert updated_chunk["status"] == sm.PLANNING
 
 
 def test_state_machine_rejects_illegal_transition():
@@ -106,4 +109,4 @@ def test_runner_dry_run_drives_all_chunks_to_done(tmp_path: Path):
         assert runnable in completed
     assert completed.index("C5") < completed.index("C11")
     assert completed.index("C7") < completed.index("C11")  # C11 deps on C7
-    assert completed.index("C8") < completed.index("C9")   # C9 deps on C8
+    assert completed.index("C8") < completed.index("C9")  # C9 deps on C8

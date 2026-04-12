@@ -1,0 +1,80 @@
+"""ATLAS FastAPI application — Market Intelligence Engine."""
+
+import structlog
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+
+from backend.config import get_settings
+from backend.routes import decisions, query, stocks, system
+
+structlog.configure(
+    processors=[
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.add_log_level,
+        structlog.dev.ConsoleRenderer(),
+    ],
+)
+
+settings = get_settings()
+log = structlog.get_logger()
+
+ALLOWED_ORIGINS: list[str] = settings.cors_origin_list
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[settings.rate_limit_default],
+    strategy="fixed-window",
+)
+
+app = FastAPI(
+    title="ATLAS — Market Intelligence Engine",
+    description="Jhaveri Intelligence Platform — Market → Sector → Stock → Decision",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# CORS — explicit allowlist sourced from settings.cors_origins (never "*").
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[*ALLOWED_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+)
+
+
+@app.middleware("http")
+async def _enforce_api_rate_limit(request: Request, call_next):
+    # slowapi middleware already applies default_limits; this hook exists so
+    # future per-route overrides on /api/v1/* can attach to request.state.
+    return await call_next(request)
+
+
+app.include_router(stocks.router)
+app.include_router(query.router)
+app.include_router(decisions.router)
+app.include_router(system.router)
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    log.info(
+        "atlas_starting",
+        port=settings.atlas_api_port,
+        cors_origins=ALLOWED_ORIGINS,
+        rate_limit=settings.rate_limit_default,
+    )
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    log.info("atlas_shutting_down")

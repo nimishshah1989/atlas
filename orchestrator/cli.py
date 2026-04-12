@@ -36,9 +36,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"{'ID':<5} {'STATUS':<14} {'ATTEMPTS':<9} TITLE")
     print("-" * 80)
     for c in chunks:
-        print(
-            f"{c['id']:<5} {c['status']:<14} {c['attempts']:<9} {c['title']}"
-        )
+        print(f"{c['id']:<5} {c['status']:<14} {c['attempts']:<9} {c['title']}")
     return 0
 
 
@@ -120,14 +118,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("run", help="run chunks")
     g = s.add_mutually_exclusive_group()
-    g.add_argument("--once", dest="all", action="store_false", default=False,
-                   help="run a single ready chunk (default)")
-    g.add_argument("--all", action="store_true",
-                   help="keep running until none are ready")
-    s.add_argument("chunk", nargs="?", default=None,
-                   help="run a specific chunk by id")
-    s.add_argument("--dry-run", action="store_true",
-                   help="don't actually spawn claude or score")
+    g.add_argument(
+        "--once",
+        dest="all",
+        action="store_false",
+        default=False,
+        help="run a single ready chunk (default)",
+    )
+    g.add_argument(
+        "--all", action="store_true", help="keep running until none are ready"
+    )
+    s.add_argument("chunk", nargs="?", default=None, help="run a specific chunk by id")
+    s.add_argument(
+        "--dry-run", action="store_true", help="don't actually spawn claude or score"
+    )
     s.set_defaults(func=cmd_run)
 
     s = sub.add_parser("unblock", help="move a BLOCKED chunk back to PENDING")

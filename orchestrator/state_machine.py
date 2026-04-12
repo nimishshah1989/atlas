@@ -24,25 +24,34 @@ FAILED = "FAILED"
 BLOCKED = "BLOCKED"
 IN_PROGRESS = "IN_PROGRESS"  # bootstrap chunks (C1-C4) reuse this
 
-STATES = frozenset({
-    PENDING, PLANNING, IMPLEMENTING, TESTING, QUALITY_GATE,
-    DONE, FAILED, BLOCKED, IN_PROGRESS,
-})
+STATES = frozenset(
+    {
+        PENDING,
+        PLANNING,
+        IMPLEMENTING,
+        TESTING,
+        QUALITY_GATE,
+        DONE,
+        FAILED,
+        BLOCKED,
+        IN_PROGRESS,
+    }
+)
 
 # Active = currently consuming runner attention.
 ACTIVE_STATES = frozenset({PLANNING, IMPLEMENTING, TESTING, QUALITY_GATE})
 TERMINAL_STATES = frozenset({DONE, BLOCKED})
 
 ALLOWED: dict[str, frozenset[str]] = {
-    PENDING:      frozenset({PLANNING, BLOCKED}),
-    PLANNING:     frozenset({IMPLEMENTING, FAILED}),
+    PENDING: frozenset({PLANNING, BLOCKED}),
+    PLANNING: frozenset({IMPLEMENTING, FAILED}),
     IMPLEMENTING: frozenset({TESTING, FAILED}),
-    TESTING:      frozenset({QUALITY_GATE, FAILED}),
+    TESTING: frozenset({QUALITY_GATE, FAILED}),
     QUALITY_GATE: frozenset({DONE, FAILED}),
-    FAILED:       frozenset({PLANNING, BLOCKED}),  # retry or give up
-    DONE:         frozenset(),
-    BLOCKED:      frozenset({PENDING}),            # manual unblock
-    IN_PROGRESS:  frozenset({DONE, FAILED}),       # bootstrap chunks
+    FAILED: frozenset({PLANNING, BLOCKED}),  # retry or give up
+    DONE: frozenset(),
+    BLOCKED: frozenset({PENDING}),  # manual unblock
+    IN_PROGRESS: frozenset({DONE, FAILED}),  # bootstrap chunks
 }
 
 
@@ -56,9 +65,7 @@ def assert_transition(from_state: str, to_state: str) -> None:
     if to_state not in STATES:
         raise IllegalTransition(f"unknown to_state: {to_state}")
     if to_state not in ALLOWED[from_state]:
-        raise IllegalTransition(
-            f"illegal transition: {from_state} → {to_state}"
-        )
+        raise IllegalTransition(f"illegal transition: {from_state} → {to_state}")
 
 
 def is_terminal(state: str) -> bool:
@@ -79,6 +86,7 @@ def next_ready_chunk(
       - every dependency is in DONE
     Chunks are returned in plan order (caller pre-sorts by id).
     """
+
     def _key(c: dict) -> tuple:
         cid = c["id"]
         digits = "".join(ch for ch in cid if ch.isdigit())

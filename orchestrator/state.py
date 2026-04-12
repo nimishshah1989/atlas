@@ -43,7 +43,7 @@ class StateStore:
             self._conn.execute("BEGIN")
             yield self._conn
             self._conn.execute("COMMIT")
-        except Exception:
+        except (sqlite3.Error, KeyError, ValueError):
             self._conn.execute("ROLLBACK")
             raise
 
@@ -68,8 +68,15 @@ class StateStore:
                        (id, title, status, plan_version, depends_on,
                         created_at, updated_at)
                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                    (chunk_id, title, status, plan_version,
-                     json.dumps(depends_on), now, now),
+                    (
+                        chunk_id,
+                        title,
+                        status,
+                        plan_version,
+                        json.dumps(depends_on),
+                        now,
+                        now,
+                    ),
                 )
                 c.execute(
                     """INSERT INTO transitions
@@ -95,9 +102,7 @@ class StateStore:
         return _row_to_chunk(row) if row else None
 
     def list_chunks(self) -> list[dict[str, Any]]:
-        rows = self._conn.execute(
-            "SELECT * FROM chunks ORDER BY id"
-        ).fetchall()
+        rows = self._conn.execute("SELECT * FROM chunks ORDER BY id").fetchall()
         return [_row_to_chunk(r) for r in rows]
 
     def set_status(
@@ -158,8 +163,14 @@ class StateStore:
                 """INSERT INTO quality_runs
                    (chunk_id, attempt, overall_score, passed, report_json, at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (chunk_id, attempt, overall_score, 1 if passed else 0,
-                 json.dumps(report, default=_json_default), _now()),
+                (
+                    chunk_id,
+                    attempt,
+                    overall_score,
+                    1 if passed else 0,
+                    json.dumps(report, default=_json_default),
+                    _now(),
+                ),
             )
 
     def latest_quality_run(self, chunk_id: str) -> Optional[dict[str, Any]]:
@@ -191,7 +202,7 @@ class StateStore:
                    VALUES (?, ?, ?, ?, ?)""",
                 (chunk_id, attempt, phase, _now(), str(log_path)),
             )
-            return int(cur.lastrowid)
+            return int(cur.lastrowid or 0)
 
     def close_session(
         self, session_id: int, pid: Optional[int], exit_code: int
