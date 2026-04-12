@@ -1,0 +1,27 @@
+[Unit]
+Description=ATLAS Forge Orchestrator
+After=network.target
+Documentation=file:///home/ubuntu/atlas/orchestrator/README.md
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/atlas
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/ubuntu/atlas
+ExecStart=/home/ubuntu/atlas/venv/bin/python -m orchestrator.cli run --all
+Restart=on-failure
+RestartSec=60
+StandardOutput=append:/home/ubuntu/atlas/orchestrator/logs/systemd.log
+StandardError=append:/home/ubuntu/atlas/orchestrator/logs/systemd.err
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/atlas
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

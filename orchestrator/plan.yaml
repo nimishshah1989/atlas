@@ -1,0 +1,162 @@
+version: "1.5"
+name: "ATLAS V1.5 — Quality Retrofit"
+description: >
+  Retrofit V1 to meet the seven-dimension quality standard, then establish the
+  autonomous orchestrator as the mechanism for every subsequent chunk. C1-C4
+  are bootstrapped outside the orchestrator; C5 onward run through it.
+
+# Global settings the runner consults for every chunk.
+settings:
+  repo_root: /home/ubuntu/atlas
+  quality:
+    script: .quality/checks.py
+    report: .quality/report.json
+    # Minimum overall score a chunk must hit before its state can advance to DONE.
+    min_overall: 80
+    # Per-dimension floors. API is skipped when no live service is reachable.
+    min_dimensions:
+      security: 80
+      code: 70
+      architecture: 80
+      frontend: 70
+      devops: 70
+      docs: 75
+  retry:
+    max_attempts: 3
+    backoff_seconds: 30
+  claude:
+    binary: claude
+    model: claude-opus-4-6
+    # Chunk sessions are stateless — each spawn is a fresh context.
+    extra_args: ["--dangerously-skip-permissions"]
+
+# State machine: PENDING → PLANNING → IMPLEMENTING → TESTING → QUALITY_GATE → DONE
+# On failure at any stage: → FAILED → (retry up to max_attempts) → BLOCKED
+chunks:
+  - id: C1
+    title: "Quality engine + frozen standards"
+    status: DONE
+    bootstrap: true
+    artifacts:
+      - .quality/standards.md
+      - .quality/SOURCE.md
+      - .quality/checks.py
+
+  - id: C2
+    title: "Orchestrator skeleton — plan, state DB, state machine"
+    status: DONE
+    bootstrap: true
+    depends_on: [C1]
+    artifacts:
+      - orchestrator/plan.yaml
+      - orchestrator/schema.sql
+      - orchestrator/state.py
+      - orchestrator/plan_loader.py
+      - orchestrator/state_machine.py
+
+  - id: C3
+    title: "Chunk runner — spawn Claude, run gate, transition state"
+    status: DONE
+    bootstrap: true
+    depends_on: [C2]
+    artifacts:
+      - orchestrator/runner.py
+      - orchestrator/prompts.py
+
+  - id: C4
+    title: "CLI + systemd + logging"
+    status: DONE
+    bootstrap: true
+    depends_on: [C3]
+    artifacts:
+      - orchestrator/cli.py
+      - orchestrator/logging_config.py
+      - orchestrator/systemd/atlas-forge.service
+      - orchestrator/README.md
+
+  # Below here: everything runs THROUGH the orchestrator, one chunk per session.
+
+  - id: C5
+    title: "Security hardening — .env.example, CORS allowlist, rate limiting, pip-audit"
+    status: PENDING
+    depends_on: [C4]
+    quality_targets:
+      security: 95
+    punch_list:
+      - Create backend/.env.example with every var the app reads
+      - Replace CORS "*" with explicit allowlist from settings
+      - Add slowapi rate limiting on all /api/v1/* routes
+      - Run pip-audit and resolve or document every advisory
+      - Document secret rotation in SECURITY.md
+
+  - id: C6
+    title: "Code quality — split god module, shrink long funcs, fix broad excepts"
+    status: PENDING
+    depends_on: [C4]
+    quality_targets:
+      code: 85
+    punch_list:
+      - Split backend/services/jip_data_service.py (505L) by concern
+      - Refactor the two >80-line functions flagged by checks.py
+      - Replace 5 broad except clauses with specific exception types
+      - Rename 36 generic variable names flagged by the scorer
+      - Wire ruff + mypy + pytest-cov into pre-commit
+
+  - id: C7
+    title: "DevOps — Dockerfile, GitHub Actions, Alembic"
+    status: PENDING
+    depends_on: [C4]
+    quality_targets:
+      devops: 90
+      architecture: 90
+    punch_list:
+      - Multi-stage Dockerfile for backend (python:3.12-slim base)
+      - docker-compose.yml for local dev (backend + frontend)
+      - .github/workflows/ci.yml — ruff, mypy, pytest, quality gate
+      - Initialize Alembic, generate baseline migration from current models
+      - Document deploy runbook in DEPLOY.md
+
+  - id: C8
+    title: "Build dashboard — Next.js UI + nginx + Let's Encrypt"
+    status: PENDING
+    depends_on: [C4]
+    quality_targets:
+      frontend: 85
+    punch_list:
+      - Replace build-dashboard/app.py with Next.js page under frontend/
+      - Live chunk status + quality scores + logs tail
+      - nginx reverse proxy config
+      - certbot / Let's Encrypt for forge.atlas.jsl.internal
+
+  - id: C9
+    title: "Frontend hardening — split large components, headless browser checks"
+    status: PENDING
+    depends_on: [C8]
+    quality_targets:
+      frontend: 90
+    punch_list:
+      - Split the 2 components >200 lines flagged by checks.py
+      - Add Playwright smoke tests for Market → Sector → Stock flow
+      - Lighthouse budget in CI
+
+  - id: C10
+    title: "Docs — README, architecture diagram, contributor guide"
+    status: PENDING
+    depends_on: [C4]
+    quality_targets:
+      docs: 95
+    punch_list:
+      - Top-level README.md with quickstart
+      - docs/architecture.md with Mermaid diagrams
+      - CONTRIBUTING.md covering orchestrator workflow
+
+  - id: C11
+    title: "API live checks — deploy + run API dimension of quality gate"
+    status: PENDING
+    depends_on: [C5, C6, C7]
+    quality_targets:
+      api: 85
+    punch_list:
+      - Deploy backend to EC2 via C7 pipeline
+      - Run .quality/checks.py --dimension api against live service
+      - Confirm overall score ≥ 90 across all seven dimensions
