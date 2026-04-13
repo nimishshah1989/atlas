@@ -1,0 +1,30 @@
+[Unit]
+Description=ATLAS Pipeline — V1 Market Intelligence Pipeline Runner
+After=network-online.target atlas-backend.service
+Wants=network-online.target
+Documentation=https://github.com/jslwealth/atlas
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/atlas
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/ubuntu/atlas
+EnvironmentFile=-/home/ubuntu/atlas/backend/.env
+ExecStart=/home/ubuntu/atlas/venv/bin/python -m atlas.pipeline run
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atlas-pipeline
+TimeoutStartSec=600
+RemainAfterExit=no
+
+# Hardening (mirrors atlas-backend.service)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/atlas/logs /home/ubuntu/atlas/backend
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-6: decisions generator agent \u2014 finding-to-decision mapping, 12-finding fixture, idempotent re-run, 25 tests",
+  "chunk": "forge: chunk-V1-7 \u2014 pipeline runner + systemd timer: 17 integration tests green, CLI exits 0/1, systemd-analyze verify passes",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776106609
+  "ts": 1776107422
 }
