@@ -159,7 +159,9 @@ async def _build_chunk_response(
 
 
 def _build_orphan_lane(
-    chunk_states: dict[str, dict], referenced_ids: set[str]
+    chunk_states: dict[str, dict],
+    referenced_ids: set[str],
+    ship_state: dict,
 ) -> VersionResponse | None:
     """Fold orphan chunks (in state.db but missing from roadmap.yaml) into a
     synthetic 'Quality & Infra' lane so every running chunk is visible on
@@ -168,18 +170,38 @@ def _build_orphan_lane(
     orphan_ids = sorted(cid for cid in chunk_states if cid not in referenced_ids)
     if not orphan_ids:
         return None
-    orphan_chunks = [
-        ChunkResponse(
-            id=cid,
-            title=chunk_states[cid].get("title") or "",
-            status=chunk_states[cid].get("status", "PENDING"),
-            attempts=chunk_states[cid].get("attempts", 0),
-            updated_at=chunk_states[cid].get("updated_at"),
-            steps=[],
-            last_error=chunk_states[cid].get("last_error"),
+
+    def _ship_fields(cid: str) -> tuple[datetime | None, bool | None]:
+        if ship_state.get("chunk") != cid or "ts" not in ship_state:
+            return None, None
+        try:
+            dt = datetime.fromtimestamp(
+                int(ship_state["ts"]), tz=timezone.utc
+            ).astimezone(IST)
+            ok = all(
+                bool(ship_state.get(k, False))
+                for k in ("tests_ok", "quality_ok", "memory_ok")
+            )
+            return dt, ok
+        except (TypeError, ValueError):
+            return None, None
+
+    orphan_chunks = []
+    for cid in orphan_ids:
+        dt, ok = _ship_fields(cid)
+        orphan_chunks.append(
+            ChunkResponse(
+                id=cid,
+                title=chunk_states[cid].get("title") or "",
+                status=chunk_states[cid].get("status", "PENDING"),
+                attempts=chunk_states[cid].get("attempts", 0),
+                updated_at=chunk_states[cid].get("updated_at"),
+                steps=[],
+                last_error=chunk_states[cid].get("last_error"),
+                last_shipped_at=dt,
+                last_ship_ok=ok,
+            )
         )
-        for cid in orphan_ids
-    ]
     return VersionResponse(
         id="SX",
         title="Quality & Infra (orphan chunks from state.db)",
@@ -228,7 +250,7 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
             )
         )
 
-    orphan_lane = _build_orphan_lane(chunk_states, referenced_ids)
+    orphan_lane = _build_orphan_lane(chunk_states, referenced_ids, ship_state)
     if orphan_lane is not None:
         version_responses.append(orphan_lane)
 

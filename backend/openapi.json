@@ -862,6 +862,29 @@
               }
             ],
             "title": "Last Error"
+          },
+          "last_shipped_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Shipped At"
+          },
+          "last_ship_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Ship Ok"
           }
         },
         "type": "object",
