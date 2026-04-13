@@ -85,6 +85,18 @@ function ChunkRow({ chunk }: { chunk: ChunkResponse }) {
             ERR
           </span>
         )}
+        {chunk.last_shipped_at && (
+          <span
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              chunk.last_ship_ok ? "bg-emerald-500" : "bg-red-500"
+            }`}
+            title={`last forge-ship: ${chunk.last_shipped_at}${
+              chunk.last_ship_ok
+                ? " — tests + gate + memory all ✓"
+                : " — FAILED, re-run scripts/forge-ship.sh"
+            }`}
+          />
+        )}
         <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">
           {timeAgo(chunk.updated_at)}
         </span>

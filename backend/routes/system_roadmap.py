@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
 import structlog
 from fastapi import Query
@@ -27,6 +29,24 @@ from .system import (
 )
 
 log = structlog.get_logger()
+
+_SHIP_STATE_FILE = Path(__file__).resolve().parents[2] / ".forge" / "last-run.json"
+
+
+def _load_ship_state() -> dict:
+    """Read .forge/last-run.json if present. Single-slot state written by
+    scripts/forge-ship.sh — tells the dashboard which chunk last went
+    through the enforced tests+gate+memory chain and when."""
+    if not _SHIP_STATE_FILE.exists():
+        return {}
+    try:
+        data = json.loads(_SHIP_STATE_FILE.read_text())
+        if not isinstance(data, dict):
+            return {}
+        return data
+    except (OSError, ValueError):
+        return {}
+
 
 _CHUNK_STATUS_MAP = {
     "DONE": "DONE",
@@ -98,7 +118,10 @@ def _version_rollup(chunks: list[ChunkResponse]) -> RollupResponse:
 
 
 async def _build_chunk_response(
-    chunk, chunk_states: dict[str, dict], evaluate_slow: bool
+    chunk,
+    chunk_states: dict[str, dict],
+    evaluate_slow: bool,
+    ship_state: dict,
 ) -> ChunkResponse:
     state = chunk_states.get(chunk.id, {})
     step_responses: list[StepResponse] = []
@@ -109,6 +132,19 @@ async def _build_chunk_response(
         step_responses.append(
             StepResponse(id=step.id, text=step.text, check=check_result, detail=detail)
         )
+    last_shipped_at = None
+    last_ship_ok = None
+    if ship_state.get("chunk") == chunk.id and "ts" in ship_state:
+        try:
+            last_shipped_at = datetime.fromtimestamp(
+                int(ship_state["ts"]), tz=timezone.utc
+            ).astimezone(IST)
+            last_ship_ok = all(
+                bool(ship_state.get(k, False))
+                for k in ("tests_ok", "quality_ok", "memory_ok")
+            )
+        except (TypeError, ValueError):
+            pass
     return ChunkResponse(
         id=chunk.id,
         title=chunk.title,
@@ -117,6 +153,8 @@ async def _build_chunk_response(
         updated_at=state.get("updated_at"),
         steps=step_responses,
         last_error=state.get("last_error"),
+        last_shipped_at=last_shipped_at,
+        last_ship_ok=last_ship_ok,
     )
 
 
@@ -159,13 +197,14 @@ def _build_orphan_lane(
 async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
     roadmap_file: RoadmapFile = await asyncio.to_thread(load_roadmap)
     chunk_states = await asyncio.to_thread(_load_chunk_states)
+    ship_state = await asyncio.to_thread(_load_ship_state)
 
     version_responses: list[VersionResponse] = []
     referenced_ids: set[str] = set()
 
     for version in roadmap_file.versions:
         chunk_responses = [
-            await _build_chunk_response(c, chunk_states, evaluate_slow)
+            await _build_chunk_response(c, chunk_states, evaluate_slow, ship_state)
             for c in version.chunks
         ]
         referenced_ids.update(c.id for c in version.chunks)

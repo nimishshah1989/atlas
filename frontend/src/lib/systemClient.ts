@@ -50,6 +50,11 @@ export interface ChunkResponse {
   updated_at: string | null;
   steps: StepResponse[];
   last_error?: string | null;
+  // Ship-protocol surfacing (chunk L1-min). When set, the chunk went
+  // through scripts/forge-ship.sh (tests + gate + memory + commit +
+  // post-chunk) on the named timestamp. Rendered as a green/red dot.
+  last_shipped_at?: string | null;
+  last_ship_ok?: boolean | null;
 }
 
 export interface RollupResponse {

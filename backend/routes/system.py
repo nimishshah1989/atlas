@@ -85,6 +85,12 @@ class ChunkResponse(BaseModel):
     updated_at: Optional[datetime]
     steps: list[StepResponse]
     last_error: Optional[str] = None
+    # Ship-protocol surfacing — populated from .forge/last-run.json when
+    # the chunk id matches. Lets the dashboard show a green/red dot next
+    # to the chunk title so the user can see at a glance whether the
+    # last ship went through the enforced tests+gate+memory chain.
+    last_shipped_at: Optional[datetime] = None
+    last_ship_ok: Optional[bool] = None
 
 
 class RollupResponse(BaseModel):

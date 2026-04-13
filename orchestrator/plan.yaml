@@ -265,3 +265,265 @@ chunks:
       - Preserve Four Laws, System Guarantees, post-chunk invariant, Step 0 protocol verbatim
       - Verify all pointers resolve; grep-verify no scope strings remain
       - All 5 gating dims still ≥ 80 post-rewrite
+
+  # --- V2 — MF Slice -------------------------------------------------
+
+  - id: V2-1
+    title: "MF Pydantic contracts + router skeleton"
+    status: PENDING
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "Every endpoint in contracts/mf-api.md has a Pydantic response model"
+      - "Router mounted"
+      - "pytest tests/api/test_mf_contracts.py green"
+      - "Zero float occurrences in backend/models/mf.py and backend/routes/mf.py"
+
+  - id: V2-2
+    title: "JIP client MF extension"
+    status: PENDING
+    depends_on: [V2-1]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "Every method round-trips recorded cassettes"
+      - "is_etf=true rows filtered out in mf_universe"
+      - "No direct de_* SQL anywhere in the repo"
+
+  - id: V2-3
+    title: "MF computations: RS momentum + quadrant + manager alpha"
+    status: PENDING
+    depends_on: [V2-2]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Fixture of 50 funds produces quadrants matching hand-computed values"
+      - "rs_momentum_28d exact Decimal equality on 10 fixture funds"
+      - "Returns INSUFFICIENT_DATA when <28 days RS history"
+
+  - id: V2-4
+    title: "MF category rollup + universe/categories/flows routes"
+    status: PENDING
+    depends_on: [V2-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "/universe fund_count sums to active-subset count returned by JIP"
+      - "/categories p50/p90 manager-alpha matches core helper"
+      - "/flows returns last 12 months"
+      - "/universe p95 <2s warm"
+
+  - id: V2-5
+    title: "Fund deep-dive + holdings + sectors routes"
+    status: PENDING
+    depends_on: [V2-4]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "manager_alpha == derived_rs_composite - nav_rs_composite exact Decimal on 50 funds"
+      - "Holdings weights sum ~100% ±1%"
+      - "p95 <500ms warm"
+
+  - id: V2-6
+    title: "MF decisions generator"
+    status: PENDING
+    depends_on: [V2-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Fixture transition IMPROVING->LEADING writes exactly one row"
+      - "Fixture flow +ve->-ve writes exactly one row"
+      - "Re-running is a no-op"
+      - "V1 decision lifecycle still handles accept/ignore/override on new rows"
+
+  - id: V2-7
+    title: "Overlap + holding-stock + history routes"
+    status: PENDING
+    depends_on: [V2-5]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Overlap formula exact on 3-fund fixture"
+      - "/holding-stock returns correct fund list for seeded fixture"
+      - "NAV history surfaces gap days when a partition is missing"
+
+  - id: V2-8
+    title: "Pro shell MF page: universe tree + category table + flows panel"
+    status: PENDING
+    depends_on: [V2-4]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "FM can walk broad -> category -> fund -> deep-dive in under 10s"
+      - "lakh/crore formatting throughout"
+      - "V1 pages untouched and still green"
+
+  - id: V2-9
+    title: "Pro shell MF deep-dive panel"
+    status: PENDING
+    depends_on: [V2-5, V2-7, V2-8]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "Every pillar renders from a single /mf/{mstar_id} fetch"
+      - "RS history sparkline loads async"
+      - "Overlap widget calls /overlap and renders common holdings ranked by min(w_a, w_b)"
+
+  - id: V2-10
+    title: "V2 integration suite + completion criteria validation"
+    status: PENDING
+    depends_on: [V2-6, V2-7, V2-9]
+    quality_targets:
+      code: 80
+      devops: 80
+      docs: 80
+    punch_list:
+      - "scripts/validate-v2.py exits 0"
+      - "Every SC-001..SC-009 mapped to an assertion"
+      - "V1 integration tests 100% green"
+      - ".quality/checks.py product dim >=80% for V2"
+
+
+  # --- V1 Completion (V1.ext) -------------------------------------------------
+
+  - id: V1-1
+    title: "atlas_intelligence + atlas_decisions schema parity"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head succeeds"
+      - "pgvector extension present"
+      - "HNSW index exists per EXPLAIN"
+      - "pytest tests/db/test_intelligence_schema.py green"
+      - "Both migrations reversible (alembic downgrade -1 works)"
+      - "Zero float columns"
+      - "V1 regression green"
+
+  - id: V1-2
+    title: "Embedding adapter (OpenAI + nomic fallback)"
+    status: PENDING
+    depends_on: [V1-1]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Unit tests cover OpenAI success, OpenAI 5xx fallback, missing key fallback, empty string ValueError, batch of 50"
+      - "Returned vectors length == 1536 in every path"
+      - "V1 regression green"
+
+  - id: V1-3
+    title: "Intelligence writer service + intelligence API routes"
+    status: PENDING
+    depends_on: [V1-2]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest green"
+      - "store_finding twice produces one row"
+      - "Vector search asserts ordering by similarity on a 5-row fixture"
+      - "EXPLAIN shows HNSW index hit"
+      - "/api/v1/intelligence p95 <300ms warm against 1k-row fixture"
+      - "Zero float in financial fields"
+      - "V1 regression green"
+
+  - id: V1-4
+    title: "rs-analyzer agent"
+    status: PENDING
+    depends_on: [V1-3]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "Unit test against 30-equity fixture writes the expected number of transition findings + 1 summary"
+      - "Re-run idempotent"
+      - "Zero de_* SQL — only JIP client"
+      - "Zero float in financial fields"
+      - "V1 regression green"
+
+  - id: V1-5
+    title: "sector-analyst agent"
+    status: PENDING
+    depends_on: [V1-4]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "Unit test on 31-sector fixture with 3 rotations + 2 divergences writes exactly 5 transition findings + 1 summary"
+      - "Re-run idempotent"
+      - "Reads only via JIP client"
+      - "Zero float"
+      - "V1 regression green"
+
+  - id: V1-6
+    title: "Decisions generator"
+    status: PENDING
+    depends_on: [V1-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "12-finding fixture (8 equity + 4 sector) writes exactly 12 decisions with correct decision_type mapping and supporting_data references"
+      - "Re-run is a clean no-op"
+      - "Zero float"
+      - "Existing accept/ignore/override flow on backend/routes/decisions.py still passes"
+      - "V1 regression green"
+
+  - id: V1-7
+    title: "Pipeline runner + systemd timer"
+    status: PENDING
+    depends_on: [V1-6]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "python -m atlas.pipeline run --data-as-of=2026-04-13 exits 0 on cassettes and writes the floors"
+      - "pytest tests/integration/test_v1_pipeline.py green"
+      - "Re-run idempotency proven"
+      - "systemd-analyze verify passes"
+      - "Pipeline duration <5min on cassette fixture"
+      - "data_as_of, rows read, findings written, decisions written, duration_ms visible in journalctl"
+      - "V1 regression green"
+
+  - id: V1-8
+    title: "Frontend wiring: finding chips + decision card + sector badge + Playwright"
+    status: PENDING
+    depends_on: [V1-7]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "npm test + npx playwright test v1-fm-flow.spec.ts green against backend with seeded findings/decisions"
+      - "Lighthouse budget unchanged"
+      - "lakh/crore formatting throughout"
+      - "V1 pages untouched and still green"
+      - "Backend regression green"
+
+  - id: V1-9
+    title: "V1 completion validation + product dim flip to gating"
+    status: PENDING
+    depends_on: [V1-7, V1-8]
+    quality_targets:
+      architecture: 85
+      code: 80
+      devops: 80
+      docs: 80
+    punch_list:
+      - "scripts/validate-v1-completion.py exits 0"
+      - "All 15 v1-criteria rows green"
+      - "Product dim is gating:true in plan.yaml"
+      - "Two consecutive .quality/checks.py runs PASS"
+      - "V1 integration tests 100% green"
+      - "Memory updated"
+      - "Backend + frontend regression green"
+
