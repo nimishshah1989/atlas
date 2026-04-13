@@ -1,0 +1,2677 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ATLAS \u2014 Market Intelligence Engine",
+    "description": "Jhaveri Intelligence Platform \u2014 Market \u2192 Sector \u2192 Stock \u2192 Decision",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/stocks/universe": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Universe",
+        "description": "Get all stocks grouped by sector with technicals and RS.",
+        "operationId": "get_universe_api_v1_stocks_universe_get",
+        "parameters": [
+          {
+            "name": "benchmark",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Benchmark filter",
+              "default": "NIFTY 500",
+              "title": "Benchmark"
+            },
+            "description": "Benchmark filter"
+          },
+          {
+            "name": "sector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sector filter",
+              "title": "Sector"
+            },
+            "description": "Sector filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockUniverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/sectors": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Sectors",
+        "description": "Get 31 sectors with 22 metrics each.",
+        "operationId": "get_sectors_api_v1_stocks_sectors_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/breadth": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Breadth",
+        "description": "Get market breadth and regime data.",
+        "operationId": "get_breadth_api_v1_stocks_breadth_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketBreadthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/movers": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Movers",
+        "description": "Get top RS momentum gainers and losers.",
+        "operationId": "get_movers_api_v1_stocks_movers_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 15,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoversResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/{symbol}": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock Deep Dive",
+        "description": "Get complete deep-dive for a stock with conviction pillars.",
+        "operationId": "get_stock_deep_dive_api_v1_stocks__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDeepDiveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/{symbol}/rs-history": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Rs History",
+        "description": "Get RS score history for a stock.",
+        "operationId": "get_rs_history_api_v1_stocks__symbol__rs_history_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "benchmark",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "NIFTY 500",
+              "title": "Benchmark"
+            }
+          },
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 1,
+              "default": 12,
+              "title": "Months"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/query": {
+      "post": {
+        "tags": [
+          "query"
+        ],
+        "summary": "Execute Query",
+        "description": "Execute a UQL query. V1 supports entity_type='equity' only.",
+        "operationId": "execute_query_api_v1_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UQLRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UQLResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/decisions": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "summary": "List Decisions",
+        "description": "List decisions, optionally filtered by symbol or action status.",
+        "operationId": "list_decisions_api_v1_decisions_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 200,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/decisions/{decision_id}/action": {
+      "put": {
+        "tags": [
+          "decisions"
+        ],
+        "summary": "Update Decision Action",
+        "description": "Accept, ignore, or override a decision.",
+        "operationId": "update_decision_action_api_v1_decisions__decision_id__action_put",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Update Decision Action Api V1 Decisions  Decision Id  Action Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "description": "Liveness probe \u2014 process is up and serving requests.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Ready",
+        "description": "Readiness probe \u2014 dependencies (DB) reachable.",
+        "operationId": "ready_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ready Api V1 Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Status",
+        "description": "Get system status with data freshness info.",
+        "operationId": "status_api_v1_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "description": "Liveness probe \u2014 process is up and serving requests.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Ready",
+        "description": "Readiness probe \u2014 dependencies (DB) reachable.",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BreadthSnapshot": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "advance": {
+            "type": "integer",
+            "title": "Advance"
+          },
+          "decline": {
+            "type": "integer",
+            "title": "Decline"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged"
+          },
+          "total_stocks": {
+            "type": "integer",
+            "title": "Total Stocks"
+          },
+          "ad_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ad Ratio"
+          },
+          "pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 200Dma"
+          },
+          "pct_above_50dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 50Dma"
+          },
+          "new_52w_highs": {
+            "type": "integer",
+            "title": "New 52W Highs",
+            "default": 0
+          },
+          "new_52w_lows": {
+            "type": "integer",
+            "title": "New 52W Lows",
+            "default": 0
+          },
+          "mcclellan_oscillator": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcclellan Oscillator"
+          },
+          "mcclellan_summation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcclellan Summation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "advance",
+          "decline",
+          "unchanged",
+          "total_stocks"
+        ],
+        "title": "BreadthSnapshot"
+      },
+      "ConvictionPillars": {
+        "properties": {
+          "rs": {
+            "$ref": "#/components/schemas/PillarRS"
+          },
+          "technical": {
+            "$ref": "#/components/schemas/PillarTechnical"
+          },
+          "institutional": {
+            "$ref": "#/components/schemas/PillarInstitutional"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rs",
+          "technical",
+          "institutional"
+        ],
+        "title": "ConvictionPillars"
+      },
+      "DataFreshness": {
+        "properties": {
+          "equity_ohlcv_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equity Ohlcv As Of"
+          },
+          "rs_scores_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Scores As Of"
+          },
+          "technicals_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technicals As Of"
+          },
+          "breadth_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth As Of"
+          },
+          "regime_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime As Of"
+          },
+          "mf_holdings_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mf Holdings As Of"
+          }
+        },
+        "type": "object",
+        "title": "DataFreshness"
+      },
+      "DecisionAction": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "ACCEPTED",
+          "IGNORED",
+          "OVERRIDDEN"
+        ],
+        "title": "DecisionAction"
+      },
+      "DecisionActionRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/DecisionAction"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "DecisionActionRequest"
+      },
+      "DecisionListResponse": {
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionSummary"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decisions",
+          "meta"
+        ],
+        "title": "DecisionListResponse"
+      },
+      "DecisionSignal": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "WATCH"
+        ],
+        "title": "DecisionSignal"
+      },
+      "DecisionSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "signal": {
+            "$ref": "#/components/schemas/DecisionSignal"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "action": {
+            "$ref": "#/components/schemas/DecisionAction",
+            "default": "PENDING"
+          },
+          "action_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action At"
+          },
+          "action_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "signal",
+          "reason",
+          "created_at"
+        ],
+        "title": "DecisionSummary"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MarketBreadthResponse": {
+        "properties": {
+          "breadth": {
+            "$ref": "#/components/schemas/BreadthSnapshot"
+          },
+          "regime": {
+            "$ref": "#/components/schemas/RegimeSnapshot"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "breadth",
+          "regime",
+          "meta"
+        ],
+        "title": "MarketBreadthResponse"
+      },
+      "MoverEntry": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "company_name"
+        ],
+        "title": "MoverEntry"
+      },
+      "MoversResponse": {
+        "properties": {
+          "gainers": {
+            "items": {
+              "$ref": "#/components/schemas/MoverEntry"
+            },
+            "type": "array",
+            "title": "Gainers"
+          },
+          "losers": {
+            "items": {
+              "$ref": "#/components/schemas/MoverEntry"
+            },
+            "type": "array",
+            "title": "Losers"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gainers",
+          "losers",
+          "meta"
+        ],
+        "title": "MoversResponse"
+      },
+      "PillarInstitutional": {
+        "properties": {
+          "mf_holder_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mf Holder Count"
+          },
+          "delivery_vs_avg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Vs Avg"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarInstitutional"
+      },
+      "PillarRS": {
+        "properties": {
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum"
+          },
+          "rs_1w": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1W"
+          },
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          },
+          "rs_6m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 6M"
+          },
+          "rs_12m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 12M"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark",
+            "default": "NIFTY 500"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarRS"
+      },
+      "PillarTechnical": {
+        "properties": {
+          "checks_passing": {
+            "type": "integer",
+            "title": "Checks Passing",
+            "default": 0
+          },
+          "checks_total": {
+            "type": "integer",
+            "title": "Checks Total",
+            "default": 10
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicalCheck"
+            },
+            "type": "array",
+            "title": "Checks",
+            "default": []
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarTechnical"
+      },
+      "Quadrant": {
+        "type": "string",
+        "enum": [
+          "LEADING",
+          "IMPROVING",
+          "WEAKENING",
+          "LAGGING"
+        ],
+        "title": "Quadrant"
+      },
+      "RSDataPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_1w": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1W"
+          },
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "RSDataPoint"
+      },
+      "RSHistoryResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/RSDataPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "benchmark",
+          "points",
+          "meta"
+        ],
+        "title": "RSHistoryResponse"
+      },
+      "Regime": {
+        "type": "string",
+        "enum": [
+          "BULL",
+          "BEAR",
+          "SIDEWAYS",
+          "RECOVERY"
+        ],
+        "title": "Regime"
+      },
+      "RegimeSnapshot": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "regime": {
+            "$ref": "#/components/schemas/Regime"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "breadth_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Score"
+          },
+          "momentum_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Momentum Score"
+          },
+          "volume_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Score"
+          },
+          "global_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Score"
+          },
+          "fii_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fii Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "regime"
+        ],
+        "title": "RegimeSnapshot"
+      },
+      "ResponseMeta": {
+        "properties": {
+          "data_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data As Of"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count",
+            "default": 0
+          },
+          "query_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Ms"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "ResponseMeta"
+      },
+      "SectorGroup": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "stock_count": {
+            "type": "integer",
+            "title": "Stock Count"
+          },
+          "stocks": {
+            "items": {
+              "$ref": "#/components/schemas/StockSummary"
+            },
+            "type": "array",
+            "title": "Stocks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "stock_count",
+          "stocks"
+        ],
+        "title": "SectorGroup"
+      },
+      "SectorListResponse": {
+        "properties": {
+          "sectors": {
+            "items": {
+              "$ref": "#/components/schemas/SectorMetrics"
+            },
+            "type": "array",
+            "title": "Sectors"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sectors",
+          "meta"
+        ],
+        "title": "SectorListResponse"
+      },
+      "SectorMetrics": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "stock_count": {
+            "type": "integer",
+            "title": "Stock Count"
+          },
+          "avg_rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rs Composite"
+          },
+          "avg_rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rs Momentum"
+          },
+          "sector_quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 200Dma"
+          },
+          "pct_above_50dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 50Dma"
+          },
+          "pct_above_ema21": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above Ema21"
+          },
+          "avg_rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rsi 14"
+          },
+          "pct_rsi_overbought": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Rsi Overbought"
+          },
+          "pct_rsi_oversold": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Rsi Oversold"
+          },
+          "avg_adx": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Adx"
+          },
+          "pct_adx_trending": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Adx Trending"
+          },
+          "pct_macd_bullish": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Macd Bullish"
+          },
+          "pct_roc5_positive": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Roc5 Positive"
+          },
+          "avg_beta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Beta"
+          },
+          "avg_sharpe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Sharpe"
+          },
+          "avg_sortino": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Sortino"
+          },
+          "avg_volatility_20d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Volatility 20D"
+          },
+          "avg_max_dd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Max Dd"
+          },
+          "avg_calmar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Calmar"
+          },
+          "avg_mf_holders": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Mf Holders"
+          },
+          "avg_disparity_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Disparity 20"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "stock_count"
+        ],
+        "title": "SectorMetrics"
+      },
+      "SortDirection": {
+        "type": "string",
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortDirection"
+      },
+      "StatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "1.0.0"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/DataFreshness"
+          },
+          "active_stocks": {
+            "type": "integer",
+            "title": "Active Stocks",
+            "default": 0
+          },
+          "sectors": {
+            "type": "integer",
+            "title": "Sectors",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "freshness"
+        ],
+        "title": "StatusResponse"
+      },
+      "StockDeepDive": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "nifty_50": {
+            "type": "boolean",
+            "title": "Nifty 50",
+            "default": false
+          },
+          "nifty_200": {
+            "type": "boolean",
+            "title": "Nifty 200",
+            "default": false
+          },
+          "nifty_500": {
+            "type": "boolean",
+            "title": "Nifty 500",
+            "default": false
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "listing_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Date"
+          },
+          "cap_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Category"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "sma_50": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 50"
+          },
+          "sma_200": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 200"
+          },
+          "ema_21": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 21"
+          },
+          "rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsi 14"
+          },
+          "adx_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adx 14"
+          },
+          "macd_line": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Line"
+          },
+          "macd_signal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Signal"
+          },
+          "macd_histogram": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Histogram"
+          },
+          "above_200dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 200Dma"
+          },
+          "above_50dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 50Dma"
+          },
+          "beta_nifty": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta Nifty"
+          },
+          "sharpe_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe 1Y"
+          },
+          "sortino_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sortino 1Y"
+          },
+          "max_drawdown_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown 1Y"
+          },
+          "calmar_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calmar Ratio"
+          },
+          "volatility_20d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volatility 20D"
+          },
+          "relative_volume": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Volume"
+          },
+          "mfi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfi 14"
+          },
+          "obv": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obv"
+          },
+          "delivery_vs_avg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Vs Avg"
+          },
+          "bollinger_upper": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bollinger Upper"
+          },
+          "bollinger_lower": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bollinger Lower"
+          },
+          "disparity_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disparity 20"
+          },
+          "stochastic_k": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stochastic K"
+          },
+          "stochastic_d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stochastic D"
+          },
+          "conviction": {
+            "$ref": "#/components/schemas/ConvictionPillars"
+          },
+          "mf_holder_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mf Holder Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "company_name",
+          "conviction"
+        ],
+        "title": "StockDeepDive"
+      },
+      "StockDeepDiveResponse": {
+        "properties": {
+          "stock": {
+            "$ref": "#/components/schemas/StockDeepDive"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stock",
+          "meta"
+        ],
+        "title": "StockDeepDiveResponse"
+      },
+      "StockSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "nifty_50": {
+            "type": "boolean",
+            "title": "Nifty 50",
+            "default": false
+          },
+          "nifty_200": {
+            "type": "boolean",
+            "title": "Nifty 200",
+            "default": false
+          },
+          "nifty_500": {
+            "type": "boolean",
+            "title": "Nifty 500",
+            "default": false
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsi 14"
+          },
+          "adx_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adx 14"
+          },
+          "above_200dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 200Dma"
+          },
+          "above_50dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 50Dma"
+          },
+          "macd_histogram": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Histogram"
+          },
+          "beta_nifty": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta Nifty"
+          },
+          "sharpe_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe 1Y"
+          },
+          "mf_holder_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mf Holder Count"
+          },
+          "cap_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "company_name"
+        ],
+        "title": "StockSummary"
+      },
+      "StockUniverseResponse": {
+        "properties": {
+          "sectors": {
+            "items": {
+              "$ref": "#/components/schemas/SectorGroup"
+            },
+            "type": "array",
+            "title": "Sectors"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sectors",
+          "meta"
+        ],
+        "title": "StockUniverseResponse"
+      },
+      "TechnicalCheck": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "passing": {
+            "type": "boolean",
+            "title": "Passing"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "passing"
+        ],
+        "title": "TechnicalCheck"
+      },
+      "UQLFilter": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "op": {
+            "$ref": "#/components/schemas/UQLOperator"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "op",
+          "value"
+        ],
+        "title": "UQLFilter"
+      },
+      "UQLOperator": {
+        "type": "string",
+        "enum": [
+          "=",
+          "!=",
+          ">",
+          ">=",
+          "<",
+          "<=",
+          "in",
+          "not_in",
+          "between",
+          "contains",
+          "is_null",
+          "is_not_null"
+        ],
+        "title": "UQLOperator"
+      },
+      "UQLRequest": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "default": "equity"
+          },
+          "filters": {
+            "items": {
+              "$ref": "#/components/schemas/UQLFilter"
+            },
+            "type": "array",
+            "title": "Filters",
+            "default": []
+          },
+          "sort": {
+            "items": {
+              "$ref": "#/components/schemas/UQLSort"
+            },
+            "type": "array",
+            "title": "Sort",
+            "default": []
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "title": "UQLRequest"
+      },
+      "UQLResponse": {
+        "properties": {
+          "records": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "records",
+          "total",
+          "meta"
+        ],
+        "title": "UQLResponse"
+      },
+      "UQLSort": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/SortDirection",
+            "default": "desc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field"
+        ],
+        "title": "UQLSort"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

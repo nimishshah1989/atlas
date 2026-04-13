@@ -973,44 +973,214 @@ def dim_architecture() -> DimensionResult:
 # ══════════════════════════════════════════════════════════════════════════
 
 
+def _http_get(url: str, timeout: float = 5.0) -> tuple[int, float, str, dict]:
+    """Return (status_code, elapsed_s, body_text, headers). status=0 on error."""
+    import time
+    import urllib.request
+
+    start = time.perf_counter()
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "atlas-quality/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+            body = resp.read().decode("utf-8", errors="replace")
+            elapsed = time.perf_counter() - start
+            return resp.status, elapsed, body, dict(resp.headers)
+    except Exception as e:  # noqa: BLE001
+        elapsed = time.perf_counter() - start
+        return 0, elapsed, str(e), {}
+
+
 def dim_api() -> DimensionResult:
-    # Live endpoint probes require service up; orchestrator runs these at deploy gate.
+    """Live API health checks against a running backend.
+
+    Base URL from ATLAS_API_BASE (default http://127.0.0.1:8010). If the
+    service is unreachable, all live checks SKIP — the deploy gate then
+    fails the dimension and the orchestrator surfaces it.
+    """
     checks: list[CheckResult] = []
+    base = os.environ.get("ATLAS_API_BASE", "http://127.0.0.1:8010").rstrip("/")
     openapi_json = ROOT / "backend" / "openapi.json"
+
+    # Probe /health first to know if service is up
+    health_code, _, _, _ = _http_get(f"{base}/health", timeout=3.0)
+    live = health_code == 200
+
+    # 4.1 OpenAPI inventory — refresh from live service if reachable
+    if live:
+        code, _, body, _ = _http_get(f"{base}/openapi.json", timeout=5.0)
+        if code == 200:
+            try:
+                spec = json.loads(body)
+                openapi_json.write_text(json.dumps(spec, indent=2))
+            except Exception:  # noqa: BLE001
+                pass
     checks.append(
         CheckResult(
             "4.1",
             "OpenAPI inventory",
             5 if openapi_json.exists() else 0,
             5,
-            "openapi.json cached"
+            f"openapi.json cached ({len(json.loads(openapi_json.read_text()).get('paths', {}))} paths)"
             if openapi_json.exists()
-            else "run service to generate",
+            else "no openapi.json",
             "Is the API spec self-documenting?",
             "Export FastAPI OpenAPI at build time.",
             "info",
-            status="SKIP" if not openapi_json.exists() else "RUN",
+            status="RUN" if openapi_json.exists() else "SKIP",
         )
     )
-    for cid, name, pts in [
-        ("4.2", "Endpoint response time", 15),
-        ("4.3", "Error rate", 10),
-        ("4.4", "Response format compliance", 10),
-        ("4.5", "DB query performance", 10),
-    ]:
-        checks.append(
-            CheckResult(
-                cid,
-                name,
-                0,
-                pts,
-                "requires live service (deploy gate runs this)",
-                "",
-                "Run after deploy gate brings service up.",
-                "info",
-                status="SKIP",
+
+    if not live:
+        for cid, name, pts in [
+            ("4.2", "Endpoint response time", 15),
+            ("4.3", "Error rate", 10),
+            ("4.4", "Response format compliance", 10),
+            ("4.5", "DB query performance", 10),
+        ]:
+            checks.append(
+                CheckResult(
+                    cid,
+                    name,
+                    0,
+                    pts,
+                    f"service unreachable at {base} (set ATLAS_API_BASE or start atlas-backend)",
+                    "Is the live API answering?",
+                    "Start atlas-backend.service then re-run.",
+                    "high",
+                    status="SKIP",
+                )
             )
+        return DimensionResult("api", checks)
+
+    # Probe a representative set of GET endpoints
+    probes = [
+        "/health",
+        "/api/v1/health",
+        "/api/v1/ready",
+        "/api/v1/status",
+        "/api/v1/stocks/sectors",
+        "/api/v1/stocks/breadth",
+        "/api/v1/stocks/movers",
+        "/api/v1/stocks/universe",
+    ]
+    results: list[tuple[str, int, float, str, dict]] = []
+    for path in probes:
+        code, elapsed, body, headers = _http_get(f"{base}{path}", timeout=10.0)
+        results.append((path, code, elapsed, body, headers))
+
+    # 4.2 Endpoint response time (15 pts) — p95 latency
+    times = sorted(elapsed for _, _, elapsed, _, _ in results)
+    p95 = times[max(0, int(len(times) * 0.95) - 1)] if times else 0.0
+    avg = sum(times) / len(times) if times else 0.0
+    if p95 < 0.5:
+        rt_score = 15
+    elif p95 < 1.0:
+        rt_score = 12
+    elif p95 < 2.0:
+        rt_score = 8
+    else:
+        rt_score = 4
+    checks.append(
+        CheckResult(
+            "4.2",
+            "Endpoint response time",
+            rt_score,
+            15,
+            f"avg={avg * 1000:.0f}ms p95={p95 * 1000:.0f}ms over {len(times)} endpoints",
+            "Are API responses fast enough for users?",
+            "Profile slow endpoints; add DB indexes or cache.",
+            "high" if rt_score < 10 else "info",
         )
+    )
+
+    # 4.3 Error rate (10 pts) — count non-2xx
+    errors = [(p, c) for p, c, _, _, _ in results if not (200 <= c < 300)]
+    if not errors:
+        err_score = 10
+    elif len(errors) == 1:
+        err_score = 6
+    else:
+        err_score = 0
+    checks.append(
+        CheckResult(
+            "4.3",
+            "Error rate",
+            err_score,
+            10,
+            f"{len(errors)}/{len(results)} non-2xx"
+            + (f" → {errors[:3]}" if errors else ""),
+            "Are endpoints returning success?",
+            "Investigate failing endpoints; check logs.",
+            "critical" if errors else "info",
+        )
+    )
+
+    # 4.4 Response format compliance (10 pts) — JSON content-type + parseable
+    fmt_ok = 0
+    fmt_bad: list[str] = []
+    for path, code, _, body, headers in results:
+        if not (200 <= code < 300):
+            continue
+        ct = (headers.get("Content-Type") or headers.get("content-type") or "").lower()
+        if "application/json" not in ct:
+            fmt_bad.append(f"{path}:no-json-ct")
+            continue
+        try:
+            json.loads(body)
+            fmt_ok += 1
+        except Exception:  # noqa: BLE001
+            fmt_bad.append(f"{path}:invalid-json")
+    total_ok_responses = sum(1 for _, c, _, _, _ in results if 200 <= c < 300)
+    if total_ok_responses and fmt_ok == total_ok_responses:
+        fmt_score = 10
+    elif total_ok_responses and fmt_ok >= total_ok_responses - 1:
+        fmt_score = 6
+    else:
+        fmt_score = 0
+    checks.append(
+        CheckResult(
+            "4.4",
+            "Response format compliance",
+            fmt_score,
+            10,
+            f"{fmt_ok}/{total_ok_responses} valid JSON"
+            + (f" issues={fmt_bad[:3]}" if fmt_bad else ""),
+            "Do responses follow a consistent JSON contract?",
+            "Ensure all endpoints return application/json with valid bodies.",
+            "high" if fmt_bad else "info",
+        )
+    )
+
+    # 4.5 DB query performance (10 pts) — universe is the heaviest DB endpoint
+    db_path = "/api/v1/stocks/universe"
+    db_result = next((r for r in results if r[0] == db_path), None)
+    if db_result is None or db_result[1] != 200:
+        db_score = 0
+        db_evidence = f"{db_path} unavailable"
+    else:
+        db_elapsed = db_result[2]
+        if db_elapsed < 1.0:
+            db_score = 10
+        elif db_elapsed < 2.0:
+            db_score = 7
+        elif db_elapsed < 5.0:
+            db_score = 4
+        else:
+            db_score = 0
+        db_evidence = f"{db_path} {db_elapsed * 1000:.0f}ms"
+    checks.append(
+        CheckResult(
+            "4.5",
+            "DB query performance",
+            db_score,
+            10,
+            db_evidence,
+            "Are DB-backed endpoints fast?",
+            "Add indexes on filter columns; review slow query log.",
+            "high" if db_score < 7 else "info",
+        )
+    )
+
     return DimensionResult("api", checks)
 
 
@@ -1372,6 +1542,7 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="emit JSON to stdout")
     ap.add_argument(
         "--dim",
+        "--dimension",
         action="append",
         choices=list(DIMENSIONS.keys()),
         help="run specific dimension(s)",
