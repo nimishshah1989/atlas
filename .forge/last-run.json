@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-3: Intelligence writer service + intelligence API routes \u2014 store_finding idempotent upsert, vector similarity search, /api/v1/intelligence endpoints, alembic migration for natural key index",
+  "chunk": "V1-4: RS analyzer agent \u2014 quadrant classification, transition detection, intelligence writer integration",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776103850
+  "ts": 1776104622
 }
