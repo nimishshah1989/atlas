@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-7: pipeline runner + systemd timer \u2014 3-agent sequential pipeline, CLI entry point, 17 integration tests, idempotent re-run",
+  "chunk": "V1-8: frontend wiring \u2014 DecisionPanel contract fix, FindingChips component, v1-fm-flow Playwright test (14 e2e tests green)",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776107551
+  "ts": 1776108504
 }

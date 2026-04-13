@@ -271,17 +271,57 @@ export interface RsHistoryResponse {
 
 export interface DecisionSummary {
   id: string;
-  symbol: string;
-  signal: string;
-  quadrant: string | null;
-  reason: string;
+  entity: string;
+  entity_type: string;
+  decision_type: string;
+  rationale: string;
+  confidence: string;
+  horizon: string;
+  horizon_end_date: string;
+  status: string;
+  source_agent: string | null;
   created_at: string;
-  action: string;
-  action_at: string | null;
-  action_note: string | null;
+  user_action: string | null;
+  user_action_at: string | null;
+  user_notes: string | null;
 }
 
 export interface DecisionListResponse {
   decisions: DecisionSummary[];
   meta: Meta;
+}
+
+export interface FindingSummary {
+  id: string;
+  agent_id: string;
+  agent_type: string;
+  entity: string | null;
+  entity_type: string | null;
+  finding_type: string;
+  title: string;
+  content: string;
+  confidence: string | null;
+  tags: string[] | null;
+  data_as_of: string;
+  created_at: string;
+}
+
+export interface FindingsListResponse {
+  findings: FindingSummary[];
+  meta: Meta;
+}
+
+export async function getFindings(params?: {
+  entity?: string;
+  finding_type?: string;
+  limit?: number;
+}) {
+  const qs = new URLSearchParams();
+  if (params?.entity) qs.set("entity", params.entity);
+  if (params?.finding_type) qs.set("finding_type", params.finding_type);
+  if (params?.limit) qs.set("limit", String(params.limit));
+  const q = qs.toString();
+  return fetchApi<FindingsListResponse>(
+    `/api/v1/intelligence/findings${q ? `?${q}` : ""}`
+  );
 }
