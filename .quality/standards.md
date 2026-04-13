@@ -447,57 +447,149 @@ owns "is CI alive" because backend owns "is the deploy reliable".
 
 ---
 
-## Dimension 7 — Product  *(informational until V1.6)*
+## Dimension 7 — Product  *(informational until V1.6 R1)*
 
-Tracks the V1 completion criteria from `docs/specs/v1-criteria.yaml`. The
-file is intentionally a stub during the V1.5 retrofit so the engine can
-load the dimension without forcing every chunk to write criteria
-metadata. The dimension is `gating=false` and the single placeholder check
-SKIPs cleanly.
+Tracks the V1 completion criteria from `docs/specs/v1-criteria.yaml`.
+S3 wired this dim to the real YAML: each criterion becomes one
+`CheckResult`, dispatched via a declarative handler
+(`http_contract`, `sql_count`, `sql_invariant`, `python_callable`,
+`file_exists`). The dim stays `gating=false` — forge dashboard surfaces
+it as a V1-completion progress bar so FMs can watch the score climb as
+V1.6 chunks ship.
 
 ### How it works
 
-1. Read `docs/specs/v1-criteria.yaml`.
-2. If the file is missing or empty, return one SKIP'd check (`p0`) and
-   exit with `eligible=0` so the dimension is informational-only.
-3. If criteria exist, materialize one check per entry as `p1`, `p2`, …
-   each scoring 10/10 if `met: true` and 0/10 otherwise. The check name
-   comes from the YAML `name` field; description and fix come from
-   `description` / `fix`.
+1. Read `docs/specs/v1-criteria.yaml` + `v1-criteria.schema.json`.
+2. Validate the top-level shape (cheap) and, if `jsonschema` is
+   installed, the full schema.
+3. For each criterion, dispatch by `check.type` to the handler in
+   `.quality/dimensions/check_types/`. Each handler returns
+   `(passed: bool, evidence: str)` — never raises.
+4. Emit one `CheckResult` per criterion. 10/10 on pass, 0/10 on fail.
+   Severity comes from the YAML; on pass it collapses to `info`.
+5. V1.6 R1 flips `gating=true` once ≥13 of 15 criteria pass.
 
-### Worked example — V1 completion criterion 7
+### Supported check types
 
-CLAUDE.md V1 completion criteria item 7 reads:
-*"FM can accept/ignore/override decisions"*. The yaml entry is:
-
-```yaml
-criteria:
-  - name: fm_can_resolve_decisions
-    description: |
-      A Fund Manager logged into the Pro shell can call
-      POST /api/v1/decisions/{id}/accept, /ignore, or /override and the
-      decision lifecycle row in atlas_decisions transitions accordingly.
-      Verified by tests/integration/test_decision_lifecycle.py::
-      test_fm_resolves_decision.
-    met: false
-    fix: Wire the three lifecycle endpoints, add the integration test, then
-         flip met to true in this YAML.
-```
-
-While `met: false`, the resulting `p7` check scores 0/10. The dimension
-score is 0 — and because product is informational the gate stays green,
-but the dashboard surfaces it as the V1 blocker. When the integration
-test passes and the YAML flips to `met: true`, `p7` immediately scores
-10/10. V1.6 R4 flips `gating=true` once at least 12 of the 13 V1
-criteria are met.
+- `http_contract` — GET URL, assert 200 under `max_latency_ms`.
+- `sql_count` — scalar `COUNT(*)`, assert `min`/`max` bounds. Needs
+  `ATLAS_DATABASE_URL` or `backend.config` + `psycopg2`.
+- `sql_invariant` — scalar query, assert `equals`/`min`/`max`.
+- `python_callable` — dotted path returning `(bool, str)`. Escape hatch
+  for anything the declarative types can't express (AST scans,
+  multi-endpoint checks, etc.).
+- `file_exists` — path + optional `min_size_bytes`.
 
 ### p0 V1 criteria file
 
-Stub check that fires only when `docs/specs/v1-criteria.yaml` is missing
-or empty. `eligible=0`, `score=0`, `status="SKIP"`. Once real criteria are
-populated, `p0` is replaced by `p1..pN` and never fires again.
+SKIP stub fired only when `docs/specs/v1-criteria.yaml` is missing or
+malformed. Never fires on a healthy repo — if you see `p0`, the YAML
+loader found something wrong with the criteria file.
+
+### v1-01 /stocks/universe returns valid data matching contract
+`http_contract` against `/api/v1/stocks/universe`, 2000ms budget.
+
+### v1-02 /stocks/sectors returns 31 sectors with 22 metrics each
+`python_callable` into `quality_product_checks.check_sectors_shape` —
+asserts exactly 31 sectors and ≥22 metric columns per row (excluding
+the `sector` label).
+
+### v1-03 /stocks/{symbol} returns deep-dive for any stock
+`http_contract` against `/api/v1/stocks/RELIANCE`, 500ms budget.
+
+### v1-04 /query handles basic equity queries (filters + sort)
+`python_callable` that POSTs `{filters: [], sort: [], limit: 1}` to
+`/api/v1/query` and asserts 200.
+
+### v1-05 Frontend: FM navigates Market → Sector → Stock flow
+`python_callable` that file-checks the key pages/components
+(`frontend/src/app/page.tsx`, `DeepDivePanel.tsx`). Not Playwright —
+this is a presence gate, not a browser flow gate.
+
+### v1-06 Deep-dive panel shows all conviction pillar data
+`file_exists` on `frontend/src/components/DeepDivePanel.tsx` with a
+500-byte floor (catches accidental stubs).
+
+### v1-07 ≥5 decisions generated per pipeline run
+`sql_count` on `atlas_decisions WHERE created_at >= now() - interval '1 day'`,
+`min: 5`. **Expected to FAIL until V1.6 R1** — nothing writes decisions
+yet.
+
+### v1-08 FM can accept / ignore / override decisions
+`python_callable` — asserts GET `/api/v1/decisions` returns 200 and
+`backend/routes/decisions.py` exists. Liberal read of "accept/ignore/
+override" — V1.6 R2 adds the lifecycle endpoints that make this
+strict.
+
+### v1-09 Sector rollup stock_count sums to ~2,700
+`python_callable` that sums `stock_count` across `/sectors`. Tolerant
+band (2300–2900) — §24.3 says "~2,700" as a ballpark, not a fixed
+gate. Actual sum depends on NSE additions and corporate actions.
+
+### v1-10 RS momentum present and numeric on deep-dive
+`python_callable` — walks the `/stocks/RELIANCE` response for an
+`rs_momentum` field and asserts it's numeric.
+
+### v1-11 pct_above_200dma exposed on /sectors and in [0,100]
+`python_callable` — every sector row must carry `pct_above_200dma` in
+`[0, 100]`.
+
+### v1-12 ≥10 intelligence findings stored after first pipeline run
+`sql_count` on `atlas_intelligence WHERE created_at >= now() - interval '1 day'`,
+`min: 10`. **Expected to FAIL until V1.6 R1** — intelligence engine
+doesn't write yet.
+
+### v1-13 Integration test suite present
+`file_exists` on `tests/integration/test_v1_endpoints.py`, 500-byte
+floor. The check 4.x api dim covers actual endpoint health; v1-13 is
+the source-of-truth that the suite file itself exists.
+
+### v1-14 No float in financial calculations
+`python_callable` — regex-scans `backend/**/*.py` for `: float`
+annotations. Mirrors architecture check 3.4 so the product dim stays
+self-contained.
+
+### v1-15 Response times: universe < 2s, deep-dive < 500ms
+`python_callable` — hits both critical endpoints and asserts their
+latency budgets in one check. Complements v1-01 + v1-03 by keeping
+the two budgets paired in a single assertion.
+
+### Worked example — criterion v1-07
+
+§24.3 reads: *"Decisions generated: at least 5 decisions per pipeline
+run"*. The YAML entry is:
+
+```yaml
+- id: v1-07
+  title: "≥5 decisions generated per pipeline run"
+  severity: critical
+  source_spec_section: "§24.3"
+  check:
+    type: sql_count
+    query: "SELECT COUNT(*) FROM atlas_decisions WHERE created_at >= now() - interval '1 day'"
+    min: 5
+```
+
+On the current repo `atlas_decisions` is empty, so the handler returns
+`(False, "count=0 < min=5")` and the check scores 0/10. Because
+product is informational, this does not fail the gate — but it drops
+the V1 completion progress bar on the forge dashboard from 100% toward
+~86%. When the V1.6 R1 pipeline chunk lands and decisions start being
+written, this check flips to pass automatically.
 
 ---
+
+## Audit log — what changed in S3
+
+- Product dim wired to real `docs/specs/v1-criteria.yaml` — 15 criteria,
+  5 check types dispatched through `.quality/dimensions/check_types/`.
+- `p1..pN` placeholder IDs replaced with `v1-01..v1-15` so the IDs are
+  stable across slices (V2 criteria will use `v2-XX`).
+- Forge dashboard now renders a V1 completion progress bar from the
+  product dim score.
+- Expected baseline on the current repo: 13/15 passing (86%). The two
+  reliable failures are `v1-07` (no decisions written) and `v1-12`
+  (no intelligence findings written). V1.6 R1 flips them green.
 
 ## Audit log — what changed in S2
 

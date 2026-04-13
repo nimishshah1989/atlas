@@ -1,0 +1,150 @@
+version: "1"
+slice: "V1"
+source: "ATLAS-DEFINITIVE-SPEC.md §24.3"
+
+# Each criterion here is one executable check on the product dim.
+# Criteria 7 and 12 are expected to fail on the current repo because
+# nothing generates decisions or intelligence findings yet — that's the
+# whole point of V1.6 R1. product dim stays gating:false until then.
+
+criteria:
+  - id: v1-01
+    title: "/stocks/universe returns valid data matching contract"
+    description: "GET /api/v1/stocks/universe returns 200 under the 2s budget."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: http_contract
+      url: "http://127.0.0.1:8010/api/v1/stocks/universe"
+      max_latency_ms: 2000
+
+  - id: v1-02
+    title: "/stocks/sectors returns 31 sectors with 22 metrics each"
+    description: "Each sector row must carry at least 22 metric columns beyond the sector label."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_sectors_shape"
+
+  - id: v1-03
+    title: "/stocks/{symbol} returns deep-dive for any stock"
+    description: "GET /api/v1/stocks/RELIANCE returns 200 under the 500ms budget."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: http_contract
+      url: "http://127.0.0.1:8010/api/v1/stocks/RELIANCE"
+      max_latency_ms: 500
+
+  - id: v1-04
+    title: "/query handles basic equity queries (filters + sort)"
+    description: "POST /api/v1/query with a minimal filter returns 200."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_query_endpoint"
+
+  - id: v1-05
+    title: "Frontend: FM navigates Market → Sector → Stock flow"
+    description: "Key frontend pages/components for the FM flow exist in the build."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_fm_flow_files"
+
+  - id: v1-06
+    title: "Deep-dive panel shows all conviction pillar data"
+    description: "DeepDivePanel component exists and references the conviction pillars."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: file_exists
+      path: "frontend/src/components/DeepDivePanel.tsx"
+      min_size_bytes: 500
+
+  - id: v1-07
+    title: "≥5 decisions generated per pipeline run"
+    description: "atlas_decisions has at least 5 rows from the last 24h pipeline run."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: sql_count
+      query: "SELECT COUNT(*) FROM atlas_decisions WHERE created_at >= now() - interval '1 day'"
+      min: 5
+
+  - id: v1-08
+    title: "FM can accept / ignore / override decisions"
+    description: "Decisions endpoint exposed and decisions route module present."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_decisions_endpoint"
+
+  - id: v1-09
+    title: "Sector rollup stock_count sums to ~2,700"
+    description: "Sum of stock_count across /sectors must land in [2500, 2900]."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_sector_stock_count_sum"
+
+  - id: v1-10
+    title: "RS momentum present and numeric on deep-dive"
+    description: "GET /stocks/RELIANCE carries an rs_momentum field convertible to float."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_rs_momentum_present"
+
+  - id: v1-11
+    title: "pct_above_200dma exposed on /sectors and in [0,100]"
+    description: "Every sector row must carry pct_above_200dma in [0,100]."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_pct_above_200dma_bounds"
+
+  - id: v1-12
+    title: "≥10 intelligence findings stored after first pipeline run"
+    description: "atlas_intelligence has at least 10 rows from the last 24h pipeline run."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: sql_count
+      query: "SELECT COUNT(*) FROM atlas_intelligence WHERE created_at >= now() - interval '1 day'"
+      min: 10
+
+  - id: v1-13
+    title: "Integration test suite present"
+    description: "tests/integration/test_v1_endpoints.py exists and is non-trivial."
+    severity: high
+    source_spec_section: "§24.3"
+    check:
+      type: file_exists
+      path: "tests/integration/test_v1_endpoints.py"
+      min_size_bytes: 500
+
+  - id: v1-14
+    title: "No float in financial calculations"
+    description: "AST scan of backend/ finds zero `: float` annotations in money-handling code."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_no_float_in_finance"
+
+  - id: v1-15
+    title: "Response times: universe < 2s, deep-dive < 500ms"
+    description: "Re-run both critical endpoints against their latency budgets in one check."
+    severity: critical
+    source_spec_section: "§24.3"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks.check_response_time_budgets"

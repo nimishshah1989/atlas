@@ -38,23 +38,30 @@ CHECK_RESULT_RE = re.compile(
 # fanned out into CheckResult calls. The literal CheckResult regex misses those,
 # so we also pick up ("ID", "Name", ...) tuples that look like check entries.
 CHECK_TUPLE_RE = re.compile(
-    r'\(\s*"([0-9]+\.[0-9]+|b[0-9]+|p[0-9]+)"\s*,\s*"([^"]+)"\s*,\s*[0-9]+\s*\)',
+    r'\(\s*"([0-9]+\.[0-9]+|b[0-9]+|p[0-9]+|v[0-9]+-[0-9]{2})"\s*,\s*"([^"]+)"\s*,\s*[0-9]+\s*\)',
 )
 
 # ### 1.1 No hardcoded secrets   (ID followed by space then name)
 HEADING_RE = re.compile(
-    r"^###\s+([A-Za-z0-9_.]+)\s+(.+?)\s*$",
+    r"^###\s+([A-Za-z0-9_.-]+)\s+(.+?)\s*$",
     re.MULTILINE,
+)
+
+# S3: criterion IDs (v1-01 …) live in docs/specs/v1-criteria.yaml, not in
+# Python source. dim_product dispatches them at runtime by reading the YAML,
+# so the doc↔code sync check has to know about them too.
+CRITERIA_YAML = (
+    Path(__file__).resolve().parents[1] / "docs" / "specs" / "v1-criteria.yaml"
 )
 
 
 def collect_code_checks() -> dict[str, str]:
-    """Scan checks.py + dimensions/*.py for declared CheckResult IDs/names."""
+    """Scan checks.py + dimensions/*.py + v1-criteria.yaml for declared IDs."""
     out: dict[str, str] = {}
     sources = [QUALITY / "checks.py"]
     dims_dir = QUALITY / "dimensions"
     if dims_dir.exists():
-        sources.extend(sorted(dims_dir.glob("*.py")))
+        sources.extend(sorted(dims_dir.rglob("*.py")))
     for src in sources:
         text = src.read_text(encoding="utf-8", errors="replace")
         for regex in (CHECK_RESULT_RE, CHECK_TUPLE_RE):
@@ -69,6 +76,19 @@ def collect_code_checks() -> dict[str, str]:
                     out[cid] = f"__CONFLICT__ {existing} vs {name}"
                 elif not existing:
                     out[cid] = name
+    # Criterion IDs come from the YAML, not Python. Merge them in.
+    if CRITERIA_YAML.exists():
+        try:
+            import yaml  # type: ignore[import-untyped]
+
+            data = yaml.safe_load(CRITERIA_YAML.read_text()) or {}
+            for c in data.get("criteria", []):
+                cid = c.get("id")
+                title = c.get("title")
+                if cid and title:
+                    out[cid] = title
+        except Exception:  # noqa: BLE001
+            pass
     return out
 
 
@@ -80,8 +100,8 @@ def collect_doc_checks() -> dict[str, str]:
     out: dict[str, str] = {}
     for m in HEADING_RE.finditer(text):
         cid, name = m.group(1), m.group(2)
-        # Heading IDs always look like 1.1, 3.10, b1, p0 — skip prose headings.
-        if not re.match(r"^([0-9]+\.[0-9]+|b[0-9]+|p[0-9]+)$", cid):
+        # Heading IDs look like 1.1, 3.10, b1, p0, v1-01 — skip prose headings.
+        if not re.match(r"^([0-9]+\.[0-9]+|b[0-9]+|p[0-9]+|v[0-9]+-[0-9]{2})$", cid):
             continue
         out[cid] = name.strip()
     return out

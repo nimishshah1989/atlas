@@ -550,50 +550,6 @@
         }
       }
     },
-    "/api/v1/system/roadmap": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Roadmap",
-        "description": "Roadmap \u2014 parsed roadmap.yaml joined with state.db. 10s cached.",
-        "operationId": "roadmap_api_v1_system_roadmap_get",
-        "parameters": [
-          {
-            "name": "evaluate_slow",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Evaluate Slow"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SystemRoadmapResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/system/quality": {
       "get": {
         "tags": [
@@ -643,6 +599,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SystemLogsTailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/roadmap": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Roadmap",
+        "description": "Roadmap \u2014 parsed roadmap.yaml joined with state.db. 10s cached.",
+        "operationId": "roadmap_api_v1_system_roadmap_get",
+        "parameters": [
+          {
+            "name": "evaluate_slow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Evaluate Slow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemRoadmapResponse"
                 }
               }
             }
@@ -851,6 +851,17 @@
             },
             "type": "array",
             "title": "Steps"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
           }
         },
         "type": "object",

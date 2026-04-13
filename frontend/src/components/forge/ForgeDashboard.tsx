@@ -14,6 +14,7 @@ import {
 import HeartbeatStrip from "./HeartbeatStrip";
 import RoadmapTree from "./RoadmapTree";
 import QualityScores from "./QualityScores";
+import V1CompletionStrip from "./V1CompletionStrip";
 import ContextFiles, { type ContextFile } from "./ContextFiles";
 import LogTail from "./LogTail";
 
@@ -144,6 +145,9 @@ export default function ForgeDashboard({
           </h2>
           <RoadmapTree roadmap={state.roadmap} />
         </section>
+
+        {/* V1 completion — driven by product dim / v1-criteria.yaml */}
+        <V1CompletionStrip quality={state.quality} />
 
         {/* Quality scores */}
         <section className="bg-white border border-gray-200 rounded-lg p-4">

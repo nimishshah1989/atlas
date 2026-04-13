@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.jslwealth.in/schemas/v1-criteria.schema.json",
+  "title": "ATLAS slice completion criteria",
+  "description": "Machine-readable form of slice completion criteria. One file per slice (V1, V2, ...). Each criterion becomes one executable check in the product dim.",
+  "type": "object",
+  "required": ["version", "slice", "source", "criteria"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"type": "string", "description": "Schema version of this criteria file."},
+    "slice": {"type": "string", "description": "Slice name, e.g. V1, V2."},
+    "source": {"type": "string", "description": "Pointer back to the canonical spec section."},
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "severity", "source_spec_section", "check"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^v[0-9]+-[0-9]{2}$"},
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "severity": {"enum": ["critical", "high", "medium", "low", "info"]},
+          "source_spec_section": {"type": "string"},
+          "check": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {"enum": ["http_contract", "sql_count", "sql_invariant", "python_callable", "file_exists"]}
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "type": {"const": "http_contract"},
+                  "url": {"type": "string", "format": "uri"},
+                  "contract": {"type": "string"},
+                  "max_latency_ms": {"type": "integer", "minimum": 1}
+                },
+                "required": ["type", "url", "max_latency_ms"],
+                "additionalProperties": false
+              },
+              {
+                "properties": {
+                  "type": {"const": "sql_count"},
+                  "query": {"type": "string"},
+                  "min": {"type": "integer"},
+                  "max": {"type": "integer"}
+                },
+                "required": ["type", "query"],
+                "additionalProperties": false
+              },
+              {
+                "properties": {
+                  "type": {"const": "sql_invariant"},
+                  "query": {"type": "string"},
+                  "min": {"type": "number"},
+                  "max": {"type": "number"},
+                  "equals": {"type": ["number", "string"]}
+                },
+                "required": ["type", "query"],
+                "additionalProperties": false
+              },
+              {
+                "properties": {
+                  "type": {"const": "python_callable"},
+                  "dotted_path": {"type": "string"}
+                },
+                "required": ["type", "dotted_path"],
+                "additionalProperties": false
+              },
+              {
+                "properties": {
+                  "type": {"const": "file_exists"},
+                  "path": {"type": "string"},
+                  "min_size_bytes": {"type": "integer", "minimum": 0}
+                },
+                "required": ["type", "path"],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

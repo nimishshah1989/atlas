@@ -97,6 +97,65 @@ def _version_rollup(chunks: list[ChunkResponse]) -> RollupResponse:
     return RollupResponse(done=done, total=total, pct=pct)
 
 
+async def _build_chunk_response(
+    chunk, chunk_states: dict[str, dict], evaluate_slow: bool
+) -> ChunkResponse:
+    state = chunk_states.get(chunk.id, {})
+    step_responses: list[StepResponse] = []
+    for step in chunk.steps:
+        check_result, detail = await asyncio.to_thread(
+            evaluate_check, step.check, evaluate_slow
+        )
+        step_responses.append(
+            StepResponse(id=step.id, text=step.text, check=check_result, detail=detail)
+        )
+    return ChunkResponse(
+        id=chunk.id,
+        title=chunk.title,
+        status=state.get("status", "PENDING"),
+        attempts=state.get("attempts", 0),
+        updated_at=state.get("updated_at"),
+        steps=step_responses,
+        last_error=state.get("last_error"),
+    )
+
+
+def _build_orphan_lane(
+    chunk_states: dict[str, dict], referenced_ids: set[str]
+) -> VersionResponse | None:
+    """Fold orphan chunks (in state.db but missing from roadmap.yaml) into a
+    synthetic 'Quality & Infra' lane so every running chunk is visible on
+    the dashboard. Without this the orchestrator can be executing a chunk
+    the UI has no node for — which is exactly how S1–S4 went invisible."""
+    orphan_ids = sorted(cid for cid in chunk_states if cid not in referenced_ids)
+    if not orphan_ids:
+        return None
+    orphan_chunks = [
+        ChunkResponse(
+            id=cid,
+            title=chunk_states[cid].get("title") or "",
+            status=chunk_states[cid].get("status", "PENDING"),
+            attempts=chunk_states[cid].get("attempts", 0),
+            updated_at=chunk_states[cid].get("updated_at"),
+            steps=[],
+            last_error=chunk_states[cid].get("last_error"),
+        )
+        for cid in orphan_ids
+    ]
+    return VersionResponse(
+        id="SX",
+        title="Quality & Infra (orphan chunks from state.db)",
+        goal=(
+            "Chunks tracked by the orchestrator but not declared in "
+            "roadmap.yaml. Surfaced so no running chunk is invisible."
+        ),
+        status=_version_status(orphan_chunks),
+        rollup=_version_rollup(orphan_chunks),
+        chunks=orphan_chunks,
+        demo_gate=None,
+    )
+
+
 async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
     roadmap_file: RoadmapFile = await asyncio.to_thread(load_roadmap)
     chunk_states = await asyncio.to_thread(_load_chunk_states)
@@ -105,44 +164,11 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
     referenced_ids: set[str] = set()
 
     for version in roadmap_file.versions:
-        chunk_responses: list[ChunkResponse] = []
-
-        for chunk in version.chunks:
-            referenced_ids.add(chunk.id)
-            state = chunk_states.get(chunk.id, {})
-            status = state.get("status", "PENDING")
-            attempts = state.get("attempts", 0)
-            updated_at = state.get("updated_at")
-            last_error = state.get("last_error")
-
-            step_responses: list[StepResponse] = []
-            for step in chunk.steps:
-                check_result, detail = await asyncio.to_thread(
-                    evaluate_check, step.check, evaluate_slow
-                )
-                step_responses.append(
-                    StepResponse(
-                        id=step.id,
-                        text=step.text,
-                        check=check_result,
-                        detail=detail,
-                    )
-                )
-
-            chunk_responses.append(
-                ChunkResponse(
-                    id=chunk.id,
-                    title=chunk.title,
-                    status=status,
-                    attempts=attempts,
-                    updated_at=updated_at,
-                    steps=step_responses,
-                    last_error=last_error,
-                )
-            )
-
-        v_status = _version_status(chunk_responses)
-        rollup = _version_rollup(chunk_responses)
+        chunk_responses = [
+            await _build_chunk_response(c, chunk_states, evaluate_slow)
+            for c in version.chunks
+        ]
+        referenced_ids.update(c.id for c in version.chunks)
 
         demo_gate_resp = None
         if version.demo_gate:
@@ -156,47 +182,16 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
                 id=version.id,
                 title=version.title,
                 goal=version.goal,
-                status=v_status,
-                rollup=rollup,
+                status=_version_status(chunk_responses),
+                rollup=_version_rollup(chunk_responses),
                 chunks=chunk_responses,
                 demo_gate=demo_gate_resp,
             )
         )
 
-    # Fold orphan chunks (in state.db but missing from roadmap.yaml) into a
-    # synthetic "Quality & Infra" lane so every running chunk is visible on
-    # the dashboard. Without this the orchestrator can be executing a chunk
-    # the UI has no node for — which is exactly how S1–S4 went invisible.
-    orphan_ids = [cid for cid in chunk_states if cid not in referenced_ids]
-    if orphan_ids:
-        orphan_chunks: list[ChunkResponse] = []
-        for cid in sorted(orphan_ids):
-            state = chunk_states[cid]
-            orphan_chunks.append(
-                ChunkResponse(
-                    id=cid,
-                    title=state.get("title") or "",
-                    status=state.get("status", "PENDING"),
-                    attempts=state.get("attempts", 0),
-                    updated_at=state.get("updated_at"),
-                    steps=[],
-                    last_error=state.get("last_error"),
-                )
-            )
-        version_responses.append(
-            VersionResponse(
-                id="SX",
-                title="Quality & Infra (orphan chunks from state.db)",
-                goal=(
-                    "Chunks tracked by the orchestrator but not declared in "
-                    "roadmap.yaml. Surfaced so no running chunk is invisible."
-                ),
-                status=_version_status(orphan_chunks),
-                rollup=_version_rollup(orphan_chunks),
-                chunks=orphan_chunks,
-                demo_gate=None,
-            )
-        )
+    orphan_lane = _build_orphan_lane(chunk_states, referenced_ids)
+    if orphan_lane is not None:
+        version_responses.append(orphan_lane)
 
     return SystemRoadmapResponse(
         as_of=datetime.now(IST),
