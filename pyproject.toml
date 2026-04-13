@@ -11,3 +11,6 @@ select = ["E", "F", "W"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: requires real database and services (deselect with -m 'not integration')",
+]

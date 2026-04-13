@@ -13,7 +13,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
 from backend.config import get_settings
-from backend.routes import decisions, query, stocks, system
+from backend.routes import decisions, intelligence, query, stocks, system
 from backend.routes.system import health as _health_impl
 from backend.routes.system import ready as _ready_impl
 from backend.version import GIT_SHA, VERSION
@@ -69,6 +69,7 @@ async def _enforce_api_rate_limit(request: Request, call_next: Any) -> Any:
 app.include_router(stocks.router)
 app.include_router(query.router)
 app.include_router(decisions.router)
+app.include_router(intelligence.router)
 app.include_router(system.router)
 
 

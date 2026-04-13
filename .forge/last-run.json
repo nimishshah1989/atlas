@@ -1,7 +1,7 @@
 {
-  "chunk": "INFRA-DELTAGATE",
+  "chunk": "forge: chunk-V1-3 \u2014 intelligence writer service + API routes + vector search",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776102806
+  "ts": 1776103695
 }

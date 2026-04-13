@@ -365,13 +365,22 @@ class TestPgvector:
 
 class TestAlembicMigration:
     def test_alembic_at_head(self, pg_conn) -> None:
-        """Atlas alembic version must be at the v1_1_schema_parity revision."""
+        """Atlas alembic version must be at the current head revision."""
+        from alembic.config import Config  # type: ignore[import-untyped]
+        from alembic.script import ScriptDirectory  # type: ignore[import-untyped]
+
+        cfg = Config("/home/ubuntu/atlas/alembic.ini")
+        script = ScriptDirectory.from_config(cfg)
+        expected_head = script.get_heads()[0]
+
         cur = pg_conn.cursor()
         cur.execute("SELECT version_num FROM atlas_alembic_version")
         rows = cur.fetchall()
         cur.close()
         versions = [r[0] for r in rows]
-        assert "c118008a7781" in versions, f"Expected c118008a7781 in versions, got: {versions}"
+        assert expected_head in versions, (
+            f"Expected alembic head {expected_head} in versions, got: {versions}"
+        )
 
     def test_single_head(self) -> None:
         """Alembic script directory must have exactly one head (no branches)."""
