@@ -88,6 +88,36 @@ class RoadmapFile(BaseModel):
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _ROADMAP_PATH = _REPO_ROOT / "orchestrator" / "roadmap.yaml"
+_PLAN_PATH = _REPO_ROOT / "orchestrator" / "plan.yaml"
+
+
+def _load_plan_chunk_titles(path: Optional[Path] = None) -> dict[str, str]:
+    """Return {chunk_id: title} from plan.yaml.
+
+    The roadmap dashboard uses this to fill in titles for chunks that are
+    declared in roadmap.yaml with ``plan_ref: true`` and no ``title`` field.
+    Keeping the title in plan.yaml avoids having to maintain the same string
+    in two files; roadmap.yaml stays a pure status skeleton.
+    """
+    target = path or _PLAN_PATH
+    if not target.exists():
+        return {}
+    try:
+        raw: Any = yaml.safe_load(target.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        log.warning("plan_yaml_parse_error", path=str(target), error=str(exc))
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    result: dict[str, str] = {}
+    for chunk in raw.get("chunks", []) or []:
+        if not isinstance(chunk, dict):
+            continue
+        cid = chunk.get("id")
+        title = chunk.get("title")
+        if isinstance(cid, str) and isinstance(title, str) and title:
+            result[cid] = title
+    return result
 
 
 def load_roadmap(path: Optional[Path] = None) -> RoadmapFile:
@@ -113,10 +143,11 @@ def load_roadmap(path: Optional[Path] = None) -> RoadmapFile:
         return RoadmapFile(versions=[])
 
     versions_raw = raw.get("versions", [])
+    plan_titles = _load_plan_chunk_titles()
     versions: list[Version] = []
     for v_data in versions_raw:
         try:
-            version = _parse_version(v_data)
+            version = _parse_version(v_data, plan_titles)
             versions.append(version)
         except Exception as exc:
             log.warning(
@@ -129,10 +160,11 @@ def load_roadmap(path: Optional[Path] = None) -> RoadmapFile:
     return RoadmapFile(versions=versions)
 
 
-def _parse_version(data: dict) -> Version:
+def _parse_version(data: dict, plan_titles: Optional[dict[str, str]] = None) -> Version:
+    plan_titles = plan_titles or {}
     chunks: list[Chunk] = []
     for c_data in data.get("chunks", []):
-        chunks.append(_parse_chunk(c_data))
+        chunks.append(_parse_chunk(c_data, plan_titles))
 
     demo_gate_data = data.get("demo_gate")
     demo_gate = DemoGate(**demo_gate_data) if demo_gate_data else None
@@ -146,13 +178,16 @@ def _parse_version(data: dict) -> Version:
     )
 
 
-def _parse_chunk(data: dict) -> Chunk:
+def _parse_chunk(data: dict, plan_titles: Optional[dict[str, str]] = None) -> Chunk:
+    plan_titles = plan_titles or {}
     steps: list[Step] = []
     for s_data in data.get("steps", []):
         steps.append(_parse_step(s_data))
+    chunk_id = data["id"]
+    title = data.get("title") or plan_titles.get(chunk_id, "")
     return Chunk(
-        id=data["id"],
-        title=data.get("title", ""),
+        id=chunk_id,
+        title=title,
         steps=steps,
     )
 
