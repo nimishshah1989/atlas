@@ -323,7 +323,7 @@
           "decisions"
         ],
         "summary": "List Decisions",
-        "description": "List decisions, optionally filtered by entity, status, or entity_type.",
+        "description": "List decisions, optionally filtered by entity, user_action, or status.",
         "operationId": "list_decisions_api_v1_decisions_get",
         "parameters": [
           {
@@ -343,6 +343,22 @@
             }
           },
           {
+            "name": "user_action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Action"
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
@@ -356,22 +372,6 @@
                 }
               ],
               "title": "Status"
-            }
-          },
-          {
-            "name": "entity_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Entity Type"
             }
           },
           {
@@ -1012,11 +1012,20 @@
         "type": "object",
         "title": "DataFreshness"
       },
+      "DecisionAction": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "ACCEPTED",
+          "IGNORED",
+          "OVERRIDDEN"
+        ],
+        "title": "DecisionAction"
+      },
       "DecisionActionRequest": {
         "properties": {
-          "user_action": {
-            "type": "string",
-            "title": "User Action"
+          "action": {
+            "$ref": "#/components/schemas/DecisionAction"
           },
           "note": {
             "anyOf": [
@@ -1032,7 +1041,7 @@
         },
         "type": "object",
         "required": [
-          "user_action"
+          "action"
         ],
         "title": "DecisionActionRequest"
       },
@@ -1056,6 +1065,16 @@
         ],
         "title": "DecisionListResponse"
       },
+      "DecisionSignal": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "WATCH"
+        ],
+        "title": "DecisionSignal"
+      },
       "DecisionSummary": {
         "properties": {
           "id": {
@@ -1069,11 +1088,11 @@
           },
           "entity_type": {
             "type": "string",
-            "title": "Entity Type"
+            "title": "Entity Type",
+            "default": "equity"
           },
           "decision_type": {
-            "type": "string",
-            "title": "Decision Type"
+            "$ref": "#/components/schemas/DecisionSignal"
           },
           "rationale": {
             "type": "string",
@@ -1084,13 +1103,19 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Confidence"
           },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
           "horizon": {
             "type": "string",
             "title": "Horizon"
+          },
+          "horizon_end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Horizon End Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "active"
           },
           "source_agent": {
             "anyOf": [
@@ -1111,13 +1136,12 @@
           "user_action": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/DecisionAction"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "User Action"
+            ]
           },
           "user_action_at": {
             "anyOf": [
@@ -1147,12 +1171,11 @@
         "required": [
           "id",
           "entity",
-          "entity_type",
           "decision_type",
           "rationale",
           "confidence",
-          "status",
           "horizon",
+          "horizon_end_date",
           "created_at"
         ],
         "title": "DecisionSummary"
