@@ -18,7 +18,7 @@ import pytest
 from orchestrator import state_machine as sm
 from orchestrator.plan_loader import load_plan, PlanError
 from orchestrator.prompts import build_chunk_prompt
-from orchestrator.runner import Runner, _dims_to_dict
+from orchestrator.runner import Runner, _dims_map
 from orchestrator.state import StateStore
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -83,15 +83,28 @@ def test_next_ready_uses_natural_sort_not_lexical():
     assert nxt["id"] == "C5", "C5 must come before C10 with natural sort"
 
 
-def test_dims_to_dict_accepts_list_and_dict_shape():
-    list_shape = [
-        {"dimension": "security", "score": 80},
-        {"dimension": "code", "score": 42},
-    ]
-    assert _dims_to_dict(list_shape) == {"security": 80, "code": 42}
+def test_dims_map_accepts_legacy_and_s1_shape():
+    # S1 shape: {"dims": {name: {score, gating, ...}}}
+    s1 = {
+        "dims": {
+            "security": {"score": 80, "gating": True},
+            "code": {"score": 42, "gating": True},
+        }
+    }
+    out = _dims_map(s1)
+    assert out["security"]["score"] == 80
+    assert out["code"]["score"] == 42
 
-    dict_shape = {"security": {"score": 80}, "code": 42}
-    assert _dims_to_dict(dict_shape) == {"security": 80, "code": 42}
+    # Legacy shape: {"dimensions": [{"dimension": ..., "score": ...}]}
+    legacy = {
+        "dimensions": [
+            {"dimension": "security", "score": 80},
+            {"dimension": "code", "score": 42},
+        ]
+    }
+    out = _dims_map(legacy)
+    assert out["security"]["score"] == 80
+    assert out["code"]["score"] == 42
 
 
 def test_runner_dry_run_drives_all_chunks_to_done(tmp_path: Path):

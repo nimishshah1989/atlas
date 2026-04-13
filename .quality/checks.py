@@ -982,6 +982,43 @@ def dim_architecture() -> DimensionResult:
         )
     )
 
+    # 3.10 Doc/code bidirectional sync — standards.md and checks.py must
+    # describe the same set of checks. Drift here means either the engine
+    # added a check the rubric never explained, or the rubric promised a
+    # check the engine doesn't run.
+    try:
+        from verify_doc_matches_code import (  # type: ignore[import-not-found]
+            collect_code_checks,
+            collect_doc_checks,
+            diff,
+            total_drift,
+        )
+
+        drift_report = diff(collect_code_checks(), collect_doc_checks())
+        drift = total_drift(drift_report)
+        if drift == 0:
+            doc_score = 10
+            doc_evidence = "standards.md ↔ checks.py in sync"
+        else:
+            doc_score = 0
+            parts = [f"{k}={len(v)}" for k, v in drift_report.items() if v]
+            doc_evidence = f"drift={drift} ({', '.join(parts)})"
+    except Exception as exc:  # noqa: BLE001
+        doc_score = 0
+        doc_evidence = f"verify_doc_matches_code failed: {str(exc)[:80]}"
+    checks.append(
+        CheckResult(
+            "3.10",
+            "Standards doc matches code",
+            doc_score,
+            10,
+            doc_evidence,
+            "Does the rubric still describe the engine that runs?",
+            "Add/rename the missing entries in .quality/standards.md.",
+            "high" if doc_score == 0 else "info",
+        )
+    )
+
     return DimensionResult("architecture", checks)
 
 

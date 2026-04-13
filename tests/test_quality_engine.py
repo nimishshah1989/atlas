@@ -33,11 +33,22 @@ def test_quality_script_runs_and_emits_report():
     )
     assert REPORT.exists(), f"no report.json after run; stderr={proc.stderr}"
     report = json.loads(REPORT.read_text())
-    assert "overall" in report
-    assert isinstance(report["overall"], (int, float))
-    assert "dimensions" in report
-    assert isinstance(report["dimensions"], list)
-    assert report["dimensions"], "no dimensions scored"
-    expected = {"security", "code", "architecture", "frontend", "devops", "docs", "api"}
-    seen = {d["dimension"] for d in report["dimensions"] if "dimension" in d}
-    assert expected.issubset(seen), f"missing dimensions: {expected - seen}"
+    # S1 removed the composite "overall" score — 7 independent dims now.
+    assert "dims" in report, "report missing dims block"
+    assert isinstance(report["dims"], dict)
+    expected = {
+        "security",
+        "code",
+        "architecture",
+        "api",
+        "frontend",
+        "backend",
+        "product",
+    }
+    seen = set(report["dims"].keys())
+    assert expected == seen, (
+        f"dim drift: extra={seen - expected} missing={expected - seen}"
+    )
+    for name, dim in report["dims"].items():
+        assert "score" in dim, f"{name} missing score"
+        assert "gating" in dim, f"{name} missing gating flag"
