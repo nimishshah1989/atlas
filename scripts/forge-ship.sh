@@ -39,9 +39,23 @@ else
   pytest tests/ -q || { log "FAIL: pytest"; exit 1; }
 fi
 
-# --- 2. Quality gate (71 checks) --------------------------------------
-log "step 2/5 — .quality/checks.py (71 checks)"
-python3 .quality/checks.py || { log "FAIL: quality gate"; exit 1; }
+# --- 2. Quality gate (71 checks + delta vs pre-chunk baseline) -------
+log "step 2/5 — .quality/checks.py (71 checks + delta gate)"
+BASELINE_FILE=".forge/baseline/current.json"
+BASELINE_CHUNK_FILE=".forge/baseline/current.chunk"
+GATE_ARGS=(--gate --save)
+if [ -f "$BASELINE_FILE" ] && [ -f "$BASELINE_CHUNK_FILE" ]; then
+  BASELINE_CHUNK=$(cat "$BASELINE_CHUNK_FILE")
+  if [ "$BASELINE_CHUNK" = "$CHUNK" ]; then
+    log "delta-gating against baseline captured at chunk start"
+    GATE_ARGS+=(--compare-baseline "$BASELINE_FILE")
+  else
+    log "baseline chunk mismatch ($BASELINE_CHUNK vs $CHUNK) — skipping delta gate"
+  fi
+else
+  log "no baseline present — running floor gate only (manual chunk or first run)"
+fi
+python3 .quality/checks.py "${GATE_ARGS[@]}" || { log "FAIL: quality gate"; exit 1; }
 
 # --- 3. Memory freshness ----------------------------------------------
 # The project memory status file must have been touched in the last 10

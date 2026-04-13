@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-2: Embedding adapter \u2014 OpenAI primary + nomic fallback, 11 tests, all vectors 1536-dim",
+  "chunk": "INFRA-DELTAGATE",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776101111
+  "ts": 1776102806
 }

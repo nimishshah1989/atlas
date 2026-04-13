@@ -241,6 +241,29 @@ class LocalImplementStage:
         state.mark_in_progress(chunk.id, ctx.runner_pid, ctx.state_db_path)
         ctx.session_started_at = now_ist()
 
+        # Snapshot quality baseline so forge-ship.sh can delta-gate this chunk
+        # against the last-shipped state. Missing report.json = first chunk or
+        # manual run; delta check becomes a no-op.
+        import shutil as _shutil
+
+        baseline_src = ctx.repo / ".quality" / "report.json"
+        baseline_dir = ctx.repo / ".forge" / "baseline"
+        baseline_dir.mkdir(parents=True, exist_ok=True)
+        baseline_dst = baseline_dir / "current.json"
+        if baseline_src.exists():
+            _shutil.copy2(baseline_src, baseline_dst)
+            (baseline_dir / "current.chunk").write_text(chunk.id)
+            logger.info(
+                "baseline_snapshot_ok",
+                chunk_id=chunk.id,
+                baseline_path=str(baseline_dst),
+            )
+        else:
+            # No prior report — remove stale baseline so ship script skips delta check
+            baseline_dst.unlink(missing_ok=True)
+            (baseline_dir / "current.chunk").unlink(missing_ok=True)
+            logger.info("baseline_snapshot_skip", chunk_id=chunk.id, reason="no_prior_report")
+
         # Runner-state: session starting
         _update_runner_state(ctx, current_chunk=chunk.id)
 

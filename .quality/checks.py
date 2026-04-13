@@ -1435,6 +1435,12 @@ def main() -> int:
     )
     ap.add_argument("--gate", action="store_true", help="exit 1 if any gating dim < 80")
     ap.add_argument("--save", action="store_true", help="write report to .quality/report.json")
+    ap.add_argument(
+        "--compare-baseline",
+        metavar="PATH",
+        help="path to a prior report.json; with --gate, fail if any gating dim regresses "
+        ">2pts or any non-gating dim regresses >5pts vs baseline, even if still above floor",
+    )
     args = ap.parse_args()
 
     report = registry_run_all(args.dim)
@@ -1449,7 +1455,32 @@ def main() -> int:
     if args.gate:
         dims = report.get("dims", {})
         failed = [n for n, d in dims.items() if d.get("gating") and d["score"] < 80]
-        return 1 if failed else 0
+        if failed:
+            print(f" DELTA-GATE: FLOOR FAIL — gating dims below 80: {', '.join(failed)}")
+            return 1
+        if args.compare_baseline:
+            baseline_path = Path(args.compare_baseline)
+            if not baseline_path.exists():
+                print(f" DELTA-GATE: baseline {baseline_path} missing — skipping delta check")
+            else:
+                baseline = json.loads(baseline_path.read_text())
+                base_dims = baseline.get("dims", {})
+                regressions: list[str] = []
+                for name, d in dims.items():
+                    if name not in base_dims:
+                        continue
+                    delta = d["score"] - base_dims[name]["score"]
+                    tolerance = -2 if d.get("gating") else -5
+                    if delta < tolerance:
+                        regressions.append(
+                            f"{name} {base_dims[name]['score']}→{d['score']} (Δ{delta:+d}, "
+                            f"tol {tolerance})"
+                        )
+                if regressions:
+                    print(" DELTA-GATE: REGRESSION FAIL — " + "; ".join(regressions))
+                    return 1
+                print(" DELTA-GATE: PASS — no dim regressed beyond tolerance vs baseline")
+        return 0
     return 0
 
 
