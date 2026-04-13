@@ -5,24 +5,11 @@ import {
   getStockDeepDive,
   getRsHistory,
   type StockDeepDive,
-  type RsHistoryResponse,
 } from "@/lib/api";
-import {
-  formatDecimal,
-  formatCurrency,
-  quadrantColor,
-  quadrantBg,
-  signColor,
-} from "@/lib/format";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
+import { formatCurrency, quadrantBg, quadrantColor } from "@/lib/format";
+import RsChart, { type RsPoint } from "./deepdive/RsChart";
+import ConvictionPillars from "./deepdive/ConvictionPillars";
+import KeyTechnicalsGrid from "./deepdive/KeyTechnicalsGrid";
 
 export default function DeepDivePanel({
   symbol,
@@ -32,17 +19,12 @@ export default function DeepDivePanel({
   onBack: () => void;
 }) {
   const [stock, setStock] = useState<StockDeepDive | null>(null);
-  const [rsData, setRsData] = useState<
-    { date: string; rs: number | null }[]
-  >([]);
+  const [rsData, setRsData] = useState<RsPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      getStockDeepDive(symbol),
-      getRsHistory(symbol, 12),
-    ])
+    Promise.all([getStockDeepDive(symbol), getRsHistory(symbol, 12)])
       .then(([dive, hist]) => {
         setStock(dive.stock);
         setRsData(
@@ -72,12 +54,10 @@ export default function DeepDivePanel({
 
   if (!stock) return <div>Stock not found</div>;
 
-  const { conviction } = stock;
-  const q = conviction.rs.quadrant;
+  const q = stock.conviction.rs.quadrant;
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -114,174 +94,9 @@ export default function DeepDivePanel({
         </div>
       </div>
 
-      {/* RS Chart */}
-      <div className="border rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">
-          Relative Strength vs NIFTY 500 (12m)
-        </h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={rsData}>
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 10 }}
-              tickFormatter={(v) => v.slice(5)}
-            />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip
-              contentStyle={{ fontSize: 12 }}
-              labelFormatter={(v) => `Date: ${v}`}
-            />
-            <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="3 3" />
-            <Line
-              type="monotone"
-              dataKey="rs"
-              stroke="#1D9E75"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Conviction Pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Pillar 1: RS */}
-        <div className="border rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Pillar 1: Relative Strength
-          </h3>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">RS Composite</span>
-              <span className={`font-medium ${signColor(conviction.rs.rs_composite)}`}>
-                {formatDecimal(conviction.rs.rs_composite)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Momentum</span>
-              <span className={`font-medium ${signColor(conviction.rs.rs_momentum)}`}>
-                {formatDecimal(conviction.rs.rs_momentum)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">1W / 1M / 3M</span>
-              <span className="text-xs tabular-nums">
-                {formatDecimal(conviction.rs.rs_1w, 1)} /{" "}
-                {formatDecimal(conviction.rs.rs_1m, 1)} /{" "}
-                {formatDecimal(conviction.rs.rs_3m, 1)}
-              </span>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 italic">
-            {conviction.rs.explanation}
-          </p>
-        </div>
-
-        {/* Pillar 2: Technical */}
-        <div className="border rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Pillar 2: Technical Health
-          </h3>
-          <div className="text-2xl font-bold text-center mb-2">
-            <span
-              className={
-                conviction.technical.checks_passing >= 7
-                  ? "text-emerald-600"
-                  : conviction.technical.checks_passing >= 4
-                    ? "text-amber-600"
-                    : "text-red-600"
-              }
-            >
-              {conviction.technical.checks_passing}
-            </span>
-            <span className="text-gray-400 text-lg">
-              /{conviction.technical.checks_total}
-            </span>
-          </div>
-          <div className="space-y-1">
-            {conviction.technical.checks.map((c) => (
-              <div
-                key={c.name}
-                className="flex items-center gap-1.5 text-xs"
-              >
-                <span
-                  className={
-                    c.value === "N/A"
-                      ? "text-gray-400"
-                      : c.passing
-                        ? "text-emerald-500"
-                        : "text-red-500"
-                  }
-                >
-                  {c.value === "N/A" ? "○" : c.passing ? "●" : "●"}
-                </span>
-                <span className="text-gray-600">{c.name}</span>
-                <span className="text-gray-400 ml-auto truncate max-w-[100px]">
-                  {c.value !== "N/A" ? c.value : "—"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Pillar 3: Institutional */}
-        <div className="border rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Pillar 3: Institutional
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <div className="text-xs text-gray-500">MF Holders</div>
-              <div className="text-2xl font-bold">
-                {conviction.institutional.mf_holder_count ?? "—"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">Delivery vs Avg</div>
-              <div className="text-lg font-medium">
-                {conviction.institutional.delivery_vs_avg
-                  ? `${formatDecimal(conviction.institutional.delivery_vs_avg)}x`
-                  : "—"}
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 italic">
-            {conviction.institutional.explanation}
-          </p>
-        </div>
-      </div>
-
-      {/* Key Technicals Grid */}
-      <div className="border rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Key Technicals
-        </h3>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm">
-          {[
-            { label: "RSI", value: stock.rsi_14, fmt: (v: string) => formatDecimal(v, 1) },
-            { label: "ADX", value: stock.adx_14, fmt: (v: string) => formatDecimal(v, 1) },
-            { label: "MACD", value: stock.macd_histogram, fmt: (v: string) => formatDecimal(v, 4) },
-            { label: "Beta", value: stock.beta_nifty, fmt: formatDecimal },
-            { label: "Sharpe 1Y", value: stock.sharpe_1y, fmt: formatDecimal },
-            { label: "Sortino 1Y", value: stock.sortino_1y, fmt: formatDecimal },
-            { label: "Max DD 1Y", value: stock.max_drawdown_1y, fmt: (v: string) => `${formatDecimal(v)}%` },
-            { label: "Vol 20d", value: stock.volatility_20d, fmt: (v: string) => `${formatDecimal(v)}%` },
-            { label: "SMA 50", value: stock.sma_50, fmt: (v: string) => formatCurrency(v) },
-            { label: "SMA 200", value: stock.sma_200, fmt: (v: string) => formatCurrency(v) },
-            { label: "200 DMA", value: stock.above_200dma, fmt: (v: boolean) => v ? "Above" : "Below" },
-            { label: "50 DMA", value: stock.above_50dma, fmt: (v: boolean) => v ? "Above" : "Below" },
-          ].map((item) => (
-            <div key={item.label}>
-              <div className="text-xs text-gray-500">{item.label}</div>
-              <div className={`font-medium ${item.value !== null && item.value !== undefined ? signColor(item.value as string) : ""}`}>
-                {item.value !== null && item.value !== undefined
-                  ? (item.fmt as (v: unknown) => string)(item.value)
-                  : "—"}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <RsChart data={rsData} />
+      <ConvictionPillars conviction={stock.conviction} />
+      <KeyTechnicalsGrid stock={stock} />
     </div>
   );
 }

@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUniverse, type StockSummary, type SectorGroup } from "@/lib/api";
-import {
-  formatDecimal,
-  formatCurrency,
-  quadrantColor,
-  quadrantBg,
-  signColor,
-} from "@/lib/format";
+import { getUniverse, type StockSummary } from "@/lib/api";
+import StockTableRow from "./stocktable/StockTableRow";
 
 export default function StockTable({
   sector,
@@ -28,10 +22,7 @@ export default function StockTable({
   useEffect(() => {
     setLoading(true);
     getUniverse({ sector })
-      .then((res) => {
-        const allStocks = res.sectors.flatMap((sg) => sg.stocks);
-        setStocks(allStocks);
-      })
+      .then((res) => setStocks(res.sectors.flatMap((sg) => sg.stocks)))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [sector]);
@@ -135,76 +126,7 @@ export default function StockTable({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {sorted.map((s) => (
-              <tr
-                key={s.id}
-                className="hover:bg-gray-50 cursor-pointer"
-                onClick={() => onSelectStock(s.symbol)}
-              >
-                <td className="px-2 py-1.5 font-medium text-[#1D9E75] whitespace-nowrap">
-                  {s.symbol}
-                </td>
-                <td className="px-2 py-1.5 text-gray-700 max-w-[200px] truncate">
-                  {s.company_name}
-                </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">
-                  {formatCurrency(s.close)}
-                </td>
-                <td
-                  className={`px-2 py-1.5 text-right tabular-nums font-medium ${signColor(s.rs_composite)}`}
-                >
-                  {formatDecimal(s.rs_composite)}
-                </td>
-                <td
-                  className={`px-2 py-1.5 text-right tabular-nums ${signColor(s.rs_momentum)}`}
-                >
-                  {formatDecimal(s.rs_momentum)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded border ${quadrantBg(s.quadrant)} ${quadrantColor(s.quadrant)}`}
-                  >
-                    {s.quadrant || "—"}
-                  </span>
-                </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">
-                  {formatDecimal(s.rsi_14, 1)}
-                </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">
-                  {formatDecimal(s.adx_14, 1)}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {s.above_200dma === true ? (
-                    <span className="text-emerald-500">●</span>
-                  ) : s.above_200dma === false ? (
-                    <span className="text-red-500">●</span>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className="px-2 py-1.5 text-center">
-                  {s.above_50dma === true ? (
-                    <span className="text-emerald-500">●</span>
-                  ) : s.above_50dma === false ? (
-                    <span className="text-red-500">●</span>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">
-                  {formatDecimal(s.beta_nifty)}
-                </td>
-                <td
-                  className={`px-2 py-1.5 text-right tabular-nums ${signColor(s.sharpe_1y)}`}
-                >
-                  {formatDecimal(s.sharpe_1y)}
-                </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">
-                  {s.mf_holder_count ?? "—"}
-                </td>
-                <td className="px-2 py-1.5 text-center text-xs text-gray-500">
-                  {s.cap_category || "—"}
-                </td>
-              </tr>
+              <StockTableRow key={s.id} s={s} onSelect={onSelectStock} />
             ))}
           </tbody>
         </table>
