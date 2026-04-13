@@ -18,6 +18,30 @@ CHUNK_PROMPT = """\
 You are running as a stateless worker in the ATLAS forge orchestrator.
 This is chunk **{chunk_id}**: {title}
 
+# STEP 0 — Boot context (MANDATORY before any other action)
+
+You start with zero memory of prior chunks. Before you plan, implement,
+or edit a single file you MUST load the project's persistent context so
+you know what has already been built, decided, and learned. Read, in
+order:
+
+1. `CLAUDE.md` at repo root — the authoritative architect file. Full
+   spec pointer, Four Laws, schema facts, build order, conventions, and
+   the **post-chunk sync invariant**.
+2. `~/.claude/projects/-home-ubuntu-atlas/memory/MEMORY.md` — the
+   auto-memory index. One line per prior memory file. Open every memory
+   file whose description looks relevant to this chunk's punch list,
+   especially `project_v15_chunk_status.md` (the running chunk ledger)
+   and any `feedback_*.md` that applies to files you will touch.
+3. `~/.forge/knowledge/wiki/index.md` — the cross-project pattern wiki.
+   Identify patterns relevant to THIS chunk's files and tech, then read
+   ONLY those specific articles. Do NOT read the entire wiki.
+4. `ATLAS-DEFINITIVE-SPEC.md` — only the sections your punch list
+   touches. Use the table of contents; do not read end-to-end.
+
+If any of those files is missing, HALT and report — do not proceed with
+stale context.
+
 # Context
 - Repo: {repo_root}
 - Plan: orchestrator/plan.yaml (read-only — DO NOT edit)

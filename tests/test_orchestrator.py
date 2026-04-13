@@ -17,6 +17,7 @@ import pytest
 
 from orchestrator import state_machine as sm
 from orchestrator.plan_loader import load_plan, PlanError
+from orchestrator.prompts import build_chunk_prompt
 from orchestrator.runner import Runner, _dims_to_dict
 from orchestrator.state import StateStore
 
@@ -110,3 +111,21 @@ def test_runner_dry_run_drives_all_chunks_to_done(tmp_path: Path):
     assert completed.index("C5") < completed.index("C11")
     assert completed.index("C7") < completed.index("C11")  # C11 deps on C7
     assert completed.index("C8") < completed.index("C9")  # C9 deps on C8
+
+
+def test_chunk_prompt_includes_step0_boot_context():
+    """Every chunk prompt must force the worker to read CLAUDE.md,
+    MEMORY.md, and the wiki before touching any file. Regression guard
+    for the post-chunk sync + chunk boot-context protocol added after C9.
+    """
+    plan = load_plan(PLAN_PATH)
+    spec = next(c for c in plan.chunks if c.id == "C10")
+    prompt = build_chunk_prompt(
+        plan, spec, attempt=1, last_error=None, quality_report=None
+    )
+    assert "STEP 0" in prompt
+    assert "CLAUDE.md" in prompt
+    assert "MEMORY.md" in prompt
+    assert "project_v15_chunk_status.md" in prompt
+    assert "~/.forge/knowledge/wiki/index.md" in prompt
+    assert "ATLAS-DEFINITIVE-SPEC.md" in prompt

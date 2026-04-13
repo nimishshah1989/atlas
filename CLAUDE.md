@@ -312,13 +312,31 @@ The hook does, in order:
 1. Residual `git commit` of any tracked changes the session left behind.
 2. `git push origin HEAD`.
 3. Restart `atlas-backend.service` if the systemd unit is installed.
-4. Spawn `claude -p "/forge-compile"` headless so the wiki session is
-   captured without human nudging.
+4. Spawn ONE headless Claude that runs two tasks in sequence:
+   (a) `/forge-compile` — fold learnings into `~/.forge/knowledge/wiki/`.
+   (b) **Auto-memory sync** — update
+   `~/.claude/projects/-home-ubuntu-atlas/memory/project_v15_chunk_status.md`
+   with the new DONE row + commit hash + latest gate score, reconcile
+   the one-line hook in `MEMORY.md`, and add any new user-feedback /
+   project-decision memory files surfaced by the session. MEMORY.md is
+   the live summary every future chunk reads during Step 0 boot — it is
+   not allowed to go stale.
 
 If you run a chunk outside the orchestrator, you MUST invoke
 `scripts/post-chunk.sh <chunk_id>` manually before starting the next one.
-Do not skip the push or the compile — a chunk is not DONE until all
-three surfaces (git, EC2, wiki) agree.
+Do not skip the push, the compile, or the memory sync — a chunk is not
+DONE until git, EC2, wiki, AND MEMORY.md all agree.
+
+## Chunk boot-context protocol (Step 0)
+
+Every chunk prompt spawned by the orchestrator begins with a **Step 0 —
+Boot context** block. Before planning or editing anything, the worker
+MUST read, in order: (1) this `CLAUDE.md`, (2) `MEMORY.md` + every
+relevant memory file (especially `project_v15_chunk_status.md`), (3)
+relevant articles in `~/.forge/knowledge/wiki/` (via `index.md`, not
+end-to-end), and (4) only the sections of `ATLAS-DEFINITIVE-SPEC.md`
+that the punch list touches. A chunk that skips Step 0 is operating on
+stale context and will be rejected by review.
 
 ## Context Discipline
 
