@@ -1,5 +1,8 @@
 """ATLAS FastAPI application — Market Intelligence Engine."""
 
+import json
+from pathlib import Path
+
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +13,9 @@ from slowapi.util import get_remote_address
 
 from backend.config import get_settings
 from backend.routes import decisions, query, stocks, system
+from backend.routes.system import health as _health_impl
+from backend.routes.system import ready as _ready_impl
+from backend.version import GIT_SHA, VERSION
 
 structlog.configure(
     processors=[
@@ -65,13 +71,39 @@ app.include_router(decisions.router)
 app.include_router(system.router)
 
 
+@app.get("/", include_in_schema=False)
+async def root() -> dict:
+    return {
+        "service": "atlas-backend",
+        "version": VERSION,
+        "git_sha": GIT_SHA,
+        "docs": "/docs",
+        "health": "/health",
+        "ready": "/ready",
+    }
+
+
+# Bare-path aliases for load balancers / systemd / k8s probes that don't
+# want to know about the /api/v1 prefix.
+app.add_api_route("/health", _health_impl, methods=["GET"], tags=["system"])
+app.add_api_route("/ready", _ready_impl, methods=["GET"], tags=["system"])
+
+
 @app.on_event("startup")
 async def startup() -> None:
+    try:
+        spec_path = Path(__file__).resolve().parent / "openapi.json"
+        spec_path.write_text(json.dumps(app.openapi(), indent=2))
+    except OSError as exc:
+        log.warning("openapi_export_failed", error=str(exc))
+
     log.info(
         "atlas_starting",
         port=settings.atlas_api_port,
         cors_origins=ALLOWED_ORIGINS,
         rate_limit=settings.rate_limit_default,
+        version=VERSION,
+        git_sha=GIT_SHA,
     )
 
 

@@ -1,14 +1,16 @@
-"""System endpoints — health and status."""
+"""System endpoints — health, readiness, status."""
 
 import time
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status as http_status
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
-from backend.db.session import get_db
+from backend.db.session import async_session_factory, get_db
 from backend.models.schemas import DataFreshness, StatusResponse
+from backend.version import GIT_SHA, VERSION
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1", tags=["system"])
@@ -16,7 +18,36 @@ router = APIRouter(prefix="/api/v1", tags=["system"])
 
 @router.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    """Liveness probe — process is up and serving requests."""
+    return {"status": "ok", "version": VERSION, "git_sha": GIT_SHA}
+
+
+@router.get("/ready")
+async def ready(response: Response) -> dict:
+    """Readiness probe — dependencies (DB) reachable."""
+    checks: dict[str, dict] = {}
+    all_ok = True
+
+    t0 = time.monotonic()
+    try:
+        async with async_session_factory() as session:
+            await session.execute(text("SELECT 1"))
+        checks["database"] = {
+            "status": "ok",
+            "latency_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_ok = False
+        checks["database"] = {"status": "fail", "error": str(exc)[:200]}
+
+    if not all_ok:
+        response.status_code = http_status.HTTP_503_SERVICE_UNAVAILABLE
+    return {
+        "status": "ready" if all_ok else "not_ready",
+        "version": VERSION,
+        "git_sha": GIT_SHA,
+        "checks": checks,
+    }
 
 
 @router.get("/status", response_model=StatusResponse)
