@@ -11,9 +11,14 @@ settings:
   quality:
     script: .quality/checks.py
     report: .quality/report.json
-    # Minimum overall score a chunk must hit before its state can advance to DONE.
+    # Legacy composite — retained for C1–FD4 chunks that pre-date S1.
+    # Post-S1, the gate no longer reads min_overall; it reads
+    # min_per_gating_dim and iterates .quality/report.json's `dims` map.
     min_overall: 80
-    # Per-dimension floors. API is skipped when no live service is reachable.
+    min_per_gating_dim: 80
+    # Legacy per-dimension floors (pre-S1). Kept so mid-flight chunks
+    # don't break if they roll back onto this plan. S1 drops devops+docs
+    # and adds backend+product (backend+product start non-gating).
     min_dimensions:
       security: 80
       code: 70
@@ -21,6 +26,16 @@ settings:
       frontend: 70
       devops: 70
       docs: 75
+    # Post-S1 gating flags. S1 ships backend+product as non-gating;
+    # V1.6 R1 is the chunk that flips them to gating: true.
+    gating:
+      security: true
+      code: true
+      architecture: true
+      api: true
+      frontend: true
+      backend: false
+      product: false
   retry:
     max_attempts: 3
     backoff_seconds: 30
@@ -168,3 +183,85 @@ chunks:
       - Deploy backend to EC2 via C7 pipeline
       - Run .quality/checks.py --dimension api against live service
       - Confirm overall score ≥ 90 across all seven dimensions
+
+  # =====================================================================
+  # S1–S4: Scoring engine rewrite block (pre-V1.6).
+  # Fixes the composite/drift problem that let V1 ship without agents.
+  # Introduces: 7 dims (adds backend + product, folds/drops devops+docs),
+  # passed/eligible formula, no composite, per-dim 80% floor.
+  # backend + product dims start non-gating and flip to gating in V1.6 R1.
+  # Full specs: docs/specs/chunks/s{1,2,3,4}.md
+  # =====================================================================
+
+  - id: S1
+    title: "Scoring engine rewrite — 7 dims, no composite, per-dim 80% floor"
+    status: PENDING
+    depends_on: [FD-3]
+    spec: docs/specs/chunks/s1.md
+    quality_targets:
+      code: 85
+      architecture: 85
+    punch_list:
+      - Inventory current 53 checks; apply fold/keep/drop table from s1.md
+      - Add .quality/dimensions/ package with backend.py and product.py (stub)
+      - Gut composite from .quality/checks.py; emit per-dim DimensionResult
+      - Fold devops checks (docker_build, alembic_apply, pip_audit) into backend
+      - Fold docs checks (readme, claude_md_live, adr_count) into architecture
+      - Drop ceremony checks (ssl_expiry, bundle_size, wiki_freshness, etc.)
+      - Rewire orchestrator/runner.py _run_quality_gate to iterate gating dims
+      - Update plan.yaml settings.quality (already done in this diff)
+      - Update forge dashboard UI to render 7 bars, no composite
+      - Unit tests for dimension registry + runner gate logic
+      - Confirm 5 gating dims all ≥ 80 on current repo before DONE
+
+  - id: S2
+    title: "standards.md rewrite — audit 53, add backend+product rubrics"
+    status: PENDING
+    depends_on: [S1]
+    spec: docs/specs/chunks/s2.md
+    quality_targets:
+      architecture: 90
+    punch_list:
+      - Audit all 53 existing checks for KEEP/FOLD/DROP (match S1 code)
+      - Add missing checks surfaced by Forge Four Laws + project conventions
+      - Write full rubric for backend dim (10 checks, plain English + fix + severity)
+      - Write product dim framing + worked example (V1 criterion 7)
+      - Strip obsolete content (four platforms, composite formula, fix prompts)
+      - Add .quality/verify_doc_matches_code.py as new architecture check
+      - Every check in checks.py ↔ entry in standards.md (bidirectional)
+      - .quality/CHANGES.md with fold/drop/add log
+
+  - id: S3
+    title: "v1-criteria.yaml — wire §24.3 into product dim"
+    status: PENDING
+    depends_on: [S2]
+    spec: docs/specs/chunks/s3.md
+    quality_targets:
+      architecture: 85
+    punch_list:
+      - Write docs/specs/v1-criteria.schema.json
+      - Transcribe all 15 §24.3 criteria to docs/specs/v1-criteria.yaml
+      - Implement 5 check types (http_contract, sql_count, sql_invariant, python_callable, file_exists)
+      - Flesh out .quality/dimensions/product.py (S1 left it stubbed)
+      - Run product dim; confirm ~86% (13/15) with criteria 7+12 failing
+      - Add V1 completion progress bar to forge dashboard
+      - Product dim stays gating:false (V1.6 R1 flips it)
+
+  - id: S4
+    title: "CLAUDE.md surgery — strip to 80 lines, operational rules only"
+    status: PENDING
+    depends_on: [S3]
+    spec: docs/specs/chunks/s4.md
+    quality_targets:
+      architecture: 90
+    punch_list:
+      - Move Critical Schema Facts → docs/architecture/critical-schema-facts.md
+      - Move Data Flow → docs/architecture/data-flow.md
+      - Move Technology Stack → docs/architecture/tech-stack.md
+      - Delete V1 criteria list (now in v1-criteria.yaml)
+      - Delete Build Order V1→V10 (now in spec)
+      - Delete Hard Stop Conditions (now in standards.md)
+      - Rewrite remaining CLAUDE.md to 80–120 lines, operational only
+      - Preserve Four Laws, System Guarantees, post-chunk invariant, Step 0 protocol verbatim
+      - Verify all pointers resolve; grep-verify no scope strings remain
+      - All 5 gating dims still ≥ 80 post-rewrite
