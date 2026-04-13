@@ -38,6 +38,14 @@ class DecisionSignal(str, Enum):
     SELL = "SELL"
     HOLD = "HOLD"
     WATCH = "WATCH"
+    # Spec §23.2 decision types (lowercase to match DB values written by decisions-generator)
+    BUY_SIGNAL = "buy_signal"
+    SELL_SIGNAL = "sell_signal"
+    OVERWEIGHT = "overweight"
+    AVOID = "avoid"
+    ROTATION = "rotation"
+    REBALANCE = "rebalance"
+    REDUCE_EQUITY = "reduce_equity"
 
 
 class UQLOperator(str, Enum):
