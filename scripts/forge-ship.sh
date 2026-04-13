@@ -55,7 +55,7 @@ if [ -f "$BASELINE_FILE" ] && [ -f "$BASELINE_CHUNK_FILE" ]; then
 else
   log "no baseline present — running floor gate only (manual chunk or first run)"
 fi
-python3 .quality/checks.py "${GATE_ARGS[@]}" || { log "FAIL: quality gate"; exit 1; }
+PATH="${ROOT}/venv/bin:${PATH}" python3 .quality/checks.py "${GATE_ARGS[@]}" || { log "FAIL: quality gate"; exit 1; }
 
 # --- 3. Memory freshness ----------------------------------------------
 # The project memory status file must have been touched in the last 10
