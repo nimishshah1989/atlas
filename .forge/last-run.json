@@ -1,7 +1,7 @@
 {
-  "chunk": "forge: chunk-V1-3 \u2014 intelligence writer service + API routes + vector search",
+  "chunk": "V1-3: Intelligence writer service + intelligence API routes \u2014 store_finding idempotent upsert, vector similarity search, /api/v1/intelligence endpoints, alembic migration for natural key index",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776103695
+  "ts": 1776103850
 }
