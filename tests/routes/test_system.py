@@ -667,3 +667,67 @@ class TestCacheBehavior:
         body2 = resp2.json()
         # as_of should be identical (same cached response)
         assert body1["as_of"] == body2["as_of"]
+
+
+class TestStateDbReadOnly:
+    """Regression: state.db must open in sqlite URI ro mode so systemd
+    hardening (ProtectHome=read-only + ReadWritePaths excluding orchestrator/)
+    can't break chunk status readout. Previously the backend opened rw and
+    failed with 'unable to open database file' on the live host, which
+    caused the dashboard to show V1 PENDING while state.db had DONE.
+    """
+
+    def test_load_chunk_states_reads_done_from_readonly_db(self, tmp_path):
+        """_load_chunk_states should return DONE even if the db file path
+        is in a dir the process cannot write to."""
+        import sqlite3
+
+        from backend.routes import system as system_mod
+
+        db_path = tmp_path / "state.db"
+        conn = sqlite3.connect(str(db_path))
+        conn.execute(
+            "CREATE TABLE chunks (id TEXT, status TEXT, attempts INT, updated_at TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO chunks VALUES ('C1','DONE',0,'2026-04-13T06:52:14+00:00')"
+        )
+        conn.commit()
+        conn.close()
+
+        with patch.object(system_mod, "_STATE_DB", db_path):
+            states = system_mod._load_chunk_states()
+
+        assert "C1" in states
+        assert states["C1"]["status"] == "DONE"
+
+    def test_load_chunk_states_uses_uri_ro_mode(self, tmp_path, monkeypatch):
+        """sqlite3.connect must be called with a file: URI that includes
+        mode=ro. This is what lets us open the db under systemd
+        ProtectHome=read-only."""
+        import sqlite3
+
+        from backend.routes import system as system_mod
+
+        db_path = tmp_path / "state.db"
+        conn = sqlite3.connect(str(db_path))
+        conn.execute(
+            "CREATE TABLE chunks (id TEXT, status TEXT, attempts INT, updated_at TEXT)"
+        )
+        conn.commit()
+        conn.close()
+
+        captured: dict = {}
+        real_connect = sqlite3.connect
+
+        def spy_connect(*args, **kwargs):
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            return real_connect(*args, **kwargs)
+
+        monkeypatch.setattr(system_mod.sqlite3, "connect", spy_connect)
+        with patch.object(system_mod, "_STATE_DB", db_path):
+            system_mod._load_chunk_states()
+
+        assert captured["kwargs"].get("uri") is True
+        assert "mode=ro" in captured["args"][0]

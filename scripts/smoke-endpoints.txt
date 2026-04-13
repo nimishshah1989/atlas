@@ -28,5 +28,11 @@ http://localhost:8010/api/v1/stocks/sectors
 ?http://localhost:8010/api/v1/system/roadmap
 ?http://localhost:8010/api/v1/system/quality
 
-# Forge dashboard frontend (FD-4 — optional: 200 or 401 accepted).
-?http://localhost:3000/forge
+# Forge dashboard — HARD probes via the public HTTPS URL. If these fail,
+# the dashboard is effectively down for users and the chunk must BLOCK.
+# This is the "dashboard never goes down" guarantee in smoke-probe form.
+https://atlas.jslwealth.in/forge
+https://atlas.jslwealth.in/api/v1/system/heartbeat
+
+# Local loopback probes (catch failures before nginx layer too).
+http://localhost:3000/forge

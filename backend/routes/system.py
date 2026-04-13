@@ -227,7 +227,10 @@ def _state_db_info() -> dict:
     result["state_db_mtime"] = _file_mtime_ist(_STATE_DB)
 
     try:
-        conn = sqlite3.connect(str(_STATE_DB))
+        # Read-only URI mode — the backend never writes state.db, and under
+        # systemd hardening (ProtectHome=read-only) a normal rw connect fails
+        # to create the WAL/journal file with "unable to open database file".
+        conn = sqlite3.connect(f"file:{_STATE_DB}?mode=ro&immutable=1", uri=True)
         try:
             # Last DONE chunk
             row = conn.execute(
@@ -397,7 +400,8 @@ def _load_chunk_states() -> dict[str, dict]:
     if not _STATE_DB.exists():
         return states
     try:
-        conn = sqlite3.connect(str(_STATE_DB))
+        # Read-only URI mode — same reason as _state_db_info above.
+        conn = sqlite3.connect(f"file:{_STATE_DB}?mode=ro&immutable=1", uri=True)
         try:
             rows = conn.execute(
                 "SELECT id, status, attempts, updated_at FROM chunks"

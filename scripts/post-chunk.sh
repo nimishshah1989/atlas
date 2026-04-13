@@ -94,6 +94,19 @@ else
 fi
 
 # --- 3. Redeploy on-box services ---------------------------------------
+# 3.a Reconcile host artifacts (systemd units, env files, nginx site) from
+# what the repo ships. Idempotent. This is the thing that makes the
+# dashboard survive drift — if someone rebuilt the box, deleted a file,
+# or a chunk's changes altered the repo unit/nginx config, this step
+# reinstalls and reloads before the build+restart sequence below.
+if [ -x "$REPO_ROOT/scripts/bootstrap-host.sh" ]; then
+  log "running host bootstrap (systemd + nginx reconcile)"
+  if ! REPO_ROOT="$REPO_ROOT" "$REPO_ROOT/scripts/bootstrap-host.sh"; then
+    err "host bootstrap failed — chunk will be BLOCKED"
+    exit 1
+  fi
+fi
+
 # Backend: restart uvicorn if a systemd unit exists; otherwise skip (the
 # dev loop restarts it manually). Frontend: next dev hot-reloads.
 if systemctl list-unit-files 2>/dev/null | grep -q '^atlas-backend\.service'; then
