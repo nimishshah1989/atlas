@@ -15,7 +15,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import AtlasIntelligence
-from backend.services.embedding import embed
+from backend.services.embedding import EmbeddingError, embed
 
 log = structlog.get_logger(__name__)
 
@@ -61,7 +61,8 @@ async def store_finding(
 
     Raises:
         ValueError: if confidence is not in [0, 1] or data_as_of is naive.
-        EmbeddingError: if embedding generation fails.
+        EmbeddingError: never raised — embedding failures are logged and skipped
+            (System Guarantee #3: fault-tolerant, partial data > no data).
     """
     if data_as_of.tzinfo is None:
         raise ValueError("data_as_of must be timezone-aware")
@@ -69,7 +70,16 @@ async def store_finding(
         raise ValueError(f"confidence must be in [0, 1], got {confidence}")
 
     embed_text = f"{title} | {content} | Entity: {entity}"
-    embedding_vector = await embed(embed_text)
+    embedding_vector: list[float] | None = None
+    try:
+        embedding_vector = await embed(embed_text)
+    except EmbeddingError:
+        log.warning(
+            "embedding_unavailable",
+            agent_id=agent_id,
+            entity=entity,
+            detail="Finding will be stored without embedding vector",
+        )
 
     expires_at = data_as_of + timedelta(hours=expires_hours)
 
@@ -150,12 +160,13 @@ async def store_finding(
     result = await db.execute(upsert_sql, params)
     returned_id = result.scalar_one()
 
-    # Update embedding via raw SQL to avoid pgvector type mismatch
+    # Update embedding via raw SQL to avoid pgvector type mismatch (only if embedding available)
     # Use CAST() not ::vector — asyncpg rejects ::type with :param syntax
-    embed_sql = text(
-        "UPDATE atlas_intelligence SET embedding = CAST(:vec AS vector) WHERE id = :rid"
-    )
-    await db.execute(embed_sql, {"vec": str(embedding_vector), "rid": str(returned_id)})
+    if embedding_vector is not None:
+        embed_sql = text(
+            "UPDATE atlas_intelligence SET embedding = CAST(:vec AS vector) WHERE id = :rid"
+        )
+        await db.execute(embed_sql, {"vec": str(embedding_vector), "rid": str(returned_id)})
 
     await db.commit()
 

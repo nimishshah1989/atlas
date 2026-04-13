@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-8: frontend wiring \u2014 DecisionPanel contract fix, FindingChips component, v1-fm-flow Playwright test (14 e2e tests green)",
+  "chunk": "V1-9",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776108504
+  "ts": 1776109448
 }

@@ -19,6 +19,22 @@ def _resolve_db_url() -> str | None:
         v = os.environ.get(key)
         if v:
             return v
+    # Try loading from .env file at project root
+    try:
+        from pathlib import Path
+
+        env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                line = line.strip()
+                if line.startswith("#") or "=" not in line:
+                    continue
+                k, _, val = line.partition("=")
+                k = k.strip()
+                if k in DB_URL_ENVS:
+                    return val.strip()
+    except Exception:  # noqa: BLE001
+        pass
     try:
         from backend.config import get_settings
 

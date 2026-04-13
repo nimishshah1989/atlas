@@ -110,4 +110,4 @@ def dim_product() -> DimensionResult:
             )
         )
 
-    return DimensionResult("product", checks, gating=False)
+    return DimensionResult("product", checks, gating=True)

@@ -34,8 +34,8 @@ settings:
       architecture: true
       api: true
       frontend: true
-      backend: false
-      product: false
+      backend: true
+      product: true
   retry:
     max_attempts: 3
     backoff_seconds: 30

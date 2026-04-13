@@ -52,7 +52,7 @@ def test_sql_count_bad_query_returns_false_cleanly() -> None:
 def test_dim_product_loads_yaml_and_returns_checks() -> None:
     result = product.dim_product()
     assert result.dimension == "product"
-    assert result.gating is False
+    assert result.gating is True  # V1-9 flipped product dim to gating=True
     # The YAML ships with 15 criteria. If S3 is wired, we should see them.
     v1_ids = [c.check_id for c in result.checks if c.check_id.startswith("v1-")]
     assert len(v1_ids) == 15, f"expected 15 v1-XX criteria, got {len(v1_ids)}"
