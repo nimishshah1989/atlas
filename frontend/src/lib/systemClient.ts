@@ -4,7 +4,10 @@
  * Use cache: 'no-store' on all fetches.
  */
 
-const BACKEND_BASE = "http://localhost:8010/api/v1/system";
+const BACKEND_BASE =
+  typeof window === "undefined"
+    ? "http://localhost:8010/api/v1/system"
+    : "/api/v1/system";
 
 // ---------------------------------------------------------------------------
 // Response interfaces — match PRD §7 byte-for-byte
