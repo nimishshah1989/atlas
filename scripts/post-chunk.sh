@@ -59,6 +59,22 @@ else
   log "no atlas-backend systemd unit — skipping backend restart"
 fi
 
+# --- 3.5 Smoke probe: verify deployed slice still responds -------------
+# Runs scripts/smoke-probe.sh against scripts/smoke-endpoints.txt. A hard
+# failure here exits non-zero, which makes the runner mark this chunk
+# BLOCKED — the whole point is to catch "green quality gate, dead product"
+# before the next chunk starts building on broken foundations. See
+# docs/specs/version-demo-gate.md for the rationale.
+if [ -x "$REPO_ROOT/scripts/smoke-probe.sh" ]; then
+  log "running post-deploy smoke probe"
+  if ! REPO_ROOT="$REPO_ROOT" "$REPO_ROOT/scripts/smoke-probe.sh"; then
+    log "smoke probe failed — leaving chunk for runner to mark BLOCKED"
+    exit 1
+  fi
+else
+  log "no smoke probe script — skipping slice regression check"
+fi
+
 # --- 4. Headless context sync: forge wiki + auto-memory ---------------
 # One Claude spawn, two jobs:
 #   (a) /forge-compile — fold session learnings into ~/.forge/knowledge/wiki/

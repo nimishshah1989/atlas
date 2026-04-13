@@ -1,0 +1,29 @@
+# scripts/smoke-endpoints.txt — post-deploy slice probes.
+#
+# Format: one URL per line. Blank lines and lines starting with # are ignored.
+# Lines starting with "?" are OPTIONAL — missing or 404 is not a failure, only
+# a non-2xx that returns some other code (e.g. 500) counts as regression. Use
+# this for endpoints that haven't been built yet but will be soon, so you can
+# add them before they exist without breaking the gate.
+#
+# The probe runs inside scripts/post-chunk.sh AFTER deploy, BEFORE context
+# sync. A non-zero exit here blocks the chunk transition to DONE and the
+# runner marks it BLOCKED. You fix the regression, then `orchestrator.cli
+# unblock <chunk>` to retry.
+#
+# Rule of thumb: every endpoint that is part of a "working vertical slice"
+# you've shipped goes here as a HARD probe. Endpoints that are WIP go here as
+# OPTIONAL (prefix with ?). When they go green, remove the ? to lock them in.
+
+# Backend health (always expected once backend is running).
+http://localhost:8010/health
+
+# V1 slice — Market → Sector → Stock. HARD because these shipped in V1.5.
+# Verified live at retrofit-complete (2026-04-13, gate 97/100).
+http://localhost:8010/api/v1/stocks/universe
+http://localhost:8010/api/v1/stocks/sectors
+
+# Forge dashboard backend data plane (other session's FD-1 will enable these).
+?http://localhost:8010/api/v1/system/heartbeat
+?http://localhost:8010/api/v1/system/roadmap
+?http://localhost:8010/api/v1/system/quality
