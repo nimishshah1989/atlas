@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import ChunkTable, { type ForgeChunk } from "./ChunkTable";
 import QualityScores, { type QualityReport } from "./QualityScores";
 import LogTail, { type LogPayload } from "./LogTail";
+import ContextFiles, { type ContextFile } from "./ContextFiles";
 
 type ForgeState = {
   now: string;
   chunks: ForgeChunk[];
   quality: QualityReport | null;
   log: LogPayload | null;
+  context: ContextFile[];
 };
 
 export default function ForgeDashboard() {
@@ -97,6 +99,13 @@ export default function ForgeDashboard() {
             </h2>
             <QualityScores report={data?.quality ?? null} />
           </div>
+        </div>
+
+        <div className="bg-white border rounded-lg p-4">
+          <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
+            Context Files — read by every chunk during Step 0 boot
+          </h2>
+          <ContextFiles files={data?.context ?? []} />
         </div>
 
         <div className="bg-white border rounded-lg p-4">

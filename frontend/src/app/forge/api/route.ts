@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
+import { listContextFiles } from "@/lib/forgeContext";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -86,6 +88,7 @@ export async function GET() {
       chunks: readChunks(),
       quality: readReport(),
       log: latestLog(),
+      context: listContextFiles(),
     },
     { headers: { "cache-control": "no-store" } }
   );
