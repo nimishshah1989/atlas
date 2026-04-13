@@ -1,0 +1,93 @@
+{
+  "project": "ATLAS Forge Dashboard v2",
+  "source_prd": "docs/specs/prd.md",
+  "chunk_plan": "docs/specs/chunk-plan.md",
+  "created": "2026-04-13",
+  "chunks": [
+    {
+      "id": "FD-1",
+      "name": "Backend data plane",
+      "spec": "docs/specs/chunks/chunk-1.md",
+      "status": "pending",
+      "depends_on": [],
+      "complexity": "M",
+      "estimate_hours": 1.5,
+      "files": [
+        "backend/routes/system.py",
+        "backend/core/roadmap_checks.py",
+        "backend/core/roadmap_loader.py",
+        "tests/routes/test_system.py",
+        "tests/core/test_roadmap_checks.py"
+      ],
+      "acceptance": "All 4 endpoints match frozen contract (PRD §7) plus /heartbeat has last_smoke_* fields. Check evaluator handles 5 types (file_exists, command, http_ok, db_query, smoke_list) with sandbox. smoke_list shells to scripts/smoke-probe.sh with 60s result cache. pytest + ruff + mypy clean."
+    },
+    {
+      "id": "FD-2",
+      "name": "Roadmap spine + lint",
+      "spec": "docs/specs/chunks/chunk-2.md",
+      "status": "pending",
+      "depends_on": [],
+      "complexity": "S",
+      "estimate_hours": 0.75,
+      "files": [
+        "orchestrator/roadmap.yaml",
+        "orchestrator/roadmap_schema.py",
+        "scripts/roadmap-lint.py",
+        "scripts/plan-to-roadmap.py",
+        "scripts/tasks-to-plan.py",
+        "tests/scripts/test_roadmap_lint.py",
+        "tests/scripts/test_plan_to_roadmap.py"
+      ],
+      "acceptance": "roadmap.yaml seeded V1 (real, with one smoke_list step per V2+) + V2-V10 (stubs) + V2 demo_gate. Optional DemoGate sub-model on Version. Lint catches 3/3 drift cases + demo_gate validation. plan-to-roadmap.py appends skeleton entries idempotently with ruamel.yaml round-trip. tasks-to-plan.py --auto-roadmap invokes it. Pre-commit wired."
+    },
+    {
+      "id": "FD-3",
+      "name": "Frontend redesign",
+      "spec": "docs/specs/chunks/chunk-3.md",
+      "status": "pending",
+      "depends_on": ["FD-1", "FD-2"],
+      "complexity": "L",
+      "estimate_hours": 3.0,
+      "files": [
+        "frontend/src/components/forge/HeartbeatStrip.tsx",
+        "frontend/src/components/forge/RoadmapTree.tsx",
+        "frontend/src/components/forge/VersionCard.tsx",
+        "frontend/src/components/forge/StepCheckRow.tsx",
+        "frontend/src/components/forge/ForgeDashboard.tsx",
+        "frontend/src/components/forge/QualityScores.tsx",
+        "frontend/src/components/forge/LogTail.tsx",
+        "frontend/src/components/forge/ContextFiles.tsx",
+        "frontend/src/lib/systemClient.ts",
+        "frontend/src/app/forge/page.tsx",
+        "frontend/src/app/forge/api/route.ts",
+        "frontend/src/middleware.ts"
+      ],
+      "acceptance": "Layout order matches PRD §6.4. Zero fs imports in /forge. Middleware token works (3 cases). Heartbeat strip has 6 chips including 'last smoke' that reads heartbeat endpoint's last_smoke_* fields. Visual pass in browser."
+    },
+    {
+      "id": "FD-4",
+      "name": "Deployment pipeline",
+      "spec": "docs/specs/chunks/chunk-4.md",
+      "status": "pending",
+      "depends_on": ["FD-3"],
+      "complexity": "S",
+      "estimate_hours": 0.75,
+      "files": [
+        "backend/systemd/atlas-frontend.service",
+        "scripts/post-chunk.sh",
+        "CONTRIBUTING.md"
+      ],
+      "acceptance": "Systemd unit installed and active. Step 3.b inserted inside Step 3 of post-chunk.sh; Step 3.5 smoke probe preserved byte-identical (diff test). Broken-build test keeps old build serving AND does not block chunk DONE (smoke probe is the gate). End-to-end smoke probe test proves BLOCKED on broken V1 endpoint. Live smoke at atlas.jslwealth.in/forge."
+    }
+  ],
+  "phase_4_verification": {
+    "qa": "Run /qa against atlas.jslwealth.in/forge. Browser walk-through US-1 through US-6.",
+    "cso": "OWASP + STRIDE focused on command sandbox, middleware token, Next.js proxy.",
+    "dashboard": "Run /forge-status to generate status page."
+  },
+  "phase_5_learn": {
+    "retro": "Run /retro.",
+    "wiki_harvest": "Copy session-log + chunk-plan into ~/.forge/knowledge/raw/atlas/.",
+    "compile": "Weekly cron or manual /forge-compile."
+  }
+}
