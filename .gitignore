@@ -23,3 +23,7 @@ orchestrator/logs/
 
 # Local Claude Code session state (per-session cache, not source)
 .claude/
+
+# spec-kit / specify CLI scaffolding — not part of ATLAS source
+.specify/
+specs/
