@@ -46,9 +46,7 @@ def test_quality_script_runs_and_emits_report():
         "product",
     }
     seen = set(report["dims"].keys())
-    assert expected == seen, (
-        f"dim drift: extra={seen - expected} missing={expected - seen}"
-    )
+    assert expected == seen, f"dim drift: extra={seen - expected} missing={expected - seen}"
     for name, dim in report["dims"].items():
         assert "score" in dim, f"{name} missing score"
         assert "gating" in dim, f"{name} missing gating flag"

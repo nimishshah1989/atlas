@@ -62,8 +62,7 @@ def upgrade() -> None:
         existing_type=postgresql.JSONB(astext_type=sa.Text()),
     )
     op.execute(
-        "UPDATE atlas_decisions SET supporting_data = '{}'::jsonb"
-        " WHERE supporting_data IS NULL"
+        "UPDATE atlas_decisions SET supporting_data = '{}'::jsonb WHERE supporting_data IS NULL"
     )
     op.alter_column(
         "atlas_decisions",

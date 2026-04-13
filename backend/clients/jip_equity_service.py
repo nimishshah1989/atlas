@@ -169,17 +169,27 @@ class JIPEquityService:
                 i.sector,
                 COUNT(*) AS stock_count,
                 AVG(r.rs_composite) AS avg_rs_composite,
-                AVG(r.rs_composite - COALESCE(r28.rs_composite_28d, r.rs_composite)) AS avg_rs_momentum,
-                COUNT(*) FILTER (WHERE t.above_200dma = true) * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_200dma,
-                COUNT(*) FILTER (WHERE t.above_50dma = true) * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_50dma,
-                COUNT(*) FILTER (WHERE t.close_adj > t.ema_21) * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_ema21,
+                AVG(r.rs_composite
+                    - COALESCE(r28.rs_composite_28d, r.rs_composite))
+                    AS avg_rs_momentum,
+                COUNT(*) FILTER (WHERE t.above_200dma = true)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_200dma,
+                COUNT(*) FILTER (WHERE t.above_50dma = true)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_50dma,
+                COUNT(*) FILTER (WHERE t.close_adj > t.ema_21)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_ema21,
                 AVG(t.rsi_14) AS avg_rsi_14,
-                COUNT(*) FILTER (WHERE t.rsi_14 > 70) * 100.0 / NULLIF(COUNT(*), 0) AS pct_rsi_overbought,
-                COUNT(*) FILTER (WHERE t.rsi_14 < 30) * 100.0 / NULLIF(COUNT(*), 0) AS pct_rsi_oversold,
+                COUNT(*) FILTER (WHERE t.rsi_14 > 70)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_rsi_overbought,
+                COUNT(*) FILTER (WHERE t.rsi_14 < 30)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_rsi_oversold,
                 AVG(t.adx_14) AS avg_adx,
-                COUNT(*) FILTER (WHERE t.adx_14 > 25) * 100.0 / NULLIF(COUNT(*), 0) AS pct_adx_trending,
-                COUNT(*) FILTER (WHERE t.macd_histogram > 0) * 100.0 / NULLIF(COUNT(*), 0) AS pct_macd_bullish,
-                COUNT(*) FILTER (WHERE t.roc_5 > 0) * 100.0 / NULLIF(COUNT(*), 0) AS pct_roc5_positive,
+                COUNT(*) FILTER (WHERE t.adx_14 > 25)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_adx_trending,
+                COUNT(*) FILTER (WHERE t.macd_histogram > 0)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_macd_bullish,
+                COUNT(*) FILTER (WHERE t.roc_5 > 0)
+                    * 100.0 / NULLIF(COUNT(*), 0) AS pct_roc5_positive,
                 AVG(t.beta_nifty) AS avg_beta,
                 AVG(t.sharpe_1y) AS avg_sharpe,
                 AVG(t.sortino_1y) AS avg_sortino,
@@ -221,9 +231,11 @@ class JIPEquityService:
                 LEFT JOIN rs_28d r28 ON r28.entity_id = i.id::text
                 WHERE i.is_active = true AND i.nifty_500 = true
             )
-            (SELECT *, 'gainer' AS mover_type FROM momentum ORDER BY rs_momentum DESC NULLS LAST LIMIT :lim)
+            (SELECT *, 'gainer' AS mover_type FROM momentum
+             ORDER BY rs_momentum DESC NULLS LAST LIMIT :lim)
             UNION ALL
-            (SELECT *, 'loser' AS mover_type FROM momentum ORDER BY rs_momentum ASC NULLS LAST LIMIT :lim)
+            (SELECT *, 'loser' AS mover_type FROM momentum
+             ORDER BY rs_momentum ASC NULLS LAST LIMIT :lim)
         """)
 
         query_result = await self.session.execute(query, {"lim": limit})

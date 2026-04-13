@@ -32,9 +32,7 @@ def upgrade() -> None:
         "atlas_decisions",
         "action",
         existing_type=sa.VARCHAR(length=20),
-        type_=sa.Enum(
-            "PENDING", "ACCEPTED", "IGNORED", "OVERRIDDEN", name="decisionactionenum"
-        ),
+        type_=sa.Enum("PENDING", "ACCEPTED", "IGNORED", "OVERRIDDEN", name="decisionactionenum"),
         existing_nullable=False,
         existing_server_default=sa.text("'PENDING'::character varying"),
     )
@@ -97,18 +95,10 @@ def downgrade() -> None:
         nullable=True,
         existing_server_default=sa.text("false"),
     )
-    op.drop_index(
-        op.f("ix_atlas_intelligence_finding_type"), table_name="atlas_intelligence"
-    )
-    op.drop_index(
-        op.f("ix_atlas_intelligence_entity_type"), table_name="atlas_intelligence"
-    )
-    op.drop_index(
-        op.f("ix_atlas_intelligence_entity_id"), table_name="atlas_intelligence"
-    )
-    op.drop_index(
-        op.f("ix_atlas_intelligence_agent_name"), table_name="atlas_intelligence"
-    )
+    op.drop_index(op.f("ix_atlas_intelligence_finding_type"), table_name="atlas_intelligence")
+    op.drop_index(op.f("ix_atlas_intelligence_entity_type"), table_name="atlas_intelligence")
+    op.drop_index(op.f("ix_atlas_intelligence_entity_id"), table_name="atlas_intelligence")
+    op.drop_index(op.f("ix_atlas_intelligence_agent_name"), table_name="atlas_intelligence")
     op.create_index(
         op.f("ix_atlas_intel_finding_type"),
         "atlas_intelligence",
@@ -145,9 +135,7 @@ def downgrade() -> None:
     op.alter_column(
         "atlas_decisions",
         "signal",
-        existing_type=sa.Enum(
-            "BUY", "SELL", "HOLD", "WATCH", name="decisionsignalenum"
-        ),
+        existing_type=sa.Enum("BUY", "SELL", "HOLD", "WATCH", name="decisionsignalenum"),
         type_=sa.VARCHAR(length=10),
         existing_nullable=False,
     )

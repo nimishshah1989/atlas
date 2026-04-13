@@ -47,4 +47,5 @@ def configure(log_dir: Path, level: str = "INFO") -> None:
 
 
 def get_logger(name: str = "forge") -> structlog.BoundLogger:
-    return structlog.get_logger(name)
+    logger: structlog.BoundLogger = structlog.get_logger(name)
+    return logger

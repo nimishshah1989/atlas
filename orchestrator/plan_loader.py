@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from . import state_machine as sm
 from .state import StateStore
@@ -126,17 +126,13 @@ def sync_plan_to_state(plan: Plan, store: StateStore) -> dict[str, str]:
     return final
 
 
-def _force_status(
-    store: StateStore, chunk_id: str, new_status: str, reason: str
-) -> None:
+def _force_status(store: StateStore, chunk_id: str, new_status: str, reason: str) -> None:
     """Bypass state machine validation for bootstrap reconciliation only."""
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with store.tx() as c:
-        row = c.execute(
-            "SELECT status FROM chunks WHERE id = ?", (chunk_id,)
-        ).fetchone()
+        row = c.execute("SELECT status FROM chunks WHERE id = ?", (chunk_id,)).fetchone()
         old = row["status"] if row else None
         c.execute(
             "UPDATE chunks SET status = ?, updated_at = ? WHERE id = ?",

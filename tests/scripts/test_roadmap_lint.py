@@ -172,9 +172,7 @@ class TestLintClean:
     """Lint on a valid roadmap+plan pair exits 0."""
 
     def test_clean_exits_zero(self, tmp_path, monkeypatch):
-        code, out = _run_lint_in_process(
-            MINIMAL_ROADMAP, MINIMAL_PLAN, tmp_path, monkeypatch
-        )
+        code, out = _run_lint_in_process(MINIMAL_ROADMAP, MINIMAL_PLAN, tmp_path, monkeypatch)
         assert code == 0
         assert "roadmap OK" in out
 

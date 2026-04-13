@@ -95,9 +95,7 @@ def upgrade() -> None:
         type_=sa.Numeric(5, 4),
         nullable=True,
     )
-    op.execute(
-        "UPDATE atlas_intelligence SET data_as_of = NOW() WHERE data_as_of IS NULL"
-    )
+    op.execute("UPDATE atlas_intelligence SET data_as_of = NOW() WHERE data_as_of IS NULL")
     op.alter_column(
         "atlas_intelligence",
         "data_as_of",
@@ -148,21 +146,14 @@ def upgrade() -> None:
         " WITH (m = 16, ef_construction = 64)"
     )
     op.create_index("idx_intelligence_entity", "atlas_intelligence", ["entity"])
-    op.create_index(
-        "idx_intelligence_entity_type", "atlas_intelligence", ["entity_type"]
-    )
+    op.create_index("idx_intelligence_entity_type", "atlas_intelligence", ["entity_type"])
     op.create_index("idx_intelligence_agent_type", "atlas_intelligence", ["agent_type"])
-    op.create_index(
-        "idx_intelligence_finding_type", "atlas_intelligence", ["finding_type"]
-    )
+    op.create_index("idx_intelligence_finding_type", "atlas_intelligence", ["finding_type"])
     op.create_index("idx_intelligence_created", "atlas_intelligence", ["created_at"])
     op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_intelligence_tags"
-        " ON atlas_intelligence USING gin(tags)"
+        "CREATE INDEX IF NOT EXISTS idx_intelligence_tags ON atlas_intelligence USING gin(tags)"
     )
-    op.create_index(
-        "idx_intelligence_validated", "atlas_intelligence", ["is_validated"]
-    )
+    op.create_index("idx_intelligence_validated", "atlas_intelligence", ["is_validated"])
     op.create_index("idx_intelligence_agent_id", "atlas_intelligence", ["agent_id"])
 
 
@@ -170,31 +161,21 @@ def downgrade() -> None:
     # Drop new indexes
     op.execute("DROP INDEX IF EXISTS idx_intelligence_embedding")
     op.execute("DROP INDEX IF EXISTS idx_intelligence_tags")
-    op.drop_index(
-        "idx_intelligence_agent_id", table_name="atlas_intelligence", if_exists=True
-    )
-    op.drop_index(
-        "idx_intelligence_validated", table_name="atlas_intelligence", if_exists=True
-    )
-    op.drop_index(
-        "idx_intelligence_created", table_name="atlas_intelligence", if_exists=True
-    )
+    op.drop_index("idx_intelligence_agent_id", table_name="atlas_intelligence", if_exists=True)
+    op.drop_index("idx_intelligence_validated", table_name="atlas_intelligence", if_exists=True)
+    op.drop_index("idx_intelligence_created", table_name="atlas_intelligence", if_exists=True)
     op.drop_index(
         "idx_intelligence_finding_type",
         table_name="atlas_intelligence",
         if_exists=True,
     )
-    op.drop_index(
-        "idx_intelligence_agent_type", table_name="atlas_intelligence", if_exists=True
-    )
+    op.drop_index("idx_intelligence_agent_type", table_name="atlas_intelligence", if_exists=True)
     op.drop_index(
         "idx_intelligence_entity_type",
         table_name="atlas_intelligence",
         if_exists=True,
     )
-    op.drop_index(
-        "idx_intelligence_entity", table_name="atlas_intelligence", if_exists=True
-    )
+    op.drop_index("idx_intelligence_entity", table_name="atlas_intelligence", if_exists=True)
 
     # Drop new columns
     op.drop_column("atlas_intelligence", "validation_result")

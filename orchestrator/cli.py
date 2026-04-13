@@ -125,13 +125,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="run a single ready chunk (default)",
     )
-    g.add_argument(
-        "--all", action="store_true", help="keep running until none are ready"
-    )
+    g.add_argument("--all", action="store_true", help="keep running until none are ready")
     s.add_argument("chunk", nargs="?", default=None, help="run a specific chunk by id")
-    s.add_argument(
-        "--dry-run", action="store_true", help="don't actually spawn claude or score"
-    )
+    s.add_argument("--dry-run", action="store_true", help="don't actually spawn claude or score")
     s.set_defaults(func=cmd_run)
 
     s = sub.add_parser("unblock", help="move a BLOCKED chunk back to PENDING")
@@ -149,7 +145,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     configure(args.log_dir, level=args.log_level)
-    return args.func(args)
+    exit_code: int = args.func(args)
+    return exit_code
 
 
 if __name__ == "__main__":

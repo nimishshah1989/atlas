@@ -30,7 +30,7 @@ LOG_DIR_NAME = "logs"
 SENTINEL = "FORGE_CHUNK_COMPLETE"
 
 
-def _dims_map(report: dict[str, Any]) -> dict[str, dict]:
+def _dims_map(report: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Return the per-dimension map from an S1+ report.
 
     S1+ shape: ``{"dims": {name: {score, gating, passed, eligible, checks}}}``.
@@ -41,7 +41,7 @@ def _dims_map(report: dict[str, Any]) -> dict[str, dict]:
     if isinstance(dims, dict):
         return {k: v for k, v in dims.items() if isinstance(v, dict)}
     legacy = report.get("dimensions")
-    out: dict[str, dict] = {}
+    out: dict[str, dict[str, Any]] = {}
     if isinstance(legacy, list):
         for entry in legacy:
             if isinstance(entry, dict) and "dimension" in entry:
@@ -84,8 +84,9 @@ class Runner:
         chunk = sm.next_ready_chunk(chunks)
         if chunk is None:
             return None
-        self._run_chunk(chunk["id"])
-        return chunk["id"]
+        chunk_id: str = chunk["id"]
+        self._run_chunk(chunk_id)
+        return chunk_id
 
     def run_all(self) -> list[str]:
         """Run chunks until none are ready or one ends BLOCKED."""
@@ -167,9 +168,7 @@ class Runner:
                 chunk_id,
                 error=f"quality gate failed at attempt {attempt}",
             )
-            self._safe_transition(
-                chunk_id, sm.FAILED, "quality gate did not meet thresholds"
-            )
+            self._safe_transition(chunk_id, sm.FAILED, "quality gate did not meet thresholds")
             if attempt >= max_attempts:
                 self._safe_transition(
                     chunk_id,
@@ -244,9 +243,7 @@ class Runner:
                     exit_code=exit_code,
                 )
         if exit_code != 0:
-            raise RunnerError(
-                f"claude exited {exit_code} for {spec.id}; see {log_path}"
-            )
+            raise RunnerError(f"claude exited {exit_code} for {spec.id}; see {log_path}")
 
     def _run_quality_gate(self, spec: ChunkSpec) -> tuple[bool, dict[str, Any]]:
         """S1 gate: per-dimension floors only, no composite.
@@ -355,6 +352,7 @@ class Runner:
         if not report_path.exists():
             return None
         try:
-            return json.loads(report_path.read_text())
+            parsed: dict[str, Any] = json.loads(report_path.read_text())
+            return parsed
         except json.JSONDecodeError:
             return None

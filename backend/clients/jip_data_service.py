@@ -29,9 +29,7 @@ class JIPDataService:
         benchmark: Optional[str] = "NIFTY 500",
         sector: Optional[str] = None,
     ) -> list[dict[str, Any]]:
-        return await self._equity.get_equity_universe(
-            benchmark=benchmark, sector=sector
-        )
+        return await self._equity.get_equity_universe(benchmark=benchmark, sector=sector)
 
     async def get_sector_rollups(self) -> list[dict[str, Any]]:
         return await self._equity.get_sector_rollups()
@@ -51,9 +49,7 @@ class JIPDataService:
         benchmark: str = "NIFTY 500",
         months: int = 12,
     ) -> list[dict[str, Any]]:
-        return await self._equity.get_rs_history(
-            symbol, benchmark=benchmark, months=months
-        )
+        return await self._equity.get_rs_history(symbol, benchmark=benchmark, months=months)
 
     async def get_movers(self, limit: int = 15) -> dict[str, list[dict[str, Any]]]:
         return await self._equity.get_movers(limit=limit)
@@ -66,8 +62,8 @@ class JIPDataService:
 
     async def query_equity(
         self,
-        filters: list[dict],
-        sort: list[dict],
+        filters: list[dict[str, Any]],
+        sort: list[dict[str, Any]],
         limit: int = 50,
         offset: int = 0,
         fields: Optional[list[str]] = None,

@@ -266,6 +266,27 @@ chunks:
       - Verify all pointers resolve; grep-verify no scope strings remain
       - All 5 gating dims still ≥ 80 post-rewrite
 
+  # --- L2-RUNNER — forge-runner on Claude Agent SDK (replaces ralph) ---
+
+  - id: L2-RUNNER
+    title: "forge-runner: Claude Agent SDK loop replacing ralph"
+    status: PENDING
+    spec: specs/003-forge-runner/
+    quality_targets:
+      security: 100
+      code: 80
+      architecture: 85
+    punch_list:
+      - "scripts/forge_runner/ package implemented per specs/003-forge-runner/tasks.md (T001–T062)"
+      - "alembic migration adds started_at / runner_pid / failure_reason to chunks table"
+      - "Stage protocol + LocalPickStage/LocalImplementStage/LocalVerifyStage/LocalLoopAdvanceStage + HostedStageBase stub"
+      - "secrets.scrub + API-key regex check registered in .quality/checks.py security dim"
+      - ".ralph/ + .ralphrc removed, CLAUDE.md references updated to forge-runner"
+      - "pytest tests/forge_runner/ ≥80% coverage, mypy strict clean, ruff clean"
+      - "FORGE_RUNNER_LIVE=1 smoke test passes (real SDK session)"
+      - "V1-1 re-ships cleanly under forge-runner as SC-001 acceptance gate (separate dry verification; V1-1 already DONE)"
+      - "Per-chunk runner overhead <5s across 9 canned chunks (SC-008 folded into T058)"
+
   # --- V2 — MF Slice -------------------------------------------------
 
   - id: V2-1

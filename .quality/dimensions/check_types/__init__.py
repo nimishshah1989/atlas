@@ -6,7 +6,7 @@ Keep handlers under 50 lines. Raise nothing — return (False, msg) on failure.
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Any, Callable
 
 from .file_exists import run_file_exists
 from .http_contract import run_http_contract
@@ -14,7 +14,7 @@ from .python_callable import run_python_callable
 from .sql_count import run_sql_count
 from .sql_invariant import run_sql_invariant
 
-Handler = Callable[[dict], tuple[bool, str]]
+Handler = Callable[[dict[str, Any]], tuple[bool, str]]
 
 HANDLERS: dict[str, Handler] = {
     "http_contract": run_http_contract,
@@ -25,7 +25,7 @@ HANDLERS: dict[str, Handler] = {
 }
 
 
-def dispatch(check: dict) -> tuple[bool, str]:
+def dispatch(check: dict[str, Any]) -> tuple[bool, str]:
     t = check.get("type")
     handler = HANDLERS.get(t or "")
     if handler is None:

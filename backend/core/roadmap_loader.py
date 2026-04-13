@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import structlog
-import yaml  # type: ignore[import-untyped]
+import yaml
 from pydantic import BaseModel, Field
 
 log = structlog.get_logger()
@@ -109,15 +109,15 @@ def _load_plan_chunk_titles(path: Optional[Path] = None) -> dict[str, str]:
         return {}
     if not isinstance(raw, dict):
         return {}
-    result: dict[str, str] = {}
+    chunk_map: dict[str, str] = {}
     for chunk in raw.get("chunks", []) or []:
         if not isinstance(chunk, dict):
             continue
         cid = chunk.get("id")
         title = chunk.get("title")
         if isinstance(cid, str) and isinstance(title, str) and title:
-            result[cid] = title
-    return result
+            chunk_map[cid] = title
+    return chunk_map
 
 
 def load_roadmap(path: Optional[Path] = None) -> RoadmapFile:
@@ -160,7 +160,7 @@ def load_roadmap(path: Optional[Path] = None) -> RoadmapFile:
     return RoadmapFile(versions=versions)
 
 
-def _parse_version(data: dict, plan_titles: Optional[dict[str, str]] = None) -> Version:
+def _parse_version(data: dict[str, Any], plan_titles: Optional[dict[str, str]] = None) -> Version:
     plan_titles = plan_titles or {}
     chunks: list[Chunk] = []
     for c_data in data.get("chunks", []):
@@ -178,7 +178,7 @@ def _parse_version(data: dict, plan_titles: Optional[dict[str, str]] = None) -> 
     )
 
 
-def _parse_chunk(data: dict, plan_titles: Optional[dict[str, str]] = None) -> Chunk:
+def _parse_chunk(data: dict[str, Any], plan_titles: Optional[dict[str, str]] = None) -> Chunk:
     plan_titles = plan_titles or {}
     steps: list[Step] = []
     for s_data in data.get("steps", []):
@@ -192,7 +192,7 @@ def _parse_chunk(data: dict, plan_titles: Optional[dict[str, str]] = None) -> Ch
     )
 
 
-def _parse_step(data: dict) -> Step:
+def _parse_step(data: dict[str, Any]) -> Step:
     check_data = data.get("check")
     check: Optional[Check] = None
     if check_data:

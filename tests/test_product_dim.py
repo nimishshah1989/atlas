@@ -21,9 +21,7 @@ from dimensions.check_types import dispatch  # type: ignore[import-not-found]  #
 
 def test_file_exists_handler_pass_and_fail() -> None:
     # Use a real repo file the handler can stat under ROOT.
-    ok, ev = dispatch(
-        {"type": "file_exists", "path": "README.md", "min_size_bytes": 100}
-    )
+    ok, ev = dispatch({"type": "file_exists", "path": "README.md", "min_size_bytes": 100})
     assert ok is True
     assert "README.md" in ev
 
@@ -48,9 +46,7 @@ def test_sql_count_bad_query_returns_false_cleanly() -> None:
         }
     )
     assert ok is False
-    assert any(
-        s in ev for s in ("DATABASE_URL", "psycopg2", "query failed", "does not exist")
-    )
+    assert any(s in ev for s in ("DATABASE_URL", "psycopg2", "query failed", "does not exist"))
 
 
 def test_dim_product_loads_yaml_and_returns_checks() -> None:

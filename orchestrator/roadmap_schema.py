@@ -20,9 +20,7 @@ VERSION_ID_RE = re.compile(r"^V\d+$")
 CHUNK_ID_RE = re.compile(r"^C\d+$")
 STEP_ID_RE = re.compile(r"^C(\d+)\.(\d+)$")
 
-VALID_CHECK_TYPES = frozenset(
-    {"file_exists", "command", "http_ok", "db_query", "smoke_list"}
-)
+VALID_CHECK_TYPES = frozenset({"file_exists", "command", "http_ok", "db_query", "smoke_list"})
 
 
 # ---------------------------------------------------------------------------
@@ -52,10 +50,8 @@ class CommandCheck(BaseModel):
     @classmethod
     def cmd_must_be_list(cls, v: Any) -> list[str]:
         if isinstance(v, str):
-            raise ValueError(
-                f"'cmd' must be a list of strings, not a shell string. Got: {v!r}"
-            )
-        return v
+            raise ValueError(f"'cmd' must be a list of strings, not a shell string. Got: {v!r}")
+        return list(v)
 
 
 class HttpOkCheck(BaseModel):
@@ -89,9 +85,7 @@ def parse_check(data: dict[str, Any]) -> Check:
     """Parse a raw dict into the correct Check submodel."""
     check_type = data.get("type")
     if check_type not in VALID_CHECK_TYPES:
-        raise ValueError(
-            f"Unknown check type {check_type!r}. Valid: {sorted(VALID_CHECK_TYPES)}"
-        )
+        raise ValueError(f"Unknown check type {check_type!r}. Valid: {sorted(VALID_CHECK_TYPES)}")
     mapping = {
         "file_exists": FileExistsCheck,
         "command": CommandCheck,
@@ -99,7 +93,7 @@ def parse_check(data: dict[str, Any]) -> Check:
         "db_query": DbQueryCheck,
         "smoke_list": SmokeListCheck,
     }
-    return mapping[check_type].model_validate(data)  # type: ignore[attr-defined,return-value]
+    return mapping[check_type].model_validate(data)  # type: ignore[attr-defined,no-any-return]
 
 
 # ---------------------------------------------------------------------------
@@ -219,8 +213,7 @@ class RoadmapFile(BaseModel):
             for chunk in version.chunks:
                 if chunk.id in seen:
                     raise ValueError(
-                        f"Chunk id {chunk.id!r} appears in both "
-                        f"{seen[chunk.id]} and {version.id}"
+                        f"Chunk id {chunk.id!r} appears in both {seen[chunk.id]} and {version.id}"
                     )
                 seen[chunk.id] = version.id
         return self

@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq
@@ -29,7 +30,7 @@ from orchestrator.roadmap_schema import CHUNK_ID_RE, VERSION_ID_RE  # noqa: E402
 ROADMAP_YAML = _REPO_ROOT / "orchestrator" / "roadmap.yaml"
 
 
-def find_chunk_location(versions: list, chunk_id: str) -> tuple[str | None, int | None]:
+def find_chunk_location(versions: list[Any], chunk_id: str) -> tuple[str | None, int | None]:
     """Return (version_id, chunk_index) if chunk_id is already in any version."""
     for version in versions:
         vid = version.get("id", "")

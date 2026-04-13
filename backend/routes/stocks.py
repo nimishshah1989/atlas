@@ -2,7 +2,7 @@
 
 import time
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -33,7 +33,7 @@ log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1/stocks", tags=["stocks"])
 
 
-def _dec(val) -> Optional[Decimal]:
+def _dec(val: Any) -> Optional[Decimal]:
     if val is None:
         return None
     return Decimal(str(val))
@@ -214,7 +214,7 @@ async def get_movers(
     svc = JIPDataService(db)
     movers = await svc.get_movers(limit=limit)
 
-    def _to_mover(row: dict) -> MoverEntry:
+    def _to_mover(row: dict[str, Any]) -> MoverEntry:
         rs_c = _dec(row.get("rs_composite"))
         rs_m = _dec(row.get("rs_momentum"))
         return MoverEntry(

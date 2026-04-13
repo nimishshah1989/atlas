@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any, Callable, cast
 
 import structlog
 from fastapi import FastAPI, Request
@@ -45,7 +46,7 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, cast(Callable[..., Any], _rate_limit_exceeded_handler))
 app.add_middleware(SlowAPIMiddleware)
 
 # CORS — explicit allowlist sourced from settings.cors_origins (never "*").
@@ -59,7 +60,7 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def _enforce_api_rate_limit(request: Request, call_next):
+async def _enforce_api_rate_limit(request: Request, call_next: Any) -> Any:
     # slowapi middleware already applies default_limits; this hook exists so
     # future per-route overrides on /api/v1/* can attach to request.state.
     return await call_next(request)
@@ -72,7 +73,7 @@ app.include_router(system.router)
 
 
 @app.get("/", include_in_schema=False)
-async def root() -> dict:
+async def root() -> dict[str, str]:
     return {
         "service": "atlas-backend",
         "version": VERSION,

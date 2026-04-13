@@ -1,0 +1,17 @@
+[Unit]
+Description=ATLAS forge-runner (Claude Agent SDK loop)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ubuntu/atlas
+EnvironmentFile=/home/ubuntu/.forge/runner.env
+ExecStart=/home/ubuntu/atlas/venv/bin/python -m scripts.forge_runner --filter '^V1-\d+$'
+Restart=on-failure
+RestartSec=30
+StandardOutput=append:/home/ubuntu/.forge/logs/systemd.log
+StandardError=append:/home/ubuntu/.forge/logs/systemd.log
+
+[Install]
+WantedBy=default.target

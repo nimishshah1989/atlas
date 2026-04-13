@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from .sql_count import _resolve_db_url, _to_sync
 
 
-def run_sql_invariant(check: dict) -> tuple[bool, str]:
+def run_sql_invariant(check: dict[str, Any]) -> tuple[bool, str]:
     url = _resolve_db_url()
     if not url:
         return False, "no DATABASE_URL — cannot run sql_invariant"
     try:
-        import psycopg2  # type: ignore[import-not-found]
+        import psycopg2
     except ImportError:
         return False, "psycopg2 not installed — cannot run sql_invariant"
     query = check["query"]

@@ -83,8 +83,7 @@ def build_conviction_pillars(stock_data: dict[str, Any]) -> ConvictionPillars:
         checks_passing=passing,
         checks_total=len(checks),
         checks=checks,
-        explanation=f"{passing}/{len(checks)} checks passing. "
-        + "; ".join(check_details[:5]),
+        explanation=f"{passing}/{len(checks)} checks passing. " + "; ".join(check_details[:5]),
     )
 
     # --- Pillar 3: Institutional ---
@@ -101,9 +100,7 @@ def build_conviction_pillars(stock_data: dict[str, Any]) -> ConvictionPillars:
     pillar_inst = PillarInstitutional(
         mf_holder_count=mf_count,
         delivery_vs_avg=delivery,
-        explanation=". ".join(inst_parts)
-        if inst_parts
-        else "No institutional data available",
+        explanation=". ".join(inst_parts) if inst_parts else "No institutional data available",
     )
 
     return ConvictionPillars(
@@ -167,15 +164,11 @@ _TECHNICAL_CHECK_DEFS: list[tuple[str, str, Any, Any]] = [
 ]
 
 
-def _evaluate_check(
-    name: str, raw_value: Any, test_fn: Any, detail_fn: Any
-) -> TechnicalCheck:
+def _evaluate_check(name: str, raw_value: Any, test_fn: Any, detail_fn: Any) -> TechnicalCheck:
     """Evaluate a single technical check against a raw data value."""
     converted = _dec(raw_value) if not isinstance(raw_value, bool) else raw_value
     if converted is None and not isinstance(raw_value, bool):
-        return TechnicalCheck(
-            name=name, passing=False, value="N/A", detail=f"{name}: no data"
-        )
+        return TechnicalCheck(name=name, passing=False, value="N/A", detail=f"{name}: no data")
     passing = test_fn(converted)
     return TechnicalCheck(
         name=name,

@@ -46,9 +46,7 @@ def mod():
 
 
 def test_derive_quality_targets_backend_routes(mod) -> None:
-    out = mod.derive_quality_targets(
-        ["backend/routes/system.py", "tests/routes/test_system.py"]
-    )
+    out = mod.derive_quality_targets(["backend/routes/system.py", "tests/routes/test_system.py"])
     assert "api" in out and out["api"] >= 80
     assert "code" in out and out["code"] >= 70
 
@@ -100,9 +98,7 @@ def test_extract_acceptance_bullets_numbered(tmp_path, mod) -> None:
 
 def test_extract_acceptance_bullets_dash(tmp_path, mod) -> None:
     spec = tmp_path / "chunk-y.md"
-    spec.write_text(
-        "## Acceptance criteria\n\n- alpha\n- beta\n\n## Next section\n\n- excluded\n"
-    )
+    spec.write_text("## Acceptance criteria\n\n- alpha\n- beta\n\n## Next section\n\n- excluded\n")
     assert mod.extract_acceptance_bullets(spec) == ["alpha", "beta"]
 
 
@@ -170,10 +166,7 @@ def test_append_rows_to_plan_produces_valid_yaml_block(tmp_path, mod) -> None:
 def test_existing_plan_ids_detects_all(tmp_path, mod) -> None:
     plan = tmp_path / "plan.yaml"
     plan.write_text(
-        "chunks:\n"
-        "  - id: C1\n    title: a\n"
-        "  - id: C2\n    title: b\n"
-        "  - id: FD-1\n    title: c\n"
+        "chunks:\n  - id: C1\n    title: a\n  - id: C2\n    title: b\n  - id: FD-1\n    title: c\n"
     )
     assert mod.existing_plan_ids(plan) == {"C1", "C2", "FD-1"}
 

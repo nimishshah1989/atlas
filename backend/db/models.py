@@ -7,6 +7,7 @@ import enum
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -50,53 +51,33 @@ class DecisionStatusEnum(str, enum.Enum):
 class AtlasDecision(Base):
     __tablename__ = "atlas_decisions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     entity: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    entity_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="equity"
-    )
-    decision_type: Mapped[str] = mapped_column(
-        String(30), nullable=False, server_default="HOLD"
-    )
+    entity_type: Mapped[str] = mapped_column(String(20), nullable=False, server_default="equity")
+    decision_type: Mapped[str] = mapped_column(String(30), nullable=False, server_default="HOLD")
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
-    supporting_data: Mapped[dict] = mapped_column(
+    supporting_data: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default="{}"
     )
-    confidence: Mapped[Decimal] = mapped_column(
-        Numeric(5, 4), nullable=False, server_default="0"
-    )
+    confidence: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False, server_default="0")
     source_agent: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    horizon: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="3m"
-    )
+    horizon: Mapped[str] = mapped_column(String(20), nullable=False, server_default="3m")
     horizon_end_date: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=func.current_date()
     )
-    invalidation_conditions: Mapped[list[str] | None] = mapped_column(
-        ARRAY(Text), nullable=True
-    )
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="active"
-    )
-    invalidated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    invalidation_conditions: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="active")
+    invalidated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     invalidation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    outcome: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    outcome: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     user_action: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    user_action_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    user_action_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     user_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     data_as_of: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=func.current_date()
     )
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -114,36 +95,24 @@ class AtlasDecision(Base):
 class AtlasIntelligence(Base):
     __tablename__ = "atlas_intelligence"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     entity_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     entity: Mapped[str | None] = mapped_column(Text, nullable=True)
     finding_type: Mapped[str] = mapped_column(String(50), nullable=False)
     agent_id: Mapped[str] = mapped_column(String(100), nullable=False)
-    agent_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, server_default=""
-    )
+    agent_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding: Mapped[list | None] = mapped_column(Vector(1536), nullable=True)
-    evidence: Mapped[dict | None] = mapped_column("evidence", JSONB, nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column("evidence", JSONB, nullable=True)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
-    data_as_of: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    is_validated: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
-    validation_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    data_as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_validated: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    validation_result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -163,15 +132,11 @@ class AtlasIntelligence(Base):
 class AtlasWatchlist(Base):
     __tablename__ = "atlas_watchlists"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    symbols: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    symbols: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

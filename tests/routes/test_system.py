@@ -33,9 +33,7 @@ def anyio_backend():
 
 @pytest_asyncio.fixture
 async def client():
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
@@ -210,9 +208,7 @@ class TestRoadmap:
         loaded = real_load(roadmap_file)
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -223,9 +219,7 @@ class TestRoadmap:
         assert step["check"] == "ok"
 
     @pytest.mark.asyncio
-    async def test_roadmap_failing_command_step_returns_fail_not_500(
-        self, client, tmp_path
-    ):
+    async def test_roadmap_failing_command_step_returns_fail_not_500(self, client, tmp_path):
         """command: ["false"] returns check:fail, not 500."""
         yaml_content = """
 versions:
@@ -254,9 +248,7 @@ versions:
         _cache.clear()
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -297,9 +289,7 @@ versions:
         _cache.clear()
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -340,9 +330,7 @@ versions:
         _cache.clear()
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -403,9 +391,7 @@ versions:
         _cache.clear()
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -442,9 +428,7 @@ versions:
         _cache.clear()
 
         with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
-            with patch(
-                "backend.routes.system_roadmap._load_chunk_states", return_value={}
-            ):
+            with patch("backend.routes.system_roadmap._load_chunk_states", return_value={}):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -778,8 +762,7 @@ class TestStateDbReadOnly:
             "last_error TEXT, updated_at TEXT)"
         )
         conn.execute(
-            "INSERT INTO chunks VALUES "
-            "('C1','first','DONE',0,NULL,'2026-04-13T06:52:14+00:00')"
+            "INSERT INTO chunks VALUES ('C1','first','DONE',0,NULL,'2026-04-13T06:52:14+00:00')"
         )
         conn.commit()
         conn.close()
@@ -800,9 +783,7 @@ class TestStateDbReadOnly:
 
         db_path = tmp_path / "state.db"
         conn = sqlite3.connect(str(db_path))
-        conn.execute(
-            "CREATE TABLE chunks (id TEXT, status TEXT, attempts INT, updated_at TEXT)"
-        )
+        conn.execute("CREATE TABLE chunks (id TEXT, status TEXT, attempts INT, updated_at TEXT)")
         conn.commit()
         conn.close()
 

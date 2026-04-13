@@ -50,9 +50,7 @@ HEADING_RE = re.compile(
 # S3: criterion IDs (v1-01 …) live in docs/specs/v1-criteria.yaml, not in
 # Python source. dim_product dispatches them at runtime by reading the YAML,
 # so the doc↔code sync check has to know about them too.
-CRITERIA_YAML = (
-    Path(__file__).resolve().parents[1] / "docs" / "specs" / "v1-criteria.yaml"
-)
+CRITERIA_YAML = Path(__file__).resolve().parents[1] / "docs" / "specs" / "v1-criteria.yaml"
 
 
 def collect_code_checks() -> dict[str, str]:
@@ -68,18 +66,14 @@ def collect_code_checks() -> dict[str, str]:
             for m in regex.finditer(text):
                 cid, name = m.group(1), m.group(2)
                 existing = out.get(cid)
-                if (
-                    existing
-                    and existing != name
-                    and not existing.startswith("__CONFLICT__")
-                ):
+                if existing and existing != name and not existing.startswith("__CONFLICT__"):
                     out[cid] = f"__CONFLICT__ {existing} vs {name}"
                 elif not existing:
                     out[cid] = name
     # Criterion IDs come from the YAML, not Python. Merge them in.
     if CRITERIA_YAML.exists():
         try:
-            import yaml  # type: ignore[import-untyped]
+            import yaml
 
             data = yaml.safe_load(CRITERIA_YAML.read_text()) or {}
             for c in data.get("criteria", []):

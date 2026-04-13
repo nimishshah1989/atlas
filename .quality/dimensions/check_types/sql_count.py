@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Any
 
 DB_URL_ENVS = ("ATLAS_DATABASE_URL", "DATABASE_URL")
 
@@ -19,7 +20,7 @@ def _resolve_db_url() -> str | None:
         if v:
             return v
     try:
-        from backend.config import get_settings  # type: ignore[import-not-found]
+        from backend.config import get_settings
 
         return str(get_settings().database_url)
     except Exception:  # noqa: BLE001
@@ -30,12 +31,12 @@ def _to_sync(url: str) -> str:
     return re.sub(r"^postgresql\+asyncpg://", "postgresql://", url)
 
 
-def run_sql_count(check: dict) -> tuple[bool, str]:
+def run_sql_count(check: dict[str, Any]) -> tuple[bool, str]:
     url = _resolve_db_url()
     if not url:
         return False, "no DATABASE_URL — cannot run sql_count"
     try:
-        import psycopg2  # type: ignore[import-not-found]
+        import psycopg2
     except ImportError:
         return False, "psycopg2 not installed — cannot run sql_count"
     query = check["query"]

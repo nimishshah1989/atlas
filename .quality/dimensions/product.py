@@ -41,7 +41,7 @@ def _skip(reason: str) -> DimensionResult:
 
 def _load_yaml(path: Path) -> dict[str, Any] | None:
     try:
-        import yaml  # type: ignore[import-untyped]
+        import yaml
     except ImportError:
         return None
     try:
@@ -65,7 +65,7 @@ def _validate(data: dict[str, Any]) -> str | None:
     # If jsonschema is installed, do a full validation pass. Otherwise fall
     # back to the cheap required-key check above.
     try:
-        import jsonschema  # type: ignore[import-not-found]
+        import jsonschema
     except ImportError:
         return None
     if not SCHEMA_PATH.exists():

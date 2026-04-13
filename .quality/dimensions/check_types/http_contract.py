@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import time
 import urllib.request
+from typing import Any
 
 
-def run_http_contract(check: dict) -> tuple[bool, str]:
+def run_http_contract(check: dict[str, Any]) -> tuple[bool, str]:
     url = check["url"]
     budget = int(check["max_latency_ms"])
     req = urllib.request.Request(url, headers={"User-Agent": "atlas-quality/1.0"})

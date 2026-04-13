@@ -7,12 +7,13 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, cast
 
 import structlog
 from fastapi import Query
 
 from backend.core.roadmap_checks import evaluate_check
-from backend.core.roadmap_loader import RoadmapFile, load_roadmap
+from backend.core.roadmap_loader import Chunk, RoadmapFile, load_roadmap
 
 from .system import (
     IST,
@@ -33,17 +34,17 @@ log = structlog.get_logger()
 _SHIP_STATE_FILE = Path(__file__).resolve().parents[2] / ".forge" / "last-run.json"
 
 
-def _load_ship_state() -> dict:
+def _load_ship_state() -> dict[str, Any]:
     """Read .forge/last-run.json if present. Single-slot state written by
     scripts/forge-ship.sh — tells the dashboard which chunk last went
     through the enforced tests+gate+memory chain and when."""
     if not _SHIP_STATE_FILE.exists():
         return {}
     try:
-        data = json.loads(_SHIP_STATE_FILE.read_text())
-        if not isinstance(data, dict):
+        ship_state_raw = json.loads(_SHIP_STATE_FILE.read_text())
+        if not isinstance(ship_state_raw, dict):
             return {}
-        return data
+        return ship_state_raw
     except (OSError, ValueError):
         return {}
 
@@ -58,8 +59,8 @@ _CHUNK_STATUS_MAP = {
 }
 
 
-def _load_chunk_states() -> dict[str, dict]:
-    states: dict[str, dict] = {}
+def _load_chunk_states() -> dict[str, dict[str, Any]]:
+    states: dict[str, dict[str, Any]] = {}
     if not _STATE_DB.exists():
         return states
     try:
@@ -118,17 +119,15 @@ def _version_rollup(chunks: list[ChunkResponse]) -> RollupResponse:
 
 
 async def _build_chunk_response(
-    chunk,
-    chunk_states: dict[str, dict],
+    chunk: Chunk,
+    chunk_states: dict[str, dict[str, Any]],
     evaluate_slow: bool,
-    ship_state: dict,
+    ship_state: dict[str, Any],
 ) -> ChunkResponse:
     state = chunk_states.get(chunk.id, {})
     step_responses: list[StepResponse] = []
     for step in chunk.steps:
-        check_result, detail = await asyncio.to_thread(
-            evaluate_check, step.check, evaluate_slow
-        )
+        check_result, detail = await asyncio.to_thread(evaluate_check, step.check, evaluate_slow)
         step_responses.append(
             StepResponse(id=step.id, text=step.text, check=check_result, detail=detail)
         )
@@ -140,8 +139,7 @@ async def _build_chunk_response(
                 int(ship_state["ts"]), tz=timezone.utc
             ).astimezone(IST)
             last_ship_ok = all(
-                bool(ship_state.get(k, False))
-                for k in ("tests_ok", "quality_ok", "memory_ok")
+                bool(ship_state.get(k, False)) for k in ("tests_ok", "quality_ok", "memory_ok")
             )
         except (TypeError, ValueError):
             pass
@@ -159,9 +157,9 @@ async def _build_chunk_response(
 
 
 def _build_orphan_lane(
-    chunk_states: dict[str, dict],
+    chunk_states: dict[str, dict[str, Any]],
     referenced_ids: set[str],
-    ship_state: dict,
+    ship_state: dict[str, Any],
 ) -> VersionResponse | None:
     """Fold orphan chunks (in state.db but missing from roadmap.yaml) into a
     synthetic 'Quality & Infra' lane so every running chunk is visible on
@@ -175,12 +173,9 @@ def _build_orphan_lane(
         if ship_state.get("chunk") != cid or "ts" not in ship_state:
             return None, None
         try:
-            dt = datetime.fromtimestamp(
-                int(ship_state["ts"]), tz=timezone.utc
-            ).astimezone(IST)
+            dt = datetime.fromtimestamp(int(ship_state["ts"]), tz=timezone.utc).astimezone(IST)
             ok = all(
-                bool(ship_state.get(k, False))
-                for k in ("tests_ok", "quality_ok", "memory_ok")
+                bool(ship_state.get(k, False)) for k in ("tests_ok", "quality_ok", "memory_ok")
             )
             return dt, ok
         except (TypeError, ValueError):
@@ -268,12 +263,10 @@ async def roadmap(
     cache_key = f"roadmap:{evaluate_slow}"
     cached = _cache_get(cache_key)
     if cached is not None:
-        return cached
+        return cast(SystemRoadmapResponse, cached)
 
     try:
-        resp = await asyncio.wait_for(
-            _build_roadmap_response(evaluate_slow), timeout=15.0
-        )
+        resp = await asyncio.wait_for(_build_roadmap_response(evaluate_slow), timeout=15.0)
     except asyncio.TimeoutError:
         log.warning("roadmap_endpoint_timeout")
         resp = SystemRoadmapResponse(

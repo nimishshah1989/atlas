@@ -36,9 +36,18 @@ FIELD_MAP = {
     "volatility_20d": "t.volatility_20d",
     "cap_category": "cap.cap_category",
     "quadrant": """CASE
-        WHEN r.rs_composite > 0 AND (r.rs_composite - COALESCE(r28.rs_composite_28d, r.rs_composite)) > 0 THEN 'LEADING'
-        WHEN r.rs_composite < 0 AND (r.rs_composite - COALESCE(r28.rs_composite_28d, r.rs_composite)) > 0 THEN 'IMPROVING'
-        WHEN r.rs_composite > 0 AND (r.rs_composite - COALESCE(r28.rs_composite_28d, r.rs_composite)) < 0 THEN 'WEAKENING'
+        WHEN r.rs_composite > 0
+             AND (r.rs_composite
+                  - COALESCE(r28.rs_composite_28d, r.rs_composite)) > 0
+             THEN 'LEADING'
+        WHEN r.rs_composite < 0
+             AND (r.rs_composite
+                  - COALESCE(r28.rs_composite_28d, r.rs_composite)) > 0
+             THEN 'IMPROVING'
+        WHEN r.rs_composite > 0
+             AND (r.rs_composite
+                  - COALESCE(r28.rs_composite_28d, r.rs_composite)) < 0
+             THEN 'WEAKENING'
         ELSE 'LAGGING'
     END""",
 }
@@ -58,7 +67,7 @@ _OPERATOR_TEMPLATES = {
 
 
 def _build_filter_conditions(
-    filters: list[dict],
+    filters: list[dict[str, Any]],
 ) -> tuple[list[str], dict[str, Any]]:
     """Build WHERE conditions and params from UQL filters."""
     conditions = ["i.is_active = true"]
@@ -87,15 +96,13 @@ def _build_filter_conditions(
     return conditions, params
 
 
-def _build_order_clause(sort_specs: list[dict]) -> str:
+def _build_order_clause(sort_specs: list[dict[str, Any]]) -> str:
     """Build ORDER BY clause from UQL sort specs."""
     order_parts = []
     for sort_spec in sort_specs:
         field_sql = FIELD_MAP.get(sort_spec["field"])
         if field_sql:
-            direction = (
-                "DESC" if sort_spec.get("direction", "desc") == "desc" else "ASC"
-            )
+            direction = "DESC" if sort_spec.get("direction", "desc") == "desc" else "ASC"
             order_parts.append(f"{field_sql} {direction} NULLS LAST")
     return ", ".join(order_parts) if order_parts else "r.rs_composite DESC NULLS LAST"
 
@@ -127,8 +134,8 @@ class JIPQueryService:
 
     async def query_equity(
         self,
-        filters: list[dict],
-        sort_specs: list[dict],
+        filters: list[dict[str, Any]],
+        sort_specs: list[dict[str, Any]],
         limit: int = 50,
         offset: int = 0,
         fields: Optional[list[str]] = None,

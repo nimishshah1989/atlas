@@ -12,7 +12,7 @@ Failure paths:
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Any, Iterable
 
 PENDING = "PENDING"
 PLANNING = "PLANNING"
@@ -77,8 +77,8 @@ def is_active(state: str) -> bool:
 
 
 def next_ready_chunk(
-    chunks: Iterable[dict],
-) -> dict | None:
+    chunks: Iterable[dict[str, Any]],
+) -> dict[str, Any] | None:
     """Return the next chunk eligible to start work.
 
     A chunk is ready when:
@@ -87,7 +87,7 @@ def next_ready_chunk(
     Chunks are returned in plan order (caller pre-sorts by id).
     """
 
-    def _key(c: dict) -> tuple:
+    def _key(c: dict[str, Any]) -> tuple[int, str]:
         cid = c["id"]
         digits = "".join(ch for ch in cid if ch.isdigit())
         return (int(digits) if digits else 0, cid)

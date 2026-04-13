@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def run_file_exists(check: dict) -> tuple[bool, str]:
+def run_file_exists(check: dict[str, Any]) -> tuple[bool, str]:
     path = ROOT / check["path"]
     if not path.exists():
         return False, f"missing: {check['path']}"

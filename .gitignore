@@ -28,6 +28,3 @@ orchestrator/logs/
 .specify/
 specs/
 
-# ralph runtime state — to be removed in L2-RUNNER (FR-041)
-.ralph/
-.ralphrc

@@ -90,15 +90,12 @@ def build_chunk_prompt(
     min_dims = settings.get("min_dimensions", {})
 
     if quality_report:
-        overall = quality_report.get(
-            "overall", quality_report.get("overall_score", "?")
-        )
+        overall = quality_report.get("overall", quality_report.get("overall_score", "?"))
         from .runner import _dims_map
 
         dims_map = _dims_map(quality_report)
         dim_scores = (
-            ", ".join(f"{k}={v.get('score', '?')}" for k, v in sorted(dims_map.items()))
-            or "(none)"
+            ", ".join(f"{k}={v.get('score', '?')}" for k, v in sorted(dims_map.items())) or "(none)"
         )
     else:
         overall = "(no prior run)"

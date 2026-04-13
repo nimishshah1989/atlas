@@ -47,9 +47,7 @@ async def execute_query(
 
     svc = JIPDataService(db)
 
-    filters = [
-        {"field": f.field, "op": f.op.value, "value": f.value} for f in request.filters
-    ]
+    filters = [{"field": f.field, "op": f.op.value, "value": f.value} for f in request.filters]
     sort = [{"field": s.field, "direction": s.direction.value} for s in request.sort]
 
     rows, total = await svc.query_equity(

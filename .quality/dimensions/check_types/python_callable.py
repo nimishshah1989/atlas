@@ -5,11 +5,12 @@ from __future__ import annotations
 import importlib
 import sys
 from pathlib import Path
+from typing import Any
 
 QUALITY_DIR = Path(__file__).resolve().parents[2]
 
 
-def run_python_callable(check: dict) -> tuple[bool, str]:
+def run_python_callable(check: dict[str, Any]) -> tuple[bool, str]:
     dotted = check["dotted_path"]
     module_path, _, func_name = dotted.rpartition(".")
     if not module_path:

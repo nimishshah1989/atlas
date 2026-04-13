@@ -7,7 +7,7 @@ The registry maps dimension names to their runners and gating status.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Callable
+from typing import Any, Callable
 
 
 @dataclass
@@ -22,7 +22,7 @@ class CheckResult:
     severity: str  # critical | high | medium | low | info
     status: str = "RUN"  # RUN | SKIP | ERROR
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -46,7 +46,7 @@ class DimensionResult:
             return 100
         return round(self.passed * 100 / self.eligible)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "dimension": self.dimension,
             "score": self.score,
@@ -75,9 +75,9 @@ def run_dimension(name: str) -> DimensionResult:
     return result
 
 
-def run_all(selected: list[str] | None = None) -> dict:
+def run_all(selected: list[str] | None = None) -> dict[str, Any]:
     names = selected or list(REGISTRY.keys())
-    dims: dict[str, dict] = {}
+    dims: dict[str, dict[str, Any]] = {}
     for name in names:
         result = run_dimension(name)
         dims[name] = result.to_dict()

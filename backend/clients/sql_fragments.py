@@ -17,7 +17,8 @@ def safe_decimal(val: Any) -> Optional[Decimal]:
 LATEST_DATES_CTE = """
     latest_dates AS (
         SELECT
-            (SELECT MAX(date) FROM de_rs_scores WHERE entity_type = 'equity' AND vs_benchmark = 'NIFTY 500') AS rs_date,
+            (SELECT MAX(date) FROM de_rs_scores
+             WHERE entity_type = 'equity' AND vs_benchmark = 'NIFTY 500') AS rs_date,
             (SELECT MAX(date) FROM de_equity_technical_daily) AS tech_date,
             (SELECT MAX(as_of_date) FROM de_mf_holdings) AS mf_date
     )

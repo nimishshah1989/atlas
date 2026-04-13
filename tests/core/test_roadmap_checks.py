@@ -194,9 +194,7 @@ class TestHttpOkCheck:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         with patch("backend.core.roadmap_checks.httpx.get", return_value=mock_resp):
-            check = make_check(
-                type="http_ok", url="http://localhost:8010/api/v1/health"
-            )
+            check = make_check(type="http_ok", url="http://localhost:8010/api/v1/health")
             result, detail = _check_http_ok(check)
         assert result == "ok"
 
@@ -286,9 +284,7 @@ class TestDbQueryCheck:
 
         if not _STATE_DB.exists():
             pytest.skip("state.db not available")
-        check = make_check(
-            type="db_query", sql="SELECT count(*) FROM chunks WHERE status='DONE'"
-        )
+        check = make_check(type="db_query", sql="SELECT count(*) FROM chunks WHERE status='DONE'")
         result, detail = _check_db_query(check)
         # Either ok (if DONE chunks exist) or fail (zero result) — not error
         assert result in ("ok", "fail")
@@ -307,9 +303,7 @@ class TestDbQueryCheck:
 
     def test_db_query_state_db_not_found(self, tmp_path):
         """When state.db is missing, returns error."""
-        with patch(
-            "backend.core.roadmap_checks._STATE_DB", tmp_path / "nonexistent.db"
-        ):
+        with patch("backend.core.roadmap_checks._STATE_DB", tmp_path / "nonexistent.db"):
             check = make_check(type="db_query", sql="SELECT 1")
             result, detail = _check_db_query(check)
         assert result == "error"

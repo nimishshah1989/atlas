@@ -7,7 +7,7 @@ import time
 from collections import deque
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import structlog
 from fastapi import APIRouter, Depends, Query, Response
@@ -39,11 +39,11 @@ def _cache_get(key: str) -> Optional[Any]:
     entry = _cache.get(key)
     if entry is None:
         return None
-    val, ts = entry
+    cached_value, ts = entry
     if time.monotonic() - ts > _CACHE_TTL:
         del _cache[key]
         return None
-    return val
+    return cached_value
 
 
 def _cache_set(key: str, val: Any) -> None:
@@ -136,15 +136,15 @@ class SystemLogsTailResponse(BaseModel):
 
 
 @router.get("/health")
-async def health() -> dict:
+async def health() -> dict[str, str]:
     """Liveness probe — process is up and serving requests."""
     return {"status": "ok", "version": VERSION, "git_sha": GIT_SHA}
 
 
 @router.get("/ready")
-async def ready(response: Response) -> dict:
+async def ready(response: Response) -> dict[str, Any]:
     """Readiness probe — dependencies (DB) reachable."""
-    checks: dict[str, dict] = {}
+    checks: dict[str, dict[str, Any]] = {}
     all_ok = True
 
     t0 = time.monotonic()
@@ -216,9 +216,9 @@ def _file_mtime_ist(path: Path) -> Optional[datetime]:
 _STATE_DB = _REPO_ROOT / "orchestrator" / "state.db"
 
 
-def _state_db_info() -> dict:
+def _state_db_info() -> dict[str, Any]:
     """Read state.db for last DONE chunk. Returns dict with keys or None values."""
-    result: dict = {
+    state_info: dict[str, Any] = {
         "state_db_mtime": None,
         "last_chunk_done_at": None,
         "last_chunk_id": None,
@@ -226,9 +226,9 @@ def _state_db_info() -> dict:
         "last_quality_run_at": None,
     }
     if not _STATE_DB.exists():
-        return result
+        return state_info
 
-    result["state_db_mtime"] = _file_mtime_ist(_STATE_DB)
+    state_info["state_db_mtime"] = _file_mtime_ist(_STATE_DB)
 
     try:
         # Read-only URI mode — the backend never writes state.db, and under
@@ -243,13 +243,13 @@ def _state_db_info() -> dict:
             ).fetchone()
             if row:
                 chunk_id, finished_at_str = row
-                result["last_chunk_id"] = chunk_id
+                state_info["last_chunk_id"] = chunk_id
                 if finished_at_str:
                     try:
                         dt = datetime.fromisoformat(finished_at_str)
                         if dt.tzinfo is None:
                             dt = dt.replace(tzinfo=timezone.utc)
-                        result["last_chunk_done_at"] = dt.astimezone(IST)
+                        state_info["last_chunk_done_at"] = dt.astimezone(IST)
                     except ValueError:
                         pass
 
@@ -259,13 +259,13 @@ def _state_db_info() -> dict:
             ).fetchone()
             if qrow:
                 score, at_str = qrow
-                result["last_quality_score"] = int(score)
+                state_info["last_quality_score"] = int(score)
                 if at_str:
                     try:
                         dt = datetime.fromisoformat(at_str)
                         if dt.tzinfo is None:
                             dt = dt.replace(tzinfo=timezone.utc)
-                        result["last_quality_run_at"] = dt.astimezone(IST)
+                        state_info["last_quality_run_at"] = dt.astimezone(IST)
                     except ValueError:
                         pass
         finally:
@@ -273,7 +273,7 @@ def _state_db_info() -> dict:
     except sqlite3.Error as exc:
         log.warning("state_db_read_error", error=str(exc))
 
-    return result
+    return state_info
 
 
 # ---------------------------------------------------------------------------
@@ -286,9 +286,9 @@ _SMOKE_SUMMARY_TRAILER_RE = __import__("re").compile(
 )
 
 
-def _smoke_log_info() -> dict:
+def _smoke_log_info() -> dict[str, Any]:
     """Read most recent *.smoke.log under orchestrator/logs/."""
-    result: dict = {
+    smoke_info: dict[str, Any] = {
         "last_smoke_run_at": None,
         "last_smoke_result": None,
         "last_smoke_summary": None,
@@ -305,10 +305,10 @@ def _smoke_log_info() -> dict:
     )
 
     if not smoke_logs:
-        return result
+        return smoke_info
 
     latest = smoke_logs[0]
-    result["last_smoke_run_at"] = _file_mtime_ist(latest)
+    smoke_info["last_smoke_run_at"] = _file_mtime_ist(latest)
 
     try:
         # Read last 20 lines for trailer
@@ -319,13 +319,13 @@ def _smoke_log_info() -> dict:
                 total = int(m.group(1))
                 passed = int(m.group(2))
                 hard_fail = int(m.group(3))
-                result["last_smoke_summary"] = f"{passed}/{total} green"
-                result["last_smoke_result"] = "green" if hard_fail == 0 else "red"
+                smoke_info["last_smoke_summary"] = f"{passed}/{total} green"
+                smoke_info["last_smoke_result"] = "green" if hard_fail == 0 else "red"
                 break
     except OSError as exc:
         log.warning("smoke_log_read_error", error=str(exc))
 
-    return result
+    return smoke_info
 
 
 # ---------------------------------------------------------------------------
@@ -345,16 +345,9 @@ async def heartbeat() -> SystemHeartbeatResponse:
     """Heartbeat — 12-field status strip. 10s cached."""
     cached = _cache_get("heartbeat")
     if cached is not None:
-        return cached
+        return cast(SystemHeartbeatResponse, cached)
 
-    memory_md = (
-        Path.home()
-        / ".claude"
-        / "projects"
-        / "-home-ubuntu-atlas"
-        / "memory"
-        / "MEMORY.md"
-    )
+    memory_md = Path.home() / ".claude" / "projects" / "-home-ubuntu-atlas" / "memory" / "MEMORY.md"
     wiki_index = Path.home() / ".forge" / "knowledge" / "wiki" / "index.md"
     quality_report = _REPO_ROOT / ".quality" / "report.json"
 
@@ -402,7 +395,7 @@ async def quality() -> SystemQualityResponse:
     """Quality — returns .quality/report.json verbatim + as_of. 10s cached."""
     cached = _cache_get("quality")
     if cached is not None:
-        return cached
+        return cast(SystemQualityResponse, cached)
 
     import json
 
@@ -440,7 +433,7 @@ async def logs_tail(
     cache_key = f"logs_tail:{lines}"
     cached = _cache_get(cache_key)
     if cached is not None:
-        return cached
+        return cast(SystemLogsTailResponse, cached)
 
     now = datetime.now(IST)
 
@@ -465,9 +458,7 @@ async def logs_tail(
 
     if lines > 0:
         try:
-            buf: deque[str] = deque(
-                latest.open(encoding="utf-8", errors="replace"), maxlen=lines
-            )
+            buf: deque[str] = deque(latest.open(encoding="utf-8", errors="replace"), maxlen=lines)
             tail_lines = [line.rstrip("\n") for line in buf]
         except OSError as exc:
             log.warning("log_tail_read_error", error=str(exc))

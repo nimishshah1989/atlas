@@ -96,9 +96,7 @@ class StateStore:
                 )
 
     def get_chunk(self, chunk_id: str) -> Optional[dict[str, Any]]:
-        row = self._conn.execute(
-            "SELECT * FROM chunks WHERE id = ?", (chunk_id,)
-        ).fetchone()
+        row = self._conn.execute("SELECT * FROM chunks WHERE id = ?", (chunk_id,)).fetchone()
         return _row_to_chunk(row) if row else None
 
     def list_chunks(self) -> list[dict[str, Any]]:
@@ -113,9 +111,7 @@ class StateStore:
     ) -> None:
         now = _now()
         with self.tx() as c:
-            row = c.execute(
-                "SELECT status FROM chunks WHERE id = ?", (chunk_id,)
-            ).fetchone()
+            row = c.execute("SELECT status FROM chunks WHERE id = ?", (chunk_id,)).fetchone()
             if row is None:
                 raise KeyError(f"unknown chunk {chunk_id}")
             old_status = row["status"]
@@ -143,9 +139,7 @@ class StateStore:
                    WHERE id = ?""",
                 (error, _now(), chunk_id),
             )
-            row = c.execute(
-                "SELECT attempts FROM chunks WHERE id = ?", (chunk_id,)
-            ).fetchone()
+            row = c.execute("SELECT attempts FROM chunks WHERE id = ?", (chunk_id,)).fetchone()
             return int(row["attempts"])
 
     # ---- quality runs -------------------------------------------------
@@ -192,9 +186,7 @@ class StateStore:
 
     # ---- sessions -----------------------------------------------------
 
-    def open_session(
-        self, chunk_id: str, attempt: int, phase: str, log_path: Path
-    ) -> int:
+    def open_session(self, chunk_id: str, attempt: int, phase: str, log_path: Path) -> int:
         with self.tx() as c:
             cur = c.execute(
                 """INSERT INTO sessions
@@ -204,9 +196,7 @@ class StateStore:
             )
             return int(cur.lastrowid or 0)
 
-    def close_session(
-        self, session_id: int, pid: Optional[int], exit_code: int
-    ) -> None:
+    def close_session(self, session_id: int, pid: Optional[int], exit_code: int) -> None:
         with self.tx() as c:
             c.execute(
                 """UPDATE sessions
@@ -217,18 +207,24 @@ class StateStore:
 
 
 def _row_to_chunk(row: sqlite3.Row) -> dict[str, Any]:
+    # Note: runner_pid and failure_reason are nullable columns added by
+    # orchestrator/migrations/add_runner_columns.py (L2-RUNNER Phase 2 T007).
+    # Use .get() via dict conversion to handle dbs that predate the migration.
+    row_dict = dict(row)
     return {
-        "id": row["id"],
-        "title": row["title"],
-        "status": row["status"],
-        "attempts": row["attempts"],
-        "last_error": row["last_error"],
-        "plan_version": row["plan_version"],
-        "depends_on": json.loads(row["depends_on"]),
-        "created_at": row["created_at"],
-        "updated_at": row["updated_at"],
-        "started_at": row["started_at"],
-        "finished_at": row["finished_at"],
+        "id": row_dict["id"],
+        "title": row_dict["title"],
+        "status": row_dict["status"],
+        "attempts": row_dict["attempts"],
+        "last_error": row_dict.get("last_error"),
+        "plan_version": row_dict["plan_version"],
+        "depends_on": json.loads(row_dict["depends_on"]),
+        "created_at": row_dict["created_at"],
+        "updated_at": row_dict["updated_at"],
+        "started_at": row_dict.get("started_at"),
+        "finished_at": row_dict.get("finished_at"),
+        "runner_pid": row_dict.get("runner_pid"),
+        "failure_reason": row_dict.get("failure_reason"),
     }
 
 

@@ -102,7 +102,7 @@ class TestAddNewChunk:
         assert "C99" in content
 
         # Verify it's under V2 by parsing
-        import yaml  # type: ignore[import-untyped]
+        import yaml
 
         data = yaml.safe_load(content)
         v2 = next(v for v in data["versions"] if v["id"] == "V2")
@@ -122,9 +122,7 @@ class TestAddNewChunk:
 
 
 class TestIdempotentReAdd:
-    def test_second_run_exits_zero_with_already_present(
-        self, tmp_path, monkeypatch, capsys
-    ):
+    def test_second_run_exits_zero_with_already_present(self, tmp_path, monkeypatch, capsys):
         roadmap = _make_roadmap(tmp_path)
         # First add
         rc1 = _run(["--chunk", "C55", "--version", "V2"], roadmap, monkeypatch, capsys)
@@ -142,9 +140,7 @@ class TestIdempotentReAdd:
 
 
 class TestCrossVersionConflict:
-    def test_adding_to_different_version_exits_nonzero(
-        self, tmp_path, monkeypatch, capsys
-    ):
+    def test_adding_to_different_version_exits_nonzero(self, tmp_path, monkeypatch, capsys):
         roadmap = _make_roadmap(tmp_path)
         # Add C66 under V2
         rc1 = _run(["--chunk", "C66", "--version", "V2"], roadmap, monkeypatch, capsys)
@@ -176,9 +172,7 @@ class TestCommentPreservation:
 class TestInvalidArgs:
     def test_bad_chunk_id_format_exits_nonzero(self, tmp_path, monkeypatch, capsys):
         roadmap = _make_roadmap(tmp_path)
-        rc = _run(
-            ["--chunk", "chunk-12", "--version", "V2"], roadmap, monkeypatch, capsys
-        )
+        rc = _run(["--chunk", "chunk-12", "--version", "V2"], roadmap, monkeypatch, capsys)
         assert rc != 0
 
     def test_bad_version_id_format_exits_nonzero(self, tmp_path, monkeypatch, capsys):

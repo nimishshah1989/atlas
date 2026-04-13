@@ -8,7 +8,8 @@ Usage:
     python .quality/checks.py --gate            # exit 1 if any gating dim < 80
 
 Report shape (S1+):
-    {"dims": {"security": {"score": N, "gating": true, "passed": N, "eligible": N, "checks": [...]}, ...}, "generated_at": "..."}
+    {"dims": {"security": {"score": N, "gating": true, "passed": N, "eligible": N,
+    "checks": [...]}, ...}, "generated_at": "..."}
     No top-level "overall" key.
 """
 
@@ -22,7 +23,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_PATH = ROOT / ".quality" / "report.json"
@@ -105,13 +106,9 @@ def read_text(p: Path) -> str:
         return ""
 
 
-def run_cmd(
-    cmd: list[str], cwd: Optional[Path] = None, timeout: int = 120
-) -> tuple[int, str, str]:
+def run_cmd(cmd: list[str], cwd: Optional[Path] = None, timeout: int = 120) -> tuple[int, str, str]:
     try:
-        r = subprocess.run(
-            cmd, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout
-        )
+        r = subprocess.run(cmd, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout)
         return r.returncode, r.stdout, r.stderr
     except FileNotFoundError:
         return 127, "", f"command not found: {cmd[0]}"
@@ -138,9 +135,7 @@ SECRET_PATTERNS = [
 
 def check_1_1_secrets() -> CheckResult:
     matches: list[str] = []
-    for f in walk_files(
-        (".py", ".ts", ".tsx", ".js", ".jsx", ".yml", ".yaml", ".json")
-    ):
+    for f in walk_files((".py", ".ts", ".tsx", ".js", ".jsx", ".yml", ".yaml", ".json")):
         text = read_text(f)
         for pat in SECRET_PATTERNS:
             for m in re.finditer(pat, text):
@@ -238,9 +233,7 @@ def check_1_3_deps_vulns() -> CheckResult:
 
 
 def check_1_4_cors() -> CheckResult:
-    main_files = (
-        list((ROOT / "backend").rglob("main.py")) if (ROOT / "backend").exists() else []
-    )
+    main_files = list((ROOT / "backend").rglob("main.py")) if (ROOT / "backend").exists() else []
     score = 5  # default: no config = 5
     evidence = "no CORSMiddleware found"
     for f in main_files:
@@ -367,6 +360,60 @@ def check_1_9_input_validation() -> CheckResult:
     )
 
 
+_RUNNER_LOG_KEY_PATTERN = re.compile(r"sk-ant-api03-[A-Za-z0-9_\-]{20,}")
+
+_RUNNER_LOG_SCAN_GLOBS = [
+    ".forge/logs/**/*",
+    ".forge/runner-state.json",
+    "specs/003-forge-runner/**/*",
+]
+
+
+def check_1_10_runner_log_keys() -> CheckResult:
+    """Ensure no Anthropic API keys leaked into runner logs or spec files (FR-040).
+
+    Scans:
+      - .forge/logs/**/*
+      - .forge/runner-state.json
+      - specs/003-forge-runner/**/*
+
+    Binary files are skipped on UnicodeDecodeError.  The test suite
+    is intentionally NOT scanned here — check_1_1_secrets handles that scope.
+    """
+    import glob as _glob
+
+    offending: list[str] = []
+    for pattern in _RUNNER_LOG_SCAN_GLOBS:
+        for path_str in _glob.glob(str(ROOT / pattern), recursive=True):
+            p = Path(path_str)
+            if not p.is_file():
+                continue
+            try:
+                text = p.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            if _RUNNER_LOG_KEY_PATTERN.search(text):
+                offending.append(str(p.relative_to(ROOT)))
+
+    n = len(offending)
+    score = 0 if n else 5
+    evidence = (
+        f"API key leak detected in {n} file(s): {offending[:5]}"
+        if n
+        else "no runner log API key leaks"
+    )
+    return CheckResult(
+        "1.10",
+        "No API key leaks in runner logs / spec files",
+        score,
+        5,
+        evidence,
+        "Did any Anthropic API key leak into forge-runner log files or specs?",
+        "Verify secrets.scrub() is called on every log write; rotate any leaked key immediately.",
+        "critical" if n else "info",
+    )
+
+
 def dim_security() -> DimensionResult:
     return DimensionResult(
         "security",
@@ -380,6 +427,7 @@ def dim_security() -> DimensionResult:
             check_1_7_https(),
             check_1_8_rate_limit(),
             check_1_9_input_validation(),
+            check_1_10_runner_log_keys(),
         ],
     )
 
@@ -612,9 +660,7 @@ def check_2_6_naming() -> CheckResult:
         except SyntaxError:
             continue
         for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and isinstance(
-                getattr(node, "ctx", None), ast.Store
-            ):
+            if isinstance(node, ast.Name) and isinstance(getattr(node, "ctx", None), ast.Store):
                 if node.id in GENERIC_NAMES:
                     violations += 1
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -677,9 +723,7 @@ def check_2_8_error_handling() -> CheckResult:
         if "/backend/" in str(f) or "\\backend\\" in str(f):
             print_uses += len(re.findall(r"\bprint\(", text))
         bare_excepts += len(re.findall(r"except\s*:", text))
-        except_exception += len(
-            re.findall(r"except\s+Exception\s*:\s*\n(?!\s*(log|raise))", text)
-        )
+        except_exception += len(re.findall(r"except\s+Exception\s*:\s*\n(?!\s*(log|raise))", text))
     problems = bare_excepts * 3 + except_exception + print_uses
     if problems == 0:
         score = 15
@@ -694,7 +738,10 @@ def check_2_8_error_handling() -> CheckResult:
         "Error handling",
         score,
         15,
-        f"bare_except={bare_excepts} except_Exception={except_exception} backend_print={print_uses}",
+        (
+            f"bare_except={bare_excepts} except_Exception={except_exception}"
+            f" backend_print={print_uses}"
+        ),
         "Does the system handle errors gracefully?",
         "Replace print() with structlog; narrow except clauses; log errors.",
         "high" if score < 10 else "info",
@@ -989,7 +1036,7 @@ def dim_architecture() -> DimensionResult:
 def _check_standards_doc_matches_code() -> CheckResult:
     """3.10 — standards.md and checks.py must describe the same set of checks."""
     try:
-        from verify_doc_matches_code import (  # type: ignore[import-not-found]
+        from verify_doc_matches_code import (
             collect_code_checks,
             collect_doc_checks,
             diff,
@@ -1025,7 +1072,7 @@ def _check_standards_doc_matches_code() -> CheckResult:
 # ══════════════════════════════════════════════════════════════════════════
 
 
-def _http_get(url: str, timeout: float = 5.0) -> tuple[int, float, str, dict]:
+def _http_get(url: str, timeout: float = 5.0) -> tuple[int, float, str, dict[str, Any]]:
     """Return (status_code, elapsed_s, body_text, headers). status=0 on error."""
     import time
     import urllib.request
@@ -1072,7 +1119,10 @@ def dim_api() -> DimensionResult:
             "OpenAPI inventory",
             5 if openapi_json.exists() else 0,
             5,
-            f"openapi.json cached ({len(json.loads(openapi_json.read_text()).get('paths', {}))} paths)"
+            (
+                f"openapi.json cached"
+                f" ({len(json.loads(openapi_json.read_text()).get('paths', {}))} paths)"
+            )
             if openapi_json.exists()
             else "no openapi.json",
             "Is the API spec self-documenting?",
@@ -1115,7 +1165,7 @@ def dim_api() -> DimensionResult:
         "/api/v1/stocks/movers",
         "/api/v1/stocks/universe",
     ]
-    results: list[tuple[str, int, float, str, dict]] = []
+    results: list[tuple[str, int, float, str, dict[str, Any]]] = []
     for path in probes:
         code, elapsed, body, headers = _http_get(f"{base}{path}", timeout=10.0)
         results.append((path, code, elapsed, body, headers))
@@ -1159,8 +1209,7 @@ def dim_api() -> DimensionResult:
             "Error rate",
             err_score,
             10,
-            f"{len(errors)}/{len(results)} non-2xx"
-            + (f" → {errors[:3]}" if errors else ""),
+            f"{len(errors)}/{len(results)} non-2xx" + (f" → {errors[:3]}" if errors else ""),
             "Are endpoints returning success?",
             "Investigate failing endpoints; check logs.",
             "critical" if errors else "info",
@@ -1345,7 +1394,7 @@ ALL_DIMS = list(REGISTRY.keys())
 # ══════════════════════════════════════════════════════════════════════════
 
 
-def print_summary(report: dict) -> None:
+def print_summary(report: dict[str, Any]) -> None:
     print("\n" + "═" * 64)
     print(" ATLAS QUALITY REPORT — per-dimension (no composite)")
     print("═" * 64)
@@ -1385,9 +1434,7 @@ def main() -> int:
         help="run specific dimension(s)",
     )
     ap.add_argument("--gate", action="store_true", help="exit 1 if any gating dim < 80")
-    ap.add_argument(
-        "--save", action="store_true", help="write report to .quality/report.json"
-    )
+    ap.add_argument("--save", action="store_true", help="write report to .quality/report.json")
     args = ap.parse_args()
 
     report = registry_run_all(args.dim)

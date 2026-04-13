@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 import structlog
@@ -82,7 +82,7 @@ async def update_decision_action(
     decision_id: UUID,
     request: DecisionActionRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Accept, ignore, or override a decision."""
     stmt = select(AtlasDecision).where(
         AtlasDecision.id == decision_id,

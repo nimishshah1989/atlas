@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 # Allow running from repo root or scripts/ directory
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -61,9 +61,7 @@ def check_command_fields(data: Any, path: str, errors: list[str]) -> None:
         if "type" in data and data.get("type") == "command":
             cmd = data.get("cmd")
             if isinstance(cmd, str):
-                errors.append(
-                    f"Rule 6 — {path}: 'cmd' is a shell string {cmd!r}, must be a list"
-                )
+                errors.append(f"Rule 6 — {path}: 'cmd' is a shell string {cmd!r}, must be a list")
         for k, v in data.items():
             check_command_fields(v, f"{path}.{k}", errors)
     elif isinstance(data, list):
@@ -121,9 +119,7 @@ def main() -> int:
     # --- Rule 1: every plan chunk is claimed by exactly one version ---
     for pid in sorted(plan_ids):
         if pid not in roadmap_chunk_to_version:
-            errors.append(
-                f"Rule 1 — Chunk {pid!r} is in plan.yaml but not claimed by any version"
-            )
+            errors.append(f"Rule 1 — Chunk {pid!r} is in plan.yaml but not claimed by any version")
 
     # --- Rule 2: every roadmap chunk without future:true exists in plan.yaml ---
     for v in roadmap.versions:
@@ -142,9 +138,7 @@ def main() -> int:
                     try:
                         parse_check(s.check)
                     except Exception as exc:
-                        errors.append(
-                            f"Rule 5 — {v.id}/{c.id}/{s.id} check invalid: {exc}"
-                        )
+                        errors.append(f"Rule 5 — {v.id}/{c.id}/{s.id} check invalid: {exc}")
 
     _print_report(errors, t0, roadmap=roadmap)
     return 1 if errors else 0
@@ -159,11 +153,7 @@ def _print_report(
     if not errors:
         n_versions = len(roadmap.versions) if roadmap else 0
         n_chunks = sum(len(v.chunks) for v in roadmap.versions) if roadmap else 0
-        n_steps = (
-            sum(len(c.steps) for v in roadmap.versions for c in v.chunks)
-            if roadmap
-            else 0
-        )
+        n_steps = sum(len(c.steps) for v in roadmap.versions for c in v.chunks) if roadmap else 0
         print(
             f"roadmap OK: {n_versions} versions, {n_chunks} chunks, "
             f"{n_steps} steps  ({elapsed * 1000:.0f}ms)"

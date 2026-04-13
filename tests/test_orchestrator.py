@@ -133,9 +133,7 @@ def test_chunk_prompt_includes_step0_boot_context():
     """
     plan = load_plan(PLAN_PATH)
     spec = next(c for c in plan.chunks if c.id == "C10")
-    prompt = build_chunk_prompt(
-        plan, spec, attempt=1, last_error=None, quality_report=None
-    )
+    prompt = build_chunk_prompt(plan, spec, attempt=1, last_error=None, quality_report=None)
     assert "STEP 0" in prompt
     assert "CLAUDE.md" in prompt
     assert "MEMORY.md" in prompt

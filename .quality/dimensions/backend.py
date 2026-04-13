@@ -21,9 +21,7 @@ def _run_cmd(
     cmd: list[str], cwd: Optional[Path] = None, timeout: int = 120
 ) -> tuple[int, str, str]:
     try:
-        r = subprocess.run(
-            cmd, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout
-        )
+        r = subprocess.run(cmd, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout)
         return r.returncode, r.stdout, r.stderr
     except FileNotFoundError:
         return 127, "", f"command not found: {cmd[0]}"
@@ -371,9 +369,7 @@ def b10_ci_workflows_present() -> CheckResult:
         "CI/CD workflows",
         10 if has_ci else 0,
         10,
-        f"workflows: {[f.name for f in workflows.glob('*.yml')]}"
-        if has_ci
-        else "no workflows",
+        f"workflows: {[f.name for f in workflows.glob('*.yml')]}" if has_ci else "no workflows",
         "Is there automated CI/CD?",
         "Add .github/workflows/deploy.yml.",
         "medium" if not has_ci else "info",

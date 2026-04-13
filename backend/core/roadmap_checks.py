@@ -17,7 +17,7 @@ import sqlite3
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 import structlog
@@ -69,7 +69,7 @@ _BLOCKED_COMMANDS = frozenset(
 )
 
 # smoke_list 60s result cache: {file: (result_dict, timestamp)}
-_smoke_cache: dict[str, tuple[dict, float]] = {}
+_smoke_cache: dict[str, tuple[dict[str, Any], float]] = {}
 _SMOKE_CACHE_TTL = 60.0
 
 
@@ -162,7 +162,7 @@ def _check_command(check: Check) -> tuple[str, str]:
     # Sandbox: no shell, restricted env, repo cwd, 5s timeout
     env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin")}
     try:
-        result = subprocess.run(
+        proc = subprocess.run(
             cmd,
             shell=False,
             cwd=str(_REPO_ROOT),
@@ -177,11 +177,11 @@ def _check_command(check: Check) -> tuple[str, str]:
     except OSError as exc:
         return "error", f"os-error:{exc}"
 
-    if result.returncode == 0:
+    if proc.returncode == 0:
         return "ok", ""
     else:
-        stderr = result.stderr.decode("utf-8", errors="replace")[:200]
-        return "fail", stderr or f"exit-code:{result.returncode}"
+        stderr = proc.stderr.decode("utf-8", errors="replace")[:200]
+        return "fail", stderr or f"exit-code:{proc.returncode}"
 
 
 # ---------------------------------------------------------------------------
@@ -246,10 +246,10 @@ def _check_db_query(check: Check) -> tuple[str, str]:
             row = cursor.fetchone()
             if row is None:
                 return "fail", "no-rows"
-            val = row[0]
-            if val:
+            row_value = row[0]
+            if row_value:
                 return "ok", ""
-            return "fail", f"zero-result:{val}"
+            return "fail", f"zero-result:{row_value}"
         finally:
             conn.close()
     except sqlite3.OperationalError as exc:
@@ -294,12 +294,12 @@ def _check_smoke_list(check: Check, evaluate_slow: bool) -> tuple[str, str]:
             return result_dict["check"], result_dict["detail"]
 
     # Run smoke probe
-    result = _run_smoke_probe(list_path_str)
-    _smoke_cache[cache_key] = (result, now)
-    return result["check"], result["detail"]
+    probe_result = _run_smoke_probe(list_path_str)
+    _smoke_cache[cache_key] = (probe_result, now)
+    return probe_result["check"], probe_result["detail"]
 
 
-def _run_smoke_probe(list_path_str: str) -> dict:
+def _run_smoke_probe(list_path_str: str) -> dict[str, Any]:
     if not _SMOKE_SCRIPT.exists():
         return {"check": "error", "detail": "smoke-probe-script-not-found"}
 
@@ -309,7 +309,7 @@ def _run_smoke_probe(list_path_str: str) -> dict:
 
     env = {**os.environ, "SMOKE_QUIET": "1"}
     try:
-        result = subprocess.run(
+        smoke_proc = subprocess.run(
             [str(_SMOKE_SCRIPT), str(abs_list_path)],
             shell=False,
             cwd=str(_REPO_ROOT),
@@ -319,10 +319,10 @@ def _run_smoke_probe(list_path_str: str) -> dict:
         )
     except subprocess.TimeoutExpired:
         return {"check": "error", "detail": "smoke-probe-timeout"}
-    except Exception as exc:
+    except OSError as exc:
         return {"check": "error", "detail": str(exc)[:200]}
 
-    stdout = result.stdout.decode("utf-8", errors="replace")
+    stdout = smoke_proc.stdout.decode("utf-8", errors="replace")
     return _parse_smoke_output(stdout)
 
 
@@ -332,7 +332,7 @@ _SMOKE_SUMMARY_RE = re.compile(
 )
 
 
-def _parse_smoke_output(stdout: str) -> dict:
+def _parse_smoke_output(stdout: str) -> dict[str, Any]:
     """Parse smoke-probe.sh stdout for summary line."""
     match = _SMOKE_SUMMARY_RE.search(stdout)
     if not match:
@@ -345,9 +345,7 @@ def _parse_smoke_output(stdout: str) -> dict:
     hard_fail = int(match.group(3))
     soft_skip = int(match.group(4))
 
-    detail = (
-        f"total={total} passed={passed} hard_fail={hard_fail} soft_skip={soft_skip}"
-    )
+    detail = f"total={total} passed={passed} hard_fail={hard_fail} soft_skip={soft_skip}"
 
     if hard_fail == 0:
         return {"check": "ok", "detail": detail}

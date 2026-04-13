@@ -37,7 +37,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLAN_YAML = REPO_ROOT / "orchestrator" / "plan.yaml"
@@ -82,9 +82,7 @@ def derive_quality_targets(files: list[str]) -> dict[str, int]:
         for prefix, dims in DIMENSION_MAP:
             if f.startswith(prefix) or prefix in f:
                 hit.update(dims)
-    return {
-        dim: DIMENSION_FLOORS[dim] for dim in sorted(hit) if dim in DIMENSION_FLOORS
-    }
+    return {dim: DIMENSION_FLOORS[dim] for dim in sorted(hit) if dim in DIMENSION_FLOORS}
 
 
 # --- punch list derivation ----------------------------------------------------
@@ -116,7 +114,7 @@ def extract_acceptance_bullets(spec_path: Path) -> list[str]:
     return bullets
 
 
-def derive_punch_list(task: dict, repo_root: Path) -> list[str]:
+def derive_punch_list(task: dict[str, Any], repo_root: Path) -> list[str]:
     spec_rel = task.get("spec")
     if spec_rel:
         bullets = extract_acceptance_bullets(repo_root / spec_rel)
@@ -238,7 +236,7 @@ def main() -> int:
         print(f"ERROR: tasks.json invalid JSON: {exc}", file=sys.stderr)
         return 2
 
-    tasks: list[dict] = data.get("chunks") or data.get("tasks") or []
+    tasks: list[dict[str, Any]] = data.get("chunks") or data.get("tasks") or []
     if not tasks:
         print("ERROR: tasks.json has no 'chunks' or 'tasks' array", file=sys.stderr)
         return 2

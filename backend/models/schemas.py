@@ -368,7 +368,7 @@ class UQLRequest(BaseModel):
     fields: Optional[list[str]] = None
 
     @model_validator(mode="after")
-    def validate_constraints(self):
+    def validate_constraints(self) -> "UQLRequest":
         if len(self.filters) > 10:
             raise ValueError("Maximum 10 filters per query")
         return self

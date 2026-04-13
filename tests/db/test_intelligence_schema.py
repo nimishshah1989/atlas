@@ -167,9 +167,7 @@ class TestAtlasIntelligenceColumns:
         )
         float_cols = cur.fetchall()
         cur.close()
-        assert float_cols == [], (
-            f"Float columns found in atlas_intelligence: {float_cols}"
-        )
+        assert float_cols == [], f"Float columns found in atlas_intelligence: {float_cols}"
 
 
 # ---------------------------------------------------------------------------
@@ -333,9 +331,7 @@ class TestIndexes:
         am_names = [r[0] for r in rows]
         opc_names = [r[1] for r in rows]
         assert "hnsw" in am_names, f"Expected hnsw access method, got: {am_names}"
-        assert any("cosine" in n for n in opc_names), (
-            f"Expected cosine ops, got: {opc_names}"
-        )
+        assert any("cosine" in n for n in opc_names), f"Expected cosine ops, got: {opc_names}"
 
 
 # ---------------------------------------------------------------------------
@@ -375,9 +371,7 @@ class TestAlembicMigration:
         rows = cur.fetchall()
         cur.close()
         versions = [r[0] for r in rows]
-        assert "c118008a7781" in versions, (
-            f"Expected c118008a7781 in versions, got: {versions}"
-        )
+        assert "c118008a7781" in versions, f"Expected c118008a7781 in versions, got: {versions}"
 
     def test_single_head(self) -> None:
         """Alembic script directory must have exactly one head (no branches)."""

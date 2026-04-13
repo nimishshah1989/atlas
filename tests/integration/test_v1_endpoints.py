@@ -138,7 +138,8 @@ class TestUniverse:
                 field_value = stock.get(field)
                 if field_value is not None:
                     assert isinstance(field_value, str), (
-                        f"Field {field}={field_value} is {type(field_value)}, expected str (Decimal)"
+                        f"Field {field}={field_value} is {type(field_value)},"
+                        " expected str (Decimal)"
                     )
 
 
@@ -230,9 +231,7 @@ class TestQuery:
         assert resp.status_code == 200
         body = resp.json()
         rs_values = [
-            float(rec["rs_composite"])
-            for rec in body["records"]
-            if rec.get("rs_composite")
+            float(rec["rs_composite"]) for rec in body["records"] if rec.get("rs_composite")
         ]
         for idx in range(len(rs_values) - 1):
             assert rs_values[idx] >= rs_values[idx + 1], "RS should be sorted DESC"

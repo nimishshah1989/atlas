@@ -12,12 +12,13 @@ import re
 import time
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 BACKEND_BASE = "http://127.0.0.1:8010"
 
 
-def _get_json(url: str, timeout: float = 5.0) -> tuple[int, dict | None, int]:
+def _get_json(url: str, timeout: float = 5.0) -> tuple[int, dict[str, Any] | None, int]:
     req = urllib.request.Request(url, headers={"User-Agent": "atlas-quality/1.0"})
     start = time.monotonic()
     try:
@@ -119,7 +120,7 @@ def check_rs_momentum_present() -> tuple[bool, str]:
     # rs_momentum may live nested; flatten the first level.
     seen: list[str] = []
 
-    def walk(obj: dict, path: str = "") -> float | None:
+    def walk(obj: dict[str, Any], path: str = "") -> float | None:
         for k, v in obj.items():
             full = f"{path}.{k}" if path else k
             if k == "rs_momentum":
