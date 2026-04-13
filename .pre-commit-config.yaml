@@ -18,6 +18,14 @@ repos:
 
   - repo: local
     hooks:
+      - id: roadmap-lint
+        name: roadmap lint (drift check)
+        entry: python scripts/roadmap-lint.py
+        language: system
+        pass_filenames: false
+        files: ^orchestrator/(roadmap\.yaml|plan\.yaml)$
+        always_run: false
+
       - id: pytest-cov
         name: pytest with coverage
         entry: python -m pytest tests/ -x -q --tb=short
