@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     cors_origins: str = "https://atlas.jslwealth.in,http://localhost:3000,http://localhost:3001"
     jip_api_base_url: str = "http://172.31.10.182:8000"
     rate_limit_default: str = "60/minute"
+    openai_api_key: str = ""
+    nomic_api_url: str = "http://localhost:11434"
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: int = 1536
 
     @property
     def cors_origin_list(self) -> list[str]:
