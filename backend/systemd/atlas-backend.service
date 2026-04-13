@@ -1,0 +1,30 @@
+[Unit]
+Description=ATLAS Backend — Market Intelligence Engine (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/atlas
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/ubuntu/atlas
+EnvironmentFile=-/home/ubuntu/atlas/backend/.env
+ExecStart=/home/ubuntu/atlas/venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8010 --proxy-headers --forwarded-allow-ips=*
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=15
+StandardOutput=append:/home/ubuntu/atlas/logs/atlas-backend.log
+StandardError=append:/home/ubuntu/atlas/logs/atlas-backend.log
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/atlas/logs /home/ubuntu/atlas/backend
+
+[Install]
+WantedBy=multi-user.target

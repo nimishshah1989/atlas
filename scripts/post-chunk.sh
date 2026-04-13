@@ -27,6 +27,50 @@ REPO_ROOT="${REPO_ROOT:-/home/ubuntu/atlas}"
 cd "$REPO_ROOT"
 
 log() { echo "[post-chunk:${CHUNK_ID}] $*"; }
+err() { echo "[post-chunk:${CHUNK_ID}] ERROR: $*" >&2; }
+
+# --- 0. Drift guard — hard-fail on untracked non-ignored files ---------
+# The three-way sync invariant (git / EC2 / wiki) is non-negotiable. The
+# previous version of this hook used `git add -u` in step 1, which only
+# stages MODIFICATIONS to already-tracked files; it silently skips any
+# file a chunk creates but forgets to `git add` itself. That's exactly
+# how C10's README/CONTRIBUTING/architecture/version.py ended up on
+# disk but never in git while state.db and memory both reported DONE.
+#
+# Solution: before anything else, list untracked files that are NOT
+# matched by .gitignore. If any exist outside the allowlist below, HARD
+# FAIL so the chunk stays BLOCKED until a human either gitignores or
+# commits them. Autonomy only works if drift is impossible, not just
+# discouraged.
+#
+# Allowlist: paths below are permitted to be untracked between chunks
+# because they are in-flight spec drafts from a parallel session or
+# are intentionally ephemeral. Everything else must be tracked or
+# ignored. Edit this list when a new parallel workflow needs room.
+DRIFT_ALLOWLIST=(
+  "docs/specs/"      # parallel /forge-build sessions draft specs here
+)
+UNTRACKED=$(git ls-files --others --exclude-standard | tr '\n' '\0' | xargs -0 -n1 echo 2>/dev/null || true)
+OFFENDERS=""
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  allowed=0
+  for allow in "${DRIFT_ALLOWLIST[@]}"; do
+    case "$f" in "$allow"*) allowed=1; break ;; esac
+  done
+  [ "$allowed" = "1" ] && continue
+  OFFENDERS="${OFFENDERS}${f}"$'\n'
+done <<< "$UNTRACKED"
+
+if [ -n "$OFFENDERS" ]; then
+  err "drift guard: untracked files outside allowlist:"
+  echo "$OFFENDERS" | sed 's/^/  /' >&2
+  err "every file above must be either committed or added to .gitignore"
+  err "before this chunk can transition DONE. This is the three-way sync"
+  err "invariant — git, EC2 and wiki must agree. Exiting non-zero."
+  exit 1
+fi
+log "drift guard: clean (no untracked files outside allowlist)"
 
 # --- 1. Residual commit (tracked files only) ---------------------------
 if ! git diff --quiet || ! git diff --cached --quiet; then

@@ -20,3 +20,6 @@ orchestrator/state.db-wal
 orchestrator/state.db-shm
 orchestrator/logs/
 *.log
+
+# Local Claude Code session state (per-session cache, not source)
+.claude/
