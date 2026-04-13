@@ -1,7 +1,7 @@
 {
-  "chunk": "V1-6",
+  "chunk": "V1-6: decisions generator agent \u2014 finding-to-decision mapping, 12-finding fixture, idempotent re-run, 25 tests",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776106472
+  "ts": 1776106609
 }
