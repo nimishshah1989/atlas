@@ -1,58 +1,123 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ChunkTable, { type ForgeChunk } from "./ChunkTable";
-import QualityScores, { type QualityReport } from "./QualityScores";
-import LogTail, { type LogPayload } from "./LogTail";
+import {
+  getHeartbeat,
+  getRoadmap,
+  getQuality,
+  getLogsTail,
+  type HeartbeatResponse,
+  type RoadmapResponse,
+  type QualityResponse,
+  type LogsTailResponse,
+} from "@/lib/systemClient";
+import HeartbeatStrip from "./HeartbeatStrip";
+import RoadmapTree from "./RoadmapTree";
+import QualityScores from "./QualityScores";
 import ContextFiles, { type ContextFile } from "./ContextFiles";
+import LogTail from "./LogTail";
 
-type ForgeState = {
-  now: string;
-  chunks: ForgeChunk[];
-  quality: QualityReport | null;
-  log: LogPayload | null;
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type DashState = {
+  heartbeat: HeartbeatResponse | null;
+  roadmap: RoadmapResponse | null;
+  quality: QualityResponse | null;
+  log: LogsTailResponse | null;
   context: ContextFile[];
+  lastUpdated: string | null;
+  error: string | null;
 };
 
-export default function ForgeDashboard() {
-  const [data, setData] = useState<ForgeState | null>(null);
-  const [error, setError] = useState<string | null>(null);
+// ---------------------------------------------------------------------------
+// ForgeDashboard
+// ---------------------------------------------------------------------------
 
+export default function ForgeDashboard({
+  initial,
+}: {
+  initial?: Partial<DashState>;
+}) {
+  const [state, setState] = useState<DashState>({
+    heartbeat: initial?.heartbeat ?? null,
+    roadmap: initial?.roadmap ?? null,
+    quality: initial?.quality ?? null,
+    log: initial?.log ?? null,
+    context: initial?.context ?? [],
+    lastUpdated: null,
+    error: null,
+  });
+
+  // Fetch all four endpoints in parallel on mount
   useEffect(() => {
     let alive = true;
-    const load = async () => {
+
+    const loadAll = async () => {
       try {
-        const res = await fetch("/forge/api", { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as ForgeState;
-        if (alive) {
-          setData(json);
-          setError(null);
-        }
+        const [hb, rm, ql, lg] = await Promise.allSettled([
+          getHeartbeat(),
+          getRoadmap(),
+          getQuality(),
+          getLogsTail(200),
+        ]);
+
+        if (!alive) return;
+
+        setState((prev) => ({
+          ...prev,
+          heartbeat: hb.status === "fulfilled" ? hb.value : prev.heartbeat,
+          roadmap: rm.status === "fulfilled" ? rm.value : prev.roadmap,
+          quality: ql.status === "fulfilled" ? ql.value : prev.quality,
+          log: lg.status === "fulfilled" ? lg.value : prev.log,
+          lastUpdated: new Date().toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+          }),
+          error: null,
+        }));
       } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : "load failed");
+        if (!alive) return;
+        setState((prev) => ({
+          ...prev,
+          error: e instanceof Error ? e.message : "load failed",
+        }));
       }
     };
-    load();
-    const id = setInterval(load, 10_000);
+
+    // Fast refresh for heartbeat + logs every 30s
+    const pollHeartbeatLogs = async () => {
+      try {
+        const [hb, lg] = await Promise.allSettled([
+          getHeartbeat(),
+          getLogsTail(200),
+        ]);
+        if (!alive) return;
+        setState((prev) => ({
+          ...prev,
+          heartbeat: hb.status === "fulfilled" ? hb.value : prev.heartbeat,
+          log: lg.status === "fulfilled" ? lg.value : prev.log,
+        }));
+      } catch {
+        // keep stale
+      }
+    };
+
+    loadAll();
+    const pollId = setInterval(pollHeartbeatLogs, 30_000);
+
     return () => {
       alive = false;
-      clearInterval(id);
+      clearInterval(pollId);
     };
   }, []);
 
-  const chunks = data?.chunks ?? [];
-  const done = chunks.filter((c) => c.status === "DONE").length;
-  const failed = chunks.filter((c) => c.status === "FAILED").length;
-  const inProgress = chunks.filter((c) =>
-    ["PLANNING", "IMPLEMENTING", "TESTING", "QUALITY_CHECK"].includes(c.status)
-  ).length;
-  const total = chunks.length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
   return (
-    <div className="min-h-screen bg-[#f9f9f7] text-gray-900 p-6">
-      <div className="max-w-[1400px] mx-auto space-y-5">
+    <div className="min-h-screen bg-[#f9f9f7] text-gray-900">
+      {/* Heartbeat strip — sticky top */}
+      <HeartbeatStrip initial={state.heartbeat} />
+
+      <div className="max-w-[1400px] mx-auto p-6 space-y-5">
         <header className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
@@ -62,78 +127,45 @@ export default function ForgeDashboard() {
               </span>
             </h1>
             <p className="text-xs text-gray-500 mt-1 font-mono">
-              auto-refresh 10s ·{" "}
-              {data ? new Date(data.now).toLocaleString("en-IN") : "loading…"}
+              {state.lastUpdated
+                ? `last loaded ${state.lastUpdated} · heartbeat polls every 30s`
+                : "loading…"}
             </p>
           </div>
-          {error && (
-            <span className="text-xs text-red-600 font-mono">{error}</span>
+          {state.error && (
+            <span className="text-xs text-red-600 font-mono">{state.error}</span>
           )}
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <Stat label="Chunks" value={total} />
-          <Stat label="Done" value={done} color="text-emerald-600" />
-          <Stat label="In progress" value={inProgress} color="text-teal-600" />
-          <Stat label="Failed" value={failed} color="text-red-600" />
-          <Stat label="Progress" value={`${pct}%`} color="text-[#1D9E75]" />
-        </div>
-
-        <div className="w-full h-2 bg-gray-200 rounded">
-          <div
-            className="h-full bg-[#1D9E75] rounded transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-white border rounded-lg p-4">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
-              Chunk Status
-            </h2>
-            <ChunkTable chunks={chunks} />
-          </div>
-          <div className="bg-white border rounded-lg p-4">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
-              Quality Scores
-            </h2>
-            <QualityScores report={data?.quality ?? null} />
-          </div>
-        </div>
-
-        <div className="bg-white border rounded-lg p-4">
+        {/* Primary panel: Roadmap tree */}
+        <section>
           <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
-            Context Files — read by every chunk during Step 0 boot
+            Product Roadmap — V1 → V10
           </h2>
-          <ContextFiles files={data?.context ?? []} />
-        </div>
+          <RoadmapTree roadmap={state.roadmap} />
+        </section>
 
-        <div className="bg-white border rounded-lg p-4">
+        {/* Quality scores */}
+        <section className="bg-white border border-gray-200 rounded-lg p-4">
           <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
-            Latest Log
+            Quality Scores
           </h2>
-          <LogTail log={data?.log ?? null} />
-        </div>
-      </div>
-    </div>
-  );
-}
+          <QualityScores quality={state.quality} />
+        </section>
 
-function Stat({
-  label,
-  value,
-  color = "text-gray-900",
-}: {
-  label: string;
-  value: number | string;
-  color?: string;
-}) {
-  return (
-    <div className="bg-white border rounded-lg px-4 py-3">
-      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
-        {label}
+        {/* Context files — collapsed by default */}
+        <section className="bg-white border border-gray-200 rounded-lg p-4">
+          <ContextFiles files={state.context} />
+        </section>
+
+        {/* Log tail */}
+        <section className="bg-white border border-gray-200 rounded-lg p-4">
+          <h2 className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-3">
+            Latest Orchestrator Log
+          </h2>
+          <LogTail log={state.log} />
+        </section>
       </div>
-      <div className={`text-2xl font-mono font-bold ${color}`}>{value}</div>
     </div>
   );
 }

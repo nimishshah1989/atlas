@@ -1,12 +1,8 @@
 "use client";
 
-export type LogPayload = {
-  name: string;
-  tail: string[];
-  mtime: string;
-};
+import type { LogsTailResponse } from "@/lib/systemClient";
 
-export default function LogTail({ log }: { log: LogPayload | null }) {
+export default function LogTail({ log }: { log: LogsTailResponse | null }) {
   if (!log) {
     return (
       <p className="text-xs text-gray-500 font-mono">
@@ -17,11 +13,13 @@ export default function LogTail({ log }: { log: LogPayload | null }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono text-gray-700">{log.name}</span>
-        <span className="text-[10px] font-mono text-gray-400">{log.mtime}</span>
+        <span className="text-xs font-mono text-gray-700">{log.file}</span>
+        <span className="text-[10px] font-mono text-gray-400">
+          {log.as_of.slice(0, 19).replace("T", " ")}
+        </span>
       </div>
       <pre className="bg-gray-900 text-gray-100 text-[11px] font-mono leading-snug rounded p-3 overflow-x-auto max-h-[420px] whitespace-pre">
-        {log.tail.join("\n") || "(empty)"}
+        {log.lines.join("\n") || "(empty)"}
       </pre>
     </div>
   );

@@ -50,6 +50,8 @@ function formatSize(n: number | null): string {
 }
 
 export default function ContextFiles({ files }: { files: ContextFile[] }) {
+  // Collapsed by default (demoted panel)
+  const [collapsed, setCollapsed] = useState(true);
   const [open, setOpen] = useState<ContextFile | null>(null);
   const [body, setBody] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -74,70 +76,84 @@ export default function ContextFiles({ files }: { files: ContextFile[] }) {
     }
   };
 
-  if (files.length === 0) {
-    return (
-      <p className="text-xs text-gray-500 font-mono">
-        No context files discovered.
-      </p>
-    );
-  }
-
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-[10px] uppercase tracking-wider text-gray-500 border-b">
-              <th className="py-2 pr-2">Group</th>
-              <th className="py-2 pr-2">File</th>
-              <th className="py-2 pr-2 font-mono">Path</th>
-              <th className="py-2 pr-2 text-right">Size</th>
-              <th className="py-2 pr-2 font-mono">Last updated</th>
-              <th className="py-2 pr-2 text-right">Open</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((f) => (
-              <tr
-                key={f.key}
-                className="border-b border-gray-100 last:border-0"
-              >
-                <td className="py-1.5 pr-2">
-                  <span
-                    className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${GROUP_COLOR[f.group]}`}
-                  >
-                    {GROUP_LABEL[f.group]}
-                  </span>
-                </td>
-                <td className="py-1.5 pr-2 text-gray-800">{f.label}</td>
-                <td className="py-1.5 pr-2 font-mono text-[10px] text-gray-500">
-                  {f.relPath}
-                </td>
-                <td className="py-1.5 pr-2 text-right tabular-nums text-xs text-gray-600">
-                  {formatSize(f.size)}
-                </td>
-                <td
-                  className="py-1.5 pr-2 font-mono text-[10px] text-gray-500"
-                  title={formatAbsolute(f.mtime)}
-                >
-                  {f.exists ? formatRelative(f.mtime) : (
-                    <span className="text-red-600">missing</span>
-                  )}
-                </td>
-                <td className="py-1.5 pr-2 text-right">
-                  <button
-                    onClick={() => view(f)}
-                    disabled={!f.exists}
-                    className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-[#1D9E75] text-[#1D9E75] hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    view
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Collapsed toggle */}
+      <button
+        onClick={() => setCollapsed((v) => !v)}
+        className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-gray-500 hover:text-gray-700 mb-2"
+      >
+        <span>{collapsed ? "▶" : "▼"}</span>
+        <span>Context files ({files.length})</span>
+        <span className="text-gray-400">— read by every chunk at boot</span>
+      </button>
+
+      {!collapsed && (
+        <>
+          {files.length === 0 ? (
+            <p className="text-xs text-gray-500 font-mono">
+              No context files discovered.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[10px] uppercase tracking-wider text-gray-500 border-b">
+                    <th className="py-2 pr-2">Group</th>
+                    <th className="py-2 pr-2">File</th>
+                    <th className="py-2 pr-2 font-mono">Path</th>
+                    <th className="py-2 pr-2 text-right">Size</th>
+                    <th className="py-2 pr-2 font-mono">Last updated</th>
+                    <th className="py-2 pr-2 text-right">Open</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {files.map((f) => (
+                    <tr
+                      key={f.key}
+                      className="border-b border-gray-100 last:border-0"
+                    >
+                      <td className="py-1.5 pr-2">
+                        <span
+                          className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${GROUP_COLOR[f.group]}`}
+                        >
+                          {GROUP_LABEL[f.group]}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-2 text-gray-800">{f.label}</td>
+                      <td className="py-1.5 pr-2 font-mono text-[10px] text-gray-500">
+                        {f.relPath}
+                      </td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums text-xs text-gray-600">
+                        {formatSize(f.size)}
+                      </td>
+                      <td
+                        className="py-1.5 pr-2 font-mono text-[10px] text-gray-500"
+                        title={formatAbsolute(f.mtime)}
+                      >
+                        {f.exists ? (
+                          formatRelative(f.mtime)
+                        ) : (
+                          <span className="text-red-600">missing</span>
+                        )}
+                      </td>
+                      <td className="py-1.5 pr-2 text-right">
+                        <button
+                          onClick={() => view(f)}
+                          disabled={!f.exists}
+                          className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-[#1D9E75] text-[#1D9E75] hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          view
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
 
       {open && (
         <div
@@ -167,7 +183,9 @@ export default function ContextFiles({ files }: { files: ContextFile[] }) {
               {loading && (
                 <p className="text-xs text-gray-500 font-mono">loading…</p>
               )}
-              {err && <p className="text-xs text-red-600 font-mono">{err}</p>}
+              {err && (
+                <p className="text-xs text-red-600 font-mono">{err}</p>
+              )}
               {!loading && !err && (
                 <pre className="text-[11px] font-mono whitespace-pre-wrap break-words text-gray-800">
                   {body}

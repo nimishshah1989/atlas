@@ -528,6 +528,138 @@
         }
       }
     },
+    "/api/v1/system/heartbeat": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Heartbeat",
+        "description": "Heartbeat \u2014 12-field status strip. 10s cached.",
+        "operationId": "heartbeat_api_v1_system_heartbeat_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHeartbeatResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/roadmap": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Roadmap",
+        "description": "Roadmap \u2014 parsed roadmap.yaml joined with state.db. 10s cached.",
+        "operationId": "roadmap_api_v1_system_roadmap_get",
+        "parameters": [
+          {
+            "name": "evaluate_slow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Evaluate Slow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemRoadmapResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/quality": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Quality",
+        "description": "Quality \u2014 returns .quality/report.json verbatim + as_of. 10s cached.",
+        "operationId": "quality_api_v1_system_quality_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemQualityResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/logs/tail": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Logs Tail",
+        "description": "Log tail \u2014 last N lines from most recent orchestrator log. 10s cached.",
+        "operationId": "logs_tail_api_v1_system_logs_tail_get",
+        "parameters": [
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Lines"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemLogsTailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -682,6 +814,55 @@
           "total_stocks"
         ],
         "title": "BreadthSnapshot"
+      },
+      "ChunkResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepResponse"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "attempts",
+          "updated_at",
+          "steps"
+        ],
+        "title": "ChunkResponse"
       },
       "ConvictionPillars": {
         "properties": {
@@ -914,6 +1095,27 @@
           "created_at"
         ],
         "title": "DecisionSummary"
+      },
+      "DemoGateResponse": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "walkthrough": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Walkthrough"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "walkthrough"
+        ],
+        "title": "DemoGateResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1453,6 +1655,29 @@
         "type": "object",
         "title": "ResponseMeta"
       },
+      "RollupResponse": {
+        "properties": {
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "pct": {
+            "type": "integer",
+            "title": "Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "done",
+          "total",
+          "pct"
+        ],
+        "title": "RollupResponse"
+      },
       "SectorGroup": {
         "properties": {
           "sector": {
@@ -1806,6 +2031,34 @@
           "freshness"
         ],
         "title": "StatusResponse"
+      },
+      "StepResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "check": {
+            "type": "string",
+            "title": "Check"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "check",
+          "detail"
+        ],
+        "title": "StepResponse"
       },
       "StockDeepDive": {
         "properties": {
@@ -2462,6 +2715,231 @@
         ],
         "title": "StockUniverseResponse"
       },
+      "SystemHeartbeatResponse": {
+        "properties": {
+          "memory_md_mtime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Md Mtime"
+          },
+          "wiki_index_mtime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wiki Index Mtime"
+          },
+          "state_db_mtime": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Db Mtime"
+          },
+          "last_chunk_done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Chunk Done At"
+          },
+          "last_chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Chunk Id"
+          },
+          "last_quality_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Quality Run At"
+          },
+          "last_quality_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Quality Score"
+          },
+          "backend_uptime_seconds": {
+            "type": "integer",
+            "title": "Backend Uptime Seconds"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          },
+          "last_smoke_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Smoke Run At"
+          },
+          "last_smoke_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Smoke Result"
+          },
+          "last_smoke_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Smoke Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_md_mtime",
+          "wiki_index_mtime",
+          "state_db_mtime",
+          "last_chunk_done_at",
+          "last_chunk_id",
+          "last_quality_run_at",
+          "last_quality_score",
+          "backend_uptime_seconds",
+          "as_of",
+          "last_smoke_run_at",
+          "last_smoke_result",
+          "last_smoke_summary"
+        ],
+        "title": "SystemHeartbeatResponse"
+      },
+      "SystemLogsTailResponse": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "lines",
+          "as_of"
+        ],
+        "title": "SystemLogsTailResponse"
+      },
+      "SystemQualityResponse": {
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "scores": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scores"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "scores"
+        ],
+        "title": "SystemQualityResponse"
+      },
+      "SystemRoadmapResponse": {
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/VersionResponse"
+            },
+            "type": "array",
+            "title": "Versions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "versions"
+        ],
+        "title": "SystemRoadmapResponse"
+      },
       "TechnicalCheck": {
         "properties": {
           "name": {
@@ -2671,6 +3149,56 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VersionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "goal": {
+            "type": "string",
+            "title": "Goal"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "rollup": {
+            "$ref": "#/components/schemas/RollupResponse"
+          },
+          "chunks": {
+            "items": {
+              "$ref": "#/components/schemas/ChunkResponse"
+            },
+            "type": "array",
+            "title": "Chunks"
+          },
+          "demo_gate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoGateResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "goal",
+          "status",
+          "rollup",
+          "chunks"
+        ],
+        "title": "VersionResponse"
       }
     }
   }
