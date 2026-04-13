@@ -20,7 +20,7 @@ repos:
     hooks:
       - id: roadmap-lint
         name: roadmap lint (drift check)
-        entry: python scripts/roadmap-lint.py
+        entry: python3 scripts/roadmap-lint.py
         language: system
         pass_filenames: false
         files: ^orchestrator/(roadmap\.yaml|plan\.yaml)$
@@ -28,7 +28,7 @@ repos:
 
       - id: pytest-cov
         name: pytest with coverage
-        entry: python -m pytest tests/ -x -q --tb=short
+        entry: python3 -m pytest tests/ -x -q --tb=short
         language: system
         pass_filenames: false
         always_run: true

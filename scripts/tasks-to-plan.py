@@ -218,6 +218,15 @@ def main() -> int:
         action="store_true",
         help="Allow overwriting ids that already exist in plan.yaml (dangerous).",
     )
+    ap.add_argument(
+        "--auto-roadmap",
+        action="store_true",
+        help=(
+            "After appending chunks to plan.yaml, also invoke plan-to-roadmap.py "
+            "for each newly-added chunk so roadmap.yaml stays in sync. "
+            "Version is derived from --id-prefix (e.g. V2 prefix → V2)."
+        ),
+    )
     args = ap.parse_args()
 
     try:
@@ -289,6 +298,53 @@ def main() -> int:
         "Next: run `python -m orchestrator.cli sync` to load them into state.db.",
         file=sys.stderr,
     )
+
+    # --auto-roadmap: invoke plan-to-roadmap.py for each newly-added chunk.
+    if args.auto_roadmap:
+        import subprocess
+
+        # Derive the version from --id-prefix. Examples:
+        #   --id-prefix V2  → V2
+        #   --id-prefix FD  → no numeric group → skip with warning
+        version_id: str | None = None
+        if args.id_prefix:
+            m = re.match(r"^(V\d+)", args.id_prefix)
+            if m:
+                version_id = m.group(1)
+
+        plan_to_roadmap = Path(__file__).resolve().parent / "plan-to-roadmap.py"
+        for row in rows:
+            if version_id is None:
+                print(
+                    f"  --auto-roadmap: skipping {row.id} — cannot derive version "
+                    f"from id-prefix {args.id_prefix!r} (must start with V<n>)",
+                    file=sys.stderr,
+                )
+                continue
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(plan_to_roadmap),
+                    "--chunk",
+                    row.id,
+                    "--version",
+                    version_id,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                print(
+                    f"  --auto-roadmap: {row.id} → roadmap.yaml [{version_id}]",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"  --auto-roadmap: WARNING — plan-to-roadmap failed for {row.id}: "
+                    f"{result.stderr.strip()}",
+                    file=sys.stderr,
+                )
+
     return 0
 
 

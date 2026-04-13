@@ -1,0 +1,280 @@
+# Canonical V1-V10 roadmap. Edit this file to add chunks; the dashboard
+# picks them up automatically. Lint enforces consistency with plan.yaml.
+#
+# Rules:
+#   - version ids: V1–V10
+#   - chunk ids:   C<n>  (must also exist in plan.yaml unless future: true)
+#   - step ids:    C<n>.<m>
+#   - check types: file_exists | command | http_ok | db_query | smoke_list
+#   - command must be a list, never a shell string
+
+versions:
+  - id: V1
+    title: "Market → Sector → Stock → Decision"
+    goal: >
+      FM navigates Market → Sector → Stock flow end-to-end;
+      decisions tracked from creation to outcome.
+    chunks:
+      - id: C1
+        plan_ref: true
+        steps:
+          - id: C1.1
+            text: ".quality/standards.md exists"
+            check:
+              type: file_exists
+              path: .quality/standards.md
+          - id: C1.2
+            text: ".quality/checks.py exists"
+            check:
+              type: file_exists
+              path: .quality/checks.py
+
+      - id: C2
+        plan_ref: true
+        steps:
+          - id: C2.1
+            text: "orchestrator/plan.yaml exists"
+            check:
+              type: file_exists
+              path: orchestrator/plan.yaml
+          - id: C2.2
+            text: "orchestrator/state_machine.py exists"
+            check:
+              type: file_exists
+              path: orchestrator/state_machine.py
+
+      - id: C3
+        plan_ref: true
+        steps:
+          - id: C3.1
+            text: "orchestrator/runner.py exists"
+            check:
+              type: file_exists
+              path: orchestrator/runner.py
+          - id: C3.2
+            text: "orchestrator/prompts.py exists"
+            check:
+              type: file_exists
+              path: orchestrator/prompts.py
+
+      - id: C4
+        plan_ref: true
+        steps:
+          - id: C4.1
+            text: "orchestrator/cli.py exists"
+            check:
+              type: file_exists
+              path: orchestrator/cli.py
+          - id: C4.2
+            text: "orchestrator/logging_config.py exists"
+            check:
+              type: file_exists
+              path: orchestrator/logging_config.py
+
+      - id: C5
+        plan_ref: true
+        steps:
+          - id: C5.1
+            text: "backend/.env.example exists"
+            check:
+              type: file_exists
+              path: backend/.env.example
+
+      - id: C6
+        plan_ref: true
+        steps:
+          - id: C6.1
+            text: "backend/services/ directory split from monolith"
+            check:
+              type: file_exists
+              path: backend/services
+
+      - id: C7
+        plan_ref: true
+        steps:
+          - id: C7.1
+            text: "Dockerfile exists"
+            check:
+              type: file_exists
+              path: Dockerfile
+
+      - id: C8
+        plan_ref: true
+        steps:
+          - id: C8.1
+            text: "frontend/ directory exists"
+            check:
+              type: file_exists
+              path: frontend
+
+      - id: C9
+        plan_ref: true
+        steps:
+          - id: C9.1
+            text: "tests/ directory exists with integration tests"
+            check:
+              type: file_exists
+              path: tests/integration
+
+      - id: C10
+        plan_ref: true
+        steps:
+          - id: C10.1
+            text: "README.md exists"
+            check:
+              type: file_exists
+              path: README.md
+
+      - id: C11
+        plan_ref: true
+        steps:
+          - id: C11.1
+            text: ".quality/report.json exists (API quality gate passed)"
+            check:
+              type: file_exists
+              path: .quality/report.json
+
+  - id: V2
+    title: "MF slice"
+    goal: >
+      MF slice (category → fund → holdings drill-down).
+      Category → fund → holdings drill-down works end-to-end.
+    demo_gate:
+      url: https://atlas.jslwealth.in/v2/mf
+      walkthrough:
+        - "Open MF category grid, verify 38 categories render with RS scores."
+        - "Drill into 'Large Cap Growth', verify holdings list loads."
+        - "Click into HDFC Top 100, verify deep-dive tabs populate."
+    chunks:
+      # V2-smoke: optional smoke_list step for slice-health chip.
+      # future: true because V2 chunks are not yet in plan.yaml.
+      - id: C20
+        future: true
+        steps:
+          - id: C20.1
+            text: "Smoke all MF endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V3
+    title: "Simulation slice"
+    goal: >
+      Simulation slice (VectorBT + tax + QuantStats).
+      VectorBT + Indian FIFO tax + QuantStats tear sheets.
+    chunks:
+      - id: C30
+        future: true
+        steps:
+          - id: C30.1
+            text: "Smoke all simulation endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V4
+    title: "Portfolio slice"
+    goal: >
+      Portfolio slice (casparser + Riskfolio-Lib + attribution).
+    chunks:
+      - id: C40
+        future: true
+        steps:
+          - id: C40.1
+            text: "Smoke all portfolio endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V5
+    title: "Intelligence slice"
+    goal: >
+      Intelligence slice (briefings, debate, Darwinian evolution).
+    chunks:
+      - id: C50
+        future: true
+        steps:
+          - id: C50.1
+            text: "Smoke all intelligence endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V6
+    title: "TradingView slice"
+    goal: >
+      TradingView slice (MCP bridge, charts, bidirectional sync).
+    chunks:
+      - id: C60
+        future: true
+        steps:
+          - id: C60.1
+            text: "Smoke all TradingView endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V7
+    title: "ETF + Global slice"
+    goal: >
+      ETF + Global slice. ETF and global instrument coverage.
+    chunks:
+      - id: C70
+        future: true
+        steps:
+          - id: C70.1
+            text: "Smoke all ETF/Global endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V8
+    title: "Advisor shell"
+    goal: >
+      Advisor shell. Advisor experience surface.
+    chunks:
+      - id: C80
+        future: true
+        steps:
+          - id: C80.1
+            text: "Smoke all advisor endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V9
+    title: "Retail shell"
+    goal: >
+      Retail shell. Retail MF investor surface.
+    chunks:
+      - id: C90
+        future: true
+        steps:
+          - id: C90.1
+            text: "Smoke all retail endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
+
+  - id: V10
+    title: "Qlib + Advanced"
+    goal: >
+      Qlib + Advanced (Alpha158, ML models, parameter optimization).
+    chunks:
+      - id: C100
+        future: true
+        steps:
+          - id: C100.1
+            text: "Smoke all Qlib/Advanced endpoints"
+            slow: true
+            check:
+              type: smoke_list
+              file: scripts/smoke-endpoints.txt
