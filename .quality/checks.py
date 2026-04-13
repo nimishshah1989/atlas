@@ -65,7 +65,7 @@ EXCLUDE_FILE_PATTERNS = [
 ]
 
 
-NON_PRODUCTION_DIRS = {"tests", "scripts"}
+NON_PRODUCTION_DIRS = {"tests", "scripts", "alembic"}
 
 
 def walk_files(exts: tuple[str, ...] = (".py",)) -> list[Path]:

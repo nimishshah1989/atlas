@@ -116,9 +116,9 @@ data coming in, or blindly trust it?" **Severity:** high if 0.
 ## Dimension 2 — Code  *(gating)*
 
 Lint, types, coverage, complexity, hygiene. Eleven checks, all run against
-production code only — `tests/` and `scripts/` are excluded by
-`walk_production_files()` so fixtures and one-off scripts don't drown
-real regressions.
+production code only — `tests/`, `scripts/`, and `alembic/` are excluded
+by `walk_production_files()` so fixtures, one-off scripts, and DDL-heavy
+migration functions don't drown real regressions.
 
 ### 2.1 Zero lint errors
 

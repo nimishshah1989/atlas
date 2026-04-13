@@ -323,11 +323,11 @@
           "decisions"
         ],
         "summary": "List Decisions",
-        "description": "List decisions, optionally filtered by symbol or action status.",
+        "description": "List decisions, optionally filtered by entity, status, or entity_type.",
         "operationId": "list_decisions_api_v1_decisions_get",
         "parameters": [
           {
-            "name": "symbol",
+            "name": "entity",
             "in": "query",
             "required": false,
             "schema": {
@@ -339,11 +339,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Symbol"
+              "title": "Entity"
             }
           },
           {
-            "name": "action",
+            "name": "status",
             "in": "query",
             "required": false,
             "schema": {
@@ -355,7 +355,23 @@
                   "type": "null"
                 }
               ],
-              "title": "Action"
+              "title": "Status"
+            }
+          },
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Type"
             }
           },
           {
@@ -996,20 +1012,11 @@
         "type": "object",
         "title": "DataFreshness"
       },
-      "DecisionAction": {
-        "type": "string",
-        "enum": [
-          "PENDING",
-          "ACCEPTED",
-          "IGNORED",
-          "OVERRIDDEN"
-        ],
-        "title": "DecisionAction"
-      },
       "DecisionActionRequest": {
         "properties": {
-          "action": {
-            "$ref": "#/components/schemas/DecisionAction"
+          "user_action": {
+            "type": "string",
+            "title": "User Action"
           },
           "note": {
             "anyOf": [
@@ -1025,7 +1032,7 @@
         },
         "type": "object",
         "required": [
-          "action"
+          "user_action"
         ],
         "title": "DecisionActionRequest"
       },
@@ -1049,16 +1056,6 @@
         ],
         "title": "DecisionListResponse"
       },
-      "DecisionSignal": {
-        "type": "string",
-        "enum": [
-          "BUY",
-          "SELL",
-          "HOLD",
-          "WATCH"
-        ],
-        "title": "DecisionSignal"
-      },
       "DecisionSummary": {
         "properties": {
           "id": {
@@ -1066,37 +1063,63 @@
             "format": "uuid",
             "title": "Id"
           },
-          "symbol": {
+          "entity": {
             "type": "string",
-            "title": "Symbol"
+            "title": "Entity"
           },
-          "signal": {
-            "$ref": "#/components/schemas/DecisionSignal"
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
           },
-          "quadrant": {
+          "decision_type": {
+            "type": "string",
+            "title": "Decision Type"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "confidence": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Confidence"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "horizon": {
+            "type": "string",
+            "title": "Horizon"
+          },
+          "source_agent": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Quadrant"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
-          },
-          "reason": {
-            "type": "string",
-            "title": "Reason"
+            ],
+            "title": "Source Agent"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
           },
-          "action": {
-            "$ref": "#/components/schemas/DecisionAction",
-            "default": "PENDING"
+          "user_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Action"
           },
-          "action_at": {
+          "user_action_at": {
             "anyOf": [
               {
                 "type": "string",
@@ -1106,9 +1129,9 @@
                 "type": "null"
               }
             ],
-            "title": "Action At"
+            "title": "User Action At"
           },
-          "action_note": {
+          "user_notes": {
             "anyOf": [
               {
                 "type": "string"
@@ -1117,15 +1140,19 @@
                 "type": "null"
               }
             ],
-            "title": "Action Note"
+            "title": "User Notes"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "symbol",
-          "signal",
-          "reason",
+          "entity",
+          "entity_type",
+          "decision_type",
+          "rationale",
+          "confidence",
+          "status",
+          "horizon",
           "created_at"
         ],
         "title": "DecisionSummary"

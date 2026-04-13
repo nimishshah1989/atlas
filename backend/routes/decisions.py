@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.models import AtlasDecision, DecisionActionEnum
+from backend.db.models import AtlasDecision
 from backend.db.session import get_db
 from backend.models.schemas import (
     DecisionAction,
@@ -18,7 +18,6 @@ from backend.models.schemas import (
     DecisionListResponse,
     DecisionSignal,
     DecisionSummary,
-    Quadrant,
     ResponseMeta,
 )
 
@@ -28,20 +27,23 @@ router = APIRouter(prefix="/api/v1/decisions", tags=["decisions"])
 
 @router.get("", response_model=DecisionListResponse)
 async def list_decisions(
-    symbol: Optional[str] = Query(None),
-    action: Optional[str] = Query(None),
+    entity: Optional[str] = Query(None),
+    user_action: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
     limit: Optional[int] = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> DecisionListResponse:
-    """List decisions, optionally filtered by symbol or action status."""
+    """List decisions, optionally filtered by entity, user_action, or status."""
     t0 = time.monotonic()
 
     stmt = select(AtlasDecision).where(AtlasDecision.is_deleted == False)  # noqa: E712
 
-    if symbol:
-        stmt = stmt.where(AtlasDecision.symbol == symbol.upper())
-    if action:
-        stmt = stmt.where(AtlasDecision.action == DecisionActionEnum(action))
+    if entity:
+        stmt = stmt.where(AtlasDecision.entity == entity.upper())
+    if user_action:
+        stmt = stmt.where(AtlasDecision.user_action == user_action)
+    if status:
+        stmt = stmt.where(AtlasDecision.status == status)
 
     stmt = stmt.order_by(AtlasDecision.created_at.desc()).limit(limit)
 
@@ -51,18 +53,19 @@ async def list_decisions(
     decisions = [
         DecisionSummary(
             id=r.id,
-            symbol=r.symbol,
-            signal=DecisionSignal(
-                r.signal.value if hasattr(r.signal, "value") else r.signal
-            ),
-            quadrant=Quadrant(r.quadrant) if r.quadrant else None,
-            reason=r.reason,
+            entity=r.entity,
+            entity_type=r.entity_type,
+            decision_type=DecisionSignal(r.decision_type),
+            rationale=r.rationale,
+            confidence=r.confidence,
+            horizon=r.horizon,
+            horizon_end_date=r.horizon_end_date,
+            status=r.status,
+            source_agent=r.source_agent,
             created_at=r.created_at,
-            action=DecisionAction(
-                r.action.value if hasattr(r.action, "value") else r.action
-            ),
-            action_at=r.action_at,
-            action_note=r.action_note,
+            user_action=DecisionAction(r.user_action) if r.user_action else None,
+            user_action_at=r.user_action_at,
+            user_notes=r.user_notes,
         )
         for r in rows
     ]
@@ -96,9 +99,9 @@ async def update_decision_action(
         update(AtlasDecision)
         .where(AtlasDecision.id == decision_id)
         .values(
-            action=DecisionActionEnum(request.action.value),
-            action_at=now,
-            action_note=request.note,
+            user_action=request.action.value,
+            user_action_at=now,
+            user_notes=request.note,
             updated_at=now,
         )
     )

@@ -94,3 +94,10 @@ skips Step 0 is operating on stale context and will be rejected by review.
 - Subagents always `context: fork`. Main agent sees summaries only.
 - Do NOT accumulate state across chunks. Commit, update the status memory,
   move on.
+
+## Active Technologies
+- Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep) (main)
+- `orchestrator/state.db` (SQLite with WAL mode, already present) — read + update existing `chunks` table with three new columns via alembic migration. No new tables. No touching atlas_* or de_* tables (constitution §Technology). (main)
+
+## Recent Changes
+- main: Added Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep)

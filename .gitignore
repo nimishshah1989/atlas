@@ -27,3 +27,7 @@ orchestrator/logs/
 # spec-kit / specify CLI scaffolding — not part of ATLAS source
 .specify/
 specs/
+
+# ralph runtime state — to be removed in L2-RUNNER (FR-041)
+.ralph/
+.ralphrc

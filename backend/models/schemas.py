@@ -320,14 +320,19 @@ class MoversResponse(BaseModel):
 
 class DecisionSummary(BaseModel):
     id: UUID
-    symbol: str
-    signal: DecisionSignal
-    quadrant: Optional[Quadrant] = None
-    reason: str
+    entity: str
+    entity_type: str = "equity"
+    decision_type: DecisionSignal
+    rationale: str
+    confidence: Decimal
+    horizon: str
+    horizon_end_date: date
+    status: str = "active"
+    source_agent: Optional[str] = None
     created_at: datetime
-    action: DecisionAction = DecisionAction.PENDING
-    action_at: Optional[datetime] = None
-    action_note: Optional[str] = None
+    user_action: Optional[DecisionAction] = None
+    user_action_at: Optional[datetime] = None
+    user_notes: Optional[str] = None
 
 
 class DecisionActionRequest(BaseModel):
