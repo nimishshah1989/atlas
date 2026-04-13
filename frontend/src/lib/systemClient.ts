@@ -92,13 +92,17 @@ export interface QualityCheck {
 export interface QualityDimension {
   dimension: string;
   score: number;
-  weight: number;
+  gating: boolean;
+  passed: number;
+  eligible: number;
   checks?: QualityCheck[];
 }
 
+// S1+ shape: {"dims": {name: QualityDimension}, "generated_at": "..."}.
+// No top-level "overall" — every gating dim must clear its floor on its own.
 export interface QualityScoresData {
-  overall: number;
-  dimensions: QualityDimension[];
+  dims: Record<string, QualityDimension>;
+  generated_at?: string;
 }
 
 export interface QualityResponse {

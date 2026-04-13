@@ -196,7 +196,7 @@ chunks:
   - id: S1
     title: "Scoring engine rewrite — 7 dims, no composite, per-dim 80% floor"
     status: PENDING
-    depends_on: [FD-3]
+    depends_on: []
     spec: docs/specs/chunks/s1.md
     quality_targets:
       code: 85

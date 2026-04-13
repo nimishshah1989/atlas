@@ -93,11 +93,12 @@ def build_chunk_prompt(
         overall = quality_report.get(
             "overall", quality_report.get("overall_score", "?")
         )
-        from .runner import _dims_to_dict
+        from .runner import _dims_map
 
-        dims_map = _dims_to_dict(quality_report.get("dimensions"))
+        dims_map = _dims_map(quality_report)
         dim_scores = (
-            ", ".join(f"{k}={v}" for k, v in sorted(dims_map.items())) or "(none)"
+            ", ".join(f"{k}={v.get('score', '?')}" for k, v in sorted(dims_map.items()))
+            or "(none)"
         )
     else:
         overall = "(no prior run)"

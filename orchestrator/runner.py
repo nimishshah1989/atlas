@@ -30,39 +30,26 @@ LOG_DIR_NAME = "logs"
 SENTINEL = "FORGE_CHUNK_COMPLETE"
 
 
-def _dims_to_dict(dims: Any) -> dict[str, int]:
-    """Normalize the quality report's `dimensions` field to {name: score}.
+def _dims_map(report: dict[str, Any]) -> dict[str, dict]:
+    """Return the per-dimension map from an S1+ report.
 
-    The scorer emits a list of {dimension, score, ...}. Older callers may
-    pass a flat dict. Accept either.
+    S1+ shape: ``{"dims": {name: {score, gating, passed, eligible, checks}}}``.
+    Pre-S1 shape: ``{"dimensions": [{dimension, score, weight, ...}, ...]}``.
+    Both shapes are normalised to ``{name: {score, gating, ...}}``.
     """
-    out: dict[str, int] = {}
-    if isinstance(dims, list):
-        for entry in dims:
+    dims = report.get("dims")
+    if isinstance(dims, dict):
+        return {k: v for k, v in dims.items() if isinstance(v, dict)}
+    legacy = report.get("dimensions")
+    out: dict[str, dict] = {}
+    if isinstance(legacy, list):
+        for entry in legacy:
             if isinstance(entry, dict) and "dimension" in entry:
-                out[entry["dimension"]] = int(entry.get("score", 0) or 0)
-    elif isinstance(dims, dict):
-        for k, v in dims.items():
-            if isinstance(v, dict):
-                out[k] = int(v.get("score", 0) or 0)
-            else:
-                out[k] = int(v or 0)
+                out[entry["dimension"]] = {
+                    "score": int(entry.get("score", 0) or 0),
+                    "gating": True,
+                }
     return out
-
-
-def _has_run_check(dim: Any) -> bool:
-    """True if the dimension has at least one non-SKIP check.
-
-    Dimensions with all-SKIP checks (e.g. `api` before the service is live)
-    should be excluded from the aggregate score so they don't unfairly drag
-    the overall down.
-    """
-    if not isinstance(dim, dict):
-        return False
-    for check in dim.get("checks") or []:
-        if isinstance(check, dict) and check.get("status") != "SKIP":
-            return True
-    return False
 
 
 class RunnerError(Exception):
@@ -116,6 +103,23 @@ class Runner:
     # ---- single chunk -------------------------------------------------
 
     def _run_chunk(self, chunk_id: str) -> None:
+        try:
+            self._run_chunk_inner(chunk_id)
+        except BaseException as exc:  # noqa: BLE001 — runner boundary, catch signals too
+            # Never leave state stranded at PLANNING/RUNNING on signal or crash.
+            # A stranded chunk blocks every future run; record the failure first,
+            # then re-raise so the CLI still exits non-zero.
+            try:
+                self.store.set_status(
+                    chunk_id,
+                    sm.FAILED,
+                    f"runner aborted: {type(exc).__name__}: {exc}",
+                )
+            except Exception:  # noqa: BLE001 — best-effort cleanup
+                pass
+            raise
+
+    def _run_chunk_inner(self, chunk_id: str) -> None:
         spec = next((c for c in self.plan.chunks if c.id == chunk_id), None)
         if spec is None:
             raise RunnerError(f"chunk {chunk_id} not in plan")
@@ -222,7 +226,7 @@ class Runner:
 
         exit_code: int = 1
         proc = None
-        with log_path.open("w") as log_fh:
+        with log_path.open("w", buffering=1) as log_fh:
             try:
                 proc = subprocess.Popen(
                     cmd,
@@ -230,6 +234,7 @@ class Runner:
                     stdout=log_fh,
                     stderr=subprocess.STDOUT,
                     env={**os.environ},
+                    start_new_session=True,
                 )
                 exit_code = proc.wait()
             finally:
@@ -244,12 +249,24 @@ class Runner:
             )
 
     def _run_quality_gate(self, spec: ChunkSpec) -> tuple[bool, dict[str, Any]]:
+        """S1 gate: per-dimension floors only, no composite.
+
+        Two stops:
+          1. Every dimension flagged ``gating: true`` in .quality/report.json
+             must score ≥ ``settings.quality.min_per_gating_dim`` (default 80).
+          2. Every dimension named in ``spec.quality_targets`` must hit its
+             per-chunk target (which can be stricter than the global floor).
+
+        Non-gating dimensions (backend, product until V1.6 R1) are recorded
+        in the report for visibility but do not block the gate.
+        """
         q_cfg = self.plan.settings.get("quality", {})
         script = self.repo_root / q_cfg.get("script", ".quality/checks.py")
+        floor = int(q_cfg.get("min_per_gating_dim", 80))
 
         if self.dry_run:
-            report = self._read_quality_report() or {"overall": 100, "dimensions": []}
-            report.setdefault("overall_score", report.get("overall", 100))
+            report = self._read_quality_report() or {"dims": {}}
+            report.setdefault("overall_score", 100)
             return True, report
 
         subprocess.run(
@@ -263,38 +280,34 @@ class Runner:
         if not report:
             return False, {"overall_score": 0, "error": "no report"}
 
-        # Recompute overall as weighted average over dimensions that have at
-        # least one non-SKIP check. Dimensions whose checks are all SKIP
-        # (e.g. api before the service is live) are excluded so they don't
-        # unfairly drag the aggregate down.
-        dims = report.get("dimensions") or []
-        applicable = [d for d in dims if _has_run_check(d)]
-        if applicable:
-            weight_sum = sum(float(d.get("weight", 0)) for d in applicable) or 1.0
-            overall = int(
-                round(
-                    sum(
-                        int(d.get("score", 0)) * float(d.get("weight", 0))
-                        for d in applicable
-                    )
-                    / weight_sum
-                )
-            )
-        else:
-            overall = int(report.get("overall", report.get("overall_score", 0)))
-        report["overall_score"] = overall
-        report["overall_applicable"] = overall
+        dims = _dims_map(report)
 
-        # Per-chunk targets are the ONLY hard gate. Global floors in plan.yaml
-        # are intentionally advisory — enforcing them per-chunk blocks chunks
-        # that legitimately cannot touch dimensions owned by later chunks
-        # (e.g. C5 security cannot raise devops or frontend).
-        dims_by_name = _dims_to_dict(dims)
-        for dim, target in (spec.quality_targets or {}).items():
-            # Only block on dimensions the chunk is responsible for.
-            if int(dims_by_name.get(dim, 0)) < int(target):
-                return False, report
+        # Stop 1: global per-gating-dim floor. Iterate every gating dim so
+        # one strong dim can never carry a weak one — the whole point of S1.
+        gating_failed = [
+            name
+            for name, d in dims.items()
+            if d.get("gating", False) and int(d.get("score", 0) or 0) < floor
+        ]
 
+        # Stop 2: per-chunk targets. May be stricter than the global floor
+        # and may apply to a subset of dimensions.
+        target_failed = [
+            dim
+            for dim, target in (spec.quality_targets or {}).items()
+            if int(dims.get(dim, {}).get("score", 0) or 0) < int(target)
+        ]
+
+        # Stamp a synthetic overall_score (min of all gating dims) so legacy
+        # callers and the audit log have a single number to record. The
+        # number is informational only — it does NOT gate.
+        gating_scores = [
+            int(d.get("score", 0) or 0) for d in dims.values() if d.get("gating", False)
+        ]
+        report["overall_score"] = min(gating_scores) if gating_scores else 0
+
+        if gating_failed or target_failed:
+            return False, report
         return True, report
 
     def _run_post_chunk_hook(self, chunk_id: str) -> None:

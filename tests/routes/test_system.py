@@ -182,7 +182,7 @@ class TestRoadmap:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap") as mock_load:
+        with patch("backend.routes.system_roadmap.load_roadmap") as mock_load:
             from backend.core.roadmap_loader import load_roadmap as real_load
 
             mock_load.return_value = real_load(roadmap_file)
@@ -209,8 +209,10 @@ class TestRoadmap:
 
         loaded = real_load(roadmap_file)
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -251,8 +253,10 @@ versions:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -292,8 +296,10 @@ versions:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -333,8 +339,10 @@ versions:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -352,7 +360,8 @@ versions:
         _cache.clear()
 
         with patch(
-            "backend.routes.system.load_roadmap", return_value=RoadmapFile(versions=[])
+            "backend.routes.system_roadmap.load_roadmap",
+            return_value=RoadmapFile(versions=[]),
         ):
             _cache.clear()
             resp = await client.get("/api/v1/system/roadmap")
@@ -389,8 +398,10 @@ versions:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -426,8 +437,10 @@ versions:
 
         _cache.clear()
 
-        with patch("backend.routes.system.load_roadmap", return_value=loaded):
-            with patch("backend.routes.system._load_chunk_states", return_value={}):
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states", return_value={}
+            ):
                 _cache.clear()
                 resp = await client.get("/api/v1/system/roadmap")
 
@@ -445,7 +458,8 @@ versions:
         _cache.clear()
 
         with patch(
-            "backend.routes.system.load_roadmap", return_value=RoadmapFile(versions=[])
+            "backend.routes.system_roadmap.load_roadmap",
+            return_value=RoadmapFile(versions=[]),
         ):
             _cache.clear()
             resp = await client.get("/api/v1/system/roadmap")
@@ -682,7 +696,7 @@ class TestStateDbReadOnly:
         is in a dir the process cannot write to."""
         import sqlite3
 
-        from backend.routes import system as system_mod
+        from backend.routes import system_roadmap as system_roadmap_mod
 
         db_path = tmp_path / "state.db"
         conn = sqlite3.connect(str(db_path))
@@ -695,8 +709,8 @@ class TestStateDbReadOnly:
         conn.commit()
         conn.close()
 
-        with patch.object(system_mod, "_STATE_DB", db_path):
-            states = system_mod._load_chunk_states()
+        with patch.object(system_roadmap_mod, "_STATE_DB", db_path):
+            states = system_roadmap_mod._load_chunk_states()
 
         assert "C1" in states
         assert states["C1"]["status"] == "DONE"
@@ -707,7 +721,7 @@ class TestStateDbReadOnly:
         ProtectHome=read-only."""
         import sqlite3
 
-        from backend.routes import system as system_mod
+        from backend.routes import system_roadmap as system_roadmap_mod
 
         db_path = tmp_path / "state.db"
         conn = sqlite3.connect(str(db_path))
@@ -725,9 +739,9 @@ class TestStateDbReadOnly:
             captured["kwargs"] = kwargs
             return real_connect(*args, **kwargs)
 
-        monkeypatch.setattr(system_mod.sqlite3, "connect", spy_connect)
-        with patch.object(system_mod, "_STATE_DB", db_path):
-            system_mod._load_chunk_states()
+        monkeypatch.setattr(system_roadmap_mod.sqlite3, "connect", spy_connect)
+        with patch.object(system_roadmap_mod, "_STATE_DB", db_path):
+            system_roadmap_mod._load_chunk_states()
 
         assert captured["kwargs"].get("uri") is True
         assert "mode=ro" in captured["args"][0]

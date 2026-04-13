@@ -1,24 +1,15 @@
 """
-ATLAS Quality Engine — runnable implementation of the 7-dimension JIP standards.
-
-Canonical spec: .quality/standards.md (frozen snapshot from jip-command-center).
+ATLAS Quality Engine — 7 independent dimensions, no composite, per-dim 80% floor.
 
 Usage:
     python .quality/checks.py                   # run all, print summary
     python .quality/checks.py --json            # machine-readable JSON to stdout
     python .quality/checks.py --dim security    # run one dimension
-    python .quality/checks.py --gate            # exit 1 if any dimension < 80
+    python .quality/checks.py --gate            # exit 1 if any gating dim < 80
 
-The orchestrator calls this at the quality gate. The pre-commit hook calls this
-with --gate. The dashboard reads report.json (written by --json runs).
-
-Design:
-    - Pure Python 3 stdlib + a few optional libs (ruff, mypy, pytest, httpx)
-    - Every check returns a CheckResult (score, max, evidence, severity, fix)
-    - Dimensions aggregate check scores weighted per spec
-    - Checks that require live services or a browser are marked SKIP with a
-      reason (they run inside orchestrator chunks where services are up)
-    - No network calls from this file unless explicitly probing an endpoint
+Report shape (S1+):
+    {"dims": {"security": {"score": N, "gating": true, "passed": N, "eligible": N, "checks": [...]}, ...}, "generated_at": "..."}
+    No top-level "overall" key.
 """
 
 from __future__ import annotations
@@ -30,23 +21,22 @@ import os
 import re
 import subprocess
 import sys
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_PATH = ROOT / ".quality" / "report.json"
 
-# ─── Dimension weights (from standards.md) ────────────────────────────────
-DIM_WEIGHTS = {
-    "security": 0.25,
-    "code": 0.25,
-    "architecture": 0.20,
-    "api": 0.10,
-    "frontend": 0.10,
-    "devops": 0.05,
-    "docs": 0.05,
-}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from dimensions import (  # noqa: E402  (sys.path manipulated above)
+    CheckResult,
+    DimensionResult,
+    REGISTRY,
+    register,
+    run_all as registry_run_all,
+)
+from dimensions.backend import dim_backend  # noqa: E402
+from dimensions.product import dim_product  # noqa: E402
 
 # ─── Exclusion rules ───────────────────────────────────────────────────────
 EXCLUDE_DIRS = {
@@ -75,6 +65,9 @@ EXCLUDE_FILE_PATTERNS = [
 ]
 
 
+NON_PRODUCTION_DIRS = {"tests", "scripts"}
+
+
 def walk_files(exts: tuple[str, ...] = (".py",)) -> list[Path]:
     out: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(ROOT):
@@ -85,6 +78,23 @@ def walk_files(exts: tuple[str, ...] = (".py",)) -> list[Path]:
             if any(re.search(p, f) for p in EXCLUDE_FILE_PATTERNS):
                 continue
             out.append(Path(dirpath) / f)
+    return out
+
+
+def walk_production_files(exts: tuple[str, ...] = (".py",)) -> list[Path]:
+    """Production code only — excludes tests/ and scripts/.
+
+    Code-quality checks (file size, function complexity, naming) target
+    shipped behavior. Test and tooling code follow looser conventions
+    (long fixtures, scripted main(), throwaway names) and would
+    otherwise drown the signal from real regressions.
+    """
+    out: list[Path] = []
+    for p in walk_files(exts):
+        rel_parts = p.relative_to(ROOT).parts
+        if any(part in NON_PRODUCTION_DIRS for part in rel_parts):
+            continue
+        out.append(p)
     return out
 
 
@@ -107,50 +117,6 @@ def run_cmd(
         return 127, "", f"command not found: {cmd[0]}"
     except subprocess.TimeoutExpired:
         return 124, "", f"timeout after {timeout}s"
-
-
-# ─── Result types ──────────────────────────────────────────────────────────
-
-
-@dataclass
-class CheckResult:
-    check_id: str
-    name: str
-    score: int
-    max_score: int
-    evidence: str
-    plain_english: str
-    fix: str
-    severity: str  # critical | high | medium | low | info
-    status: str = "RUN"  # RUN | SKIP | ERROR
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
-class DimensionResult:
-    dimension: str
-    checks: list[CheckResult] = field(default_factory=list)
-
-    @property
-    def score(self) -> int:
-        # Dimension score = sum of check scores scaled to 100 of max points
-        if not self.checks:
-            return 0
-        total = sum(c.score for c in self.checks if c.status == "RUN")
-        total_max = sum(c.max_score for c in self.checks if c.status == "RUN")
-        if total_max == 0:
-            return 0
-        return round(total * 100 / total_max)
-
-    def to_dict(self) -> dict:
-        return {
-            "dimension": self.dimension,
-            "score": self.score,
-            "weight": DIM_WEIGHTS.get(self.dimension, 0),
-            "checks": [c.to_dict() for c in self.checks],
-        }
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -541,7 +507,7 @@ def check_2_3_coverage() -> CheckResult:
 def check_2_4_file_size() -> CheckResult:
     over_500, over_300 = 0, 0
     worst: list[tuple[int, str]] = []
-    for f in walk_files((".py", ".ts", ".tsx")):
+    for f in walk_production_files((".py", ".ts", ".tsx")):
         lines = len(read_text(f).splitlines())
         if lines > 500:
             over_500 += 1
@@ -572,7 +538,7 @@ def check_2_4_file_size() -> CheckResult:
 
 def check_2_5_func_complexity() -> CheckResult:
     over_80, over_50, complex_15, complex_10 = 0, 0, 0, 0
-    for f in walk_files((".py",)):
+    for f in walk_production_files((".py",)):
         try:
             tree = ast.parse(read_text(f))
         except SyntaxError:
@@ -640,7 +606,7 @@ GENERIC_NAMES = {
 
 def check_2_6_naming() -> CheckResult:
     violations = 0
-    for f in walk_files((".py",)):
+    for f in walk_production_files((".py",)):
         try:
             tree = ast.parse(read_text(f))
         except SyntaxError:
@@ -965,6 +931,57 @@ def dim_architecture() -> DimensionResult:
         )
     )
 
+    # Folded from docs: README present and substantial
+    readme = ROOT / "README.md"
+    readme_text = read_text(readme) if readme.exists() else ""
+    readme_ok = readme.exists() and len(readme_text) > 500
+    checks.append(
+        CheckResult(
+            "3.7",
+            "README present",
+            10 if readme_ok else 3,
+            10,
+            f"{len(readme_text)} chars" if readme.exists() else "missing",
+            "Does the README explain what this is and how to run it?",
+            "Write README with: what/run/deploy/API sections.",
+            "medium" if not readme_ok else "info",
+        )
+    )
+
+    # Folded from docs: CLAUDE.md present, project-specific, and live
+    claude_md = ROOT / "CLAUDE.md"
+    cm_text = read_text(claude_md)
+    cm_ok = claude_md.exists() and len(cm_text) > 1000 and "ATLAS" in cm_text
+    checks.append(
+        CheckResult(
+            "3.8",
+            "CLAUDE.md present and live",
+            10 if cm_ok else 3,
+            10,
+            f"{len(cm_text)} chars, project-specific" if cm_ok else "weak or missing",
+            "Is there project-specific Claude guidance?",
+            "Expand CLAUDE.md with stack, rules, decisions.",
+            "medium" if not cm_ok else "info",
+        )
+    )
+
+    # Folded from docs: ADR count
+    adr_dir = ROOT / "docs" / "adr"
+    adr_count = len(list(adr_dir.glob("*.md"))) if adr_dir.exists() else 0
+    in_claude = cm_text.count("## ") if cm_text else 0
+    checks.append(
+        CheckResult(
+            "3.9",
+            "Architecture decisions recorded",
+            10 if (adr_count >= 3 or in_claude >= 10) else 5,
+            10,
+            f"adr_files={adr_count} claude_md_sections={in_claude}",
+            "Are key decisions documented?",
+            "Write ADRs under docs/adr/ or expand CLAUDE.md.",
+            "low",
+        )
+    )
+
     return DimensionResult("architecture", checks)
 
 
@@ -1274,286 +1291,71 @@ def dim_frontend() -> DimensionResult:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# DIMENSION 6 — DEVOPS (weight 5%)
+# REGISTER ALL DIMENSIONS
 # ══════════════════════════════════════════════════════════════════════════
 
+register("security", dim_security, gating=True)
+register("code", dim_code, gating=True)
+register("architecture", dim_architecture, gating=True)
+register("api", dim_api, gating=True)
+register("frontend", dim_frontend, gating=True)
+register("backend", dim_backend, gating=False)
+register("product", dim_product, gating=False)
 
-def dim_devops() -> DimensionResult:
-    checks: list[CheckResult] = []
-    dockerfile = ROOT / "Dockerfile"
-    checks.append(
-        CheckResult(
-            "6.1",
-            "Docker health",
-            15 if dockerfile.exists() else 0,
-            15,
-            "Dockerfile present" if dockerfile.exists() else "missing",
-            "Is the service containerized?",
-            "Write Dockerfile.",
-            "medium" if not dockerfile.exists() else "info",
-        )
-    )
-    checks.append(
-        CheckResult(
-            "6.2",
-            "SSL certificate",
-            0,
-            10,
-            "runs post-deploy (C8 sets up Let's Encrypt)",
-            "",
-            "Configure certbot for atlas.jslwealth.in.",
-            "info",
-            status="SKIP",
-        )
-    )
-    workflows = ROOT / ".github" / "workflows"
-    has_ci = workflows.exists() and any(workflows.glob("*.yml"))
-    checks.append(
-        CheckResult(
-            "6.3",
-            "CI/CD",
-            15 if has_ci else 0,
-            15,
-            f"workflows: {list(workflows.glob('*.yml'))}" if has_ci else "no workflows",
-            "Is there automated CI/CD?",
-            "Add .github/workflows/deploy.yml.",
-            "medium" if not has_ci else "info",
-        )
-    )
-    alembic = ROOT / "alembic.ini"
-    checks.append(
-        CheckResult(
-            "6.4",
-            "Database migrations",
-            10 if alembic.exists() else 0,
-            10,
-            "alembic configured" if alembic.exists() else "missing",
-            "Are schema changes versioned?",
-            "Initialize Alembic.",
-            "high" if not alembic.exists() else "info",
-        )
-    )
-    uses_structlog = any("structlog" in read_text(f) for f in walk_files((".py",)))
-    checks.append(
-        CheckResult(
-            "6.5",
-            "Logging & monitoring",
-            15 if uses_structlog else 5,
-            15,
-            "structlog in use" if uses_structlog else "basic logging only",
-            "Is logging structured?",
-            "Adopt structlog.",
-            "medium" if not uses_structlog else "info",
-        )
-    )
-    checks.append(
-        CheckResult(
-            "6.6",
-            "Backup & recovery",
-            15,
-            15,
-            "RDS automated backups (JIP infra)",
-            "n/a — managed by RDS.",
-            "",
-            "info",
-        )
-    )
-    checks.append(
-        CheckResult(
-            "6.7",
-            "Environment parity",
-            10 if dockerfile.exists() else 5,
-            10,
-            "single Dockerfile" if dockerfile.exists() else "dev-only setup",
-            "Same runtime in dev and prod?",
-            "Use one Dockerfile.",
-            "low",
-        )
-    )
-    checks.append(
-        CheckResult(
-            "6.8",
-            "Resource configuration",
-            10,
-            10,
-            "connection pool + timeouts in config.py",
-            "",
-            "Verify pool_size, timeouts set.",
-            "info",
-        )
-    )
-    return DimensionResult("devops", checks)
-
-
-# ══════════════════════════════════════════════════════════════════════════
-# DIMENSION 7 — DOCUMENTATION (weight 5%)
-# ══════════════════════════════════════════════════════════════════════════
-
-
-def dim_docs() -> DimensionResult:
-    checks: list[CheckResult] = []
-    readme = ROOT / "README.md"
-    readme_text = read_text(readme) if readme.exists() else ""
-    readme_ok = readme.exists() and len(readme_text) > 500
-    checks.append(
-        CheckResult(
-            "7.1",
-            "README",
-            20 if readme_ok else 5,
-            20,
-            f"{len(readme_text)} chars" if readme.exists() else "missing",
-            "Does the README explain what this is and how to run it?",
-            "Write README with: what/run/deploy/API sections.",
-            "medium" if not readme_ok else "info",
-        )
-    )
-    claude_md = ROOT / "CLAUDE.md"
-    cm_text = read_text(claude_md)
-    cm_ok = claude_md.exists() and len(cm_text) > 1000 and "ATLAS" in cm_text
-    checks.append(
-        CheckResult(
-            "7.2",
-            "CLAUDE.md",
-            20 if cm_ok else 5,
-            20,
-            f"{len(cm_text)} chars, project-specific" if cm_ok else "weak",
-            "Is there project-specific Claude guidance?",
-            "Expand CLAUDE.md with stack, rules, decisions.",
-            "medium" if not cm_ok else "info",
-        )
-    )
-    # API docs: presence of docstrings on routes
-    routes_dir = ROOT / "backend" / "routes"
-    endpoints, documented = 0, 0
-    if routes_dir.exists():
-        for f in routes_dir.rglob("*.py"):
-            text = read_text(f)
-            for m in re.finditer(
-                r"@\w+\.(get|post|put|delete|patch)\b.*?\ndef\s+(\w+)", text, re.DOTALL
-            ):
-                endpoints += 1
-                func_name = m.group(2)
-                if re.search(rf'def\s+{func_name}[^:]*:\s*\n\s*"""', text):
-                    documented += 1
-    ratio = (documented / endpoints) if endpoints else 1
-    score_7_3 = round(20 * ratio)
-    checks.append(
-        CheckResult(
-            "7.3",
-            "API documentation",
-            score_7_3,
-            20,
-            f"{documented}/{endpoints} endpoints have docstrings",
-            "Are API endpoints documented?",
-            "Add docstrings to every route handler.",
-            "medium" if ratio < 0.8 else "info",
-        )
-    )
-    # Comments: sample "why" ratio — hard to measure; give benefit of doubt
-    checks.append(
-        CheckResult(
-            "7.4",
-            "Inline comments",
-            15,
-            20,
-            "heuristic pass (manual review recommended)",
-            "",
-            "Add WHY comments for non-obvious logic.",
-            "low",
-        )
-    )
-    # ADRs: look for decisions in CLAUDE.md or docs/adr/
-    adr_dir = ROOT / "docs" / "adr"
-    adr_count = len(list(adr_dir.glob("*.md"))) if adr_dir.exists() else 0
-    in_claude = cm_text.count("## ") if cm_text else 0
-    checks.append(
-        CheckResult(
-            "7.5",
-            "Architecture decisions",
-            20 if (adr_count >= 3 or in_claude >= 10) else 10,
-            20,
-            f"adr_files={adr_count} claude_md_sections={in_claude}",
-            "Are key decisions documented?",
-            "Write ADRs under docs/adr/ or expand CLAUDE.md.",
-            "low",
-        )
-    )
-    return DimensionResult("docs", checks)
+ALL_DIMS = list(REGISTRY.keys())
 
 
 # ══════════════════════════════════════════════════════════════════════════
 # MAIN RUNNER
 # ══════════════════════════════════════════════════════════════════════════
 
-DIMENSIONS: dict[str, Callable[[], DimensionResult]] = {
-    "security": dim_security,
-    "code": dim_code,
-    "architecture": dim_architecture,
-    "api": dim_api,
-    "frontend": dim_frontend,
-    "devops": dim_devops,
-    "docs": dim_docs,
-}
-
-
-def run_all(selected: Optional[list[str]] = None) -> dict:
-    dims_to_run = selected or list(DIMENSIONS.keys())
-    results = [DIMENSIONS[d]() for d in dims_to_run]
-    overall_f: float = 0.0
-    total_weight: float = 0.0
-    for r in results:
-        w = float(DIM_WEIGHTS.get(r.dimension, 0))
-        overall_f += r.score * w
-        total_weight += w
-    overall: int = round(overall_f / total_weight) if total_weight else 0
-    return {
-        "overall": overall,
-        "dimensions": [r.to_dict() for r in results],
-        "passing": all(r.score >= 80 for r in results),
-    }
-
 
 def print_summary(report: dict) -> None:
     print("\n" + "═" * 64)
-    print(f" ATLAS QUALITY REPORT — overall: {report['overall']}/100")
+    print(" ATLAS QUALITY REPORT — per-dimension (no composite)")
     print("═" * 64)
-    for d in report["dimensions"]:
+    dims = report.get("dims", {})
+    for name, d in dims.items():
+        gate_tag = "GATE" if d.get("gating") else "info"
         mark = "✓" if d["score"] >= 80 else ("~" if d["score"] >= 60 else "✗")
         print(
-            f" {mark} {d['dimension']:<14} {d['score']:>3}/100  (weight {int(d['weight'] * 100)}%)"
+            f" {mark} {name:<14} {d['score']:>3}/100  [{gate_tag}]  ({d['passed']}/{d['eligible']})"
         )
-        for c in d["checks"]:
+        for c in d.get("checks", []):
             status = c["status"]
             tag = "SKIP" if status == "SKIP" else f"{c['score']}/{c['max_score']}"
             print(f"      [{tag:>7}] {c['check_id']} {c['name']}")
             if c["evidence"] and status == "RUN":
                 print(f"              → {c['evidence'][:100]}")
+    gating_dims = {n: d for n, d in dims.items() if d.get("gating")}
+    failed = [n for n, d in gating_dims.items() if d["score"] < 80]
     print("═" * 64)
-    print(
-        f" VERDICT: {'PASS ✓' if report['passing'] else 'FAIL ✗ (any dimension < 80 blocks merge)'}"
-    )
+    if failed:
+        print(f" VERDICT: FAIL ✗ — gating dims below 80: {', '.join(failed)}")
+    else:
+        print(" VERDICT: PASS ✓ — all gating dimensions ≥ 80")
     print("═" * 64 + "\n")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="ATLAS quality gate — 7 dimensions per jip-command-center standards"
+        description="ATLAS quality gate — 7 dimensions, per-dim 80% floor, no composite"
     )
     ap.add_argument("--json", action="store_true", help="emit JSON to stdout")
     ap.add_argument(
         "--dim",
         "--dimension",
         action="append",
-        choices=list(DIMENSIONS.keys()),
+        choices=ALL_DIMS,
         help="run specific dimension(s)",
     )
-    ap.add_argument("--gate", action="store_true", help="exit 1 if any dimension < 80")
+    ap.add_argument("--gate", action="store_true", help="exit 1 if any gating dim < 80")
     ap.add_argument(
         "--save", action="store_true", help="write report to .quality/report.json"
     )
     args = ap.parse_args()
 
-    report = run_all(args.dim)
+    report = registry_run_all(args.dim)
     if args.save or not args.json:
         REPORT_PATH.write_text(json.dumps(report, indent=2))
 
@@ -1563,7 +1365,9 @@ def main() -> int:
         print_summary(report)
 
     if args.gate:
-        return 0 if report["passing"] else 1
+        dims = report.get("dims", {})
+        failed = [n for n, d in dims.items() if d.get("gating") and d["score"] < 80]
+        return 1 if failed else 0
     return 0
 
 
