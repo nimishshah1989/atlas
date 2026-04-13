@@ -103,6 +103,35 @@ else
   log "no atlas-backend systemd unit — skipping backend restart"
 fi
 
+# --- 3.b Frontend build + restart (idempotent) ---
+# Runs AFTER backend restart, BEFORE the smoke probe. Build failures here
+# are logged but do NOT block the chunk — Step 3.5's smoke probe is the
+# authoritative "did deploy actually work" gate. A broken build leaves the
+# old working build serving, and the probe will catch a real regression.
+if [ -d "$REPO_ROOT/frontend" ]; then
+  FE_LOG="orchestrator/logs/${CHUNK_ID}_frontend_build.log"
+  mkdir -p "$(dirname "$FE_LOG")"
+  log "building frontend (log: $FE_LOG)"
+  if (cd "$REPO_ROOT/frontend" && npm ci --prefer-offline && npm run build) \
+       >"$FE_LOG" 2>&1; then
+    log "frontend build succeeded"
+    if systemctl list-unit-files 2>/dev/null | grep -q '^atlas-frontend\.service'; then
+      log "restarting atlas-frontend.service"
+      sudo systemctl restart atlas-frontend.service
+      sleep 2
+      fe_code=$(curl -fsS -o /dev/null -w '%{http_code}' http://localhost:3000/forge 2>/dev/null || echo "000")
+      case "$fe_code" in
+        200|401) log "frontend local probe $fe_code" ;;
+        *)       log "WARN frontend local probe returned $fe_code (smoke probe will confirm)" ;;
+      esac
+    else
+      log "no atlas-frontend systemd unit — skipping frontend restart"
+    fi
+  else
+    log "WARN frontend build failed — leaving old build running (see $FE_LOG)"
+  fi
+fi
+
 # --- 3.5 Smoke probe: verify deployed slice still responds -------------
 # Runs scripts/smoke-probe.sh against scripts/smoke-endpoints.txt. A hard
 # failure here exits non-zero, which makes the runner mark this chunk

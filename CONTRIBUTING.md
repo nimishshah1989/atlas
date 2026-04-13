@@ -173,7 +173,64 @@ post-chunk sync invariant.
 
 ---
 
-## 7. Reporting bugs and security issues
+## 7. Deploying the Forge dashboard
+
+The Forge dashboard frontend runs under a systemd unit (`atlas-frontend.service`)
+so it auto-restarts on failure and is rebuilt automatically after every chunk lands.
+
+### One-time installation (production EC2)
+
+```bash
+# 1. Copy the unit file
+sudo cp backend/systemd/atlas-frontend.service /etc/systemd/system/
+
+# 2. Create the environment file
+sudo mkdir -p /etc/atlas
+sudo touch /etc/atlas/frontend.env
+
+# 3. Populate the environment file (edit manually or via SSM)
+#    FORGE_SHARE_TOKEN must be a random 32-hex string.
+#    NODE_ENV=production is already baked into the unit; no need to repeat it here.
+echo "FORGE_SHARE_TOKEN=$(openssl rand -hex 16)" | sudo tee /etc/atlas/frontend.env
+
+# 4. Build the frontend once before starting
+cd /home/ubuntu/atlas/frontend && npm ci && npm run build
+
+# 5. Enable and start
+sudo systemctl daemon-reload
+sudo systemctl enable --now atlas-frontend.service
+
+# 6. Verify
+sudo systemctl status atlas-frontend.service
+curl -o /dev/null -w '%{http_code}' http://localhost:3000/forge
+# Expected: 200 (no token) or 401 (token enforced)
+```
+
+After this, every post-chunk sync (`scripts/post-chunk.sh`) rebuilds the
+frontend and restarts the service automatically. No manual action is needed
+between chunks.
+
+### Rollback procedure
+
+If `atlas-frontend.service` misbehaves in production:
+
+```bash
+# Stop and disable the systemd unit
+sudo systemctl stop atlas-frontend.service
+sudo systemctl disable atlas-frontend.service
+
+# Fall back to next dev from a persistent tmux session
+cd /home/ubuntu/atlas/frontend
+tmux new-session -d -s frontend "npm run dev -- -p 3000"
+```
+
+The `next dev` server has hot-reload and does not need a rebuild step, but
+it is not production-grade (higher memory, slower cold start). File a
+follow-up chunk to diagnose and re-enable the systemd unit.
+
+---
+
+## 8. Reporting bugs and security issues
 
 - Functional bugs: open an issue with reproduction steps and the relevant
   log lines (structured logs make this painless).

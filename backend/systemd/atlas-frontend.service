@@ -1,0 +1,20 @@
+[Unit]
+Description=ATLAS Forge dashboard (Next.js)
+After=network.target atlas-backend.service
+Wants=atlas-backend.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/atlas/frontend
+EnvironmentFile=/etc/atlas/frontend.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start -- -p 3000
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atlas-frontend
+
+[Install]
+WantedBy=multi-user.target

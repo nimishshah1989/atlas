@@ -23,7 +23,10 @@ http://localhost:8010/health
 http://localhost:8010/api/v1/stocks/universe
 http://localhost:8010/api/v1/stocks/sectors
 
-# Forge dashboard backend data plane (other session's FD-1 will enable these).
+# Forge dashboard backend data plane (FD-1 shipped these).
 ?http://localhost:8010/api/v1/system/heartbeat
 ?http://localhost:8010/api/v1/system/roadmap
 ?http://localhost:8010/api/v1/system/quality
+
+# Forge dashboard frontend (FD-4 — optional: 200 or 401 accepted).
+?http://localhost:3000/forge
