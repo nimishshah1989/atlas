@@ -1,7 +1,7 @@
 {
-  "chunk": "forge: chunk-V1-7 \u2014 pipeline runner + systemd timer: 17 integration tests green, CLI exits 0/1, systemd-analyze verify passes",
+  "chunk": "V1-7: pipeline runner + systemd timer \u2014 3-agent sequential pipeline, CLI entry point, 17 integration tests, idempotent re-run",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776107422
+  "ts": 1776107551
 }
