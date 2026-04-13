@@ -301,6 +301,25 @@ tests/                   — unit + integration tests
 
 ---
 
+## Post-chunk sync invariant (non-negotiable)
+
+Every chunk that reaches DONE MUST leave git, EC2, and the wiki in sync
+before the next chunk starts. The orchestrator enforces this via
+`scripts/post-chunk.sh`, wired through `settings.post_chunk` in
+`orchestrator/plan.yaml` and called from `runner.Runner._run_post_chunk_hook`.
+
+The hook does, in order:
+1. Residual `git commit` of any tracked changes the session left behind.
+2. `git push origin HEAD`.
+3. Restart `atlas-backend.service` if the systemd unit is installed.
+4. Spawn `claude -p "/forge-compile"` headless so the wiki session is
+   captured without human nudging.
+
+If you run a chunk outside the orchestrator, you MUST invoke
+`scripts/post-chunk.sh <chunk_id>` manually before starting the next one.
+Do not skip the push or the compile — a chunk is not DONE until all
+three surfaces (git, EC2, wiki) agree.
+
 ## Context Discipline
 
 - **One chunk per session.** Fresh context per chunk.

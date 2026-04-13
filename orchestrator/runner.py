@@ -156,6 +156,7 @@ class Runner:
 
             if passed:
                 self._safe_transition(chunk_id, sm.DONE, "quality gate passed")
+                self._run_post_chunk_hook(chunk_id)
                 return
 
             self.store.record_attempt(
@@ -295,6 +296,45 @@ class Runner:
                 return False, report
 
         return True, report
+
+    def _run_post_chunk_hook(self, chunk_id: str) -> None:
+        """Keep git/EC2/wiki in sync after a chunk lands DONE.
+
+        Driven by `settings.post_chunk` in plan.yaml. Failures are logged
+        but do not reopen the DONE transition — we never want a passing
+        quality gate to silently regress because the push or compile
+        flaked. The session row captures the exit code for audit.
+        """
+        cfg = self.plan.settings.get("post_chunk") or {}
+        if not cfg.get("enabled", True):
+            return
+        script_rel = cfg.get("script", "scripts/post-chunk.sh")
+        script = (self.repo_root / script_rel).resolve()
+        if not script.exists():
+            return
+        if self.dry_run:
+            return
+
+        log_path = self.log_dir / f"{chunk_id}_post_chunk.log"
+        session_id = self.store.open_session(
+            chunk_id=chunk_id,
+            attempt=0,
+            phase="POST_CHUNK",
+            log_path=log_path,
+        )
+        exit_code = 1
+        try:
+            with log_path.open("w") as log_fh:
+                proc = subprocess.run(
+                    [str(script), chunk_id],
+                    cwd=self.repo_root,
+                    stdout=log_fh,
+                    stderr=subprocess.STDOUT,
+                    env={**os.environ},
+                )
+                exit_code = proc.returncode
+        finally:
+            self.store.close_session(session_id, pid=None, exit_code=exit_code)
 
     def _read_quality_report(self) -> dict[str, Any] | None:
         q_cfg = self.plan.settings.get("quality", {})

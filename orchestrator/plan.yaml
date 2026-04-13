@@ -29,6 +29,14 @@ settings:
     model: claude-opus-4-6
     # Chunk sessions are stateless — each spawn is a fresh context.
     extra_args: ["--dangerously-skip-permissions"]
+  # Post-chunk sync hook — runs after a chunk transitions to DONE. Keeps
+  # git (origin), EC2 filesystem, and the knowledge wiki in lockstep so
+  # the next chunk always starts from a clean, deployed, compiled base.
+  # Responsibilities: residual commit, push to origin, restart services,
+  # spawn /forge-compile headless. See scripts/post-chunk.sh.
+  post_chunk:
+    enabled: true
+    script: scripts/post-chunk.sh
 
 # State machine: PENDING → PLANNING → IMPLEMENTING → TESTING → QUALITY_GATE → DONE
 # On failure at any stage: → FAILED → (retry up to max_attempts) → BLOCKED
