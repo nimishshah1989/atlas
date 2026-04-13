@@ -84,6 +84,7 @@ class ChunkResponse(BaseModel):
     attempts: int
     updated_at: Optional[datetime]
     steps: list[StepResponse]
+    last_error: Optional[str] = None
 
 
 class RollupResponse(BaseModel):

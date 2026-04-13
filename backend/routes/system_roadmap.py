@@ -46,10 +46,10 @@ def _load_chunk_states() -> dict[str, dict]:
         conn = sqlite3.connect(f"file:{_STATE_DB}?mode=ro&immutable=1", uri=True)
         try:
             rows = conn.execute(
-                "SELECT id, status, attempts, updated_at FROM chunks"
+                "SELECT id, title, status, attempts, last_error, updated_at FROM chunks"
             ).fetchall()
             for row in rows:
-                chunk_id, status, attempts, updated_at_str = row
+                chunk_id, title, status, attempts, last_error, updated_at_str = row
                 dt = None
                 if updated_at_str:
                     try:
@@ -60,8 +60,10 @@ def _load_chunk_states() -> dict[str, dict]:
                     except ValueError:
                         pass
                 states[chunk_id] = {
+                    "title": title or "",
                     "status": _CHUNK_STATUS_MAP.get(status, status),
                     "attempts": attempts or 0,
+                    "last_error": last_error,
                     "updated_at": dt,
                 }
         finally:
@@ -100,15 +102,18 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
     chunk_states = await asyncio.to_thread(_load_chunk_states)
 
     version_responses: list[VersionResponse] = []
+    referenced_ids: set[str] = set()
 
     for version in roadmap_file.versions:
         chunk_responses: list[ChunkResponse] = []
 
         for chunk in version.chunks:
+            referenced_ids.add(chunk.id)
             state = chunk_states.get(chunk.id, {})
             status = state.get("status", "PENDING")
             attempts = state.get("attempts", 0)
             updated_at = state.get("updated_at")
+            last_error = state.get("last_error")
 
             step_responses: list[StepResponse] = []
             for step in chunk.steps:
@@ -132,6 +137,7 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
                     attempts=attempts,
                     updated_at=updated_at,
                     steps=step_responses,
+                    last_error=last_error,
                 )
             )
 
@@ -154,6 +160,41 @@ async def _build_roadmap_response(evaluate_slow: bool) -> SystemRoadmapResponse:
                 rollup=rollup,
                 chunks=chunk_responses,
                 demo_gate=demo_gate_resp,
+            )
+        )
+
+    # Fold orphan chunks (in state.db but missing from roadmap.yaml) into a
+    # synthetic "Quality & Infra" lane so every running chunk is visible on
+    # the dashboard. Without this the orchestrator can be executing a chunk
+    # the UI has no node for — which is exactly how S1–S4 went invisible.
+    orphan_ids = [cid for cid in chunk_states if cid not in referenced_ids]
+    if orphan_ids:
+        orphan_chunks: list[ChunkResponse] = []
+        for cid in sorted(orphan_ids):
+            state = chunk_states[cid]
+            orphan_chunks.append(
+                ChunkResponse(
+                    id=cid,
+                    title=state.get("title") or "",
+                    status=state.get("status", "PENDING"),
+                    attempts=state.get("attempts", 0),
+                    updated_at=state.get("updated_at"),
+                    steps=[],
+                    last_error=state.get("last_error"),
+                )
+            )
+        version_responses.append(
+            VersionResponse(
+                id="SX",
+                title="Quality & Infra (orphan chunks from state.db)",
+                goal=(
+                    "Chunks tracked by the orchestrator but not declared in "
+                    "roadmap.yaml. Surfaced so no running chunk is invisible."
+                ),
+                status=_version_status(orphan_chunks),
+                rollup=_version_rollup(orphan_chunks),
+                chunks=orphan_chunks,
+                demo_gate=None,
             )
         )
 

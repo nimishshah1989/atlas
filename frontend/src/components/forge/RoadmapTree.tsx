@@ -24,7 +24,7 @@ export default function RoadmapTree({
           title: c.title,
           status: c.status,
           attempts: c.attempts,
-          last_error: null,
+          last_error: c.last_error ?? null,
           started_at: null,
           finished_at: null,
           updated_at: c.updated_at ?? "",

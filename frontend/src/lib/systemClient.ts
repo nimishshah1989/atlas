@@ -49,6 +49,7 @@ export interface ChunkResponse {
   attempts: number;
   updated_at: string | null;
   steps: StepResponse[];
+  last_error?: string | null;
 }
 
 export interface RollupResponse {

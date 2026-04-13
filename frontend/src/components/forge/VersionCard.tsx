@@ -47,6 +47,8 @@ function timeAgo(iso: string | null): string {
 function ChunkRow({ chunk }: { chunk: ChunkResponse }) {
   const [expanded, setExpanded] = useState(false);
   const dotColor = CHUNK_STATUS_DOT[chunk.status] ?? "bg-gray-300";
+  const hasError = Boolean(chunk.last_error);
+  const canExpand = chunk.steps.length > 0 || hasError;
 
   return (
     <div>
@@ -63,17 +65,42 @@ function ChunkRow({ chunk }: { chunk: ChunkResponse }) {
         <span className="text-xs text-gray-700 flex-1 truncate">
           {chunk.title || <span className="italic text-gray-400">untitled</span>}
         </span>
+        {chunk.attempts > 0 && (
+          <span
+            className={`text-[10px] font-mono px-1 rounded flex-shrink-0 ${
+              hasError
+                ? "text-red-700 bg-red-50"
+                : "text-gray-500 bg-gray-100"
+            }`}
+            title={`${chunk.attempts} attempt${chunk.attempts === 1 ? "" : "s"}`}
+          >
+            ×{chunk.attempts}
+          </span>
+        )}
+        {hasError && (
+          <span
+            className="text-[10px] font-mono text-red-600 bg-red-50 px-1 rounded flex-shrink-0"
+            title="last_error present — click to expand"
+          >
+            ERR
+          </span>
+        )}
         <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">
           {timeAgo(chunk.updated_at)}
         </span>
-        {chunk.steps.length > 0 && (
+        {canExpand && (
           <span className="text-[10px] text-gray-400 font-mono ml-1 flex-shrink-0">
             {expanded ? "▲" : "▼"}
           </span>
         )}
       </div>
-      {expanded && chunk.steps.length > 0 && (
+      {expanded && (
         <div className="pb-1 space-y-0.5">
+          {hasError && (
+            <pre className="ml-6 mr-3 my-1 text-[10px] font-mono text-red-700 bg-red-50 border border-red-100 rounded px-2 py-1 whitespace-pre-wrap break-words">
+              {chunk.last_error}
+            </pre>
+          )}
           {chunk.steps.map((step) => (
             <StepCheckRow key={step.id} step={step} />
           ))}

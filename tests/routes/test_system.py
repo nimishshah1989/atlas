@@ -353,7 +353,7 @@ versions:
 
     @pytest.mark.asyncio
     async def test_roadmap_no_yaml_returns_empty(self, client, tmp_path):
-        """Missing roadmap.yaml returns empty versions list."""
+        """Missing roadmap.yaml + empty state.db returns empty versions list."""
         from backend.core.roadmap_loader import RoadmapFile
         from backend.routes.system import _cache
 
@@ -363,8 +363,12 @@ versions:
             "backend.routes.system_roadmap.load_roadmap",
             return_value=RoadmapFile(versions=[]),
         ):
-            _cache.clear()
-            resp = await client.get("/api/v1/system/roadmap")
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states",
+                return_value={},
+            ):
+                _cache.clear()
+                resp = await client.get("/api/v1/system/roadmap")
 
         assert resp.status_code == 200
         assert resp.json()["versions"] == []
@@ -468,6 +472,74 @@ versions:
         assert "as_of" in body
         assert "versions" in body
         assert "+05:30" in body["as_of"]
+
+    @pytest.mark.asyncio
+    async def test_roadmap_orphan_chunks_appear_in_sx_lane(self, client, tmp_path):
+        """Chunks in state.db but absent from roadmap.yaml must surface as SX."""
+        from datetime import datetime
+
+        from backend.core.roadmap_loader import load_roadmap as real_load
+        from backend.routes.system import _cache
+
+        roadmap_file = tmp_path / "roadmap.yaml"
+        roadmap_file.write_text(_MINIMAL_ROADMAP_YAML)
+        loaded = real_load(roadmap_file)
+
+        orphan_states = {
+            "S1": {
+                "title": "scoring engine rewrite",
+                "status": "DONE",
+                "attempts": 1,
+                "last_error": None,
+                "updated_at": datetime.now(IST),
+            },
+            "S3": {
+                "title": "broken chunk",
+                "status": "FAILED",
+                "attempts": 2,
+                "last_error": "gate failed: dim doc_code_drift=62",
+                "updated_at": datetime.now(IST),
+            },
+        }
+
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states",
+                return_value=orphan_states,
+            ):
+                _cache.clear()
+                resp = await client.get("/api/v1/system/roadmap")
+
+        assert resp.status_code == 200
+        body = resp.json()
+        sx = next((v for v in body["versions"] if v["id"] == "SX"), None)
+        assert sx is not None, "SX lane should exist when orphans present"
+        ids = {c["id"] for c in sx["chunks"]}
+        assert ids == {"S1", "S3"}
+        s3 = next(c for c in sx["chunks"] if c["id"] == "S3")
+        assert s3["last_error"] == "gate failed: dim doc_code_drift=62"
+        assert s3["attempts"] == 2
+
+    @pytest.mark.asyncio
+    async def test_roadmap_no_sx_lane_when_no_orphans(self, client, tmp_path):
+        """SX lane must NOT appear when every state.db chunk is in roadmap.yaml."""
+        from backend.core.roadmap_loader import load_roadmap as real_load
+        from backend.routes.system import _cache
+
+        roadmap_file = tmp_path / "roadmap.yaml"
+        roadmap_file.write_text(_MINIMAL_ROADMAP_YAML)
+        loaded = real_load(roadmap_file)
+
+        with patch("backend.routes.system_roadmap.load_roadmap", return_value=loaded):
+            with patch(
+                "backend.routes.system_roadmap._load_chunk_states",
+                return_value={},
+            ):
+                _cache.clear()
+                resp = await client.get("/api/v1/system/roadmap")
+
+        body = resp.json()
+        assert all(v["id"] != "SX" for v in body["versions"])
 
 
 # ---------------------------------------------------------------------------
@@ -701,10 +773,13 @@ class TestStateDbReadOnly:
         db_path = tmp_path / "state.db"
         conn = sqlite3.connect(str(db_path))
         conn.execute(
-            "CREATE TABLE chunks (id TEXT, status TEXT, attempts INT, updated_at TEXT)"
+            "CREATE TABLE chunks ("
+            "id TEXT, title TEXT, status TEXT, attempts INT, "
+            "last_error TEXT, updated_at TEXT)"
         )
         conn.execute(
-            "INSERT INTO chunks VALUES ('C1','DONE',0,'2026-04-13T06:52:14+00:00')"
+            "INSERT INTO chunks VALUES "
+            "('C1','first','DONE',0,NULL,'2026-04-13T06:52:14+00:00')"
         )
         conn.commit()
         conn.close()
