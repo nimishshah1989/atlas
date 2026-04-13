@@ -35,3 +35,4 @@ export default async function ForgePage() {
     />
   );
 }
+THIS IS A SYNTAX ERROR {{{{
