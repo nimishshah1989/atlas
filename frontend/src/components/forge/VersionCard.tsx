@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { VersionResponse, VersionStatusEnum, ChunkResponse } from "@/lib/systemClient";
+import type {
+  VersionResponse,
+  VersionStatusEnum,
+  ChunkResponse,
+  MilestoneResponse,
+} from "@/lib/systemClient";
 import StepCheckRow from "./StepCheckRow";
 
 // ---------------------------------------------------------------------------
@@ -26,6 +31,52 @@ const CHUNK_STATUS_DOT: Record<string, string> = {
   BLOCKED: "bg-orange-400",
   FAILED: "bg-red-500",
 };
+
+// Process-strip milestone colors (R/A/G + neutral pending).
+const MILESTONE_DOT: Record<string, string> = {
+  green: "bg-emerald-500",
+  amber: "bg-amber-400",
+  red: "bg-red-500",
+  pending: "bg-gray-200",
+};
+
+// Short two-letter labels stacked above each dot. Keep in sync with the
+// backend `milestones` order in backend/routes/system_roadmap.py.
+const MILESTONE_SHORT: Record<string, string> = {
+  planned: "PL",
+  implemented: "IM",
+  tests: "TS",
+  quality_gate: "QG",
+  post_chunk: "PC",
+  wiki: "WK",
+  memory: "MM",
+};
+
+function MilestoneStrip({ milestones }: { milestones: MilestoneResponse[] }) {
+  if (!milestones || milestones.length === 0) return null;
+  const greens = milestones.filter((m) => m.status === "green").length;
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 ml-1 flex-shrink-0"
+      title={`${greens}/${milestones.length} milestones green`}
+    >
+      {milestones.map((m) => (
+        <span
+          key={m.name}
+          className={`w-1.5 h-1.5 rounded-full ${
+            MILESTONE_DOT[m.status] ?? "bg-gray-200"
+          }`}
+          title={`${MILESTONE_SHORT[m.name] ?? m.name} (${m.name}): ${m.status}${
+            m.detail ? ` — ${m.detail}` : ""
+          }`}
+        />
+      ))}
+      <span className="text-[9px] font-mono text-gray-400 ml-0.5">
+        {greens}/{milestones.length}
+      </span>
+    </span>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -96,6 +147,9 @@ function ChunkRow({ chunk }: { chunk: ChunkResponse }) {
                 : " — FAILED, re-run scripts/forge-ship.sh"
             }`}
           />
+        )}
+        {chunk.milestones && chunk.milestones.length > 0 && (
+          <MilestoneStrip milestones={chunk.milestones} />
         )}
         <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">
           {timeAgo(chunk.updated_at)}

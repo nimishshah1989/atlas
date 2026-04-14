@@ -45,6 +45,12 @@ export interface StepResponse {
   detail: string;
 }
 
+export interface MilestoneResponse {
+  name: string;
+  status: "green" | "amber" | "red" | "pending";
+  detail?: string | null;
+}
+
 export interface ChunkResponse {
   id: string;
   title: string;
@@ -58,6 +64,9 @@ export interface ChunkResponse {
   // post-chunk) on the named timestamp. Rendered as a green/red dot.
   last_shipped_at?: string | null;
   last_ship_ok?: boolean | null;
+  // Process-audit strip — 7 fixed milestones in a stable order.
+  // Derived server-side from state.db + filesystem signals.
+  milestones?: MilestoneResponse[];
 }
 
 export interface RollupResponse {
