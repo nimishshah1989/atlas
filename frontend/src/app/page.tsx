@@ -10,8 +10,15 @@ import MFCategoryTable from "@/components/mf/MFCategoryTable";
 import MFUniverseTree from "@/components/mf/MFUniverseTree";
 import MFDeepDive from "@/components/mf/MFDeepDive";
 import MFFlowsPanel from "@/components/mf/MFFlowsPanel";
+import SimulationBuilder from "@/components/simulate/SimulationBuilder";
+import SimulationResults from "@/components/simulate/SimulationResults";
+import SavedSimulations from "@/components/simulate/SavedSimulations";
+import {
+  type SimulationRunResponse,
+  type SimulationConfig,
+} from "@/lib/api-simulate";
 
-type Tab = "equity" | "mf";
+type Tab = "equity" | "mf" | "simulate";
 
 type View =
   | { type: "sectors" }
@@ -24,14 +31,35 @@ type View =
 export default function Home() {
   const [tab, setTab] = useState<Tab>("equity");
   const [view, setView] = useState<View>({ type: "sectors" });
+  const [simResult, setSimResult] = useState<SimulationRunResponse | null>(
+    null
+  );
+  const [simConfig, setSimConfig] = useState<SimulationConfig | null>(null);
+  const [simBuilderConfig, setSimBuilderConfig] =
+    useState<SimulationConfig | null>(null);
+  const [savedRefresh, setSavedRefresh] = useState(0);
 
   const handleTabSwitch = (t: Tab) => {
     setTab(t);
     if (t === "equity") {
       setView({ type: "sectors" });
-    } else {
+    } else if (t === "mf") {
       setView({ type: "mf-categories" });
     }
+  };
+
+  const handleSimResult = (
+    result: SimulationRunResponse,
+    config: SimulationConfig
+  ) => {
+    setSimResult(result);
+    setSimConfig(config);
+  };
+
+  const handleLoadSaved = (config: SimulationConfig) => {
+    setSimBuilderConfig(config);
+    setSimResult(null);
+    setSimConfig(null);
   };
 
   return (
@@ -76,6 +104,16 @@ export default function Home() {
               >
                 Mutual Funds
               </button>
+              <button
+                onClick={() => handleTabSwitch("simulate")}
+                className={`px-3 py-1 text-xs font-medium transition-colors ${
+                  tab === "simulate"
+                    ? "bg-[#1D9E75] text-white"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+              >
+                Simulate
+              </button>
             </div>
 
             {/* Breadcrumb */}
@@ -113,6 +151,12 @@ export default function Home() {
                     </>
                   )}
                 </>
+              )}
+
+              {tab === "simulate" && (
+                <span className="text-gray-800 font-medium">
+                  Simulation Lab
+                </span>
               )}
 
               {tab === "mf" && (
@@ -259,6 +303,35 @@ export default function Home() {
               />
             )}
           </>
+        )}
+
+        {/* ── Simulation Lab views ── */}
+        {tab === "simulate" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 space-y-6">
+              <SimulationBuilder
+                onResult={(result, config) => {
+                  handleSimResult(result, config);
+                  setSavedRefresh((n) => n + 1);
+                }}
+                initialConfig={simBuilderConfig}
+              />
+              <SavedSimulations
+                onLoad={handleLoadSaved}
+                refreshTrigger={savedRefresh}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              {simResult && simConfig ? (
+                <SimulationResults response={simResult} config={simConfig} />
+              ) : (
+                <div className="bg-white border border-[#e4e4e8] rounded-lg p-8 text-center text-sm text-[#9a9aad]">
+                  Configure a simulation on the left and click Run Simulation to
+                  see results here.
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </main>
     </div>
