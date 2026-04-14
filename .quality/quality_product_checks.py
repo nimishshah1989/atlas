@@ -54,7 +54,9 @@ def check_sectors_shape() -> tuple[bool, str]:
 
 def check_query_endpoint() -> tuple[bool, str]:
     url = f"{BACKEND_BASE}/api/v1/query"
-    payload = json.dumps({"filters": [], "sort": [], "limit": 1}).encode()
+    payload = json.dumps(
+        {"entity": "stocks", "fields": ["symbol"], "filters": [], "sort": [], "limit": 1}
+    ).encode()
     req = urllib.request.Request(
         url,
         data=payload,
