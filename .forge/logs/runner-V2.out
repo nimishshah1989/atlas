@@ -13,3 +13,11 @@ INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Co
 2026-04-14 11:04:13 [info     ] chunk_marked_in_progress       chunk_id=V2-8 pid=450581 started_at=2026-04-14T16:34:13+05:30
 2026-04-14 11:04:13 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-8
 INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
+2026-04-14 11:27:23 [info     ] verifier_all_passed            chunk_id=V2-8
+2026-04-14 11:27:23 [info     ] loop_advance_ok                chunk_id=V2-8 chunks_completed=2
+2026-04-14 11:27:23 [debug    ] picker_dep_not_done            chunk_id=V2-10 dep_id=V2-9 dep_status=PENDING
+2026-04-14 11:27:23 [info     ] picker_selected                chunk_id=V2-9 depends_on=['V2-5', 'V2-7', 'V2-8']
+2026-04-14 11:27:23 [info     ] stage_pick_ok                  chunk_id=V2-9
+2026-04-14 11:27:23 [info     ] chunk_marked_in_progress       chunk_id=V2-9 pid=450581 started_at=2026-04-14T16:57:23+05:30
+2026-04-14 11:27:23 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-9
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

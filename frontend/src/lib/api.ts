@@ -336,6 +336,7 @@ export {
   getMfHoldings,
   getMfSectors,
   getMfNavHistory,
+  getMfOverlap,
   type MFStaleness,
   type MFFund,
   type MFCategoryGroup,
@@ -362,4 +363,6 @@ export {
   type MFFundSectorsResponse,
   type MFNAVPoint,
   type MFNAVHistoryResponse,
+  type MFOverlapHolding,
+  type MFOverlapResponse,
 } from "./api-mf";

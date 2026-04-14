@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMfFundDeepDive, getMfHoldings, getMfSectors, type MFFundDeepDiveResponse, type MFHolding, type MFFundSector } from "@/lib/api-mf";
+import { getMfFundDeepDive, type MFFundDeepDiveResponse } from "@/lib/api-mf";
 import { formatDecimal, formatCurrency, quadrantColor, quadrantBg, signColor } from "@/lib/format";
 import { MetricCard, PillarSection } from "./deepdive/MFPillarSection";
-import { SectorExposureTable, TopHoldingsTable, WeightedTechnicalsBlock } from "./deepdive/MFHoldingsSectors";
+import { TopHoldingsTable, WeightedTechnicalsBlock } from "./deepdive/MFHoldingsSectors";
+import MFNAVSparkline from "./deepdive/MFNAVSparkline";
+import MFOverlapWidget from "./deepdive/MFOverlapWidget";
 
 function SkeletonLoader() {
   return (
@@ -24,24 +26,16 @@ export default function MFDeepDive({
   onBack: () => void;
 }) {
   const [dive, setDive] = useState<MFFundDeepDiveResponse | null>(null);
-  const [holdings, setHoldings] = useState<MFHolding[]>([]);
-  const [sectors, setSectors] = useState<MFFundSector[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setDive(null);
-    Promise.all([
-      getMfFundDeepDive(mstarId),
-      getMfHoldings(mstarId).catch(() => ({ holdings: [], coverage_pct: "0", warnings: [], as_of_date: "" })),
-      getMfSectors(mstarId).catch(() => ({ sectors: [], as_of_date: "" })),
-    ])
-      .then(([d, h, s]) => {
-        setDive(d);
-        setHoldings(h.holdings.slice(0, 10));
-        setSectors(s.sectors);
-      })
+    setError(null);
+
+    getMfFundDeepDive(mstarId)
+      .then((d) => setDive(d))
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
   }, [mstarId]);
@@ -97,7 +91,9 @@ export default function MFDeepDive({
         </div>
         <div className="text-right shrink-0">
           <div className="text-2xl font-bold">{formatCurrency(daily.nav)}</div>
-          <div className="text-xs text-gray-400">NAV {daily.nav_date ?? "—"}</div>
+          <div className="text-xs text-gray-400 mb-1">NAV {daily.nav_date ?? "—"}</div>
+          {/* NAV sparkline loads async after main data */}
+          <MFNAVSparkline mstarId={mstarId} />
         </div>
       </div>
 
@@ -157,7 +153,7 @@ export default function MFDeepDive({
         </div>
       </div>
 
-      {/* Sector Exposure + Holdings */}
+      {/* Sector Exposure Summary + Top Holdings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b bg-gray-50">
@@ -166,17 +162,36 @@ export default function MFDeepDive({
               Top: {sector_exposure.top_sector ?? "—"}{sector_exposure.top_sector_weight_pct ? ` (${formatDecimal(sector_exposure.top_sector_weight_pct)}%)` : ""} · {sector_exposure.sector_count} sectors
             </p>
           </div>
-          <SectorExposureTable sectors={sectors} />
+          <div className="px-4 py-4">
+            {sector_exposure.top_sector ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-700 font-medium">{sector_exposure.top_sector}</span>
+                  {sector_exposure.top_sector_weight_pct && (
+                    <span className="text-gray-900 font-semibold">{formatDecimal(sector_exposure.top_sector_weight_pct)}%</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {sector_exposure.sector_count} total sector{sector_exposure.sector_count !== 1 ? "s" : ""} in portfolio
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-400 text-center py-2">No sector data</div>
+            )}
+          </div>
         </div>
         <div className="border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b bg-gray-50">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Top Holdings</h3>
           </div>
-          <TopHoldingsTable topHoldings={top_holdings} holdings={holdings} />
+          <TopHoldingsTable topHoldings={top_holdings} holdings={[]} />
         </div>
       </div>
 
       <WeightedTechnicalsBlock wt={weighted_technicals} />
+
+      {/* Overlap Widget */}
+      <MFOverlapWidget mstarId={mstarId} />
     </div>
   );
 }

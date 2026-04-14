@@ -45,6 +45,12 @@ export async function getMfNavHistory(mstarId: string) {
   return fetchApi<MFNAVHistoryResponse>(`/api/v1/mf/${mstarId}/nav-history`);
 }
 
+export async function getMfOverlap(fundA: string, fundB: string) {
+  return fetchApi<MFOverlapResponse>(
+    `/api/v1/mf/overlap?funds=${encodeURIComponent(fundA)},${encodeURIComponent(fundB)}`
+  );
+}
+
 // --- Types -------------------------------------------------------------------
 
 export interface MFStaleness {
@@ -254,6 +260,22 @@ export interface MFNAVHistoryResponse {
   mstar_id: string;
   points: MFNAVPoint[];
   coverage_gap_days: number;
+  data_as_of: string;
+  staleness: MFStaleness;
+}
+
+export interface MFOverlapHolding {
+  instrument_id: string;
+  symbol: string;
+  weight_a: string;
+  weight_b: string;
+}
+
+export interface MFOverlapResponse {
+  fund_a: string;
+  fund_b: string;
+  overlap_pct: string;
+  common_holdings: MFOverlapHolding[];
   data_as_of: string;
   staleness: MFStaleness;
 }
