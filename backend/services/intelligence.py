@@ -157,8 +157,8 @@ async def store_finding(
     # Convert Decimal to string for the query param (asyncpg doesn't accept Decimal directly)
     params["confidence"] = str(confidence)
 
-    result = await db.execute(upsert_sql, params)
-    returned_id = result.scalar_one()
+    upsert_result = await db.execute(upsert_sql, params)
+    returned_id = upsert_result.scalar_one()
 
     # Update embedding via raw SQL to avoid pgvector type mismatch (only if embedding available)
     # Use CAST() not ::vector — asyncpg rejects ::type with :param syntax
@@ -295,8 +295,8 @@ async def get_finding_by_id(
         AtlasIntelligence.id == finding_id,
         AtlasIntelligence.is_deleted == False,  # noqa: E712
     )
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    query_result = await db.execute(stmt)
+    return query_result.scalar_one_or_none()
 
 
 async def list_findings(
@@ -326,8 +326,8 @@ async def list_findings(
         stmt = stmt.where(AtlasIntelligence.confidence >= min_confidence)
 
     stmt = stmt.order_by(AtlasIntelligence.created_at.desc()).offset(offset).limit(limit)
-    result = await db.execute(stmt)
-    return list(result.scalars().all())
+    findings_result = await db.execute(stmt)
+    return list(findings_result.scalars().all())
 
 
 # ---------------------------------------------------------------------------

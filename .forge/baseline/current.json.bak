@@ -4,8 +4,8 @@
       "dimension": "security",
       "score": 100,
       "gating": true,
-      "passed": 85,
-      "eligible": 85,
+      "passed": 70,
+      "eligible": 70,
       "checks": [
         {
           "check_id": "1.1",
@@ -38,7 +38,7 @@
           "plain_english": "Do any libraries we use have known security holes?",
           "fix": "Upgrade vulnerable dependencies; replace unmaintained packages.",
           "severity": "info",
-          "status": "RUN"
+          "status": "SKIP"
         },
         {
           "check_id": "1.4",
@@ -121,32 +121,32 @@
     },
     "code": {
       "dimension": "code",
-      "score": 80,
+      "score": 73,
       "gating": true,
-      "passed": 68,
-      "eligible": 85,
+      "passed": 40,
+      "eligible": 55,
       "checks": [
         {
           "check_id": "2.1",
           "name": "Zero lint errors",
-          "score": 10,
+          "score": 0,
           "max_score": 10,
-          "evidence": "0 ruff errors",
-          "plain_english": "Does the code follow formatting/style rules?",
-          "fix": "Run `ruff check . --fix`.",
-          "severity": "info",
-          "status": "RUN"
+          "evidence": "ruff not installed",
+          "plain_english": "",
+          "fix": "pip install ruff",
+          "severity": "high",
+          "status": "SKIP"
         },
         {
           "check_id": "2.2",
           "name": "Zero type errors",
-          "score": 10,
+          "score": 0,
           "max_score": 10,
-          "evidence": "0 mypy errors",
-          "plain_english": "Is the code type-safe?",
-          "fix": "Add type hints; fix mypy errors.",
-          "severity": "info",
-          "status": "RUN"
+          "evidence": "mypy not installed",
+          "plain_english": "",
+          "fix": "pip install mypy",
+          "severity": "high",
+          "status": "SKIP"
         },
         {
           "check_id": "2.3",
@@ -162,12 +162,12 @@
         {
           "check_id": "2.4",
           "name": "File modularity",
-          "score": 3,
+          "score": 7,
           "max_score": 10,
-          "evidence": "over_500=1 over_300=15; worst: backend/routes/mf.py=635, backend/models/schemas.py=500, backend/routes/system.py=494",
+          "evidence": "over_500=0 over_300=16; worst: backend/models/schemas.py=500, backend/routes/system.py=494, backend/routes/system_roadmap.py=476",
           "plain_english": "Are features in small modules or crammed into huge files?",
           "fix": "Split files > 500 lines into smaller modules.",
-          "severity": "medium",
+          "severity": "info",
           "status": "RUN"
         },
         {
@@ -175,7 +175,7 @@
           "name": "Function size and complexity",
           "score": 0,
           "max_score": 10,
-          "evidence": "over_80=4 over_50=25 cc>15=1 cc>10=8",
+          "evidence": "over_80=4 over_50=24 cc>15=1 cc>10=8",
           "plain_english": "Are functions small and focused, or monster functions?",
           "fix": "Break up large/complex functions into smaller helpers.",
           "severity": "medium",
@@ -184,9 +184,9 @@
         {
           "check_id": "2.6",
           "name": "Naming quality",
-          "score": 5,
+          "score": 3,
           "max_score": 5,
-          "evidence": "0 generic names",
+          "evidence": "10 generic names",
           "plain_english": "Can you understand what each thing does from its name?",
           "fix": "Rename generic variables to descriptive names.",
           "severity": "low",
@@ -195,13 +195,13 @@
         {
           "check_id": "2.7",
           "name": "No dead code",
-          "score": 5,
+          "score": 0,
           "max_score": 5,
-          "evidence": "0 unused imports/vars",
-          "plain_english": "Leftover unused code?",
-          "fix": "Remove unused imports/variables.",
-          "severity": "low",
-          "status": "RUN"
+          "evidence": "ruff missing",
+          "plain_english": "",
+          "fix": "",
+          "severity": "medium",
+          "status": "SKIP"
         },
         {
           "check_id": "2.8",
@@ -217,13 +217,13 @@
         {
           "check_id": "2.9",
           "name": "Consistent formatting",
-          "score": 5,
+          "score": 0,
           "max_score": 5,
-          "evidence": "clean",
-          "plain_english": "Is code formatted consistently?",
-          "fix": "Run `ruff format .`",
+          "evidence": "ruff missing",
+          "plain_english": "",
+          "fix": "",
           "severity": "low",
-          "status": "RUN"
+          "status": "SKIP"
         },
         {
           "check_id": "2.10",
@@ -391,7 +391,7 @@
           "name": "Endpoint response time",
           "score": 15,
           "max_score": 15,
-          "evidence": "avg=51ms p95=170ms over 8 endpoints",
+          "evidence": "avg=52ms p95=168ms over 8 endpoints",
           "plain_english": "Are API responses fast enough for users?",
           "fix": "Profile slow endpoints; add DB indexes or cache.",
           "severity": "info",
@@ -424,7 +424,7 @@
           "name": "DB query performance",
           "score": 10,
           "max_score": 10,
-          "evidence": "/api/v1/stocks/universe 188ms",
+          "evidence": "/api/v1/stocks/universe 190ms",
           "plain_english": "Are DB-backed endpoints fast?",
           "fix": "Add indexes on filter columns; review slow query log.",
           "severity": "info",
@@ -542,21 +542,21 @@
     },
     "backend": {
       "dimension": "backend",
-      "score": 80,
+      "score": 100,
       "gating": false,
-      "passed": 40,
-      "eligible": 50,
+      "passed": 30,
+      "eligible": 30,
       "checks": [
         {
           "check_id": "b1",
           "name": "Alembic head matches models",
           "score": 0,
           "max_score": 10,
-          "evidence": "drift detected: FAILED: New upgrade operations detected: [[('modify_nullable', None, 'atlas_decisions', 'is_deleted', {'existing_type': ",
-          "plain_english": "Are DB migrations in sync with models?",
-          "fix": "Run `alembic revision --autogenerate` then `alembic upgrade head`.",
+          "evidence": "alembic not installed",
+          "plain_english": "",
+          "fix": "pip install alembic",
           "severity": "high",
-          "status": "RUN"
+          "status": "SKIP"
         },
         {
           "check_id": "b2",
@@ -605,13 +605,13 @@
         {
           "check_id": "b6",
           "name": "pip-audit clean",
-          "score": 10,
+          "score": 0,
           "max_score": 10,
-          "evidence": "critical=0 high=0",
-          "plain_english": "Any known vulnerabilities in Python deps?",
-          "fix": "Upgrade vulnerable packages.",
+          "evidence": "pip-audit not installed",
+          "plain_english": "",
+          "fix": "pip install pip-audit",
           "severity": "info",
-          "status": "RUN"
+          "status": "SKIP"
         },
         {
           "check_id": "b7",
@@ -671,7 +671,7 @@
           "name": "/stocks/universe returns valid data matching contract",
           "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 193ms (budget 2000ms, 4096B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 186ms (budget 2000ms, 4096B sampled)",
           "plain_english": "GET /api/v1/stocks/universe returns 200 under the 2s budget.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -682,7 +682,7 @@
           "name": "/stocks/sectors returns 31 sectors with 22 metrics each",
           "score": 10,
           "max_score": 10,
-          "evidence": "31 sectors \u00d7 22 metrics (170ms)",
+          "evidence": "31 sectors \u00d7 22 metrics (169ms)",
           "plain_english": "Each sector row must carry at least 22 metric columns beyond the sector label.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -693,7 +693,7 @@
           "name": "/stocks/{symbol} returns deep-dive for any stock",
           "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/stocks/RELIANCE \u2192 200 in 133ms (budget 500ms, 2940B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/stocks/RELIANCE \u2192 200 in 132ms (budget 500ms, 2940B sampled)",
           "plain_english": "GET /api/v1/stocks/RELIANCE returns 200 under the 500ms budget.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -748,7 +748,7 @@
           "name": "FM can accept / ignore / override decisions",
           "score": 10,
           "max_score": 10,
-          "evidence": "/decisions \u2192 200, routes/decisions.py present (11ms)",
+          "evidence": "/decisions \u2192 200, routes/decisions.py present (18ms)",
           "plain_english": "Decisions endpoint exposed and decisions route module present.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -770,7 +770,7 @@
           "name": "RS momentum present and numeric on deep-dive",
           "score": 10,
           "max_score": 10,
-          "evidence": "rs_momentum=-4.7613 at conviction.rs.rs_momentum (138ms)",
+          "evidence": "rs_momentum=-4.7613 at conviction.rs.rs_momentum (131ms)",
           "plain_english": "GET /stocks/RELIANCE carries an rs_momentum field convertible to float.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -781,7 +781,7 @@
           "name": "pct_above_200dma exposed on /sectors and in [0,100]",
           "score": 10,
           "max_score": 10,
-          "evidence": "31/31 sectors in [0,100] (173ms)",
+          "evidence": "31/31 sectors in [0,100] (172ms)",
           "plain_english": "Every sector row must carry pct_above_200dma in [0,100].",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -900,5 +900,5 @@
       ]
     }
   },
-  "generated_at": "2026-04-14T15:58:09.437844+05:30"
+  "generated_at": "2026-04-14T15:32:16.240995+05:30"
 }

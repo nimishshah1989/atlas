@@ -56,10 +56,10 @@ class JIPMarketService:
         try:
             query = text("SELECT MAX(date) FROM de_rs_scores")
             query_result = await self.session.execute(query)
-            val = query_result.scalar_one_or_none()
-            if val is None:
+            latest_date = query_result.scalar_one_or_none()
+            if latest_date is None:
                 return None
-            return str(val)
+            return str(latest_date)
         except Exception as exc:
             log.warning("latest_rs_date_query_failed", error=str(exc))
             return None

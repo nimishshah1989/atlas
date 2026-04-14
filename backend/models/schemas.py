@@ -281,10 +281,10 @@ class StockDeepDiveResponse(BaseModel):
 
     @model_serializer(mode="wrap")
     def _serialize_with_dual_meta(self, handler):  # type: ignore[no-untyped-def]
-        data = handler(self)
-        if "meta" in data:
-            data["_meta"] = data["meta"]
-        return data
+        serialized = handler(self)
+        if "meta" in serialized:
+            serialized["_meta"] = serialized["meta"]
+        return serialized
 
 
 # --- Breadth ---

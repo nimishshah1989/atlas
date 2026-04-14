@@ -124,11 +124,9 @@ def test_endpoint_declared_with_response_model(method: str, path: str, model: ty
 
 SKELETON_CALLS: list[tuple[str, str]] = [
     # /universe, /categories, /flows wired in V2-4 — removed from 501 list
+    # /{mstar_id}, /{mstar_id}/holdings, /{mstar_id}/sectors wired in V2-5 — removed from 501 list
     ("GET", "/api/v1/mf/overlap?funds=A,B"),
     ("GET", "/api/v1/mf/holding-stock/RELIANCE"),
-    ("GET", "/api/v1/mf/F00000ABCD"),
-    ("GET", "/api/v1/mf/F00000ABCD/holdings"),
-    ("GET", "/api/v1/mf/F00000ABCD/sectors"),
     ("GET", "/api/v1/mf/F00000ABCD/rs-history"),
     ("GET", "/api/v1/mf/F00000ABCD/weighted-technicals"),
     ("GET", "/api/v1/mf/F00000ABCD/nav-history"),

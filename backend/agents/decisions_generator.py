@@ -144,8 +144,8 @@ async def _decision_exists(
         AtlasDecision.data_as_of == data_as_of_date,
         AtlasDecision.is_deleted == False,  # noqa: E712
     )
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none() is not None
+    existing = await db.execute(stmt)
+    return existing.scalar_one_or_none() is not None
 
 
 # ---------------------------------------------------------------------------

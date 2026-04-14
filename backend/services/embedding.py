@@ -131,8 +131,8 @@ async def _openai_embed(text: str, settings: Settings) -> list[float]:
     if response.status_code >= 400:
         raise EmbeddingError(f"OpenAI client error {response.status_code}: {response.text[:200]}")
 
-    data = response.json()
-    vector: list[float] = data["data"][0]["embedding"]
+    resp_body = response.json()
+    vector: list[float] = resp_body["data"][0]["embedding"]
     return _validate_and_pad(vector, "openai")
 
 
@@ -163,10 +163,10 @@ async def _openai_embed_batch(texts: list[str], settings: Settings) -> list[list
             f"OpenAI batch client error {response.status_code}: {response.text[:200]}"
         )
 
-    data = response.json()
+    resp_body = response.json()
     # OpenAI sorts results by index — preserve original order
-    items = sorted(data["data"], key=lambda x: x["index"])
-    return [_validate_and_pad(item["embedding"], "openai") for item in items]
+    sorted_items = sorted(resp_body["data"], key=lambda x: x["index"])
+    return [_validate_and_pad(entry["embedding"], "openai") for entry in sorted_items]
 
 
 async def _nomic_embed(text: str, settings: Settings) -> list[float]:
@@ -186,8 +186,8 @@ async def _nomic_embed(text: str, settings: Settings) -> list[float]:
     if response.status_code >= 400:
         raise EmbeddingError(f"Nomic error {response.status_code}: {response.text[:200]}")
 
-    data = response.json()
-    vector: list[float] = data["embedding"]
+    resp_body = response.json()
+    vector: list[float] = resp_body["embedding"]
     return _validate_and_pad(vector, "nomic")
 
 
