@@ -1112,6 +1112,7 @@
           "mf"
         ],
         "summary": "Get Overlap",
+        "description": "Compute portfolio overlap between exactly two funds.\n\nReturns overlap_pct (Jaccard-style weight overlap) and common_holdings list.\nExactly 2 mstar_ids must be supplied; 400 otherwise.",
         "operationId": "get_overlap_api_v1_mf_overlap_get",
         "parameters": [
           {
@@ -1156,6 +1157,7 @@
           "mf"
         ],
         "summary": "Get Holding Stock",
+        "description": "Get all mutual funds that hold a specific stock symbol.\n\nReturns funds sorted by weight_pct descending.",
         "operationId": "get_holding_stock_api_v1_mf_holding_stock__symbol__get",
         "parameters": [
           {
@@ -1387,6 +1389,7 @@
           "mf"
         ],
         "summary": "Get Fund Nav History",
+        "description": "Get NAV history for a fund with optional date range.\n\ncoverage_gap_days = total calendar days between first and last point minus\nactual data point count. Surfaces missing days (including weekends/holidays).\nZero when < 2 data points or no gaps.",
         "operationId": "get_fund_nav_history_api_v1_mf__mstar_id__nav_history_get",
         "parameters": [
           {
@@ -1930,11 +1933,25 @@
       "CategoryRow": {
         "properties": {
           "category_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Name"
           },
           "broad_category": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Broad Category"
           },
           "fund_count": {
@@ -2024,10 +2041,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "category_name",
-          "broad_category"
-        ],
         "title": "CategoryRow"
       },
       "ChunkResponse": {
@@ -2810,11 +2823,25 @@
             "title": "Amc Name"
           },
           "category_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Name"
           },
           "broad_category": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Broad Category"
           },
           "nav": {
@@ -2920,9 +2947,7 @@
         "required": [
           "mstar_id",
           "fund_name",
-          "amc_name",
-          "category_name",
-          "broad_category"
+          "amc_name"
         ],
         "title": "Fund"
       },
@@ -3158,11 +3183,25 @@
             "title": "Amc Name"
           },
           "category_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Name"
           },
           "broad_category": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Broad Category"
           },
           "primary_benchmark": {
@@ -3198,9 +3237,7 @@
         "required": [
           "mstar_id",
           "fund_name",
-          "amc_name",
-          "category_name",
-          "broad_category"
+          "amc_name"
         ],
         "title": "FundIdentity"
       },

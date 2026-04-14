@@ -126,6 +126,46 @@ class AtlasIntelligence(Base):
     __table_args__ = (Index("ix_atlas_intel_entity_type", "entity_type"),)
 
 
+# --- ATLAS Simulations (V3) ---
+
+
+class AtlasSimulation(Base):
+    __tablename__ = "atlas_simulations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    result_summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    daily_values: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    transactions: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    tax_summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    tear_sheet_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_auto_loop: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    auto_loop_cron: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    last_auto_run: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    user_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_atlas_sim_autoloop_active",
+            "user_id",
+            "is_auto_loop",
+            postgresql_where=("is_auto_loop = true AND is_deleted = false"),
+        ),
+    )
+
+
 # --- ATLAS Watchlists ---
 
 

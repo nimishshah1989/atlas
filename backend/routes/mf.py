@@ -1,12 +1,6 @@
-"""ATLAS V2 MF (mutual fund) API — router with wired universe/categories/flows.
-
-Chunk V2-4 wires /universe, /categories, /flows with real JIP data.
-Remaining endpoints (/overlap, deep dive, holdings, sectors, rs-history,
-weighted-technicals, nav-history) stay as 501 stubs until later V2 chunks.
-"""
+"""ATLAS V2 MF (mutual fund) API — router with wired universe/categories/flows."""
 
 import datetime
-from collections import defaultdict
 from decimal import Decimal
 from typing import Any, Optional
 
@@ -18,179 +12,44 @@ from backend.clients.jip_data_service import JIPDataService
 from backend.clients.sql_fragments import safe_decimal
 from backend.db.session import get_db
 from backend.models.mf import (
-    BroadCategoryGroup,
     CategoriesResponse,
-    CategoryGroup,
     CategoryRow,
-    ConvictionPillarsMF,
     FlowRow,
     FlowsResponse,
-    Fund,
-    FundDailyMetrics,
     FundDeepDiveResponse,
     FundHoldingStockEntry,
-    FundIdentity,
     FundRSHistoryResponse,
     FundSector,
     FundSectorsResponse,
-    Holding,
     HoldingsResponse,
     HoldingStockResponse,
-    MFLifecycleEvent,
     NAVHistoryResponse,
     NAVPoint,
     OverlapHolding,
     OverlapResponse,
-    PillarFlows,
-    PillarHoldingsQuality,
-    PillarPerformance,
-    PillarRSStrength,
     SectorExposureSummary,
-    Staleness,
-    StalenessFlag,
     UniverseResponse,
     WeightedTechnicalsResponse,
-    WeightedTechnicalsSummary,
+)
+from backend.routes.mf_helpers import (
+    build_deep_dive_daily,
+    build_deep_dive_identity,
+    build_deep_dive_pillars,
+    build_lifecycle_event,
+    build_weighted_technicals,
+    compute_staleness,
+    data_as_of_from_freshness,
+    gather_universe_data,
+    group_funds_by_broad_category,
+    map_holding_row,
+    not_implemented,
+    parse_as_of_date,
+    rs_momentum_or_empty,
 )
 from backend.services.mf_compute import classify_fund_quadrant, compute_category_rollup
-from backend.services.uql import engine as uql_engine
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1/mf", tags=["mf"])
-
-
-_NOT_IMPL = "MF endpoint not yet wired (V2-1 contract skeleton)"
-
-LEGACY_ENDPOINT_IDS: tuple[str, ...] = (
-    "mf.universe",
-    "mf.categories",
-    "mf.flows",
-    "mf.overlap",
-    "mf.holding_stock",
-    "mf.deep_dive",
-    "mf.holdings",
-    "mf.sectors",
-    "mf.rs_history",
-    "mf.weighted_technicals",
-    "mf.nav_history",
-)
-
-
-def build_uql_request(endpoint_id: str, params: dict[str, Any]) -> Any:
-    """Translate a legacy mf endpoint call into a UQLRequest.
-
-    Thin shim onto :func:`uql_engine.build_from_legacy`. Per spec §17/§20
-    every fixed endpoint must be expressible as a UQL request; the engine
-    grows one branch per id. Currently delegates straight through — when a
-    later V2 chunk wires real data, route handlers swap their JIPDataService
-    calls for ``await uql_engine.execute(build_uql_request(...))`` without
-    changing this seam.
-    """
-    return uql_engine.build_from_legacy(endpoint_id, params)
-
-
-def _not_implemented() -> HTTPException:
-    return HTTPException(status_code=501, detail=_NOT_IMPL)
-
-
-def _compute_staleness(freshness: dict[str, Any], source: str = "jip") -> Staleness:
-    """Compute staleness from JIP freshness data.
-
-    Uses nav_as_of as the primary staleness signal.
-    age < 1440 min (24h) → FRESH
-    age < 2880 min (48h) → STALE
-    else → EXPIRED
-    """
-    nav_as_of = freshness.get("nav_as_of")
-    if nav_as_of is None:
-        return Staleness(source=source, age_minutes=99999, flag=StalenessFlag.EXPIRED)
-
-    if isinstance(nav_as_of, datetime.datetime):
-        nav_date = nav_as_of.date()
-    elif isinstance(nav_as_of, datetime.date):
-        nav_date = nav_as_of
-    else:
-        try:
-            nav_date = datetime.date.fromisoformat(str(nav_as_of))
-        except (ValueError, TypeError):
-            return Staleness(source=source, age_minutes=99999, flag=StalenessFlag.EXPIRED)
-
-    today = datetime.date.today()
-    age_days = (today - nav_date).days
-    age_minutes = age_days * 24 * 60
-
-    if age_minutes < 1440:
-        flag = StalenessFlag.FRESH
-    elif age_minutes < 2880:
-        flag = StalenessFlag.STALE
-    else:
-        flag = StalenessFlag.EXPIRED
-
-    return Staleness(source=source, age_minutes=age_minutes, flag=flag)
-
-
-def _data_as_of_from_freshness(freshness: dict[str, Any]) -> datetime.date:
-    """Extract data_as_of date from freshness dict, defaulting to today."""
-    nav_as_of = freshness.get("nav_as_of")
-    if nav_as_of is None:
-        return datetime.date.today()
-    if isinstance(nav_as_of, datetime.datetime):
-        return nav_as_of.date()
-    if isinstance(nav_as_of, datetime.date):
-        return nav_as_of
-    try:
-        return datetime.date.fromisoformat(str(nav_as_of))
-    except (ValueError, TypeError):
-        return datetime.date.today()
-
-
-def _enrich_universe_row_to_fund(
-    universe_row: dict[str, Any],
-    rs_batch: dict[str, dict[str, Any]],
-) -> Fund:
-    """Build a Fund model from a JIP universe row, enriched with RS momentum + quadrant."""
-    mstar_id = universe_row.get("mstar_id", "")
-    momentum_data = rs_batch.get(mstar_id, {})
-    rs_composite = safe_decimal(
-        universe_row.get("derived_rs_composite") or universe_row.get("rs_composite")
-    )
-    rs_momentum_28d = momentum_data.get("rs_momentum_28d") if momentum_data else None
-    return Fund(
-        mstar_id=mstar_id,
-        fund_name=universe_row.get("fund_name", ""),
-        amc_name=universe_row.get("amc_name", ""),
-        category_name=universe_row.get("category_name", ""),
-        broad_category=universe_row.get("broad_category", ""),
-        nav=safe_decimal(universe_row.get("nav")),
-        nav_date=universe_row.get("nav_date"),
-        rs_composite=rs_composite,
-        rs_momentum_28d=rs_momentum_28d,
-        quadrant=classify_fund_quadrant(rs_composite, rs_momentum_28d),
-        manager_alpha=safe_decimal(universe_row.get("manager_alpha")),
-        expense_ratio=safe_decimal(universe_row.get("expense_ratio")),
-        is_index_fund=bool(universe_row.get("is_index_fund", False)),
-        primary_benchmark=universe_row.get("primary_benchmark"),
-    )
-
-
-def _group_funds_by_broad_category(
-    universe_rows: list[dict[str, Any]],
-    rs_batch: dict[str, dict[str, Any]],
-) -> list[BroadCategoryGroup]:
-    """Group flat JIP universe rows into BroadCategoryGroup → CategoryGroup → Fund hierarchy."""
-    funds_by_broad: dict[str, dict[str, list[Fund]]] = defaultdict(lambda: defaultdict(list))
-    for universe_row in universe_rows:
-        fund = _enrich_universe_row_to_fund(universe_row, rs_batch)
-        bc = universe_row.get("broad_category") or "Unknown"
-        cn = universe_row.get("category_name") or "Unknown"
-        funds_by_broad[bc][cn].append(fund)
-    return [
-        BroadCategoryGroup(
-            name=bc,
-            categories=[CategoryGroup(name=cn, funds=funds) for cn, funds in cat_map.items()],
-        )
-        for bc, cat_map in funds_by_broad.items()
-    ]
 
 
 @router.get("/universe", response_model=UniverseResponse)
@@ -207,16 +66,17 @@ async def get_universe(
     """
     svc = JIPDataService(db)
     effective_active_only = active_only if active_only is not None else True
-    rows, rs_batch, freshness = await _gather_universe_data(
+    rows, rs_batch, freshness = await gather_universe_data(
         svc,
+        db,
         benchmark=benchmark,
         category=category,
         broad_category=broad_category,
         active_only=effective_active_only,
     )
-    broad_categories = _group_funds_by_broad_category(rows, rs_batch)
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    broad_categories = group_funds_by_broad_category(rows, rs_batch)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
     total_funds = sum(len(cg.funds) for bg in broad_categories for cg in bg.categories)
     log.info(
         "mf_universe_route_complete",
@@ -229,26 +89,6 @@ async def get_universe(
         data_as_of=data_as_of,
         staleness=staleness,
     )
-
-
-async def _gather_universe_data(
-    svc: JIPDataService,
-    *,
-    benchmark: Optional[str],
-    category: Optional[str],
-    broad_category: Optional[str],
-    active_only: bool,
-) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, Any]]:
-    """Fetch universe rows, RS batch, and freshness concurrently (sequential for now)."""
-    rows = await svc.get_mf_universe(
-        benchmark=benchmark,
-        category=category,
-        broad_category=broad_category,
-        active_only=active_only,
-    )
-    rs_batch = await svc.get_mf_rs_momentum_batch()
-    freshness = await svc.get_mf_data_freshness()
-    return rows, rs_batch, freshness
 
 
 @router.get("/categories", response_model=CategoriesResponse)
@@ -264,7 +104,7 @@ async def get_categories(
 
     cat_rows = await svc.get_mf_categories()
     universe_rows = await svc.get_mf_universe(active_only=True)
-    rs_batch = await svc.get_mf_rs_momentum_batch()
+    rs_batch = await rs_momentum_or_empty(svc, db)
     freshness = await svc.get_mf_data_freshness()
 
     # Enrich universe rows with quadrant for quadrant_distribution computation
@@ -296,8 +136,8 @@ async def get_categories(
         for r in rollup
     ]
 
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
 
     log.info(
         "mf_categories_route_complete",
@@ -339,8 +179,8 @@ async def get_flows(
         for row in flow_rows
     ]
 
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
 
     log.info(
         "mf_flows_route_complete",
@@ -388,8 +228,8 @@ async def get_overlap(
         for h in overlap_data.get("common_holdings", [])
     ]
 
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
 
     log.info(
         "mf_overlap_route_complete",
@@ -434,8 +274,8 @@ async def get_holding_stock(
     # Sort by weight_pct descending
     funds.sort(key=lambda f: f.weight_pct, reverse=True)
 
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
 
     log.info(
         "mf_holding_stock_route_complete",
@@ -451,33 +291,6 @@ async def get_holding_stock(
     )
 
 
-def _parse_as_of_date(raw: Any) -> datetime.date:
-    """Coerce an as_of_date from a DB row to datetime.date, defaulting to today."""
-    if isinstance(raw, datetime.datetime):
-        return raw.date()
-    if isinstance(raw, datetime.date):
-        return raw
-    return datetime.date.today()
-
-
-def _map_holding_row(row: dict[str, Any]) -> Optional[Holding]:
-    """Convert a JIP holding row to a Holding model. Returns None if weight_pct is missing."""
-    weight_pct = safe_decimal(row.get("weight_pct"))
-    if weight_pct is None:
-        return None
-    return Holding(
-        instrument_id=str(row.get("instrument_id") or ""),
-        symbol=str(row.get("current_symbol") or row.get("symbol") or ""),
-        holding_name=str(row.get("holding_name") or ""),
-        weight_pct=weight_pct,
-        shares_held=safe_decimal(row.get("shares_held")),
-        market_value=safe_decimal(row.get("market_value")),
-        sector=row.get("sector") or row.get("sector_code"),
-        rs_composite=safe_decimal(row.get("rs_composite")),
-        above_200dma=row.get("above_200dma"),
-    )
-
-
 @router.get("/{mstar_id}/holdings", response_model=HoldingsResponse)
 async def get_fund_holdings(
     mstar_id: str,
@@ -487,10 +300,10 @@ async def get_fund_holdings(
     svc = JIPDataService(db)
     holding_rows = await svc.get_fund_holdings(mstar_id)
 
-    holdings = [h for row in holding_rows if (h := _map_holding_row(row)) is not None]
+    holdings = [h for row in holding_rows if (h := map_holding_row(row)) is not None]
     coverage_pct = sum((h.weight_pct for h in holdings), Decimal("0")) if holdings else Decimal("0")
     as_of_date = (
-        _parse_as_of_date(holding_rows[0].get("as_of_date"))
+        parse_as_of_date(holding_rows[0].get("as_of_date"))
         if holding_rows
         else datetime.date.today()
     )
@@ -538,9 +351,7 @@ async def get_fund_sectors(
         )
 
     as_of_date = (
-        _parse_as_of_date(sector_rows[0].get("as_of_date"))
-        if sector_rows
-        else datetime.date.today()
+        parse_as_of_date(sector_rows[0].get("as_of_date")) if sector_rows else datetime.date.today()
     )
     log.info(
         "mf_sectors_route_complete",
@@ -556,12 +367,12 @@ async def get_fund_rs_history(
     mstar_id: str,
     months: Optional[int] = Query(12, ge=1, le=120),
 ) -> FundRSHistoryResponse:
-    raise _not_implemented()
+    raise not_implemented()
 
 
 @router.get("/{mstar_id}/weighted-technicals", response_model=WeightedTechnicalsResponse)
 async def get_fund_weighted_technicals(mstar_id: str) -> WeightedTechnicalsResponse:
-    raise _not_implemented()
+    raise not_implemented()
 
 
 @router.get("/{mstar_id}/nav-history", response_model=NAVHistoryResponse)
@@ -600,8 +411,8 @@ async def get_fund_nav_history(
     else:
         coverage_gap_days = 0
 
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
 
     log.info(
         "mf_nav_history_route_complete",
@@ -616,89 +427,6 @@ async def get_fund_nav_history(
         coverage_gap_days=coverage_gap_days,
         data_as_of=data_as_of,
         staleness=staleness,
-    )
-
-
-def _build_deep_dive_identity(detail: dict[str, Any]) -> FundIdentity:
-    """Extract FundIdentity from JIP fund detail row."""
-    return FundIdentity(
-        mstar_id=detail["mstar_id"],
-        fund_name=detail.get("fund_name", ""),
-        amc_name=detail.get("amc_name", ""),
-        category_name=detail.get("category_name", ""),
-        broad_category=detail.get("broad_category", ""),
-        primary_benchmark=detail.get("primary_benchmark"),
-        inception_date=detail.get("inception_date"),
-        is_index_fund=bool(detail.get("is_index_fund", False)),
-    )
-
-
-def _build_deep_dive_daily(detail: dict[str, Any]) -> FundDailyMetrics:
-    """Extract FundDailyMetrics from JIP fund detail row."""
-    return FundDailyMetrics(
-        nav=safe_decimal(detail.get("nav")),
-        nav_date=detail.get("nav_date"),
-        expense_ratio=safe_decimal(detail.get("expense_ratio")),
-    )
-
-
-def _build_deep_dive_pillars(
-    detail: dict[str, Any],
-    derived_rs: Optional[Decimal],
-    rs_momentum_28d: Optional[Decimal],
-    quadrant: Optional[Any],
-) -> ConvictionPillarsMF:
-    """Build conviction pillars from detail + computed RS values."""
-    return ConvictionPillarsMF(
-        performance=PillarPerformance(
-            manager_alpha=safe_decimal(detail.get("manager_alpha")),
-            information_ratio=safe_decimal(detail.get("information_ratio")),
-        ),
-        rs_strength=PillarRSStrength(
-            rs_composite=derived_rs,
-            rs_momentum_28d=rs_momentum_28d,
-            quadrant=quadrant,
-        ),
-        flows=PillarFlows(),
-        holdings_quality=PillarHoldingsQuality(),
-    )
-
-
-def _build_weighted_technicals(detail: dict[str, Any]) -> WeightedTechnicalsSummary:
-    """Extract weighted technicals summary from JIP fund detail row."""
-    weighted_as_of = detail.get("weighted_as_of")
-    if isinstance(weighted_as_of, datetime.datetime):
-        as_of_date: Optional[datetime.date] = weighted_as_of.date()
-    elif isinstance(weighted_as_of, datetime.date):
-        as_of_date = weighted_as_of
-    else:
-        as_of_date = None
-    return WeightedTechnicalsSummary(
-        weighted_rsi=safe_decimal(detail.get("weighted_rsi")),
-        weighted_breadth_pct_above_200dma=safe_decimal(
-            detail.get("weighted_breadth_pct_above_200dma")
-        ),
-        weighted_macd_bullish_pct=safe_decimal(detail.get("weighted_macd_bullish_pct")),
-        as_of_date=as_of_date,
-    )
-
-
-def _build_lifecycle_event(
-    lifecycle_events: list[dict[str, Any]],
-) -> Optional[MFLifecycleEvent]:
-    """Build MFLifecycleEvent from first lifecycle row, if any."""
-    if not lifecycle_events:
-        return None
-    first = lifecycle_events[0]
-    effective_date = first.get("effective_date")
-    if isinstance(effective_date, datetime.datetime):
-        effective_date = effective_date.date()
-    if effective_date is None:
-        return None
-    return MFLifecycleEvent(
-        event_type=str(first.get("event_type", "")),
-        effective_date=effective_date,
-        detail=first.get("detail"),
     )
 
 
@@ -720,7 +448,7 @@ async def get_fund_deep_dive(
 
     lifecycle_events = await svc.get_fund_lifecycle(mstar_id)
     freshness = await svc.get_mf_data_freshness()
-    rs_batch = await svc.get_mf_rs_momentum_batch()
+    rs_batch = await rs_momentum_or_empty(svc, db)
 
     momentum_data = rs_batch.get(mstar_id, {})
     rs_momentum_28d = safe_decimal(momentum_data.get("rs_momentum_28d")) if momentum_data else None
@@ -740,8 +468,8 @@ async def get_fund_deep_dive(
             )
 
     quadrant = classify_fund_quadrant(derived_rs, rs_momentum_28d)
-    data_as_of = _data_as_of_from_freshness(freshness)
-    staleness = _compute_staleness(freshness)
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
     is_active = detail.get("is_active")
 
     log.info(
@@ -752,16 +480,16 @@ async def get_fund_deep_dive(
     )
 
     return FundDeepDiveResponse(
-        identity=_build_deep_dive_identity(detail),
-        daily=_build_deep_dive_daily(detail),
-        pillars=_build_deep_dive_pillars(detail, derived_rs, rs_momentum_28d, quadrant),
+        identity=build_deep_dive_identity(detail),
+        daily=build_deep_dive_daily(detail),
+        pillars=build_deep_dive_pillars(detail, derived_rs, rs_momentum_28d, quadrant),
         sector_exposure=SectorExposureSummary(
             sector_count=int(detail.get("sector_count") or 0),
         ),
         top_holdings=[],
-        weighted_technicals=_build_weighted_technicals(detail),
+        weighted_technicals=build_weighted_technicals(detail),
         data_as_of=data_as_of,
         staleness=staleness,
         inactive=True if is_active is False else None,
-        mf_lifecycle_event=_build_lifecycle_event(lifecycle_events),
+        mf_lifecycle_event=build_lifecycle_event(lifecycle_events),
     )

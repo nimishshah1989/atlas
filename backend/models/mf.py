@@ -34,8 +34,10 @@ class Fund(BaseModel):
     mstar_id: str
     fund_name: str
     amc_name: str
-    category_name: str
-    broad_category: str
+    # Some JIP rows have NULL category fields for funds that haven't been
+    # classified yet; tolerate them rather than 500-ing the whole universe.
+    category_name: Optional[str] = None
+    broad_category: Optional[str] = None
     nav: Optional[Decimal] = None
     nav_date: Optional[date] = None
     rs_composite: Optional[Decimal] = None
@@ -67,8 +69,8 @@ class UniverseResponse(BaseModel):
 
 
 class CategoryRow(BaseModel):
-    category_name: str
-    broad_category: str
+    category_name: Optional[str] = None
+    broad_category: Optional[str] = None
     fund_count: int = 0
     avg_rs_composite: Optional[Decimal] = None
     quadrant_distribution: dict[str, int] = {}
@@ -113,8 +115,8 @@ class FundIdentity(BaseModel):
     mstar_id: str
     fund_name: str
     amc_name: str
-    category_name: str
-    broad_category: str
+    category_name: Optional[str] = None
+    broad_category: Optional[str] = None
     primary_benchmark: Optional[str] = None
     inception_date: Optional[date] = None
     is_index_fund: bool = False

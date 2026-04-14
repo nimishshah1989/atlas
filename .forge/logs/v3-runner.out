@@ -1,0 +1,6 @@
+2026-04-14 15:01:40 [info     ] loop_started                   filter_regex=V3-[1-9] once=False runner_pid=522325
+2026-04-14 15:01:40 [info     ] picker_selected                chunk_id=V3-1 depends_on=[]
+2026-04-14 15:01:40 [info     ] stage_pick_ok                  chunk_id=V3-1
+2026-04-14 15:01:40 [info     ] chunk_marked_in_progress       chunk_id=V3-1 pid=522325 started_at=2026-04-14T20:31:40+05:30
+2026-04-14 15:01:40 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V3-1
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

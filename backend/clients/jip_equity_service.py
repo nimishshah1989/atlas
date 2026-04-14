@@ -1,5 +1,6 @@
 """JIP Equity Service — stock universe, detail, RS history, movers."""
 
+import asyncio
 import time
 from typing import Any, Optional
 
@@ -19,6 +20,15 @@ from backend.clients.sql_fragments import (
 
 log = structlog.get_logger()
 
+# Process-local TTL cache for the equity-universe query. JIP refreshes daily;
+# a 5-minute cache prevents the 6-CTE join from saturating the connection
+# pool under load.
+_EQUITY_UNIVERSE_TTL_SECONDS = 300
+_equity_universe_cache: dict[
+    tuple[Optional[str], Optional[str]], tuple[float, list[dict[str, Any]]]
+] = {}
+_equity_universe_locks: dict[tuple[Optional[str], Optional[str]], asyncio.Lock] = {}
+
 
 class JIPEquityService:
     """Read-only access to JIP equity data."""
@@ -31,7 +41,34 @@ class JIPEquityService:
         benchmark: Optional[str] = "NIFTY 500",
         sector: Optional[str] = None,
     ) -> list[dict[str, Any]]:
-        """Get all active instruments with latest technicals and RS."""
+        """Get all active instruments with latest technicals and RS. Cached 5m.
+
+        The underlying query is a 6-CTE join with a full-table DISTINCT ON
+        over de_market_cap_history that can run for 200+ seconds cold.
+        Cached process-locally per (benchmark, sector); concurrent callers
+        share a single in-flight query via per-key lock.
+        """
+        cache_key = (benchmark, sector)
+        now = time.monotonic()
+        cached = _equity_universe_cache.get(cache_key)
+        if cached and now - cached[0] < _EQUITY_UNIVERSE_TTL_SECONDS:
+            log.info("equity_universe_cache_hit", count=len(cached[1]))
+            return cached[1]
+        lock = _equity_universe_locks.setdefault(cache_key, asyncio.Lock())
+        async with lock:
+            cached = _equity_universe_cache.get(cache_key)
+            if cached and time.monotonic() - cached[0] < _EQUITY_UNIVERSE_TTL_SECONDS:
+                log.info("equity_universe_cache_hit", count=len(cached[1]))
+                return cached[1]
+            rows = await self._fetch_equity_universe(benchmark=benchmark, sector=sector)
+            _equity_universe_cache[cache_key] = (time.monotonic(), rows)
+            return rows
+
+    async def _fetch_equity_universe(
+        self,
+        benchmark: Optional[str],
+        sector: Optional[str],
+    ) -> list[dict[str, Any]]:
         start_time = time.monotonic()
 
         conditions = ["i.is_active = true"]

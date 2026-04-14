@@ -15,7 +15,16 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
 from backend.config import get_settings
-from backend.routes import decisions, errors as uql_errors, intelligence, mf, query, stocks, system
+from backend.routes import (
+    decisions,
+    errors as uql_errors,
+    intelligence,
+    mf,
+    query,
+    simulate,
+    stocks,
+    system,
+)
 from backend.routes.system import health as _health_impl
 from backend.routes.system import ready as _ready_impl
 from backend.version import GIT_SHA, VERSION
@@ -75,6 +84,7 @@ app.include_router(query.router)
 app.include_router(decisions.router)
 app.include_router(intelligence.router)
 app.include_router(mf.router)
+app.include_router(simulate.router)
 app.include_router(system.router)
 
 
@@ -125,6 +135,67 @@ async def startup() -> None:
         version=VERSION,
         git_sha=GIT_SHA,
     )
+
+    # Cache pre-warming: kick off the heavy aggregate queries on a
+    # background task so the first user request hits a populated cache
+    # instead of a cold 200-second JIP query that would 504 via nginx.
+    # Errors are logged but never block startup.
+    import asyncio as _asyncio
+
+    _asyncio.create_task(_prewarm_caches())
+
+
+async def _prewarm_caches() -> None:
+    """Fire-and-forget warm-up of equity + MF aggregate caches at boot.
+
+    Each step runs in its own session so a timeout in one cannot poison the
+    rest, and each session relaxes statement_timeout to 60s so the slow cold
+    queries can complete and populate the cache. User-facing requests still
+    use the default 15s ceiling — only this one-shot warmup is allowed to
+    take longer.
+    """
+    from sqlalchemy import text as _text
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from backend.clients.jip_data_service import JIPDataService
+    from backend.db.session import async_session_factory
+
+    log.info("cache_prewarm_start")
+
+    async def _warm(label: str, fn_name: str, *args: Any, **kwargs: Any) -> None:
+        try:
+            async with async_session_factory() as session:
+                # Relax statement_timeout to 180s for this prewarm session
+                # (default is 15s). 180s is required because some MF
+                # aggregate queries do double DISTINCT ON over de_rs_scores
+                # without a covering index on the JIP side; remove once
+                # JIP ships ix_de_rs_scores_entity_type_id_date.
+                await session.execute(_text("SET statement_timeout = '180000'"))
+                try:
+                    svc = JIPDataService(session)
+                    target = getattr(svc, fn_name, None) or getattr(svc._mf, fn_name)
+                    await target(*args, **kwargs)
+                    log.info(f"cache_prewarm_{label}_ok")
+                finally:
+                    try:
+                        await session.execute(_text("SET statement_timeout = '15000'"))
+                    except SQLAlchemyError:
+                        pass
+        except SQLAlchemyError as exc:
+            log.warning(f"cache_prewarm_{label}_failed", error=str(exc)[:300])
+
+    # Sequential, not parallel. Empirically, parallel prewarm caused JIP
+    # contention that made the equity query 25× slower (3s → 76s). Sequential
+    # gives equity 3s, universe 17s, categories instant. rs_momentum is
+    # deliberately NOT prewarmed here — it requires a JIP-side index that
+    # doesn't exist yet, so atlas-side warming is futile. Routes that depend
+    # on rs_momentum already wrap the call in a try/except and degrade
+    # gracefully (quadrant=None) if the query fails.
+    await _warm("equity", "get_equity_universe", benchmark="NIFTY 500")
+    await _warm("mf_universe", "get_mf_universe", active_only=True)
+    await _warm("mf_categories", "get_mf_categories")
+
+    log.info("cache_prewarm_done")
 
 
 @app.on_event("shutdown")

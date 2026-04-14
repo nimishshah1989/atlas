@@ -18,7 +18,24 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from backend.clients import jip_mf_service as mf_service_module
 from backend.clients.jip_mf_service import JIPMFService
+
+
+@pytest.fixture(autouse=True)
+def _clear_mf_caches():
+    """Process-local TTL caches must not bleed between tests."""
+    mf_service_module._mf_universe_cache.clear()
+    mf_service_module._mf_universe_locks.clear()
+    mf_service_module._mf_categories_cache.clear()
+    mf_service_module._mf_rs_momentum_cache.clear()
+    mf_service_module._mf_rs_momentum_last_failure.clear()
+    yield
+    mf_service_module._mf_universe_cache.clear()
+    mf_service_module._mf_universe_locks.clear()
+    mf_service_module._mf_categories_cache.clear()
+    mf_service_module._mf_rs_momentum_cache.clear()
+    mf_service_module._mf_rs_momentum_last_failure.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -55,6 +72,26 @@ def _make_session(*responses: Any) -> MagicMock:
     session = MagicMock()
     session.execute = AsyncMock(side_effect=list(responses))
     return session
+
+
+def _probe(has_table: bool = True) -> "_Result":
+    """Mock response for the to_regclass() table-existence probe."""
+    return _Result(rows=[{"has_table": has_table}])
+
+
+def _freshness_probe(**flags: bool) -> "_Result":
+    """Mock response for the bulk freshness existence probe."""
+    defaults = {
+        "has_nav": True,
+        "has_derived": True,
+        "has_holdings": True,
+        "has_sectors": True,
+        "has_flows": True,
+        "has_weighted": True,
+        "has_master": True,
+    }
+    defaults.update(flags)
+    return _Result(rows=[defaults])
 
 
 # ---------------------------------------------------------------------------
@@ -273,7 +310,7 @@ async def test_get_mf_flows_returns_decimal_values():
 
 @pytest.mark.asyncio
 async def test_get_fund_detail_returns_none_when_not_found():
-    session = _make_session(_Result(rows=[]))
+    session = _make_session(_probe(True), _Result(rows=[]))
     svc = JIPMFService(session)
 
     result = await svc.get_fund_detail("NONEXISTENT")
@@ -335,7 +372,7 @@ async def test_get_fund_detail_returns_decimal_fields():
             "weighted_macd_bullish_pct": "65.00",
         }
     ]
-    session = _make_session(_Result(rows=cassette))
+    session = _make_session(_probe(True), _Result(rows=cassette))
     svc = JIPMFService(session)
 
     result = await svc.get_fund_detail("F00001")
@@ -355,11 +392,12 @@ async def test_get_fund_detail_returns_decimal_fields():
 
 @pytest.mark.asyncio
 async def test_get_fund_detail_passes_mstar_id_param():
-    session = _make_session(_Result(rows=[]))
+    session = _make_session(_probe(True), _Result(rows=[]))
     svc = JIPMFService(session)
 
     await svc.get_fund_detail("F00001")
 
+    # call_args is the LAST call (the main fund-detail query, after the probe)
     params = session.execute.call_args[0][1]
     assert params.get("mstar_id") == "F00001"
 
@@ -517,7 +555,7 @@ async def test_get_fund_weighted_technicals_returns_decimal_fields():
             "weighted_macd_bullish_pct": "65.00",
         }
     ]
-    session = _make_session(_Result(rows=cassette))
+    session = _make_session(_probe(True), _Result(rows=cassette))
     svc = JIPMFService(session)
 
     result = await svc.get_fund_weighted_technicals("F00001")
@@ -530,10 +568,20 @@ async def test_get_fund_weighted_technicals_returns_decimal_fields():
 
 @pytest.mark.asyncio
 async def test_get_fund_weighted_technicals_returns_none_when_not_found():
-    session = _make_session(_Result(rows=[]))
+    session = _make_session(_probe(True), _Result(rows=[]))
     svc = JIPMFService(session)
     result = await svc.get_fund_weighted_technicals("F00001")
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_fund_weighted_technicals_returns_none_when_table_missing():
+    """When JIP source table is not provisioned, return None gracefully."""
+    session = _make_session(_probe(False))
+    svc = JIPMFService(session)
+    result = await svc.get_fund_weighted_technicals("F00001")
+    assert result is None
+    assert session.execute.call_count == 1
 
 
 # ---------------------------------------------------------------------------
@@ -700,7 +748,7 @@ async def test_get_mf_data_freshness_returns_dict():
             "active_fund_count": 3820,
         }
     ]
-    session = _make_session(_Result(rows=cassette))
+    session = _make_session(_freshness_probe(), _Result(rows=cassette))
     svc = JIPMFService(session)
 
     result = await svc.get_mf_data_freshness()
@@ -711,10 +759,34 @@ async def test_get_mf_data_freshness_returns_dict():
 
 @pytest.mark.asyncio
 async def test_get_mf_data_freshness_empty_table_returns_dict():
-    session = _make_session(_Result(rows=[]))
+    session = _make_session(_freshness_probe(), _Result(rows=[]))
     svc = JIPMFService(session)
     result = await svc.get_mf_data_freshness()
     assert isinstance(result, dict)
+
+
+@pytest.mark.asyncio
+async def test_get_mf_data_freshness_tolerant_of_missing_weighted_table():
+    """Missing de_mf_weighted_technicals must not 500 — returns NULL for that key."""
+    cassette = [
+        {
+            "nav_as_of": "2026-04-14",
+            "derived_as_of": "2026-04-14",
+            "holdings_as_of": "2026-03-31",
+            "sectors_as_of": "2026-03-31",
+            "flows_as_of": "2026-03-31",
+            "active_fund_count": 3820,
+        }
+    ]
+    session = _make_session(
+        _freshness_probe(has_weighted=False),
+        _Result(rows=cassette),
+    )
+    svc = JIPMFService(session)
+    result = await svc.get_mf_data_freshness()
+    assert result["weighted_as_of"] is None
+    assert result["nav_as_of"] == "2026-04-14"
+    assert result["active_fund_count"] == 3820
 
 
 # ---------------------------------------------------------------------------

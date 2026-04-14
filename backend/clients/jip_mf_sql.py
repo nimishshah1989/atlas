@@ -179,6 +179,12 @@ FUND_DETAIL_SQL = """
     WHERE m.mstar_id = :mstar_id
 """
 
+from backend.clients.jip_mf_sql_fallbacks import (  # noqa: E402, F401
+    FUND_DETAIL_SQL_NO_WEIGHTED,
+)
+
+__all_fallbacks__ = ("FUND_DETAIL_SQL_NO_WEIGHTED",)
+
 FUND_DETAIL_DECIMAL_FIELDS = (
     "expense_ratio",
     "nav",
@@ -393,6 +399,36 @@ LIFECYCLE_SQL = """
     ORDER BY effective_date DESC
 """
 
+FRESHNESS_TABLE_PROBES: tuple[tuple[str, str, str], ...] = (
+    ("nav_as_of", "de_mf_nav_daily", "nav_date"),
+    ("derived_as_of", "de_mf_derived_daily", "nav_date"),
+    ("holdings_as_of", "de_mf_holdings", "as_of_date"),
+    ("sectors_as_of", "de_mf_sector_exposure", "as_of_date"),
+    ("flows_as_of", "de_mf_category_flows", "month_date"),
+    ("weighted_as_of", "de_mf_weighted_technicals", "as_of_date"),
+)
+
+FRESHNESS_PROBE_KEYS: dict[str, str] = {
+    "nav_as_of": "has_nav",
+    "derived_as_of": "has_derived",
+    "holdings_as_of": "has_holdings",
+    "sectors_as_of": "has_sectors",
+    "flows_as_of": "has_flows",
+    "weighted_as_of": "has_weighted",
+}
+
+FRESHNESS_PROBE_SQL = """
+    SELECT
+        to_regclass('public.de_mf_nav_daily') IS NOT NULL AS has_nav,
+        to_regclass('public.de_mf_derived_daily') IS NOT NULL AS has_derived,
+        to_regclass('public.de_mf_holdings') IS NOT NULL AS has_holdings,
+        to_regclass('public.de_mf_sector_exposure') IS NOT NULL AS has_sectors,
+        to_regclass('public.de_mf_category_flows') IS NOT NULL AS has_flows,
+        to_regclass('public.de_mf_weighted_technicals') IS NOT NULL AS has_weighted,
+        to_regclass('public.de_mf_master') IS NOT NULL AS has_master
+"""
+
+# Kept for backward compatibility; no longer used by the service.
 FRESHNESS_SQL = """
     SELECT
         (SELECT MAX(nav_date) FROM de_mf_nav_daily) AS nav_as_of,
@@ -400,7 +436,6 @@ FRESHNESS_SQL = """
         (SELECT MAX(as_of_date) FROM de_mf_holdings) AS holdings_as_of,
         (SELECT MAX(as_of_date) FROM de_mf_sector_exposure) AS sectors_as_of,
         (SELECT MAX(month_date) FROM de_mf_category_flows) AS flows_as_of,
-        (SELECT MAX(as_of_date) FROM de_mf_weighted_technicals) AS weighted_as_of,
         (SELECT COUNT(*) FROM de_mf_master WHERE is_active = true AND is_etf = false)
             AS active_fund_count
 """

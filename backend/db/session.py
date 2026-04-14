@@ -10,10 +10,20 @@ settings = get_settings()
 
 engine = create_async_engine(
     settings.database_url,
-    pool_size=5,
-    max_overflow=10,
+    pool_size=10,
+    max_overflow=20,
     pool_pre_ping=True,
+    pool_timeout=10,
     echo=False,
+    # 15s per-statement timeout enforced at the asyncpg session level. Caps
+    # the blast radius of any pathological JIP query so it can no longer
+    # cascade-fail the API via QueuePool starvation.
+    connect_args={
+        "server_settings": {
+            "statement_timeout": "15000",
+            "application_name": "atlas-backend",
+        },
+    },
 )
 
 async_session_factory = async_sessionmaker(

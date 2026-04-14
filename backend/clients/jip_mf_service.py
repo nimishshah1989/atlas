@@ -1,21 +1,26 @@
 """JIP Mutual Fund Service — all MF-domain queries against de_mf_* tables."""
 
+import asyncio
 import time
 from decimal import Decimal
 from typing import Any, Optional, Sequence
 
 import structlog
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.clients.jip_mf_sql import (
+from backend.clients.jip_mf_sql import (  # type: ignore[attr-defined]
     CATEGORIES_DECIMAL_FIELDS,
     CATEGORIES_SQL,
     FLOWS_DECIMAL_FIELDS,
     FLOWS_SQL,
-    FRESHNESS_SQL,
+    FRESHNESS_PROBE_KEYS,
+    FRESHNESS_PROBE_SQL,
+    FRESHNESS_TABLE_PROBES,
     FUND_DETAIL_DECIMAL_FIELDS,
     FUND_DETAIL_SQL,
+    FUND_DETAIL_SQL_NO_WEIGHTED,
     HOLDERS_SQL,
     HOLDINGS_SQL,
     LIFECYCLE_SQL,
@@ -34,6 +39,24 @@ from backend.clients.jip_mf_sql import (
 from backend.clients.sql_fragments import safe_decimal
 
 log = structlog.get_logger()
+
+# Process-local TTL caches for the heavy MF aggregate queries. JIP data
+# refreshes daily so a 5-minute cache is safe and prevents pool exhaustion
+# from concurrent slow queries.
+_MF_CACHE_TTL_SECONDS = 300
+_mf_universe_cache: dict[tuple[Any, ...], tuple[float, list[dict[str, Any]]]] = {}
+_mf_universe_locks: dict[tuple[Any, ...], asyncio.Lock] = {}
+_mf_categories_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+_mf_categories_lock = asyncio.Lock()
+_mf_rs_momentum_cache: dict[str, tuple[float, dict[str, dict[str, Any]]]] = {}
+_mf_rs_momentum_lock = asyncio.Lock()
+# Negative cache: when rs_momentum_batch fails (JIP-side timeout, missing
+# index), record the failure timestamp so subsequent requests return empty
+# immediately instead of burning 15s on every page load. Auto-retries
+# after the TTL expires — when JIP ships ix_de_rs_scores_entity_type_id_date
+# the next attempt will succeed and quadrants light back up.
+_MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS = 60
+_mf_rs_momentum_last_failure: dict[str, float] = {}
 
 
 def _decimalize(
@@ -65,7 +88,35 @@ class JIPMFService:
         broad_category: Optional[str] = None,
         active_only: bool = True,
     ) -> list[dict[str, Any]]:
-        """Get the MF universe — is_etf=false is ALWAYS enforced."""
+        """Get the MF universe — is_etf=false is ALWAYS enforced. Cached 5m."""
+        cache_key = (benchmark, category, broad_category, active_only)
+        now = time.monotonic()
+        cached = _mf_universe_cache.get(cache_key)
+        if cached and now - cached[0] < _MF_CACHE_TTL_SECONDS:
+            log.info("mf_universe_cache_hit", count=len(cached[1]))
+            return cached[1]
+        lock = _mf_universe_locks.setdefault(cache_key, asyncio.Lock())
+        async with lock:
+            cached = _mf_universe_cache.get(cache_key)
+            if cached and time.monotonic() - cached[0] < _MF_CACHE_TTL_SECONDS:
+                log.info("mf_universe_cache_hit", count=len(cached[1]))
+                return cached[1]
+            rows = await self._fetch_mf_universe(
+                benchmark=benchmark,
+                category=category,
+                broad_category=broad_category,
+                active_only=active_only,
+            )
+            _mf_universe_cache[cache_key] = (time.monotonic(), rows)
+            return rows
+
+    async def _fetch_mf_universe(
+        self,
+        benchmark: Optional[str],
+        category: Optional[str],
+        broad_category: Optional[str],
+        active_only: bool,
+    ) -> list[dict[str, Any]]:
         start_time = time.monotonic()
 
         conditions = ["m.is_etf = false"]
@@ -90,20 +141,48 @@ class JIPMFService:
         return rows
 
     async def get_mf_categories(self) -> list[dict[str, Any]]:
-        """Get category-level aggregates with latest flows."""
-        query_result = await self.session.execute(text(CATEGORIES_SQL))
-        return [
-            _decimalize(row, CATEGORIES_DECIMAL_FIELDS) for row in query_result.mappings().all()
-        ]
+        """Get category-level aggregates with latest flows. Cached 5m."""
+        now = time.monotonic()
+        cached = _mf_categories_cache.get("default")
+        if cached and now - cached[0] < _MF_CACHE_TTL_SECONDS:
+            log.info("mf_categories_cache_hit", count=len(cached[1]))
+            return cached[1]
+        async with _mf_categories_lock:
+            cached = _mf_categories_cache.get("default")
+            if cached and time.monotonic() - cached[0] < _MF_CACHE_TTL_SECONDS:
+                log.info("mf_categories_cache_hit", count=len(cached[1]))
+                return cached[1]
+            query_result = await self.session.execute(text(CATEGORIES_SQL))
+            rows = [
+                _decimalize(row, CATEGORIES_DECIMAL_FIELDS) for row in query_result.mappings().all()
+            ]
+            _mf_categories_cache["default"] = (time.monotonic(), rows)
+            return rows
 
     async def get_mf_flows(self, months: int = 12) -> list[dict[str, Any]]:
         """Get category flows for the last N months."""
         query_result = await self.session.execute(text(FLOWS_SQL), {"months": months})
         return [_decimalize(row, FLOWS_DECIMAL_FIELDS) for row in query_result.mappings().all()]
 
+    async def _has_weighted_technicals_table(self) -> bool:
+        probe = await self.session.execute(
+            text("SELECT to_regclass('public.de_mf_weighted_technicals') IS NOT NULL AS has_table")
+        )
+        row = probe.mappings().first()
+        return bool(row["has_table"]) if row else False
+
     async def get_fund_detail(self, mstar_id: str) -> Optional[dict[str, Any]]:
-        """Full deep-dive for a single fund."""
-        query_result = await self.session.execute(text(FUND_DETAIL_SQL), {"mstar_id": mstar_id})
+        """Full deep-dive for a single fund.
+
+        Falls back to a stripped query (NULL weighted technicals) when the
+        de_mf_weighted_technicals source table is not yet provisioned in JIP.
+        """
+        sql = (
+            FUND_DETAIL_SQL
+            if await self._has_weighted_technicals_table()
+            else FUND_DETAIL_SQL_NO_WEIGHTED
+        )
+        query_result = await self.session.execute(text(sql), {"mstar_id": mstar_id})
         row = query_result.mappings().first()
         if not row:
             return None
@@ -136,7 +215,13 @@ class JIPMFService:
         ]
 
     async def get_fund_weighted_technicals(self, mstar_id: str) -> Optional[dict[str, Any]]:
-        """Get latest weighted technicals for a fund."""
+        """Get latest weighted technicals for a fund.
+
+        Returns None if the JIP source table is not yet provisioned, so the
+        deep-dive endpoint degrades gracefully instead of 500-ing.
+        """
+        if not await self._has_weighted_technicals_table():
+            return None
         query_result = await self.session.execute(
             text(WEIGHTED_TECHNICALS_SQL), {"mstar_id": mstar_id}
         )
@@ -208,16 +293,53 @@ class JIPMFService:
             - past_rs_composite: Decimal | None
             - rs_momentum_28d: Decimal | None  (None if <28 days of history)
 
-        Uses a single batch CTE query (not N+1 per fund). Efficient for 800+ funds.
+        Uses a single batch CTE query (not N+1 per fund). Cached 5m.
+        Negative-cached for 60s on failure: if the last attempt within the
+        TTL raised (typically a statement_timeout from the missing JIP
+        index), raise the same shape immediately so callers can fall back
+        without burning another 15s per request.
         """
-        start_time = time.monotonic()
-        query_result = await self.session.execute(text(RS_MOMENTUM_SQL))
-        rows = [
-            _decimalize(row, RS_MOMENTUM_DECIMAL_FIELDS) for row in query_result.mappings().all()
-        ]
-        elapsed_ms = int((time.monotonic() - start_time) * 1000)
-        log.info("mf_rs_momentum_batch_fetched", count=len(rows), ms=elapsed_ms)
-        return {row["mstar_id"]: row for row in rows}
+        now = time.monotonic()
+        cached = _mf_rs_momentum_cache.get("default")
+        if cached and now - cached[0] < _MF_CACHE_TTL_SECONDS:
+            log.info("mf_rs_momentum_cache_hit", count=len(cached[1]))
+            return cached[1]
+        last_failure = _mf_rs_momentum_last_failure.get("default")
+        if last_failure and now - last_failure < _MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS:
+            log.info("mf_rs_momentum_negative_cache_hit")
+            raise RuntimeError("rs_momentum_batch unavailable (negative-cached)")
+        async with _mf_rs_momentum_lock:
+            cached = _mf_rs_momentum_cache.get("default")
+            if cached and time.monotonic() - cached[0] < _MF_CACHE_TTL_SECONDS:
+                log.info("mf_rs_momentum_cache_hit", count=len(cached[1]))
+                return cached[1]
+            last_failure = _mf_rs_momentum_last_failure.get("default")
+            if (
+                last_failure
+                and time.monotonic() - last_failure < _MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS
+            ):
+                log.info("mf_rs_momentum_negative_cache_hit")
+                raise RuntimeError("rs_momentum_batch unavailable (negative-cached)")
+            start_time = time.monotonic()
+            try:
+                query_result = await self.session.execute(text(RS_MOMENTUM_SQL))
+                rows = [
+                    _decimalize(row, RS_MOMENTUM_DECIMAL_FIELDS)
+                    for row in query_result.mappings().all()
+                ]
+            except SQLAlchemyError:
+                _mf_rs_momentum_last_failure["default"] = time.monotonic()
+                log.warning(
+                    "mf_rs_momentum_negative_cache_set",
+                    ttl=_MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS,
+                )
+                raise
+            elapsed_ms = int((time.monotonic() - start_time) * 1000)
+            log.info("mf_rs_momentum_batch_fetched", count=len(rows), ms=elapsed_ms)
+            result = {row["mstar_id"]: row for row in rows}
+            _mf_rs_momentum_cache["default"] = (time.monotonic(), result)
+            _mf_rs_momentum_last_failure.pop("default", None)  # clear negative cache on success
+            return result
 
     async def get_fund_lifecycle(self, mstar_id: str) -> list[dict[str, Any]]:
         """Get lifecycle events for a fund."""
@@ -225,7 +347,43 @@ class JIPMFService:
         return [dict(row) for row in query_result.mappings().all()]
 
     async def get_mf_data_freshness(self) -> dict[str, Any]:
-        """Get freshness dates for all MF tables."""
-        query_result = await self.session.execute(text(FRESHNESS_SQL))
-        row = query_result.mappings().first()
-        return dict(row) if row else {}
+        """Get freshness dates for all MF tables.
+
+        Tolerant of missing JIP tables: probes existence with to_regclass first,
+        then queries MAX() only for tables that exist. A missing source table
+        yields a NULL freshness value rather than 500-ing every MF endpoint.
+        """
+        probe_result = await self.session.execute(text(FRESHNESS_PROBE_SQL))
+        probe_row = probe_result.mappings().first()
+        if not probe_row:
+            return {}
+
+        out: dict[str, Any] = {key: None for key in FRESHNESS_PROBE_KEYS}
+        out["active_fund_count"] = None
+
+        select_parts: list[str] = []
+        missing: list[str] = []
+        for alias, table, column in FRESHNESS_TABLE_PROBES:
+            if probe_row.get(FRESHNESS_PROBE_KEYS[alias]):
+                select_parts.append(f"(SELECT MAX({column}) FROM {table}) AS {alias}")
+            else:
+                missing.append(table)
+
+        if probe_row.get("has_master"):
+            select_parts.append(
+                "(SELECT COUNT(*) FROM de_mf_master "
+                "WHERE is_active = true AND is_etf = false) AS active_fund_count"
+            )
+
+        if missing:
+            log.warning("mf_freshness_missing_tables", missing=missing)
+
+        if not select_parts:
+            return out
+
+        sql = "SELECT " + ", ".join(select_parts)
+        result = await self.session.execute(text(sql))
+        row = result.mappings().first()
+        if row:
+            out.update(dict(row))
+        return out

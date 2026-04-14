@@ -20,8 +20,31 @@
 
 set -euo pipefail
 
-CHUNK="${1:?chunk id required, e.g. V1.6-R1}"
-SUMMARY="${2:-${CHUNK} — see spec}"
+CHUNK_RAW="${1:?chunk id required, e.g. V2-10}"
+SUMMARY_RAW="${2:-}"
+
+# Defensive normalisation. Inner forge sessions sometimes pass the full
+# chunk title as the chunk id (e.g. "V2-9: MF deep-dive panel — single-fetch
+# pillars, NAV sparkline, overlap widget"), which produced commits like
+# `forge: forge: V2-9 — ... : V2-9 — ... — see spec`. Strip any leading
+# `forge: ` and any "<id>: <title>" pattern down to just the id.
+CHUNK="${CHUNK_RAW#forge: }"   # drop any "forge: " prefix
+CHUNK="${CHUNK%%:*}"             # keep only text before the first colon
+CHUNK="${CHUNK%% *}"             # and only the first whitespace token
+
+# Validate: chunk id must look like an id (V2-10, V1-9, S2, C8, V2-UQL-AGG-30)
+if ! [[ "$CHUNK" =~ ^[A-Z][A-Z0-9.-]*$ ]]; then
+  echo "[forge-ship] FAIL: chunk id '$CHUNK' (from '$CHUNK_RAW') does not look like an id." >&2
+  echo "             Expected something like V2-10, S2, C8, V2-UQL-AGG-30." >&2
+  exit 2
+fi
+
+# Strip any leading `forge: ` and any `<id>: ` prefix from the summary so
+# we don't end up double-prefixing the commit subject.
+SUMMARY="${SUMMARY_RAW#forge: }"
+SUMMARY="${SUMMARY#${CHUNK}: }"
+SUMMARY="${SUMMARY#${CHUNK} — }"
+[ -z "$SUMMARY" ] && SUMMARY="${CHUNK} — see spec"
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
