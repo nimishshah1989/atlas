@@ -198,13 +198,13 @@ async def test_search_returns_200_with_findings(app: Any) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_missing_query_param_returns_422(app: Any) -> None:
-    """GET /search without 'q' param returns 422."""
+async def test_search_missing_query_param_returns_400(app: Any) -> None:
+    """GET /search without 'q' param returns 400 (UQL validation)."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/api/v1/intelligence/search")
 
-    assert resp.status_code == 422
+    assert resp.status_code == 400
 
 
 # ---------------------------------------------------------------------------
@@ -305,13 +305,13 @@ async def test_get_finding_by_id_not_found_returns_404(app: Any) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_finding_invalid_uuid_returns_422(app: Any) -> None:
-    """GET /findings/{id} with invalid UUID returns 422."""
+async def test_get_finding_invalid_uuid_returns_400(app: Any) -> None:
+    """GET /findings/{id} with invalid UUID returns 400 (UQL validation)."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/api/v1/intelligence/findings/not-a-uuid")
 
-    assert resp.status_code == 422
+    assert resp.status_code == 400
 
 
 # ---------------------------------------------------------------------------

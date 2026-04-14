@@ -1,0 +1,18 @@
+
+ATLAS API design standard — 6/6 criteria passing
+Source: ATLAS-DEFINITIVE-SPEC.md §17 (UQL) + §18 (Include system) + §20 (API principles)
+Base:   http://127.0.0.1:8010
+
+  [PASS] uql-01-aggregations               POST /query supports group_by + aggregations
+         └─ POST /api/v1/query → 200
+  [PASS] uql-02-timeseries                 POST /query supports mode=timeseries with time_range
+         └─ POST /api/v1/query → 200
+  [PASS] uql-03-templates                  POST /query/template dispatches named templates
+         └─ POST /api/v1/query/template → 200
+  [PASS] uql-04-include-system             GET /stocks/{symbol}?include=rs,conviction composes response
+         └─ GET /api/v1/stocks/RELIANCE?include=rs,conviction → 200
+  [PASS] uql-05-fixed-endpoints-are-sugar  Fixed endpoints route through the UQL service
+         └─ backend/routes/stocks.py imports backend.services.uql
+  [PASS] api-01-error-standard             Errors carry code + message + suggestion
+         └─ POST /api/v1/query → 400
+

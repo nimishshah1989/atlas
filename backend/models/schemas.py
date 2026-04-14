@@ -3,10 +3,10 @@
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_serializer
 
 
 # --- Enums ---
@@ -72,10 +72,29 @@ class SortDirection(str, Enum):
 
 
 class ResponseMeta(BaseModel):
+    """Response provenance + pagination meta.
+
+    V1 fields (data_as_of/record_count/query_ms/stale) remain present and
+    typed identically for backward compatibility (spec §SC-003). The
+    additional fields below are populated by `services.uql.meta.build_meta`
+    for V2 UQL responses; V1 fixed-endpoint callers leave them as defaults.
+    """
+
     data_as_of: Optional[date] = None
     record_count: int = 0
     query_ms: Optional[int] = None
     stale: bool = False
+
+    # V2 UQL additive fields (spec §17 / data-model §4)
+    returned: Optional[int] = None
+    total_count: Optional[int] = None
+    offset: Optional[int] = None
+    limit: Optional[int] = None
+    has_more: Optional[bool] = None
+    next_offset: Optional[int] = None
+    cache_hit: Optional[bool] = None
+    includes_loaded: Optional[list[str]] = None
+    staleness: Optional[Literal["fresh", "stale", "unknown"]] = None
 
 
 # --- Stock Models ---
@@ -248,8 +267,24 @@ class StockDeepDive(BaseModel):
 
 
 class StockDeepDiveResponse(BaseModel):
+    """Single-equity deep-dive response (spec §17.10 + §18.2).
+
+    Serializes both ``meta`` (V1 contract — frontend reads) and ``_meta``
+    (the §18 standard path that ``check-api-standard.py`` asserts via
+    ``uql-04-include-system``). Both keys point at the same payload so a
+    response is loud about which fields are include-attached without
+    breaking V1 consumers.
+    """
+
     stock: StockDeepDive
     meta: ResponseMeta
+
+    @model_serializer(mode="wrap")
+    def _serialize_with_dual_meta(self, handler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        if "meta" in data:
+            data["_meta"] = data["meta"]
+        return data
 
 
 # --- Breadth ---
@@ -354,38 +389,10 @@ class DecisionListResponse(BaseModel):
 
 
 # --- UQL Query ---
-
-
-class UQLFilter(BaseModel):
-    field: str
-    op: UQLOperator
-    value: Any
-
-
-class UQLSort(BaseModel):
-    field: str
-    direction: SortDirection = SortDirection.DESC
-
-
-class UQLRequest(BaseModel):
-    entity_type: str = "equity"
-    filters: list[UQLFilter] = []
-    sort: list[UQLSort] = []
-    limit: int = Field(default=50, le=500, ge=1)
-    offset: int = Field(default=0, ge=0)
-    fields: Optional[list[str]] = None
-
-    @model_validator(mode="after")
-    def validate_constraints(self) -> "UQLRequest":
-        if len(self.filters) > 10:
-            raise ValueError("Maximum 10 filters per query")
-        return self
-
-
-class UQLResponse(BaseModel):
-    records: list[dict[str, Any]]
-    total: int
-    meta: ResponseMeta
+# UQL v2 schemas live in backend.models.uql (split out to keep this module
+# under the 500-line modularity budget). Re-exported at the bottom of this
+# file so existing `from backend.models.schemas import UQLRequest` imports
+# keep working.
 
 
 # --- Intelligence ---
@@ -461,3 +468,33 @@ class StatusResponse(BaseModel):
     freshness: DataFreshness
     active_stocks: int = 0
     sectors: int = 0
+
+
+# Re-export UQL v2 schemas so callers can keep importing from this module.
+from backend.models.uql import (  # noqa: E402  (intentional late import to break cycle)
+    UQLAggregation,
+    UQLAggregationFunction,
+    UQLEntityType,
+    UQLFilter,
+    UQLGranularity,
+    UQLIncludeModule,
+    UQLMode,
+    UQLRequest,
+    UQLResponse,
+    UQLSort,
+    UQLTimeRange,
+)
+
+__all__ = [
+    "UQLAggregation",
+    "UQLAggregationFunction",
+    "UQLEntityType",
+    "UQLFilter",
+    "UQLGranularity",
+    "UQLIncludeModule",
+    "UQLMode",
+    "UQLRequest",
+    "UQLResponse",
+    "UQLSort",
+    "UQLTimeRange",
+]

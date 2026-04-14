@@ -1,0 +1,105 @@
+"use client";
+
+import { useState } from "react";
+import type { ChunkResponse } from "@/lib/systemClient";
+import StepCheckRow from "./StepCheckRow";
+import MilestoneStrip from "./MilestoneStrip";
+
+const CHUNK_STATUS_DOT: Record<string, string> = {
+  DONE: "bg-emerald-500",
+  IN_PROGRESS: "bg-teal-500",
+  PENDING: "bg-gray-300",
+  PLANNED: "bg-gray-300",
+  BLOCKED: "bg-orange-400",
+  FAILED: "bg-red-500",
+};
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "—";
+  const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s / 60)}m ago`;
+  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86400)}d ago`;
+}
+
+export default function ChunkRow({ chunk }: { chunk: ChunkResponse }) {
+  const [expanded, setExpanded] = useState(false);
+  const dotColor = CHUNK_STATUS_DOT[chunk.status] ?? "bg-gray-300";
+  const hasError = Boolean(chunk.last_error);
+  const canExpand = chunk.steps.length > 0 || hasError;
+
+  return (
+    <div>
+      <div
+        className="flex items-center gap-2 py-1.5 pl-4 pr-3 rounded hover:bg-gray-50 cursor-pointer group"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <span
+          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`}
+        />
+        <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
+          {chunk.id}
+        </span>
+        <span className="text-xs text-gray-700 flex-1 truncate">
+          {chunk.title || <span className="italic text-gray-400">untitled</span>}
+        </span>
+        {chunk.attempts > 0 && (
+          <span
+            className={`text-[10px] font-mono px-1 rounded flex-shrink-0 ${
+              hasError
+                ? "text-red-700 bg-red-50"
+                : "text-gray-500 bg-gray-100"
+            }`}
+            title={`${chunk.attempts} attempt${chunk.attempts === 1 ? "" : "s"}`}
+          >
+            ×{chunk.attempts}
+          </span>
+        )}
+        {hasError && (
+          <span
+            className="text-[10px] font-mono text-red-600 bg-red-50 px-1 rounded flex-shrink-0"
+            title="last_error present — click to expand"
+          >
+            ERR
+          </span>
+        )}
+        {chunk.last_shipped_at && (
+          <span
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              chunk.last_ship_ok ? "bg-emerald-500" : "bg-red-500"
+            }`}
+            title={`last forge-ship: ${chunk.last_shipped_at}${
+              chunk.last_ship_ok
+                ? " — tests + gate + memory all ✓"
+                : " — FAILED, re-run scripts/forge-ship.sh"
+            }`}
+          />
+        )}
+        {chunk.milestones && chunk.milestones.length > 0 && (
+          <MilestoneStrip milestones={chunk.milestones} />
+        )}
+        <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">
+          {timeAgo(chunk.updated_at)}
+        </span>
+        {canExpand && (
+          <span className="text-[10px] text-gray-400 font-mono ml-1 flex-shrink-0">
+            {expanded ? "▲" : "▼"}
+          </span>
+        )}
+      </div>
+      {expanded && (
+        <div className="pb-1 space-y-0.5">
+          {hasError && (
+            <pre className="ml-6 mr-3 my-1 text-[10px] font-mono text-red-700 bg-red-50 border border-red-100 rounded px-2 py-1 whitespace-pre-wrap break-words">
+              {chunk.last_error}
+            </pre>
+          )}
+          {chunk.steps.map((step) => (
+            <StepCheckRow key={step.id} step={step} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

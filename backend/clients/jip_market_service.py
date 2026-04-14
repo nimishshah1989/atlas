@@ -46,3 +46,20 @@ class JIPMarketService:
         query_result = await self.session.execute(query)
         row = query_result.mappings().first()
         return dict(row) if row else {}
+
+    async def get_latest_rs_date(self) -> Optional[str]:
+        """Return MAX(date) from de_rs_scores as an ISO date string.
+
+        Punch list item 3: replaces the direct de_* SQL in pipeline.py.
+        Returns None if the table is empty or the query fails.
+        """
+        try:
+            query = text("SELECT MAX(date) FROM de_rs_scores")
+            query_result = await self.session.execute(query)
+            val = query_result.scalar_one_or_none()
+            if val is None:
+                return None
+            return str(val)
+        except Exception as exc:
+            log.warning("latest_rs_date_query_failed", error=str(exc))
+            return None

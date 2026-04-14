@@ -1,0 +1,9 @@
+=== V2-UQL-AGG-29 smoke probe 2026-04-14T06:02:17Z ===
+--- systemctl is-active atlas-backend.service
+active
+--- POST /api/v1/query (snapshot)
+{"records":[{"symbol":"INE556F16BY8","company_name":"Small Industries Development Bank of India"},{"symbol":"DATAPATTNS","company_name":"Data Patterns (India) Limited"},{"symbol":"GEEKAYWIRE","company_name":"Geekay Wires Limited"}],"total":2743,"meta":{"data_as_of":"2026-04-13","record_count":3,"query_ms":15,"stale":true,"returned":3,"total_count":2743,"offset":0,"limit":3,"has_more":true,"next_offset":3,"cache_hit":false,"includes_loaded":null,"staleness":"stale"}}
+HTTP:200
+--- POST /api/v1/query/template (top_rs_gainers)
+{"records":[{"symbol":"M&MFIN","company_name":"Mahindra & Mahindra Financial Services Limited","sector":"Conglomerate","rs_composite":"455.2508"},{"symbol":"TAKE","company_name":"Take Solutions Limited","sector":"IT","rs_composite":"108.1874"},{"symbol":"SWANDEF","company_name":"Swan Defence and Heavy Industries Limited","sector":"Infrastructure","rs_composite":"80.9733"},{"symbol":"STLTECH","company_name":"Sterlite Technologies Limited","sector":"IT","rs_composite":"80.1659"},{"symbol":"MTARTECH","company_name":"Mtar Technologies Limited","sector":"Defence","rs_composite":"75.4040"}],"total":2278,"meta":{"data_as_of":"2026-04-13","record_count":5,"query_ms":23,"stale":true,"returned":5,"total_count":2278,"offset":0,"limit":5,"has_more":true,"next_offset":5,"cache_hit":false,"includes_loaded":null,"staleness":"stale"}}
+HTTP:200

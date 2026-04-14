@@ -19,7 +19,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 import structlog
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.agents import decisions_generator, rs_analyzer, sector_analyst
@@ -35,16 +34,21 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 
 async def _get_latest_data_date(db: AsyncSession) -> datetime:
-    """Query MAX(date) from de_rs_scores to find the most recent data date.
+    """Query MAX(date) from de_rs_scores via JIP client to find the most recent data date.
 
+    Punch list item 3: no direct de_* SQL — delegates to JIPMarketService.
     Falls back to today IST if the query fails or returns NULL.
     Returns an IST-aware datetime at midnight.
     """
+    from backend.clients.jip_market_service import JIPMarketService
+
     try:
-        rows = await db.execute(text("SELECT MAX(date) FROM de_rs_scores"))
-        max_date = rows.scalar_one_or_none()
-        if max_date is not None:
-            # asyncpg returns datetime.date; convert to IST midnight datetime
+        svc = JIPMarketService(db)
+        max_date_str = await svc.get_latest_rs_date()
+        if max_date_str is not None:
+            import datetime as _dt
+
+            max_date = _dt.date.fromisoformat(max_date_str)
             return datetime(max_date.year, max_date.month, max_date.day, 0, 0, 0, tzinfo=IST)
     except Exception as exc:
         log.warning("latest_data_date_query_failed", error=str(exc))

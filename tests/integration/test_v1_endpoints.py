@@ -199,6 +199,7 @@ class TestQuery:
                     {"field": "sector", "op": "=", "value": "Banking"},
                     {"field": "rs_composite", "op": ">", "value": 0},
                 ],
+                "fields": ["symbol", "sector", "rs_composite"],
                 "sort": [{"field": "rs_composite", "direction": "desc"}],
                 "limit": 10,
             },
@@ -224,6 +225,7 @@ class TestQuery:
             json={
                 "entity_type": "equity",
                 "filters": [{"field": "nifty_50", "op": "=", "value": True}],
+                "fields": ["symbol", "rs_composite"],
                 "sort": [{"field": "rs_composite", "direction": "desc"}],
                 "limit": 50,
             },

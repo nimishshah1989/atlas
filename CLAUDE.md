@@ -28,7 +28,7 @@ If a feature violates any of these it MUST NOT deploy.
 - Financial values: `Decimal`, never `float`. Paise internal, rupees at API boundary.
 - Indian formatting: lakh/crore, never million/billion. `₹` prefix.
 - Dates: IST timezone-aware. Never naive `datetime`.
-- API: FastAPI + Pydantic v2, all routes `async def`, all query params `Optional[..] = default`.
+- API: FastAPI + Pydantic v2, all routes `async def`, all query params `Optional[..] = default`. **Every API route must conform to spec §17 (UQL) + §18 (include system) + §20 (principles)** — fixed endpoints are thin wrappers over a shared UQL service, never duplicate query logic. Measured by `scripts/check-api-standard.py` (loads `docs/specs/api-standard-criteria.yaml`).
 - DB: SQLAlchemy 2.0 async + Alembic migrations. No raw DDL. Every FK `index=True`.
 - Money columns: `Numeric(20, 4)`, never `Float`.
 - Logging: `structlog` with context. No `print()` in production code.
@@ -42,12 +42,15 @@ ruff check . --select E,F,W          # lint
 mypy . --ignore-missing-imports      # type-check
 cd frontend && npm test              # frontend
 python .quality/checks.py            # full quality gate (7 dims)
+python scripts/check-spec-coverage.py  # every mandatory spec §N has ≥1 criterion
+python scripts/check-api-standard.py   # UQL/include/error-shape compliance (spec §17/§18/§20)
 ```
 
 ## Source-of-truth pointers
 
 - Full spec (sacrosanct): `ATLAS-DEFINITIVE-SPEC.md`
 - V1 completion criteria: `docs/specs/v1-criteria.yaml` (schema-locked, product dim consumes it)
+- API design standard (cross-cutting, gates any API-touching chunk): `docs/specs/api-standard-criteria.yaml` — spec §17 + §18 + §20
 - Critical schema facts: `docs/architecture/critical-schema-facts.md`
 - Data flow (JIP → compute → own): `docs/architecture/data-flow.md`
 - Tech stack (fork / pip / build): `docs/architecture/tech-stack.md`
@@ -66,6 +69,9 @@ not try to work around them:
 - Non-deterministic test (different result on consecutive runs)
 - Schema mismatch between a Pydantic contract and its implementation
 - Starting V2+ work before V1 completion criteria pass (see `v1-criteria.yaml`)
+- Adding or editing an API route without reading spec §17 + §18 + §20 in full and passing `scripts/check-api-standard.py`
+- Constructing SQL directly inside a route handler instead of going through the shared UQL service
+- A chunk touching `docs/specs/*-criteria.yaml` or `ATLAS-DEFINITIVE-SPEC.md` that leaves `scripts/check-spec-coverage.py` red
 
 ## Post-chunk sync invariant (non-negotiable)
 
@@ -85,8 +91,12 @@ or editing anything, read in order: (1) this `CLAUDE.md`, (2) `MEMORY.md`
 plus the relevant memory files (especially `project_v15_chunk_status.md`),
 (3) `~/.forge/knowledge/wiki/index.md` and then only the relevant wiki
 articles (not end-to-end), (4) only the sections of
-`ATLAS-DEFINITIVE-SPEC.md` the punch list actually touches. A chunk that
-skips Step 0 is operating on stale context and will be rejected by review.
+`ATLAS-DEFINITIVE-SPEC.md` the punch list actually touches — **except**
+any chunk that touches `backend/routes/` or adds an API contract MUST
+read §17, §18, and §20 in full, because API surface is a cross-cutting
+contract and the root cause of the V1 UQL miss was scoping it out. A
+chunk that skips Step 0 is operating on stale context and will be
+rejected by review.
 
 ## Context discipline
 
@@ -98,6 +108,8 @@ skips Step 0 is operating on stale context and will be rejected by review.
 ## Active Technologies
 - Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep) (main)
 - `orchestrator/state.db` (SQLite with WAL mode, already present) — read + update existing `chunks` table with three new columns via alembic migration. No new tables. No touching atlas_* or de_* tables (constitution §Technology). (main)
+- Python 3.11 (existing `backend/` venv at `/home/ubuntu/atlas/venv`). + FastAPI async, Pydantic v2, SQLAlchemy 2.0 async, `asyncpg`, structlog — all already pinned in `backend/requirements.txt`. `median` uses PostgreSQL `percentile_cont(0.5) within group`; `stddev` uses `stddev_samp`. No new dependencies. (main)
+- PostgreSQL (JIP `de_*` tables, read-only via `backend/clients/jip_data_service.py`). This chunk writes nothing — no `atlas_*` table changes, no Alembic migration. (main)
 
 ## Recent Changes
 - main: Added Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep)

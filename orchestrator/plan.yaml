@@ -548,3 +548,318 @@ chunks:
       - "Memory updated"
       - "Backend + frontend regression green"
 
+
+  # --- V2-UQL-AGG -------------------------------------------------
+
+  - id: V2-UQL-AGG-1
+    title: "Scaffold backend/services/uql/ package"
+    status: PENDING
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Package imports cleanly (python -c 'import backend.services.uql')"
+      - "Each skeleton file has a module docstring"
+      - "Test suite still green (no behavior change yet)"
+
+  - id: V2-UQL-AGG-2
+    title: "Extend Pydantic schemas for UQL v2"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-1]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_schemas.py -v passes"
+      - "Every validator branch has a covering test"
+      - "Schema matches specs/004-uql-aggregations/contracts/uql_query.schema.json"
+
+  - id: V2-UQL-AGG-3
+    title: "Implement §20.5 error envelope + exception handler"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-1, V2-UQL-AGG-2]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_errors.py -v passes"
+      - "Envelope shape matches specs/004-uql-aggregations/contracts/error_envelope.schema.json for every code"
+
+  - id: V2-UQL-AGG-4
+    title: "Implement entity registry"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-1]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_registry.py -v passes"
+      - "Every entity resolves"
+      - "Every field has a valid SQL expression"
+      - "Indexed columns cover the common filter paths for equity + mf"
+
+  - id: V2-UQL-AGG-5
+    title: "Implement safety enforcement"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-2, V2-UQL-AGG-3, V2-UQL-AGG-4]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_safety.py -v passes"
+      - "Every rejection path covered"
+      - "No false positives on legitimate queries"
+
+  - id: V2-UQL-AGG-6
+    title: "Implement _meta builder"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-2, V2-UQL-AGG-4]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_meta.py -v passes"
+      - "Staleness branches covered"
+      - "Pagination math (has_more, next_offset) covered"
+
+  - id: V2-UQL-AGG-7
+    title: "Extend JIPDataService with timeout-wrapped execute_sql_plan"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-3]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_jip_service_timeout.py -v passes"
+      - "A pg_sleep(5) query returns 504 within 2.5s wall-clock"
+      - "Normal queries unaffected"
+
+  - id: V2-UQL-AGG-8
+    title: "Implement aggregation SQL builders (12 functions)"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-3, V2-UQL-AGG-4]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_aggregations.py -v passes"
+      - "Every function emits the expected SQL fragment"
+      - "Threshold validation covered"
+
+  - id: V2-UQL-AGG-9
+    title: "Implement snapshot + aggregation optimizer"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-4, V2-UQL-AGG-5, V2-UQL-AGG-8]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_optimizer.py -v passes"
+      - "Both translation paths produce parameterized SQL (no string interpolation of values)"
+      - "Sort alias/column validation covered"
+
+  - id: V2-UQL-AGG-10
+    title: "Implement timeseries optimizer"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-4, V2-UQL-AGG-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_timeseries.py -v passes"
+      - "Granularity and single-entity checks covered"
+
+  - id: V2-UQL-AGG-11
+    title: "Implement template registry"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-2, V2-UQL-AGG-3]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_templates.py -v passes"
+      - "Adding a new template requires touching only templates.py (verified via directory diff in the test)"
+
+  - id: V2-UQL-AGG-12
+    title: "Implement include system resolvers"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-4, V2-UQL-AGG-7]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_includes.py -v passes"
+      - "N+1 guard asserts exactly 1 + len(include_modules - {identity}) statements for a 50-row list query"
+
+  - id: V2-UQL-AGG-13
+    title: "Implement engine dispatcher + legacy builder"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-5, V2-UQL-AGG-6, V2-UQL-AGG-7, V2-UQL-AGG-8, V2-UQL-AGG-9, V2-UQL-AGG-10, V2-UQL-AGG-11, V2-UQL-AGG-12]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/test_uql_engine.py -v passes"
+      - "Every dispatch path emits exactly one uql.execute log event with the FR-015 fields"
+
+  - id: V2-UQL-AGG-14
+    title: "Wire /api/v1/query + /api/v1/query/template"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-13]
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "curl smoke tests return 200 for a sample aggregation, timeseries, and template request against the dev backend"
+
+  - id: V2-UQL-AGG-15
+    title: "Transpile stocks fixed endpoints through UQL"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-13]
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "tests/api/test_stocks.py passes unchanged"
+      - "grep shows 'from backend.services.uql import' at top of file"
+
+  - id: V2-UQL-AGG-16
+    title: "Transpile mf fixed endpoints through UQL"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-13]
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "tests/api/test_mf.py passes unchanged"
+      - "Module imports backend.services.uql at top"
+
+  - id: V2-UQL-AGG-17
+    title: "Wire single-entity GET with include system"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-15, V2-UQL-AGG-12]
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "curl 'http://localhost:8000/api/v1/stocks/HDFCBANK?include=rs,conviction' returns HTTP 200 with _meta.includes_loaded set"
+
+  - id: V2-UQL-AGG-18
+    title: "Integration tests: aggregations"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_aggregations.py -v passes against dev DB"
+
+  - id: V2-UQL-AGG-19
+    title: "Integration tests: timeseries"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_timeseries.py -v passes against dev DB"
+
+  - id: V2-UQL-AGG-20
+    title: "Integration tests: templates"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_templates.py -v passes against dev DB"
+
+  - id: V2-UQL-AGG-21
+    title: "Integration tests: multi-entity dispatch"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_multi_entity.py -v passes against dev DB with all four entities loaded"
+
+  - id: V2-UQL-AGG-22
+    title: "Integration tests: safety limits"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_safety.py -v passes"
+
+  - id: V2-UQL-AGG-23
+    title: "Integration tests: §20.5 error envelope"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_errors.py -v passes"
+      - "jsonschema validation passes on every response"
+
+  - id: V2-UQL-AGG-24
+    title: "Integration tests: include system"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-17]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pytest tests/api/test_query_include.py -v passes"
+
+  - id: V2-UQL-AGG-25
+    title: "Integration tests: fixed-endpoint transpile invariant + meta determinism"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-15, V2-UQL-AGG-16]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "Both test files pass against dev DB"
+      - "tests/api/test_stocks.py and tests/api/test_mf.py still pass unchanged"
+
+  - id: V2-UQL-AGG-26
+    title: "OpenAPI docs + structured logging guards"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-14]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "/api/v1/docs renders the new routes with examples"
+      - "tests/unit/test_uql_logging.py passes"
+
+  - id: V2-UQL-AGG-27
+    title: "Run scripts/check-api-standard.py (gate flip)"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-18, V2-UQL-AGG-19, V2-UQL-AGG-20, V2-UQL-AGG-21, V2-UQL-AGG-22, V2-UQL-AGG-23, V2-UQL-AGG-24, V2-UQL-AGG-25, V2-UQL-AGG-26]
+    punch_list:
+      - "Script exits 0 and reports PASS for all six criteria"
+      - "Output file committed as evidence"
+
+  - id: V2-UQL-AGG-28
+    title: "Run 7-dim quality gate"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-27]
+    punch_list:
+      - "All 7 dims ≥80%"
+      - "Product dim must factor the now-green api-standard-criteria.yaml alongside v1-criteria.yaml"
+
+  - id: V2-UQL-AGG-29
+    title: "Post-deploy smoke probe on EC2"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-28]
+    punch_list:
+      - "Both probes return HTTP 200 with populated records and _meta"
+      - "atlas-backend.service is active"
+
+  - id: V2-UQL-AGG-30
+    title: "Memory + wiki sync"
+    status: PENDING
+    depends_on: [V2-UQL-AGG-29]
+    punch_list:
+      - "Memory files reflect V2-UQL-AGG DONE"
+      - "/forge-compile exits 0"
+      - "Wiki index shows at least one new article for the UQL engine pattern"
+

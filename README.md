@@ -44,7 +44,24 @@ npm run dev   # http://localhost:3000
 pytest tests/ -v --tb=short
 ruff check . --select E,F,W
 mypy . --ignore-missing-imports
+python .quality/checks.py --gate      # 7-dim quality gate (71 checks)
 ```
+
+### Forge runner (autonomous chunk loop)
+ATLAS is built chunk-by-chunk via the Forge orchestrator. The runner drives
+one chunk per fresh Claude Agent SDK session, enforces the four-check
+post-session verifier, and ships via `scripts/forge-ship.sh` (the only legal
+commit path — a `PreToolUse` hook refuses direct `git commit` without a fresh
+`.forge/last-run.json` stamp).
+
+```bash
+python -m scripts.forge_runner           # pick next PENDING chunk and run
+scripts/forge-runner-status              # live status of current session
+systemctl --user start atlas-forge-runner.service   # unattended mode
+```
+
+Inner-session system prompt lives at `.forge/CONDUCTOR.md`. Full design:
+[`docs/architecture/forge-runner.md`](./docs/architecture/forge-runner.md).
 
 ### Docker
 ```bash

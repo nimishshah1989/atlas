@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.clients.jip_data_service import JIPDataService
 from backend.core.computations import build_conviction_pillars, compute_quadrant
 from backend.db.session import get_db
+from backend.services.uql import engine as uql_engine, includes as uql_includes
 from backend.models.schemas import (
     BreadthSnapshot,
     MarketBreadthResponse,
@@ -31,6 +32,28 @@ from backend.models.schemas import (
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1/stocks", tags=["stocks"])
+
+LEGACY_ENDPOINT_IDS: tuple[str, ...] = (
+    "stocks.universe",
+    "stocks.sectors",
+    "stocks.breadth",
+    "stocks.movers",
+    "stocks.deep_dive",
+    "stocks.rs_history",
+)
+
+
+def build_uql_request(endpoint_id: str, params: dict[str, Any]) -> Any:
+    """Translate a legacy stocks endpoint call into a UQLRequest.
+
+    Thin shim onto :func:`uql_engine.build_from_legacy`. Per spec §17/§20
+    every fixed endpoint must be expressible as a UQL request; the engine
+    grows one branch per id. Currently delegates straight through — when
+    V2-UQL-AGG-15 wires the actual transpile, route handlers swap their
+    JIPDataService calls for ``await uql_engine.execute(build_uql_request(...))``
+    without changing this seam.
+    """
+    return uql_engine.build_from_legacy(endpoint_id, params)
 
 
 def _dec(val: Any) -> Optional[Decimal]:
@@ -240,10 +263,26 @@ async def get_movers(
 @router.get("/{symbol}", response_model=StockDeepDiveResponse)
 async def get_stock_deep_dive(
     symbol: str,
+    include: Optional[str] = Query(
+        None,
+        description="Comma-separated UQL include modules (spec §18.1) — e.g. rs,conviction",
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> StockDeepDiveResponse:
-    """Get complete deep-dive for a stock with conviction pillars."""
+    """Get complete deep-dive for a stock with conviction pillars.
+
+    When ``include`` is supplied the modules are validated through the
+    shared UQL include layer (:mod:`backend.services.uql.includes`) and
+    surfaced via ``meta.includes_loaded`` per spec §18.2 — keeping this
+    fixed endpoint conformant with the §17/§18/§20 standard. Unknown or
+    deferred modules raise :class:`UQLError(INCLUDE_NOT_AVAILABLE)` which
+    the registered envelope handler converts to a §20.5 400 response.
+    """
     t0 = time.monotonic()
+    includes_loaded: Optional[list[str]] = None
+    if include is not None:
+        requested = [token.strip() for token in include.split(",") if token.strip()]
+        includes_loaded = uql_includes.validate_modules(requested)
     svc = JIPDataService(db)
     stock_detail = await svc.get_stock_detail(symbol)
 
@@ -301,6 +340,7 @@ async def get_stock_deep_dive(
             data_as_of=stock_detail.get("rs_date"),
             record_count=1,
             query_ms=elapsed,
+            includes_loaded=includes_loaded,
         ),
     )
 

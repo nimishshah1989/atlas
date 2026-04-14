@@ -226,6 +226,27 @@ class TestCheck2NoCommitPrefix:
         if not result.passed:
             assert result.failed_check != "no_commit_with_prefix"
 
+    def test_check2_passes_when_residual_sync_commit_on_top(
+        self,
+        fake_repo: Path,
+        fake_state_db: sqlite3.Connection,
+        tmp_path: Path,
+    ) -> None:
+        """Chunk commit + post-chunk residual-sync commit on top — still OK."""
+        chunk_id = "V1-9"
+        _insert_chunk(fake_state_db, chunk_id, "DONE")
+        db_path = _write_db_to_file(fake_state_db, tmp_path)
+
+        _git_commit(fake_repo, f"{chunk_id}: ship V1 completion")
+        _git_commit(fake_repo, f"forge: {chunk_id} — post-chunk residual sync")
+        _write_last_run_json(fake_repo)
+
+        ctx = _make_ctx(fake_repo, db_path)
+        result = run_four_checks(chunk_id, ctx)
+
+        if not result.passed:
+            assert result.failed_check != "no_commit_with_prefix"
+
 
 # ---------------------------------------------------------------------------
 # Check 3: stamp not fresh
@@ -349,30 +370,6 @@ class TestCheck4DirtyTree:
         result = run_four_checks(chunk_id, ctx)
 
         # Should pass (or fail on something else), but NOT fail on dirty_working_tree
-        if not result.passed:
-            assert result.failed_check != "dirty_working_tree"
-
-    def test_check4_ignores_ralph_dir(
-        self,
-        fake_repo: Path,
-        fake_state_db: sqlite3.Connection,
-        tmp_path: Path,
-    ) -> None:
-        chunk_id = "TEST-1"
-        _insert_chunk(fake_state_db, chunk_id, "DONE")
-        db_path = _write_db_to_file(fake_state_db, tmp_path)
-
-        _git_commit(fake_repo, f"{chunk_id}: implement")
-        _write_last_run_json(fake_repo)
-
-        # Create file in .ralph/ — should be exempt
-        ralph_dir = fake_repo / ".ralph"
-        ralph_dir.mkdir()
-        (ralph_dir / "PROMPT.md").write_text("ralph prompt\n")
-
-        ctx = _make_ctx(fake_repo, db_path, session_started_at=now_ist())
-        result = run_four_checks(chunk_id, ctx)
-
         if not result.passed:
             assert result.failed_check != "dirty_working_tree"
 

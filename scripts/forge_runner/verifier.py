@@ -29,7 +29,6 @@ logger = structlog.get_logger(__name__)
 # Paths to exclude from dirty-tree check (runner-owned, always exempt)
 _EXEMPT_PREFIXES = (
     ".forge/",
-    ".ralph/",
     "scripts/forge_runner/",
 )
 
@@ -160,10 +159,15 @@ def _check_state_db_done(chunk_id: str, state_db_path: str) -> tuple[bool, str]:
 
 
 def _check_commit_prefix(chunk_id: str, repo: Path) -> tuple[bool, str]:
-    """Check 2: latest git commit subject starts with chunk_id."""
+    """Check 2: one of the last 10 commits starts with chunk_id.
+
+    Scanning a window (not just HEAD) lets post-chunk residual-sync commits
+    (e.g. ``forge: <chunk> — post-chunk residual sync``) land on top of the
+    real chunk commit without false-alarming.
+    """
     try:
         result = subprocess.run(
-            ["git", "-C", str(repo), "log", "-1", "--pretty=%s"],
+            ["git", "-C", str(repo), "log", "-10", "--pretty=%s"],
             capture_output=True,
             text=True,
             timeout=15,
@@ -174,14 +178,16 @@ def _check_commit_prefix(chunk_id: str, repo: Path) -> tuple[bool, str]:
     if result.returncode != 0:
         return False, f"git log error: {result.stderr.strip()}"
 
-    subject = result.stdout.strip()
+    subjects = [line for line in result.stdout.splitlines() if line.strip()]
     prefix_colon = f"{chunk_id}:"
     prefix_space = f"{chunk_id} "
-    if subject.startswith(prefix_colon) or subject.startswith(prefix_space):
-        return True, f"commit subject: {subject!r}"
+    for subject in subjects:
+        if subject.startswith(prefix_colon) or subject.startswith(prefix_space):
+            return True, f"commit subject: {subject!r}"
 
+    head = subjects[0] if subjects else "<none>"
     return False, (
-        f"latest commit {subject!r} does not start with {prefix_colon!r} or {prefix_space!r}"
+        f"no commit in last 10 starts with {prefix_colon!r} or {prefix_space!r} (HEAD: {head!r})"
     )
 
 

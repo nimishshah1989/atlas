@@ -66,30 +66,39 @@ def _load_milestone_signals(conn: sqlite3.Connection) -> dict[str, dict[str, Any
     actually entered."""
     signals: dict[str, dict[str, Any]] = {}
 
-    for row in conn.execute("SELECT chunk_id, to_state FROM transitions"):
-        cid, to_state = row
-        chunk_signals = signals.setdefault(cid, {})
-        states = chunk_signals.setdefault("states_seen", set())
-        states.add(to_state)
+    try:
+        for row in conn.execute("SELECT chunk_id, to_state FROM transitions"):
+            cid, to_state = row
+            chunk_signals = signals.setdefault(cid, {})
+            states_seen = chunk_signals.setdefault("states_seen", set())
+            states_seen.add(to_state)
+    except sqlite3.OperationalError:
+        pass  # transitions table may not exist yet
 
-    for row in conn.execute(
-        "SELECT chunk_id, passed, overall_score, at FROM quality_runs ORDER BY id ASC"
-    ):
-        cid, passed, overall_score, at = row
-        chunk_signals = signals.setdefault(cid, {})
-        chunk_signals["latest_quality"] = {
-            "passed": bool(passed),
-            "overall_score": overall_score,
-            "at": at,
-        }
+    try:
+        for row in conn.execute(
+            "SELECT chunk_id, passed, overall_score, at FROM quality_runs ORDER BY id ASC"
+        ):
+            cid, passed, overall_score, at = row
+            chunk_signals = signals.setdefault(cid, {})
+            chunk_signals["latest_quality"] = {
+                "passed": bool(passed),
+                "overall_score": overall_score,
+                "at": at,
+            }
+    except sqlite3.OperationalError:
+        pass  # quality_runs table may not exist yet
 
     # Post-chunk session exit code — surfaces post-chunk.sh failures
     # (forge-compile, memory sync, smoke probe). Last row wins per chunk.
-    for row in conn.execute(
-        "SELECT chunk_id, exit_code FROM sessions WHERE phase='POST_CHUNK' ORDER BY id ASC"
-    ):
-        cid, exit_code = row
-        signals.setdefault(cid, {})["post_chunk_exit"] = exit_code
+    try:
+        for row in conn.execute(
+            "SELECT chunk_id, exit_code FROM sessions WHERE phase='POST_CHUNK' ORDER BY id ASC"
+        ):
+            cid, exit_code = row
+            signals.setdefault(cid, {})["post_chunk_exit"] = exit_code
+    except sqlite3.OperationalError:
+        pass  # sessions table may not exist yet
 
     return signals
 

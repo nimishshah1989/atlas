@@ -85,7 +85,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         )
         print(  # noqa: T201 — CLI stderr output, not production logging
             f"ERROR: {conductor_path} not found. "
-            "Port .ralph/PROMPT.md → .forge/CONDUCTOR.md first.",
+            "Create .forge/CONDUCTOR.md (see docs/architecture/forge-runner.md).",
             file=sys.stderr,
         )
         return _EXIT_PRECONDITION

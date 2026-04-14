@@ -7,13 +7,15 @@ from typing import Any, Callable, cast
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse, JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
 from backend.config import get_settings
-from backend.routes import decisions, intelligence, query, stocks, system
+from backend.routes import decisions, errors as uql_errors, intelligence, mf, query, stocks, system
 from backend.routes.system import health as _health_impl
 from backend.routes.system import ready as _ready_impl
 from backend.version import GIT_SHA, VERSION
@@ -66,10 +68,13 @@ async def _enforce_api_rate_limit(request: Request, call_next: Any) -> Any:
     return await call_next(request)
 
 
+uql_errors.register(app)
+
 app.include_router(stocks.router)
 app.include_router(query.router)
 app.include_router(decisions.router)
 app.include_router(intelligence.router)
+app.include_router(mf.router)
 app.include_router(system.router)
 
 
@@ -89,6 +94,19 @@ async def root() -> dict[str, str]:
 # want to know about the /api/v1 prefix.
 app.add_api_route("/health", _health_impl, methods=["GET"], tags=["system"])
 app.add_api_route("/ready", _ready_impl, methods=["GET"], tags=["system"])
+
+
+@app.get("/api/v1/openapi.json", include_in_schema=False)
+async def api_v1_openapi() -> JSONResponse:
+    return JSONResponse(app.openapi())
+
+
+@app.get("/api/v1/docs", include_in_schema=False)
+async def api_v1_docs() -> HTMLResponse:
+    return get_swagger_ui_html(
+        openapi_url="/api/v1/openapi.json",
+        title="ATLAS — API v1 docs",
+    )
 
 
 @app.on_event("startup")

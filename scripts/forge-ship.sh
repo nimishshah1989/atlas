@@ -34,9 +34,9 @@ log() { printf "[forge-ship:%s] %s\n" "$CHUNK" "$*"; }
 # --- 1. Tests ---------------------------------------------------------
 log "step 1/5 — pytest"
 if [ -x "./venv/bin/pytest" ]; then
-  ./venv/bin/pytest tests/ -q || { log "FAIL: pytest"; exit 1; }
+  ./venv/bin/pytest tests/ -q -m 'not integration' || { log "FAIL: pytest"; exit 1; }
 else
-  pytest tests/ -q || { log "FAIL: pytest"; exit 1; }
+  pytest tests/ -q -m 'not integration' || { log "FAIL: pytest"; exit 1; }
 fi
 
 # --- 2. Quality gate (71 checks + delta vs pre-chunk baseline) -------

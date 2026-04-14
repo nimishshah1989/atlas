@@ -759,10 +759,11 @@ class TestStateDbReadOnly:
         conn.execute(
             "CREATE TABLE chunks ("
             "id TEXT, title TEXT, status TEXT, attempts INT, "
-            "last_error TEXT, updated_at TEXT)"
+            "last_error TEXT, updated_at TEXT, finished_at TEXT)"
         )
         conn.execute(
-            "INSERT INTO chunks VALUES ('C1','first','DONE',0,NULL,'2026-04-13T06:52:14+00:00')"
+            "INSERT INTO chunks VALUES ('C1','first','DONE',0,NULL,"
+            "'2026-04-13T06:52:14+00:00','2026-04-13T06:52:14+00:00')"
         )
         conn.commit()
         conn.close()

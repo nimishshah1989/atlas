@@ -173,7 +173,7 @@
           "stocks"
         ],
         "summary": "Get Stock Deep Dive",
-        "description": "Get complete deep-dive for a stock with conviction pillars.",
+        "description": "Get complete deep-dive for a stock with conviction pillars.\n\nWhen ``include`` is supplied the modules are validated through the\nshared UQL include layer (:mod:`backend.services.uql.includes`) and\nsurfaced via ``meta.includes_loaded`` per spec \u00a718.2 \u2014 keeping this\nfixed endpoint conformant with the \u00a717/\u00a718/\u00a720 standard. Unknown or\ndeferred modules raise :class:`UQLError(INCLUDE_NOT_AVAILABLE)` which\nthe registered envelope handler converts to a \u00a720.5 400 response.",
         "operationId": "get_stock_deep_dive_api_v1_stocks__symbol__get",
         "parameters": [
           {
@@ -184,6 +184,24 @@
               "type": "string",
               "title": "Symbol"
             }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated UQL include modules (spec \u00a718.1) \u2014 e.g. rs,conviction",
+              "title": "Include"
+            },
+            "description": "Comma-separated UQL include modules (spec \u00a718.1) \u2014 e.g. rs,conviction"
           }
         ],
         "responses": {
@@ -280,8 +298,8 @@
         "tags": [
           "query"
         ],
-        "summary": "Execute Query",
-        "description": "Execute a UQL query. V1 supports entity_type='equity' only.",
+        "summary": "Execute a raw UQL query",
+        "description": "Spec \u00a717.5\u201317.7. Accepts a full UQL envelope \u2014 snapshot, aggregation (`group_by` + `aggregations`), or `mode='timeseries'` with `time_range`/`granularity`. Every fixed endpoint under `/stocks` and `/mf` is a thin wrapper over this route, so any payload the engine accepts here is safe to ship.",
         "operationId": "execute_query_api_v1_query_post",
         "requestBody": {
           "content": {
@@ -295,7 +313,7 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Query executed \u2014 records + total + _meta",
             "content": {
               "application/json": {
                 "schema": {
@@ -303,6 +321,57 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "UQL validation rejection (safety, limits, shape)"
+          },
+          "503": {
+            "description": "Entity partition missing (FR-019)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/query/template": {
+      "post": {
+        "tags": [
+          "query"
+        ],
+        "summary": "Execute a named UQL template",
+        "description": "Spec \u00a717.7. Dispatches a registered template (`backend/services/uql/templates.py::REGISTRY`) with optional params. Adding a template requires no route code.",
+        "operationId": "execute_query_template_api_v1_query_template_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Template executed \u2014 same shape as /query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UQLResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template name not in registry"
           },
           "422": {
             "description": "Validation Error",
@@ -863,6 +932,566 @@
         }
       }
     },
+    "/api/v1/mf/universe": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Universe",
+        "operationId": "get_universe_api_v1_mf_universe_get",
+        "parameters": [
+          {
+            "name": "benchmark",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Benchmark"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "broad_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Broad Category"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Active Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UniverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/categories": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Categories",
+        "operationId": "get_categories_api_v1_mf_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/flows": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Flows",
+        "operationId": "get_flows_api_v1_mf_flows_get",
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 120,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 12,
+              "title": "Months"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/overlap": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Overlap",
+        "operationId": "get_overlap_api_v1_mf_overlap_get",
+        "parameters": [
+          {
+            "name": "funds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated mstar_ids: A,B",
+              "title": "Funds"
+            },
+            "description": "Comma-separated mstar_ids: A,B"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlapResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/holding-stock/{symbol}": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Holding Stock",
+        "operationId": "get_holding_stock_api_v1_mf_holding_stock__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingStockResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}/holdings": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Holdings",
+        "operationId": "get_fund_holdings_api_v1_mf__mstar_id__holdings_get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}/sectors": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Sectors",
+        "operationId": "get_fund_sectors_api_v1_mf__mstar_id__sectors_get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundSectorsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}/rs-history": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Rs History",
+        "operationId": "get_fund_rs_history_api_v1_mf__mstar_id__rs_history_get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          },
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 120,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 12,
+              "title": "Months"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundRSHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}/weighted-technicals": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Weighted Technicals",
+        "operationId": "get_fund_weighted_technicals_api_v1_mf__mstar_id__weighted_technicals_get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightedTechnicalsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}/nav-history": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Nav History",
+        "operationId": "get_fund_nav_history_api_v1_mf__mstar_id__nav_history_get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NAVHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/{mstar_id}": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Fund Deep Dive",
+        "operationId": "get_fund_deep_dive_api_v1_mf__mstar_id__get",
+        "parameters": [
+          {
+            "name": "mstar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mstar Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundDeepDiveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -1224,6 +1853,177 @@
         ],
         "title": "BreadthSnapshot"
       },
+      "BroadCategoryGroup": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryGroup"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "BroadCategoryGroup"
+      },
+      "CategoriesResponse": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRow"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "CategoriesResponse"
+      },
+      "CategoryGroup": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "funds": {
+            "items": {
+              "$ref": "#/components/schemas/Fund"
+            },
+            "type": "array",
+            "title": "Funds",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryGroup"
+      },
+      "CategoryRow": {
+        "properties": {
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "broad_category": {
+            "type": "string",
+            "title": "Broad Category"
+          },
+          "fund_count": {
+            "type": "integer",
+            "title": "Fund Count",
+            "default": 0
+          },
+          "avg_rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rs Composite"
+          },
+          "quadrant_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Quadrant Distribution",
+            "default": {}
+          },
+          "net_flow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Flow Cr"
+          },
+          "sip_flow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sip Flow Cr"
+          },
+          "total_aum_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Aum Cr"
+          },
+          "manager_alpha_p50": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Alpha P50"
+          },
+          "manager_alpha_p90": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Alpha P90"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_name",
+          "broad_category"
+        ],
+        "title": "CategoryRow"
+      },
       "ChunkResponse": {
         "properties": {
           "id": {
@@ -1294,6 +2094,14 @@
               }
             ],
             "title": "Last Ship Ok"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/MilestoneResponse"
+            },
+            "type": "array",
+            "title": "Milestones",
+            "default": []
           }
         },
         "type": "object",
@@ -1326,6 +2134,30 @@
           "institutional"
         ],
         "title": "ConvictionPillars"
+      },
+      "ConvictionPillarsMF": {
+        "properties": {
+          "performance": {
+            "$ref": "#/components/schemas/PillarPerformance"
+          },
+          "rs_strength": {
+            "$ref": "#/components/schemas/PillarRSStrength"
+          },
+          "flows": {
+            "$ref": "#/components/schemas/PillarFlows"
+          },
+          "holdings_quality": {
+            "$ref": "#/components/schemas/PillarHoldingsQuality"
+          }
+        },
+        "type": "object",
+        "required": [
+          "performance",
+          "rs_strength",
+          "flows",
+          "holdings_quality"
+        ],
+        "title": "ConvictionPillarsMF"
       },
       "DataFreshness": {
         "properties": {
@@ -1830,6 +2662,631 @@
         "title": "FindingSummary",
         "description": "Response model for a single intelligence finding."
       },
+      "FlowRow": {
+        "properties": {
+          "month_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Month Date"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "net_flow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Flow Cr"
+          },
+          "gross_inflow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Inflow Cr"
+          },
+          "gross_outflow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Outflow Cr"
+          },
+          "aum_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aum Cr"
+          },
+          "sip_flow_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sip Flow Cr"
+          },
+          "sip_accounts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sip Accounts"
+          },
+          "folios": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month_date",
+          "category"
+        ],
+        "title": "FlowRow"
+      },
+      "FlowsResponse": {
+        "properties": {
+          "flows": {
+            "items": {
+              "$ref": "#/components/schemas/FlowRow"
+            },
+            "type": "array",
+            "title": "Flows",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "FlowsResponse"
+      },
+      "Fund": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "fund_name": {
+            "type": "string",
+            "title": "Fund Name"
+          },
+          "amc_name": {
+            "type": "string",
+            "title": "Amc Name"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "broad_category": {
+            "type": "string",
+            "title": "Broad Category"
+          },
+          "nav": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav"
+          },
+          "nav_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav Date"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum_28d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum 28D"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "manager_alpha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Alpha"
+          },
+          "expense_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Ratio"
+          },
+          "is_index_fund": {
+            "type": "boolean",
+            "title": "Is Index Fund",
+            "default": false
+          },
+          "primary_benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Benchmark"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "fund_name",
+          "amc_name",
+          "category_name",
+          "broad_category"
+        ],
+        "title": "Fund"
+      },
+      "FundDailyMetrics": {
+        "properties": {
+          "nav": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav"
+          },
+          "nav_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav Date"
+          },
+          "aum_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aum Cr"
+          },
+          "expense_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Ratio"
+          },
+          "return_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 1M"
+          },
+          "return_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 3M"
+          },
+          "return_6m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 6M"
+          },
+          "return_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 1Y"
+          },
+          "return_3y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 3Y"
+          },
+          "return_5y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 5Y"
+          }
+        },
+        "type": "object",
+        "title": "FundDailyMetrics"
+      },
+      "FundDeepDiveResponse": {
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/FundIdentity"
+          },
+          "daily": {
+            "$ref": "#/components/schemas/FundDailyMetrics"
+          },
+          "pillars": {
+            "$ref": "#/components/schemas/ConvictionPillarsMF"
+          },
+          "sector_exposure": {
+            "$ref": "#/components/schemas/SectorExposureSummary"
+          },
+          "top_holdings": {
+            "items": {
+              "$ref": "#/components/schemas/TopHoldingSummary"
+            },
+            "type": "array",
+            "title": "Top Holdings",
+            "default": []
+          },
+          "weighted_technicals": {
+            "$ref": "#/components/schemas/WeightedTechnicalsSummary"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          },
+          "inactive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inactive"
+          },
+          "mf_lifecycle_event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MFLifecycleEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "identity",
+          "daily",
+          "pillars",
+          "sector_exposure",
+          "weighted_technicals",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "FundDeepDiveResponse"
+      },
+      "FundHoldingStockEntry": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "fund_name": {
+            "type": "string",
+            "title": "Fund Name"
+          },
+          "weight_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "fund_name",
+          "weight_pct"
+        ],
+        "title": "FundHoldingStockEntry"
+      },
+      "FundIdentity": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "fund_name": {
+            "type": "string",
+            "title": "Fund Name"
+          },
+          "amc_name": {
+            "type": "string",
+            "title": "Amc Name"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "broad_category": {
+            "type": "string",
+            "title": "Broad Category"
+          },
+          "primary_benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Benchmark"
+          },
+          "inception_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inception Date"
+          },
+          "is_index_fund": {
+            "type": "boolean",
+            "title": "Is Index Fund",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "fund_name",
+          "amc_name",
+          "category_name",
+          "broad_category"
+        ],
+        "title": "FundIdentity"
+      },
+      "FundRSHistoryResponse": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/RSHistoryPoint"
+            },
+            "type": "array",
+            "title": "Points",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "FundRSHistoryResponse"
+      },
+      "FundSector": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "weight_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Pct"
+          },
+          "stock_count": {
+            "type": "integer",
+            "title": "Stock Count",
+            "default": 0
+          },
+          "sector_rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Rs Composite"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "weight_pct"
+        ],
+        "title": "FundSector"
+      },
+      "FundSectorsResponse": {
+        "properties": {
+          "sectors": {
+            "items": {
+              "$ref": "#/components/schemas/FundSector"
+            },
+            "type": "array",
+            "title": "Sectors",
+            "default": []
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of_date"
+        ],
+        "title": "FundSectorsResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1842,6 +3299,171 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Holding": {
+        "properties": {
+          "instrument_id": {
+            "type": "string",
+            "title": "Instrument Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "holding_name": {
+            "type": "string",
+            "title": "Holding Name"
+          },
+          "weight_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Pct"
+          },
+          "shares_held": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shares Held"
+          },
+          "market_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "above_200dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 200Dma"
+          }
+        },
+        "type": "object",
+        "required": [
+          "instrument_id",
+          "symbol",
+          "holding_name",
+          "weight_pct"
+        ],
+        "title": "Holding"
+      },
+      "HoldingStockResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "instrument_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Id"
+          },
+          "funds": {
+            "items": {
+              "$ref": "#/components/schemas/FundHoldingStockEntry"
+            },
+            "type": "array",
+            "title": "Funds",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "HoldingStockResponse"
+      },
+      "HoldingsResponse": {
+        "properties": {
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/Holding"
+            },
+            "type": "array",
+            "title": "Holdings",
+            "default": []
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date"
+          },
+          "coverage_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Coverage Pct"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of_date",
+          "coverage_pct"
+        ],
+        "title": "HoldingsResponse"
       },
       "IntelligenceListResponse": {
         "properties": {
@@ -1885,6 +3507,36 @@
         "title": "IntelligenceSearchResponse",
         "description": "Response for vector similarity search."
       },
+      "MFLifecycleEvent": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_type",
+          "effective_date"
+        ],
+        "title": "MFLifecycleEvent"
+      },
       "MarketBreadthResponse": {
         "properties": {
           "breadth": {
@@ -1904,6 +3556,36 @@
           "meta"
         ],
         "title": "MarketBreadthResponse"
+      },
+      "MilestoneResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "MilestoneResponse",
+        "description": "One R/A/G dot in the per-chunk process strip. `status` is one of\ngreen | amber | red | pending; `detail` is a short hover-tooltip\nexplaining where the value came from."
       },
       "MoverEntry": {
         "properties": {
@@ -1996,6 +3678,228 @@
         ],
         "title": "MoversResponse"
       },
+      "NAVHistoryResponse": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/NAVPoint"
+            },
+            "type": "array",
+            "title": "Points",
+            "default": []
+          },
+          "coverage_gap_days": {
+            "type": "integer",
+            "title": "Coverage Gap Days",
+            "default": 0
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "NAVHistoryResponse"
+      },
+      "NAVPoint": {
+        "properties": {
+          "nav_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Nav Date"
+          },
+          "nav": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Nav"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nav_date",
+          "nav"
+        ],
+        "title": "NAVPoint"
+      },
+      "OverlapHolding": {
+        "properties": {
+          "instrument_id": {
+            "type": "string",
+            "title": "Instrument Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "weight_a": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight A"
+          },
+          "weight_b": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight B"
+          }
+        },
+        "type": "object",
+        "required": [
+          "instrument_id",
+          "symbol",
+          "weight_a",
+          "weight_b"
+        ],
+        "title": "OverlapHolding"
+      },
+      "OverlapResponse": {
+        "properties": {
+          "fund_a": {
+            "type": "string",
+            "title": "Fund A"
+          },
+          "fund_b": {
+            "type": "string",
+            "title": "Fund B"
+          },
+          "overlap_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Overlap Pct"
+          },
+          "common_holdings": {
+            "items": {
+              "$ref": "#/components/schemas/OverlapHolding"
+            },
+            "type": "array",
+            "title": "Common Holdings",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fund_a",
+          "fund_b",
+          "overlap_pct",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "OverlapResponse"
+      },
+      "PillarFlows": {
+        "properties": {
+          "net_flow_cr_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Flow Cr 3M"
+          },
+          "sip_flow_cr_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sip Flow Cr 3M"
+          },
+          "folio_growth_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folio Growth Pct"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarFlows"
+      },
+      "PillarHoldingsQuality": {
+        "properties": {
+          "holdings_avg_rs": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdings Avg Rs"
+          },
+          "pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 200Dma"
+          },
+          "concentration_top10_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concentration Top10 Pct"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarHoldingsQuality"
+      },
       "PillarInstitutional": {
         "properties": {
           "mf_holder_count": {
@@ -2029,6 +3933,65 @@
         },
         "type": "object",
         "title": "PillarInstitutional"
+      },
+      "PillarPerformance": {
+        "properties": {
+          "manager_alpha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Alpha"
+          },
+          "information_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Information Ratio"
+          },
+          "capture_up": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Up"
+          },
+          "capture_down": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Down"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarPerformance"
       },
       "PillarRS": {
         "properties": {
@@ -2140,6 +4103,51 @@
         "type": "object",
         "title": "PillarRS"
       },
+      "PillarRSStrength": {
+        "properties": {
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum_28d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum 28D"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PillarRSStrength"
+      },
       "PillarTechnical": {
         "properties": {
           "checks_passing": {
@@ -2240,6 +4248,26 @@
           "date"
         ],
         "title": "RSDataPoint"
+      },
+      "RSHistoryPoint": {
+        "properties": {
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date"
+          },
+          "rs_composite": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rs Composite"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of_date",
+          "rs_composite"
+        ],
+        "title": "RSHistoryPoint"
       },
       "RSHistoryResponse": {
         "properties": {
@@ -2405,10 +4433,118 @@
             "type": "boolean",
             "title": "Stale",
             "default": false
+          },
+          "returned": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "has_more": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has More"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          },
+          "cache_hit": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Hit"
+          },
+          "includes_loaded": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Includes Loaded"
+          },
+          "staleness": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staleness"
           }
         },
         "type": "object",
-        "title": "ResponseMeta"
+        "title": "ResponseMeta",
+        "description": "Response provenance + pagination meta.\n\nV1 fields (data_as_of/record_count/query_ms/stale) remain present and\ntyped identically for backward compatibility (spec \u00a7SC-003). The\nadditional fields below are populated by `services.uql.meta.build_meta`\nfor V2 UQL responses; V1 fixed-endpoint callers leave them as defaults."
       },
       "RollupResponse": {
         "properties": {
@@ -2432,6 +4568,40 @@
           "pct"
         ],
         "title": "RollupResponse"
+      },
+      "SectorExposureSummary": {
+        "properties": {
+          "top_sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Sector"
+          },
+          "top_sector_weight_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Sector Weight Pct"
+          },
+          "sector_count": {
+            "type": "integer",
+            "title": "Sector Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "SectorExposureSummary"
       },
       "SectorGroup": {
         "properties": {
@@ -2754,6 +4924,38 @@
           "desc"
         ],
         "title": "SortDirection"
+      },
+      "Staleness": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "age_minutes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Age Minutes"
+          },
+          "flag": {
+            "$ref": "#/components/schemas/StalenessFlag",
+            "default": "FRESH"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "age_minutes"
+        ],
+        "title": "Staleness"
+      },
+      "StalenessFlag": {
+        "type": "string",
+        "enum": [
+          "FRESH",
+          "STALE",
+          "EXPIRED"
+        ],
+        "title": "StalenessFlag"
       },
       "StatusResponse": {
         "properties": {
@@ -3248,7 +5450,8 @@
           "stock",
           "meta"
         ],
-        "title": "StockDeepDiveResponse"
+        "title": "StockDeepDiveResponse",
+        "description": "Single-equity deep-dive response (spec \u00a717.10 + \u00a718.2).\n\nSerializes both ``meta`` (V1 contract \u2014 frontend reads) and ``_meta``\n(the \u00a718 standard path that ``check-api-standard.py`` asserts via\n``uql-04-include-system``). Both keys point at the same payload so a\nresponse is loud about which fields are include-attached without\nbreaking V1 consumers."
       },
       "StockSummary": {
         "properties": {
@@ -3729,6 +5932,129 @@
         ],
         "title": "TechnicalCheck"
       },
+      "TemplateRequest": {
+        "properties": {
+          "template": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Template"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Params"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template"
+        ],
+        "title": "TemplateRequest",
+        "description": "Body for ``POST /api/v1/query/template``.\n\n``template`` is the registry key (see\n``backend/services/uql/templates.py::REGISTRY``); ``params`` is the\nbuilder-specific param dict (may be omitted for parameterless\ntemplates).",
+        "examples": [
+          {
+            "params": {
+              "limit": 5
+            },
+            "template": "top_rs_gainers"
+          },
+          {
+            "params": {},
+            "template": "sector_rotation"
+          },
+          {
+            "params": {},
+            "template": "breadth_dashboard"
+          }
+        ]
+      },
+      "TopHoldingSummary": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "holding_name": {
+            "type": "string",
+            "title": "Holding Name"
+          },
+          "weight_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "holding_name",
+          "weight_pct"
+        ],
+        "title": "TopHoldingSummary"
+      },
+      "UQLAggregation": {
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "function": {
+            "type": "string",
+            "enum": [
+              "avg",
+              "sum",
+              "min",
+              "max",
+              "count",
+              "count_all",
+              "pct_true",
+              "pct_positive",
+              "pct_above",
+              "pct_below",
+              "median",
+              "stddev"
+            ],
+            "title": "Function"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Alias"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          }
+        },
+        "type": "object",
+        "required": [
+          "function",
+          "alias"
+        ],
+        "title": "UQLAggregation",
+        "description": "One aggregation spec inside a UQL request (data-model \u00a71)."
+      },
       "UQLFilter": {
         "properties": {
           "field": {
@@ -3745,8 +6071,7 @@
         "type": "object",
         "required": [
           "field",
-          "op",
-          "value"
+          "op"
         ],
         "title": "UQLFilter"
       },
@@ -3772,6 +6097,12 @@
         "properties": {
           "entity_type": {
             "type": "string",
+            "enum": [
+              "equity",
+              "mf",
+              "sector",
+              "index"
+            ],
             "title": "Entity Type",
             "default": "equity"
           },
@@ -3791,18 +6122,52 @@
             "title": "Sort",
             "default": []
           },
-          "limit": {
-            "type": "integer",
-            "maximum": 500.0,
-            "minimum": 1.0,
-            "title": "Limit",
-            "default": 50
+          "group_by": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group By"
           },
-          "offset": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Offset",
-            "default": 0
+          "aggregations": {
+            "items": {
+              "$ref": "#/components/schemas/UQLAggregation"
+            },
+            "type": "array",
+            "title": "Aggregations",
+            "default": []
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "snapshot",
+              "timeseries"
+            ],
+            "title": "Mode",
+            "default": "snapshot"
+          },
+          "time_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UQLTimeRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "granularity": {
+            "type": "string",
+            "const": "daily",
+            "title": "Granularity",
+            "default": "daily"
           },
           "fields": {
             "anyOf": [
@@ -3817,10 +6182,109 @@
               }
             ],
             "title": "Fields"
+          },
+          "include": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity",
+                    "rs",
+                    "technicals",
+                    "conviction"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
           }
         },
         "type": "object",
-        "title": "UQLRequest"
+        "title": "UQLRequest",
+        "description": "UQL v2 request envelope. Mirrors specs/004-uql-aggregations contract.",
+        "examples": [
+          {
+            "entity_type": "equity",
+            "fields": [
+              "symbol",
+              "company_name",
+              "rs_composite"
+            ],
+            "filters": [
+              {
+                "field": "sector",
+                "op": "=",
+                "value": "Banking"
+              }
+            ],
+            "limit": 10,
+            "sort": [
+              {
+                "direction": "desc",
+                "field": "rs_composite"
+              }
+            ]
+          },
+          {
+            "aggregations": [
+              {
+                "alias": "avg_rs",
+                "field": "rs_composite",
+                "function": "avg"
+              },
+              {
+                "alias": "pct_above_200dma",
+                "field": "above_200dma",
+                "function": "pct_true"
+              }
+            ],
+            "entity_type": "equity",
+            "group_by": [
+              "sector"
+            ],
+            "limit": 20
+          },
+          {
+            "entity_type": "equity",
+            "fields": [
+              "date",
+              "close",
+              "rs_composite"
+            ],
+            "filters": [
+              {
+                "field": "symbol",
+                "op": "=",
+                "value": "RELIANCE"
+              }
+            ],
+            "granularity": "daily",
+            "limit": 100,
+            "mode": "timeseries",
+            "time_range": {
+              "from": "2026-01-01",
+              "to": "2026-04-10"
+            }
+          }
+        ]
       },
       "UQLResponse": {
         "properties": {
@@ -3846,7 +6310,30 @@
           "total",
           "meta"
         ],
-        "title": "UQLResponse"
+        "title": "UQLResponse",
+        "description": "Fully-shaped UQL response \u2014 records + total + provenance meta.",
+        "examples": [
+          {
+            "meta": {
+              "data_as_of": "2026-04-13",
+              "has_more": false,
+              "limit": 10,
+              "offset": 0,
+              "query_ms": 42,
+              "returned": 1,
+              "staleness": "fresh",
+              "total_count": 1
+            },
+            "records": [
+              {
+                "company_name": "HDFC Bank",
+                "rs_composite": 82.1,
+                "symbol": "HDFCBANK"
+              }
+            ],
+            "total": 1
+          }
+        ]
       },
       "UQLSort": {
         "properties": {
@@ -3864,6 +6351,53 @@
           "field"
         ],
         "title": "UQLSort"
+      },
+      "UQLTimeRange": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "title": "UQLTimeRange",
+        "description": "Inclusive date range for ``mode='timeseries'`` queries."
+      },
+      "UniverseResponse": {
+        "properties": {
+          "broad_categories": {
+            "items": {
+              "$ref": "#/components/schemas/BroadCategoryGroup"
+            },
+            "type": "array",
+            "title": "Broad Categories",
+            "default": []
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "UniverseResponse"
       },
       "ValidationError": {
         "properties": {
@@ -3954,6 +6488,125 @@
           "chunks"
         ],
         "title": "VersionResponse"
+      },
+      "WeightedTechnicalsResponse": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "weighted_rsi": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Rsi"
+          },
+          "weighted_breadth_pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Breadth Pct Above 200Dma"
+          },
+          "weighted_macd_bullish_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Macd Bullish Pct"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "$ref": "#/components/schemas/Staleness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "as_of_date",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "WeightedTechnicalsResponse"
+      },
+      "WeightedTechnicalsSummary": {
+        "properties": {
+          "weighted_rsi": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Rsi"
+          },
+          "weighted_breadth_pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Breadth Pct Above 200Dma"
+          },
+          "weighted_macd_bullish_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Macd Bullish Pct"
+          },
+          "as_of_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Date"
+          }
+        },
+        "type": "object",
+        "title": "WeightedTechnicalsSummary"
       }
     }
   }

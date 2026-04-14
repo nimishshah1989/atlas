@@ -1,0 +1,8 @@
+DEBUG:asyncio:Using selector: EpollSelector
+2026-04-14 08:31:41 [info     ] loop_started                   filter_regex=V2-([2-9]|10) once=False runner_pid=377950
+2026-04-14 08:31:41 [debug    ] picker_dep_not_done            chunk_id=V2-10 dep_id=V2-6 dep_status=PENDING
+2026-04-14 08:31:41 [info     ] picker_selected                chunk_id=V2-2 depends_on=['V2-1']
+2026-04-14 08:31:41 [info     ] stage_pick_ok                  chunk_id=V2-2
+2026-04-14 08:31:41 [info     ] chunk_marked_in_progress       chunk_id=V2-2 pid=377950 started_at=2026-04-14T14:01:41+05:30
+2026-04-14 08:31:41 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-2
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
