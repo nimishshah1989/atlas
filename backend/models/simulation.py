@@ -183,3 +183,57 @@ class SimulationListResponse(BaseModel):
 
     simulations: list[SimulationListItem]
     count: int
+    data_as_of: datetime
+
+
+class SimulationDetailResponse(BaseModel):
+    """GET /api/v1/simulate/{id} response — full simulation detail."""
+
+    id: UUID
+    name: Optional[str] = None
+    config: SimulationConfig
+    result: SimulationResult
+    created_at: datetime
+    is_auto_loop: bool = False
+    auto_loop_cron: Optional[str] = None
+    last_auto_run: Optional[datetime] = None
+    data_as_of: datetime
+
+
+class SimulationSaveRequest(BaseModel):
+    """POST /api/v1/simulate/save request — save config without running."""
+
+    config: SimulationConfig
+    name: Optional[str] = None
+    is_auto_loop: bool = False
+    auto_loop_cron: Optional[str] = None
+
+
+class SimulationSaveResponse(BaseModel):
+    """POST /api/v1/simulate/save response."""
+
+    id: UUID
+    name: Optional[str] = None
+    created_at: datetime
+
+
+class AutoLoopResultItem(BaseModel):
+    """Result for a single simulation re-run in an auto-loop pass."""
+
+    simulation_id: UUID
+    status: str = Field(description="success | error | skipped")
+    error: Optional[str] = None
+    summary_delta: Optional[dict[str, str]] = Field(
+        default=None,
+        description="Key KPI deltas vs previous run (Decimal as str)",
+    )
+
+
+class AutoLoopResponse(BaseModel):
+    """POST /api/v1/simulate/auto-loop/run response."""
+
+    results: list[AutoLoopResultItem]
+    total: int
+    succeeded: int
+    failed: int
+    ran_at: datetime

@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import AtlasSimulation
 from backend.models.simulation import (
+    AutoLoopResultItem,
     SimulationConfig,
     SimulationResult,
     SimulationSummary,
@@ -27,6 +28,11 @@ from backend.services.simulation.signal_adapters import (
     SignalSeries,
     combine_signals,
     get_adapter,
+)
+from backend.services.simulation.helpers import (
+    get_remaining_lots_value,
+    parse_price_data,
+    sanitize_for_jsonb,
 )
 from backend.services.simulation.tax_engine import compute_annual_tax_summary
 
@@ -87,25 +93,25 @@ class SimulationService:
 
         # --- Step 4: Run backtest engine ---
         engine = BacktestEngine()
-        result: BacktestResult = engine.run(config, price_series, signal_series)
+        bt_result: BacktestResult = engine.run(config, price_series, signal_series)
 
         log.info(
             "simulation_backtest_complete",
-            total_invested=str(result.total_invested),
-            final_value=str(result.final_value),
-            transaction_count=len(result.transactions),
-            daily_count=len(result.daily_values),
+            total_invested=str(bt_result.total_invested),
+            final_value=str(bt_result.final_value),
+            transaction_count=len(bt_result.transactions),
+            daily_count=len(bt_result.daily_values),
         )
 
         # --- Step 5: Compute analytics ---
-        summary: SimulationSummary = compute_analytics(result, config)
+        summary: SimulationSummary = compute_analytics(bt_result, config)
 
         # --- Step 6: Compute tax summary ---
-        tax_summary: TaxSummary = self._build_tax_summary(result, config, summary.xirr)
+        tax_summary: TaxSummary = self._build_tax_summary(bt_result, config, summary.xirr)
 
         # --- Step 7: Persist ---
         data_as_of = datetime.datetime.now(tz=datetime.timezone.utc)
-        sim_orm = await self._persist(config, result, summary, tax_summary)
+        sim_orm = await self._persist(config, bt_result, summary, tax_summary)
 
         log.info(
             "simulation_saved",
@@ -115,12 +121,169 @@ class SimulationService:
         # --- Step 8: Return result ---
         return SimulationResult(
             summary=summary,
-            daily_values=result.daily_values,
-            transactions=result.transactions,
+            daily_values=bt_result.daily_values,
+            transactions=bt_result.transactions,
             tax_summary=tax_summary,
             tear_sheet_url=None,
             data_as_of=data_as_of,
         )
+
+    async def list_simulations(
+        self,
+        user_id: Optional[str] = None,
+        limit: int = 50,
+    ) -> list[AtlasSimulation]:
+        """Return saved simulations, newest first, excluding soft-deleted."""
+        return await self._repo.list_simulations(user_id=user_id, limit=limit)
+
+    async def get_simulation(self, sim_id: str) -> Optional[AtlasSimulation]:
+        """Fetch a single simulation by UUID string, excluding soft-deleted."""
+        import uuid as _uuid
+
+        try:
+            uid = _uuid.UUID(sim_id)
+        except ValueError:
+            return None
+        return await self._repo.get_simulation(uid)
+
+    async def save_config(
+        self,
+        config: SimulationConfig,
+        name: Optional[str] = None,
+        is_auto_loop: bool = False,
+        auto_loop_cron: Optional[str] = None,
+    ) -> AtlasSimulation:
+        """Persist a simulation config without running the backtest.
+
+        Used for saving auto-loop configurations that will be re-run on a schedule.
+        """
+        log.info(
+            "simulation_save_config",
+            signal=config.signal.value,
+            instrument=config.instrument,
+            is_auto_loop=is_auto_loop,
+        )
+
+        sim_orm = AtlasSimulation(
+            name=name,
+            config=sanitize_for_jsonb(config.model_dump()),
+            is_auto_loop=is_auto_loop,
+            auto_loop_cron=auto_loop_cron,
+            result_summary=None,
+            daily_values=None,
+            transactions=None,
+            tax_summary=None,
+        )
+        await self._repo.save_simulation(sim_orm)
+
+        log.info("simulation_config_saved", simulation_id=str(sim_orm.id))
+        return sim_orm
+
+    async def delete_simulation(self, sim_id: str) -> bool:
+        """Soft-delete a simulation by UUID string. Returns True if found+deleted."""
+        import uuid as _uuid
+
+        try:
+            uid = _uuid.UUID(sim_id)
+        except ValueError:
+            return False
+        return await self._repo.soft_delete(uid)
+
+    async def run_auto_loop(self, jip: Any) -> list[AutoLoopResultItem]:
+        """Re-run all active auto-loop simulations with latest data.
+
+        Each simulation is independently locked, re-run, and updated.
+        A failure on one simulation does not stop others.
+
+        Returns:
+            List of AutoLoopResultItem for each attempted re-run.
+        """
+        import uuid as _uuid
+
+        active_sims = await self._repo.list_simulations(user_id=None, limit=500)
+        auto_loop_sims = [s for s in active_sims if s.is_auto_loop and not s.is_deleted]
+
+        log.info("auto_loop_start", total_candidates=len(auto_loop_sims))
+
+        results: list[AutoLoopResultItem] = []
+
+        for sim in auto_loop_sims:
+            sim_id_str = str(sim.id)
+            sim_log = log.bind(simulation_id=sim_id_str)
+
+            try:
+                # Lock to prevent concurrent auto-loop races
+                locked = await self._repo.lock_for_update(sim.id)
+                if locked is None:
+                    sim_log.info("auto_loop_sim_skipped_locked")
+                    results.append(
+                        AutoLoopResultItem(
+                            simulation_id=sim.id,
+                            status="skipped",
+                            error="Could not acquire lock",
+                        )
+                    )
+                    continue
+
+                # Parse config back from JSONB
+                config_dict = locked.config or {}
+                config = SimulationConfig.model_validate(config_dict)
+
+                # Store previous summary for delta computation
+                prev_summary = locked.result_summary or {}
+
+                # Re-run backtest with latest data
+                sim_log.info("auto_loop_sim_rerun_start", signal=config.signal.value)
+                rerun_result = await self.run_backtest(config=config, jip=jip)
+
+                # Compute summary delta (key KPIs)
+                new_summary = rerun_result.summary
+                delta: dict[str, str] = {}
+                for field in ("xirr", "cagr", "final_value", "max_drawdown"):
+                    prev_val = prev_summary.get(field)
+                    new_val = getattr(new_summary, field, None)
+                    if prev_val is not None and new_val is not None:
+                        try:
+                            diff = Decimal(str(new_val)) - Decimal(str(prev_val))
+                            delta[field] = str(diff)
+                        except (ValueError, TypeError, ArithmeticError):
+                            pass
+
+                # Update last_auto_run timestamp
+                locked.last_auto_run = datetime.datetime.now(tz=datetime.timezone.utc)
+                await self._session.flush()
+
+                sim_log.info(
+                    "auto_loop_sim_rerun_complete",
+                    xirr=str(new_summary.xirr),
+                )
+
+                results.append(
+                    AutoLoopResultItem(
+                        simulation_id=_uuid.UUID(sim_id_str),
+                        status="success",
+                        summary_delta=delta if delta else None,
+                    )
+                )
+
+            except Exception as exc:
+                sim_log.error("auto_loop_sim_error", error=str(exc))
+                results.append(
+                    AutoLoopResultItem(
+                        simulation_id=_uuid.UUID(sim_id_str),
+                        status="error",
+                        error=str(exc),
+                    )
+                )
+
+        log.info(
+            "auto_loop_complete",
+            total=len(results),
+            succeeded=sum(1 for r in results if r.status == "success"),
+            failed=sum(1 for r in results if r.status == "error"),
+        )
+
+        return results
 
     # -----------------------------------------------------------------------
     # Private helpers
@@ -134,7 +297,7 @@ class SimulationService:
     ) -> list[tuple[datetime.date, Decimal]]:
         """Return list of (date, nav) from either provided data or JIP fetch."""
         if price_data is not None:
-            return _parse_price_data(price_data)
+            return parse_price_data(price_data)
 
         if jip is None:
             raise ValueError(
@@ -154,7 +317,7 @@ class SimulationService:
                     f"No NAV history found for MF instrument '{config.instrument}' "
                     f"between {config.start_date} and {config.end_date}"
                 )
-            return _parse_price_data(raw)
+            return parse_price_data(raw)
         else:
             raise ValueError(
                 f"Instrument type '{instrument_type}' requires pre-fetched price_data. "
@@ -243,7 +406,7 @@ class SimulationService:
         # Unrealized gains at the end of the simulation
         unrealized = Decimal("0")
         if result.final_nav > Decimal("0"):
-            for lot in _get_remaining_lots_value(result):
+            for lot in get_remaining_lots_value(result):
                 unrealized += lot
 
         return TaxSummary(
@@ -264,24 +427,13 @@ class SimulationService:
         tax_summary: TaxSummary,
     ) -> AtlasSimulation:
         """Save simulation to atlas_simulations via the repo."""
-
-        def _sanitize_decimal(obj: Any) -> Any:
-            """Recursively convert Decimal to str for JSONB storage."""
-            if isinstance(obj, Decimal):
-                return str(obj)
-            if isinstance(obj, dict):
-                return {k: _sanitize_decimal(v) for k, v in obj.items()}
-            if isinstance(obj, list):
-                return [_sanitize_decimal(i) for i in obj]
-            return obj
-
-        result_summary_dict = _sanitize_decimal(summary.model_dump())
-        daily_values_list = _sanitize_decimal([dv.model_dump() for dv in result.daily_values])
-        transactions_list = _sanitize_decimal([tx.model_dump() for tx in result.transactions])
-        tax_summary_dict = _sanitize_decimal(tax_summary.model_dump())
+        result_summary_dict = sanitize_for_jsonb(summary.model_dump())
+        daily_values_list = sanitize_for_jsonb([dv.model_dump() for dv in result.daily_values])
+        transactions_list = sanitize_for_jsonb([tx.model_dump() for tx in result.transactions])
+        tax_summary_dict = sanitize_for_jsonb(tax_summary.model_dump())
 
         sim_orm = AtlasSimulation(
-            config=_sanitize_decimal(config.model_dump()),
+            config=sanitize_for_jsonb(config.model_dump()),
             result_summary=result_summary_dict,
             daily_values=daily_values_list,
             transactions=transactions_list,
@@ -291,48 +443,3 @@ class SimulationService:
         await self._repo.save_simulation(sim_orm)
 
         return sim_orm
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _parse_price_data(
-    rows: list[dict[str, Any]],
-) -> list[tuple[datetime.date, Decimal]]:
-    """Convert raw price rows to (date, Decimal) tuples.
-
-    Supports rows with 'nav', 'price', 'close' as the price field.
-    Date can be a date object or ISO string.
-    """
-    result: list[tuple[datetime.date, Decimal]] = []
-    for row in rows:
-        raw_date = row.get("date")
-        if raw_date is None:
-            continue
-
-        if isinstance(raw_date, str):
-            raw_date = datetime.date.fromisoformat(raw_date)
-        elif isinstance(raw_date, datetime.datetime):
-            raw_date = raw_date.date()
-
-        # Find price field
-        price_raw = row.get("nav") or row.get("price") or row.get("close")
-        if price_raw is None:
-            continue
-
-        price = Decimal(str(price_raw))
-        if price <= Decimal("0"):
-            continue
-
-        result.append((raw_date, price))
-
-    return sorted(result, key=lambda x: x[0])
-
-
-def _get_remaining_lots_value(result: BacktestResult) -> list[Decimal]:
-    """Return list of unrealized gain per remaining lot (approx from final nav)."""
-    # This is an approximation since we don't keep FIFOLotTracker after run()
-    # Return empty — caller handles gracefully
-    return []

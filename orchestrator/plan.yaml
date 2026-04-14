@@ -863,3 +863,120 @@ chunks:
       - "/forge-compile exits 0"
       - "Wiki index shows at least one new article for the UQL engine pattern"
 
+
+  # --- V4 -------------------------------------------------
+
+  - id: V4-1
+    title: "Portfolio foundations — ORM, Alembic migration, Pydantic contracts, route stubs"
+    status: PENDING
+    quality_targets:
+      api: 85
+      code: 80
+      docs: 80
+    punch_list:
+      - "alembic upgrade head green against dev DB"
+      - "psql describe on atlas_portfolios and the four sibling tables shows UUID pk, tz-aware timestamps, Numeric(20,4) money columns, FK indexes"
+      - "python -c 'import backend.routes.portfolio, backend.models.portfolio, backend.contracts.portfolio' clean"
+      - "pytest tests/unit/portfolio/test_models.py tests/api/test_portfolio_stubs.py -v green"
+      - "scripts/check-api-standard.py green against the new route module (every route UQL-backed, §17/§18/§20 compliant)"
+      - "scripts/check-spec-coverage.py green (v4-criteria.yaml keys map to quality dims)"
+      - "No de_* table touched"
+      - "verified by grepping the migration"
+      - "No print() in backend/routes/portfolio.py or backend/services/portfolio/"
+
+  - id: V4-2
+    title: "CAMS import + scheme mapping — casparser wrapper, fuzzy match, persistence"
+    status: PENDING
+    depends_on: [V4-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pip list | grep casparser shows the pinned version in the EC2 venv"
+      - "POST /api/v1/portfolio/import-cams accepts the redacted CAS fixture and returns a PortfolioImportResult with N holdings, per-holding confidence, and a needs-review bucket"
+      - "Second import with a pinned override in atlas_scheme_mapping_overrides short-circuits fuzzy match (covered by regression test)"
+      - "pytest tests/unit/portfolio/test_cams_import.py tests/unit/portfolio/test_scheme_mapper.py tests/api/test_portfolio_import.py -v green"
+      - "No write to any de_* table (grep the diff)"
+      - "All money values Decimal through the whole path"
+
+  - id: V4-3
+    title: "Portfolio analysis engine — per-holding + portfolio-level, read-only JIP"
+    status: PENDING
+    depends_on: [V4-2]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/portfolio/test_analysis.py tests/api/test_portfolio_analysis.py -v green"
+      - "Determinism regression passes (same data_as_of → byte-equal output)"
+      - "Graceful-degradation regression passes (one JIP endpoint starved → analysis still returns with unavailable list)"
+      - "scripts/check-api-standard.py green on the updated routes"
+      - "No direct SQL in analysis.py (everything through jip_mf_service + UQL)"
+      - "Every response field traceable to source table + formula"
+
+  - id: V4-4
+    title: "Brinson attribution — allocation + selection + interaction"
+    status: PENDING
+    depends_on: [V4-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/portfolio/test_attribution.py tests/api/test_portfolio_attribution.py -v green"
+      - "Hand-calculated fixture reconciliation passes within documented tolerance"
+      - "Determinism regression passes"
+      - "scripts/check-api-standard.py green"
+      - "Response includes formula + tolerance + data_as_of"
+
+  - id: V4-5
+    title: "Riskfolio-Lib optimization — mean-variance + HRP under SEBI constraints"
+    status: PENDING
+    depends_on: [V4-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pip list | grep riskfolio shows the pinned version in the EC2 venv"
+      - "pytest tests/unit/portfolio/test_optimization.py tests/api/test_portfolio_optimize.py -v green"
+      - "Mean-variance and HRP both return distinct weight vectors on identical inputs"
+      - "Determinism regression passes (same inputs + data_as_of → byte-equal weights)"
+      - "Infeasibility test returns structured error with violated constraint id"
+      - "Measured per-model latency <10s on production-size candidate universe"
+      - "scripts/check-api-standard.py green"
+
+  - id: V4-6
+    title: "Daily monitoring + tax harvesting (delegates to V3 FIFO)"
+    status: PENDING
+    depends_on: [V4-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/portfolio/test_monitoring.py tests/unit/portfolio/test_tax_harvest.py -v green"
+      - "grep confirms tax_harvest.py contains no rate tables, no cess constants, no FIFO logic — only imports from backend.services.simulation.tax.fifo"
+      - "Bit-for-bit match with V3 FIFO golden fixture"
+      - "Non-trading-day regression passes (zero alerts)"
+      - "Consecutive-day LAGGING trigger fires at exactly 28 trading days, not 27 or 29"
+      - "Deterministic alerts for a given data_as_of"
+
+  - id: V4-7
+    title: "Portfolio dashboard — /pro/portfolio page in fie2 frontend"
+    status: PENDING
+    depends_on: [V4-2, V4-3, V4-4, V4-5, V4-6]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm test green"
+      - "TypeScript strict-mode clean"
+      - "Manual browser verification on EC2 /pro/portfolio/{id} renders the real imported V4-2 fixture — holdings table, weighted RS card, sector concentration chart, attribution panel, optimizer panel all populated with live API data"
+      - "Every ₹ value renders lakh/crore"
+      - "Drill-down from aggregate tiles returns constituent holdings"
+      - "CSV export works on HoldingsTable"
+      - "No synthetic data in any component (Four Laws L2)"
+      - "Backend-first rule honored — this chunk only opens after chunks 2-6 are DONE"
+
