@@ -338,6 +338,48 @@ OVERLAP_DETAIL_SQL = """
     ORDER BY (a.weight_pct + b.weight_pct) DESC NULLS LAST
 """
 
+RS_MOMENTUM_SQL = """
+    WITH latest AS (
+        SELECT DISTINCT ON (entity_id)
+            entity_id, date AS latest_date, rs_composite AS latest_rs_composite
+        FROM de_rs_scores
+        WHERE entity_type = 'mf'
+        ORDER BY entity_id, date DESC
+    ),
+    max_latest_date AS (
+        SELECT MAX(latest_date) AS max_date FROM latest
+    ),
+    past AS (
+        SELECT DISTINCT ON (entity_id)
+            entity_id,
+            date AS past_date,
+            rs_composite AS past_rs_composite
+        FROM de_rs_scores
+        WHERE entity_type = 'mf'
+          AND date <= (SELECT max_date FROM max_latest_date) - INTERVAL '28 days'
+        ORDER BY entity_id, date DESC
+    )
+    SELECT
+        l.entity_id AS mstar_id,
+        l.latest_date,
+        l.latest_rs_composite,
+        p.past_date,
+        p.past_rs_composite,
+        CASE
+            WHEN p.past_rs_composite IS NOT NULL
+            THEN (l.latest_rs_composite - p.past_rs_composite)
+            ELSE NULL
+        END AS rs_momentum_28d
+    FROM latest l
+    LEFT JOIN past p ON l.entity_id = p.entity_id
+"""
+
+RS_MOMENTUM_DECIMAL_FIELDS = (
+    "latest_rs_composite",
+    "past_rs_composite",
+    "rs_momentum_28d",
+)
+
 LIFECYCLE_SQL = """
     SELECT mstar_id, event_type, effective_date, detail
     FROM de_mf_lifecycle

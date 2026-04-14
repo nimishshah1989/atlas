@@ -6,3 +6,11 @@ DEBUG:asyncio:Using selector: EpollSelector
 2026-04-14 08:31:41 [info     ] chunk_marked_in_progress       chunk_id=V2-2 pid=377950 started_at=2026-04-14T14:01:41+05:30
 2026-04-14 08:31:41 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-2
 INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
+2026-04-14 08:59:13 [info     ] verifier_all_passed            chunk_id=V2-2
+2026-04-14 08:59:13 [info     ] loop_advance_ok                chunk_id=V2-2 chunks_completed=1
+2026-04-14 08:59:13 [debug    ] picker_dep_not_done            chunk_id=V2-10 dep_id=V2-6 dep_status=PENDING
+2026-04-14 08:59:13 [info     ] picker_selected                chunk_id=V2-3 depends_on=['V2-2']
+2026-04-14 08:59:13 [info     ] stage_pick_ok                  chunk_id=V2-3
+2026-04-14 08:59:13 [info     ] chunk_marked_in_progress       chunk_id=V2-3 pid=377950 started_at=2026-04-14T14:29:13+05:30
+2026-04-14 08:59:13 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-3
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

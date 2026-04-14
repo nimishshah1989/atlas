@@ -24,6 +24,8 @@ from backend.clients.jip_mf_sql import (
     OVERLAP_DETAIL_SQL,
     RS_HISTORY_DECIMAL_FIELDS,
     RS_HISTORY_SQL,
+    RS_MOMENTUM_DECIMAL_FIELDS,
+    RS_MOMENTUM_SQL,
     SECTORS_SQL,
     UNIVERSE_DECIMAL_FIELDS,
     UNIVERSE_SQL,
@@ -194,6 +196,28 @@ class JIPMFService:
             "count_b": agg_row.get("count_b", 0) if agg_row else 0,
             "common_holdings": common_holdings,
         }
+
+    async def get_mf_rs_momentum_batch(self) -> dict[str, dict[str, Any]]:
+        """Batch-fetch latest + 28-day-ago RS composite for all MF entities.
+
+        Returns a dict keyed by mstar_id, each value containing:
+            - mstar_id: str
+            - latest_date: date | None
+            - latest_rs_composite: Decimal | None
+            - past_date: date | None
+            - past_rs_composite: Decimal | None
+            - rs_momentum_28d: Decimal | None  (None if <28 days of history)
+
+        Uses a single batch CTE query (not N+1 per fund). Efficient for 800+ funds.
+        """
+        start_time = time.monotonic()
+        query_result = await self.session.execute(text(RS_MOMENTUM_SQL))
+        rows = [
+            _decimalize(row, RS_MOMENTUM_DECIMAL_FIELDS) for row in query_result.mappings().all()
+        ]
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log.info("mf_rs_momentum_batch_fetched", count=len(rows), ms=elapsed_ms)
+        return {row["mstar_id"]: row for row in rows}
 
     async def get_fund_lifecycle(self, mstar_id: str) -> list[dict[str, Any]]:
         """Get lifecycle events for a fund."""
