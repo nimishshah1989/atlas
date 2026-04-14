@@ -373,6 +373,75 @@ class TestCheck4DirtyTree:
         if not result.passed:
             assert result.failed_check != "dirty_working_tree"
 
+    def test_check4_auto_residual_sync_for_tracked_modification(
+        self,
+        fake_repo: Path,
+        fake_state_db: sqlite3.Connection,
+        tmp_path: Path,
+    ) -> None:
+        """Tracked file modified after ship → verifier auto-commits and passes.
+
+        Regression for the recurring V2-N-SYNC pattern where the quality
+        gate regenerates backend/openapi.json after post-chunk.sh's own
+        residual-sync commit, leaving the tree dirty when the verifier
+        checks it. The verifier should auto-recover by creating its own
+        residual-sync commit, not hard-fail.
+        """
+        chunk_id = "TEST-1"
+        _insert_chunk(fake_state_db, chunk_id, "DONE")
+        db_path = _write_db_to_file(fake_state_db, tmp_path)
+
+        _git_commit(fake_repo, f"{chunk_id}: implement")
+        _write_last_run_json(fake_repo)
+
+        # Modify an already-tracked file (simulates openapi.json regen)
+        readme = fake_repo / "README.md"
+        readme.write_text("regenerated post-ship\n")
+
+        head_before = _git(fake_repo, "rev-parse", "HEAD").stdout.strip()
+
+        ctx = _make_ctx(fake_repo, db_path, session_started_at=now_ist())
+        result = run_four_checks(chunk_id, ctx)
+
+        assert result.passed is True, f"expected pass, got {result.failed_check}: {result.detail}"
+
+        # Verifier should have created a residual-sync commit on top
+        head_after = _git(fake_repo, "rev-parse", "HEAD").stdout.strip()
+        assert head_after != head_before
+        subject = _git(fake_repo, "log", "-1", "--pretty=%s").stdout.strip()
+        assert chunk_id in subject and "residual sync" in subject
+
+        # Working tree should now be clean (ignoring exempt .forge/ paths)
+        status = _git(fake_repo, "status", "--porcelain").stdout
+        non_exempt = [
+            ln
+            for ln in status.splitlines()
+            if ln[3:].strip() and not ln[3:].strip().startswith(".forge/")
+        ]
+        assert non_exempt == []
+
+    def test_check4_no_auto_sync_for_untracked_file(
+        self,
+        fake_repo: Path,
+        fake_state_db: sqlite3.Connection,
+        tmp_path: Path,
+    ) -> None:
+        """Untracked files still hard-fail — auto-sync only handles tracked mods."""
+        chunk_id = "TEST-1"
+        _insert_chunk(fake_state_db, chunk_id, "DONE")
+        db_path = _write_db_to_file(fake_state_db, tmp_path)
+
+        _git_commit(fake_repo, f"{chunk_id}: implement")
+        _write_last_run_json(fake_repo)
+
+        (fake_repo / "rogue.py").write_text("# untracked\n")
+
+        ctx = _make_ctx(fake_repo, db_path, session_started_at=now_ist())
+        result = run_four_checks(chunk_id, ctx)
+
+        assert result.passed is False
+        assert result.failed_check == "dirty_working_tree"
+
     def test_check4_ignores_forge_runner_dir(
         self,
         fake_repo: Path,

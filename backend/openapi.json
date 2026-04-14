@@ -1198,6 +1198,7 @@
           "mf"
         ],
         "summary": "Get Fund Holdings",
+        "description": "Get latest holdings for a fund with stock RS and technicals.",
         "operationId": "get_fund_holdings_api_v1_mf__mstar_id__holdings_get",
         "parameters": [
           {
@@ -1240,6 +1241,7 @@
           "mf"
         ],
         "summary": "Get Fund Sectors",
+        "description": "Get sector exposure for a fund at latest as_of_date.",
         "operationId": "get_fund_sectors_api_v1_mf__mstar_id__sectors_get",
         "parameters": [
           {
@@ -1459,6 +1461,7 @@
           "mf"
         ],
         "summary": "Get Fund Deep Dive",
+        "description": "Full deep-dive for a single mutual fund.\n\nWires JIP fund_detail, lifecycle events, freshness, and RS momentum batch\ninto a FundDeepDiveResponse. manager_alpha is passed through from JIP's\nMF derived daily table (derived_rs_composite - nav_rs_composite).",
         "operationId": "get_fund_deep_dive_api_v1_mf__mstar_id__get",
         "parameters": [
           {
