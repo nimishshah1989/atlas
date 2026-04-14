@@ -23,6 +23,7 @@ from .check_types import dispatch
 ROOT = Path(__file__).resolve().parent.parent.parent
 CRITERIA_PATH = ROOT / "docs" / "specs" / "v1-criteria.yaml"
 V2_CRITERIA_PATH = ROOT / "docs" / "specs" / "v2-criteria.yaml"
+V3_CRITERIA_PATH = ROOT / "docs" / "specs" / "v3-criteria.yaml"
 SCHEMA_PATH = ROOT / "docs" / "specs" / "v1-criteria.schema.json"
 API_STANDARD_PATH = ROOT / "docs" / "specs" / "api-standard-criteria.yaml"
 API_STANDARD_SCRIPT = ROOT / "scripts" / "check-api-standard.py"
@@ -148,6 +149,35 @@ def _api_standard_checks() -> list[CheckResult]:
     return out
 
 
+def _extra_criteria_checks(path: Path) -> list[CheckResult]:
+    """Load an additional criteria YAML and dispatch its checks."""
+    if not path.exists():
+        return []
+    data = _load_yaml(path)
+    if data is None or not isinstance(data.get("criteria"), list):
+        return []
+    out: list[CheckResult] = []
+    for criterion in data["criteria"]:
+        cid = criterion["id"]
+        title = criterion["title"]
+        severity = criterion.get("severity", "medium")
+        check_spec = criterion["check"]
+        passed, evidence = dispatch(check_spec)
+        out.append(
+            CheckResult(
+                cid,
+                title,
+                10 if passed else 0,
+                10,
+                evidence,
+                criterion.get("description", ""),
+                f"See {criterion.get('source_spec_section', '§8')} for intent.",
+                "info" if passed else severity,
+            )
+        )
+    return out
+
+
 def dim_product() -> DimensionResult:
     if not CRITERIA_PATH.exists():
         return _skip(f"{CRITERIA_PATH.relative_to(ROOT)} not found")
@@ -181,5 +211,7 @@ def dim_product() -> DimensionResult:
         )
 
     checks.extend(_api_standard_checks())
+    checks.extend(_extra_criteria_checks(V2_CRITERIA_PATH))
+    checks.extend(_extra_criteria_checks(V3_CRITERIA_PATH))
 
     return DimensionResult("product", checks, gating=True)

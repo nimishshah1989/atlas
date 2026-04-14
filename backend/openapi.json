@@ -173,7 +173,7 @@
           "stocks"
         ],
         "summary": "Get Stock Deep Dive",
-        "description": "Get complete deep-dive for a stock with conviction pillars.\n\nWhen ``include`` is supplied the modules are validated through the\nshared UQL include layer (:mod:`backend.services.uql.includes`) and\nsurfaced via ``meta.includes_loaded`` per spec \u00a718.2 \u2014 keeping this\nfixed endpoint conformant with the \u00a717/\u00a718/\u00a720 standard. Unknown or\ndeferred modules raise :class:`UQLError(INCLUDE_NOT_AVAILABLE)` which\nthe registered envelope handler converts to a \u00a720.5 400 response.",
+        "description": "Get complete deep-dive for a stock with conviction pillars.",
         "operationId": "get_stock_deep_dive_api_v1_stocks__symbol__get",
         "parameters": [
           {
@@ -1501,6 +1501,414 @@
         }
       }
     },
+    "/api/v1/simulate/run": {
+      "post": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Run Simulation",
+        "description": "Execute a backtest simulation.\n\nAccepts a SimulationConfig and returns the full simulation result including\ndaily portfolio values, transactions, analytics summary, and tax breakdown.",
+        "operationId": "run_simulation_api_v1_simulate_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/save": {
+      "post": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Save Simulation Config",
+        "description": "Save a simulation configuration without running the backtest.\n\nUsed for setting up auto-loop configurations that will be re-run on a schedule.",
+        "operationId": "save_simulation_config_api_v1_simulate_save_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationSaveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationSaveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/auto-loop/run": {
+      "post": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Trigger Auto Loop",
+        "description": "Trigger auto-loop re-run for all saved simulations with is_auto_loop=True.\n\nRuns each simulation independently \u2014 one failure does not abort others.\nReturns per-simulation status and KPI deltas vs previous run.",
+        "operationId": "trigger_auto_loop_api_v1_simulate_auto_loop_run_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoLoopResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/optimize": {
+      "post": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Optimize Simulation",
+        "description": "Run Optuna TPE parameter optimization for a simulation config.\n\nSearches the parameter space defined in param_ranges to find the\ncombination that maximizes the chosen objective metric (xirr, sharpe,\ncagr, or sortino).\n\nThe optimizer fetches price and signal data once, then runs n_trials\nbacktests with different sampled parameter combinations. Returns the\nbest parameter set found and the full trial history.",
+        "operationId": "optimize_simulation_api_v1_simulate_optimize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/scheduler/status": {
+      "get": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Get Scheduler Status",
+        "description": "Return current status of the in-process auto-loop scheduler.\n\nReports whether the scheduler is running, how many simulations are active,\nand when the last/next scheduled run will occur.",
+        "operationId": "get_scheduler_status_api_v1_simulate_scheduler_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/{sim_id}/drift-history": {
+      "get": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Get Drift History",
+        "description": "Return drift alert history for a simulation.\n\nDrift events are stored as JSONB on the simulation record and updated\neach time the auto-loop detects KPI deviation above threshold.",
+        "operationId": "get_drift_history_api_v1_simulate__sim_id__drift_history_get",
+        "parameters": [
+          {
+            "name": "sim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriftHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/{sim_id}/reoptimize": {
+      "post": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Reoptimize Simulation",
+        "description": "Dispatch re-optimization for a simulation that has detected drift.\n\nReads the simulation's config and runs Optuna TPE optimization with\nthe given n_trials and objective. param_ranges defaults to sensible\nranges around the current config's parameters if not provided.",
+        "operationId": "reoptimize_simulation_api_v1_simulate__sim_id__reoptimize_post",
+        "parameters": [
+          {
+            "name": "sim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReoptimizeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/": {
+      "get": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "List Simulations",
+        "description": "List saved simulations, newest first, excluding soft-deleted.",
+        "operationId": "list_simulations_api_v1_simulate__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulate/{sim_id}": {
+      "get": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Get Simulation",
+        "description": "Fetch full detail for a single simulation by ID.",
+        "operationId": "get_simulation_api_v1_simulate__sim_id__get",
+        "parameters": [
+          {
+            "name": "sim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "simulation"
+        ],
+        "summary": "Delete Simulation",
+        "description": "Soft-delete a simulation by ID. Returns 404 if not found.",
+        "operationId": "delete_simulation_api_v1_simulate__sim_id__delete",
+        "parameters": [
+          {
+            "name": "sim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sim Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -1758,6 +2166,112 @@
   },
   "components": {
     "schemas": {
+      "AutoLoopResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/AutoLoopResultItem"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "succeeded": {
+            "type": "integer",
+            "title": "Succeeded"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "ran_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ran At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "total",
+          "succeeded",
+          "failed",
+          "ran_at"
+        ],
+        "title": "AutoLoopResponse",
+        "description": "POST /api/v1/simulate/auto-loop/run response."
+      },
+      "AutoLoopResultItem": {
+        "properties": {
+          "simulation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Simulation Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "success | error | skipped"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary_delta": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Delta",
+            "description": "Key KPI deltas vs previous run (Decimal as str)"
+          },
+          "drift_alerts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DriftAlert"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drift Alerts",
+            "description": "Drift alerts raised for this re-run"
+          },
+          "needs_reoptimization": {
+            "type": "boolean",
+            "title": "Needs Reoptimization",
+            "description": "True when any HIGH or CRITICAL drift alert was raised",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "simulation_id",
+          "status"
+        ],
+        "title": "AutoLoopResultItem",
+        "description": "Result for a single simulation re-run in an auto-loop pass."
+      },
       "BreadthSnapshot": {
         "properties": {
           "date": {
@@ -2134,6 +2648,35 @@
         ],
         "title": "ChunkResponse"
       },
+      "CombineLogic": {
+        "type": "string",
+        "enum": [
+          "AND",
+          "OR"
+        ],
+        "title": "CombineLogic"
+      },
+      "CombinedSignalConfig": {
+        "properties": {
+          "signal_a": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "signal_b": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "logic": {
+            "$ref": "#/components/schemas/CombineLogic",
+            "default": "AND"
+          }
+        },
+        "type": "object",
+        "required": [
+          "signal_a",
+          "signal_b"
+        ],
+        "title": "CombinedSignalConfig",
+        "description": "Config for combined (AND/OR) signal mode."
+      },
       "ConvictionPillars": {
         "properties": {
           "rs": {
@@ -2177,6 +2720,51 @@
           "holdings_quality"
         ],
         "title": "ConvictionPillarsMF"
+      },
+      "DailyValue": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "nav": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Nav"
+          },
+          "units": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Units"
+          },
+          "fv": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fv"
+          },
+          "liquid": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Liquid"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "nav",
+          "units",
+          "fv",
+          "liquid",
+          "total"
+        ],
+        "title": "DailyValue",
+        "description": "Daily portfolio snapshot (spec \u00a78 OUTPUT.daily_values)."
       },
       "DataFreshness": {
         "properties": {
@@ -2451,6 +3039,80 @@
           "walkthrough"
         ],
         "title": "DemoGateResponse"
+      },
+      "DriftAlert": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "previous_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Previous Value"
+          },
+          "current_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Value"
+          },
+          "delta": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Delta"
+          },
+          "delta_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Delta Pct"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "HIGH | CRITICAL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "previous_value",
+          "current_value",
+          "delta",
+          "delta_pct",
+          "severity"
+        ],
+        "title": "DriftAlert",
+        "description": "A single drift alert for one KPI metric."
+      },
+      "DriftHistoryResponse": {
+        "properties": {
+          "simulation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Simulation Id"
+          },
+          "drift_events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Drift Events"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "simulation_id",
+          "drift_events",
+          "data_as_of"
+        ],
+        "title": "DriftHistoryResponse",
+        "description": "GET /api/v1/simulate/{sim_id}/drift-history response."
       },
       "FindingCreate": {
         "properties": {
@@ -3777,6 +4439,92 @@
         ],
         "title": "NAVPoint"
       },
+      "OptimizeRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig-Input"
+          },
+          "param_ranges": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ParamRange"
+            },
+            "type": "object",
+            "title": "Param Ranges"
+          },
+          "n_trials": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 10.0,
+            "title": "N Trials",
+            "default": 100
+          },
+          "objective": {
+            "type": "string",
+            "pattern": "^(xirr|sharpe|cagr|sortino)$",
+            "title": "Objective",
+            "default": "xirr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "param_ranges"
+        ],
+        "title": "OptimizeRequest",
+        "description": "POST /api/v1/simulate/optimize request body."
+      },
+      "OptimizeResponse": {
+        "properties": {
+          "best_params": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "Best Params"
+          },
+          "best_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Best Value"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          },
+          "n_trials": {
+            "type": "integer",
+            "title": "N Trials"
+          },
+          "trials": {
+            "items": {
+              "$ref": "#/components/schemas/TrialResult"
+            },
+            "type": "array",
+            "title": "Trials"
+          },
+          "base_config": {
+            "$ref": "#/components/schemas/SimulationConfig-Output"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "best_params",
+          "best_value",
+          "objective",
+          "n_trials",
+          "trials",
+          "base_config",
+          "data_as_of"
+        ],
+        "title": "OptimizeResponse",
+        "description": "POST /api/v1/simulate/optimize response."
+      },
       "OverlapHolding": {
         "properties": {
           "instrument_id": {
@@ -3848,6 +4596,56 @@
           "staleness"
         ],
         "title": "OverlapResponse"
+      },
+      "ParamRange": {
+        "properties": {
+          "min_val": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Min Val"
+          },
+          "max_val": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Max Val"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min_val",
+          "max_val"
+        ],
+        "title": "ParamRange",
+        "description": "Range definition for a single optimizable parameter."
       },
       "PillarFlows": {
         "properties": {
@@ -4442,6 +5240,40 @@
         ],
         "title": "RegimeSnapshot"
       },
+      "ReoptimizeRequest": {
+        "properties": {
+          "n_trials": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 10.0,
+            "title": "N Trials",
+            "default": 50
+          },
+          "objective": {
+            "type": "string",
+            "pattern": "^(xirr|sharpe|cagr|sortino)$",
+            "title": "Objective",
+            "default": "xirr"
+          },
+          "param_ranges": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ParamRange"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Param Ranges"
+          }
+        },
+        "type": "object",
+        "title": "ReoptimizeRequest",
+        "description": "POST /api/v1/simulate/{sim_id}/reoptimize request body."
+      },
       "ResponseMeta": {
         "properties": {
           "data_as_of": {
@@ -4611,6 +5443,49 @@
           "pct"
         ],
         "title": "RollupResponse"
+      },
+      "SchedulerStatusResponse": {
+        "properties": {
+          "is_running": {
+            "type": "boolean",
+            "title": "Is Running"
+          },
+          "active_simulations": {
+            "type": "integer",
+            "title": "Active Simulations"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "next_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Run At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_running",
+          "active_simulations"
+        ],
+        "title": "SchedulerStatusResponse",
+        "description": "GET /api/v1/simulate/scheduler/status response."
       },
       "SectorExposureSummary": {
         "properties": {
@@ -4959,6 +5834,679 @@
           "stock_count"
         ],
         "title": "SectorMetrics"
+      },
+      "SignalType": {
+        "type": "string",
+        "enum": [
+          "breadth",
+          "mcclellan",
+          "rs",
+          "pe",
+          "regime",
+          "sector_rs",
+          "mcclellan_summation",
+          "combined"
+        ],
+        "title": "SignalType"
+      },
+      "SimulationConfig-Input": {
+        "properties": {
+          "signal": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "instrument": {
+            "type": "string",
+            "title": "Instrument",
+            "description": "Stock symbol, MF mstar_id, or basket name"
+          },
+          "instrument_type": {
+            "type": "string",
+            "title": "Instrument Type",
+            "description": "equity | mf | etf | basket",
+            "default": "equity"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/SimulationParameters-Input"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          },
+          "combined_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CombinedSignalConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "signal",
+          "instrument",
+          "parameters",
+          "start_date",
+          "end_date"
+        ],
+        "title": "SimulationConfig",
+        "description": "Full simulation configuration (spec \u00a78 INPUT)."
+      },
+      "SimulationConfig-Output": {
+        "properties": {
+          "signal": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "instrument": {
+            "type": "string",
+            "title": "Instrument",
+            "description": "Stock symbol, MF mstar_id, or basket name"
+          },
+          "instrument_type": {
+            "type": "string",
+            "title": "Instrument Type",
+            "description": "equity | mf | etf | basket",
+            "default": "equity"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/SimulationParameters-Output"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          },
+          "combined_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CombinedSignalConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "signal",
+          "instrument",
+          "parameters",
+          "start_date",
+          "end_date"
+        ],
+        "title": "SimulationConfig",
+        "description": "Full simulation configuration (spec \u00a78 INPUT)."
+      },
+      "SimulationDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig-Output"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SimulationResult"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "is_auto_loop": {
+            "type": "boolean",
+            "title": "Is Auto Loop",
+            "default": false
+          },
+          "auto_loop_cron": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Loop Cron"
+          },
+          "last_auto_run": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Auto Run"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config",
+          "result",
+          "created_at",
+          "data_as_of"
+        ],
+        "title": "SimulationDetailResponse",
+        "description": "GET /api/v1/simulate/{id} response \u2014 full simulation detail."
+      },
+      "SimulationListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig-Output"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "is_auto_loop": {
+            "type": "boolean",
+            "title": "Is Auto Loop",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config",
+          "created_at"
+        ],
+        "title": "SimulationListItem",
+        "description": "Summary for listing saved simulations."
+      },
+      "SimulationListResponse": {
+        "properties": {
+          "simulations": {
+            "items": {
+              "$ref": "#/components/schemas/SimulationListItem"
+            },
+            "type": "array",
+            "title": "Simulations"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "simulations",
+          "count",
+          "data_as_of"
+        ],
+        "title": "SimulationListResponse",
+        "description": "GET /api/v1/simulate/ response."
+      },
+      "SimulationParameters-Input": {
+        "properties": {
+          "sip_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Sip Amount",
+            "description": "Monthly SIP amount in INR",
+            "default": "10000"
+          },
+          "lumpsum_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Lumpsum Amount",
+            "description": "Lumpsum deployment amount in INR",
+            "default": "50000"
+          },
+          "buy_level": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Buy Level",
+            "description": "Signal threshold for entry"
+          },
+          "sell_level": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Sell Level",
+            "description": "Signal threshold for exit"
+          },
+          "reentry_level": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reentry Level",
+            "description": "Signal threshold for re-entry"
+          },
+          "sell_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Sell Pct",
+            "description": "Percentage to sell at sell_level",
+            "default": "100"
+          },
+          "redeploy_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Redeploy Pct",
+            "description": "Percentage of liquid to redeploy",
+            "default": "100"
+          },
+          "cooldown_days": {
+            "type": "integer",
+            "title": "Cooldown Days",
+            "description": "Days between lumpsums",
+            "default": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "buy_level",
+          "sell_level"
+        ],
+        "title": "SimulationParameters",
+        "description": "User-configurable simulation parameters (spec \u00a78)."
+      },
+      "SimulationParameters-Output": {
+        "properties": {
+          "sip_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sip Amount",
+            "description": "Monthly SIP amount in INR",
+            "default": "10000"
+          },
+          "lumpsum_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lumpsum Amount",
+            "description": "Lumpsum deployment amount in INR",
+            "default": "50000"
+          },
+          "buy_level": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Buy Level",
+            "description": "Signal threshold for entry"
+          },
+          "sell_level": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sell Level",
+            "description": "Signal threshold for exit"
+          },
+          "reentry_level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reentry Level",
+            "description": "Signal threshold for re-entry"
+          },
+          "sell_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sell Pct",
+            "description": "Percentage to sell at sell_level",
+            "default": "100"
+          },
+          "redeploy_pct": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Redeploy Pct",
+            "description": "Percentage of liquid to redeploy",
+            "default": "100"
+          },
+          "cooldown_days": {
+            "type": "integer",
+            "title": "Cooldown Days",
+            "description": "Days between lumpsums",
+            "default": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "buy_level",
+          "sell_level"
+        ],
+        "title": "SimulationParameters",
+        "description": "User-configurable simulation parameters (spec \u00a78)."
+      },
+      "SimulationResult": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/SimulationSummary"
+          },
+          "daily_values": {
+            "items": {
+              "$ref": "#/components/schemas/DailyValue"
+            },
+            "type": "array",
+            "title": "Daily Values"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionRecord"
+            },
+            "type": "array",
+            "title": "Transactions"
+          },
+          "tax_summary": {
+            "$ref": "#/components/schemas/TaxSummary"
+          },
+          "tear_sheet_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tear Sheet Url"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "daily_values",
+          "transactions",
+          "tax_summary",
+          "data_as_of"
+        ],
+        "title": "SimulationResult",
+        "description": "Complete simulation output."
+      },
+      "SimulationRunRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "SimulationRunRequest",
+        "description": "POST /api/v1/simulate/run request body."
+      },
+      "SimulationRunResponse": {
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/SimulationResult"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          },
+          "staleness": {
+            "type": "string",
+            "title": "Staleness",
+            "description": "FRESH | STALE | EXPIRED"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result",
+          "data_as_of",
+          "staleness"
+        ],
+        "title": "SimulationRunResponse",
+        "description": "POST /api/v1/simulate/run response."
+      },
+      "SimulationSaveRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig-Input"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "is_auto_loop": {
+            "type": "boolean",
+            "title": "Is Auto Loop",
+            "default": false
+          },
+          "auto_loop_cron": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Loop Cron"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "SimulationSaveRequest",
+        "description": "POST /api/v1/simulate/save request \u2014 save config without running."
+      },
+      "SimulationSaveResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at"
+        ],
+        "title": "SimulationSaveResponse",
+        "description": "POST /api/v1/simulate/save response."
+      },
+      "SimulationSummary": {
+        "properties": {
+          "total_invested": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Invested"
+          },
+          "final_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Final Value"
+          },
+          "xirr": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Xirr"
+          },
+          "cagr": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cagr"
+          },
+          "vs_plain_sip": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Vs Plain Sip"
+          },
+          "vs_benchmark": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Vs Benchmark"
+          },
+          "alpha": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Alpha"
+          },
+          "max_drawdown": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Drawdown"
+          },
+          "sharpe": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sharpe"
+          },
+          "sortino": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sortino"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_invested",
+          "final_value",
+          "xirr",
+          "cagr",
+          "vs_plain_sip",
+          "vs_benchmark",
+          "alpha",
+          "max_drawdown",
+          "sharpe",
+          "sortino"
+        ],
+        "title": "SimulationSummary",
+        "description": "Top-level KPI summary (spec \u00a78 OUTPUT.summary)."
       },
       "SortDirection": {
         "type": "string",
@@ -5941,6 +7489,76 @@
         ],
         "title": "SystemRoadmapResponse"
       },
+      "TaxDetail": {
+        "properties": {
+          "stcg_tax": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Stcg Tax",
+            "default": "0"
+          },
+          "ltcg_tax": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ltcg Tax",
+            "default": "0"
+          },
+          "cess": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cess",
+            "default": "0"
+          },
+          "total_tax": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Tax",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "title": "TaxDetail",
+        "description": "Per-transaction tax breakdown."
+      },
+      "TaxSummary": {
+        "properties": {
+          "stcg": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Stcg"
+          },
+          "ltcg": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ltcg"
+          },
+          "total_tax": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Tax"
+          },
+          "post_tax_xirr": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Post Tax Xirr"
+          },
+          "unrealized": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stcg",
+          "ltcg",
+          "total_tax",
+          "post_tax_xirr",
+          "unrealized"
+        ],
+        "title": "TaxSummary",
+        "description": "Aggregate tax across the simulation (spec \u00a78 OUTPUT.tax_summary)."
+      },
       "TechnicalCheck": {
         "properties": {
           "name": {
@@ -6041,6 +7659,92 @@
           "weight_pct"
         ],
         "title": "TopHoldingSummary"
+      },
+      "TransactionAction": {
+        "type": "string",
+        "enum": [
+          "sip_buy",
+          "lumpsum_buy",
+          "sell",
+          "redeploy"
+        ],
+        "title": "TransactionAction"
+      },
+      "TransactionRecord": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "action": {
+            "$ref": "#/components/schemas/TransactionAction"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "nav": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Nav"
+          },
+          "units": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Units"
+          },
+          "tax_detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "action",
+          "amount",
+          "nav",
+          "units"
+        ],
+        "title": "TransactionRecord",
+        "description": "Single transaction in the simulation log (spec \u00a78 OUTPUT.transactions)."
+      },
+      "TrialResult": {
+        "properties": {
+          "trial_number": {
+            "type": "integer",
+            "title": "Trial Number"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "Params"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trial_number",
+          "params",
+          "value"
+        ],
+        "title": "TrialResult",
+        "description": "Single Optuna trial result (in OptimizeResponse)."
       },
       "UQLAggregation": {
         "properties": {
