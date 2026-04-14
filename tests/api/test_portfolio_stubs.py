@@ -59,10 +59,18 @@ def client() -> TestClient:
 # ---------------------------------------------------------------------------
 
 
-def test_import_cams_returns_501(client: TestClient) -> None:
-    """POST /api/v1/portfolio/import-cams must return 501 Not Implemented."""
+def test_import_cams_route_exists_and_accepts_post(client: TestClient) -> None:
+    """POST /api/v1/portfolio/import-cams must exist and accept POST (wired in V4-2).
+
+    Previously returned 501 stub — now wired. Sending no file returns 422 (missing required
+    upload), which proves the route is registered and processing the request.
+    """
     resp = client.post("/api/v1/portfolio/import-cams")
-    assert resp.status_code == 501, f"Expected 501, got {resp.status_code}: {resp.text}"
+    # 422 = route exists and validates input (missing required file upload)
+    # Must NOT be 404 (not found) or 405 (method not allowed) or 501 (stub)
+    assert resp.status_code != 404, "Route must be registered"
+    assert resp.status_code != 405, "Route must accept POST"
+    assert resp.status_code != 501, "Route must no longer return 501 stub"
 
 
 def test_update_portfolio_returns_501(client: TestClient) -> None:

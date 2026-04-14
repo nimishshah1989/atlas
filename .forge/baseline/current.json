@@ -230,7 +230,7 @@
           "name": "API response consistency",
           "score": 10,
           "max_score": 10,
-          "evidence": "response_model=38 raw_dict=9",
+          "evidence": "response_model=41 raw_dict=9",
           "plain_english": "Do endpoints return consistent shapes?",
           "fix": "Use response_model= on all routes; return Pydantic models.",
           "severity": "info",
@@ -391,7 +391,7 @@
           "name": "Endpoint response time",
           "score": 15,
           "max_score": 15,
-          "evidence": "avg=26ms p95=59ms over 8 endpoints",
+          "evidence": "avg=15ms p95=25ms over 8 endpoints",
           "plain_english": "Are API responses fast enough for users?",
           "fix": "Profile slow endpoints; add DB indexes or cache.",
           "severity": "info",
@@ -661,10 +661,10 @@
     },
     "product": {
       "dimension": "product",
-      "score": 63,
+      "score": 70,
       "gating": false,
-      "passed": 220,
-      "eligible": 350,
+      "passed": 280,
+      "eligible": 400,
       "checks": [
         {
           "check_id": "v1-01",
@@ -704,7 +704,7 @@
           "name": "/query handles basic equity queries (filters + sort)",
           "score": 10,
           "max_score": 10,
-          "evidence": "POST /query \u2192 200 (36ms)",
+          "evidence": "POST /query \u2192 200 (40ms)",
           "plain_english": "POST /api/v1/query with a minimal filter returns 200.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -748,7 +748,7 @@
           "name": "FM can accept / ignore / override decisions",
           "score": 10,
           "max_score": 10,
-          "evidence": "/decisions \u2192 200, routes/decisions.py present (21ms)",
+          "evidence": "/decisions \u2192 200, routes/decisions.py present (17ms)",
           "plain_english": "Decisions endpoint exposed and decisions route module present.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -900,23 +900,23 @@
         {
           "check_id": "v2-01",
           "name": "/mf/universe returns valid MF data",
-          "score": 0,
+          "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/mf/universe unreachable: timed out",
+          "evidence": "http://127.0.0.1:8010/api/v1/mf/universe \u2192 200 in 129ms (budget 2000ms, 4096B sampled)",
           "plain_english": "GET /api/v1/mf/universe returns 200 under the 2s budget with fund data.",
           "fix": "See \u00a724.4 for intent.",
-          "severity": "critical",
+          "severity": "info",
           "status": "RUN"
         },
         {
           "check_id": "v2-02",
           "name": "/mf/categories returns category hierarchy",
-          "score": 0,
+          "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/mf/categories unreachable: timed out",
+          "evidence": "http://127.0.0.1:8010/api/v1/mf/categories \u2192 200 in 32ms (budget 2000ms, 4096B sampled)",
           "plain_english": "GET /api/v1/mf/categories returns 200 with category groups.",
           "fix": "See \u00a724.4 for intent.",
-          "severity": "critical",
+          "severity": "info",
           "status": "RUN"
         },
         {
@@ -935,7 +935,7 @@
           "name": "/mf/categories response includes data_as_of staleness (SC-009: structured data)",
           "score": 10,
           "max_score": 10,
-          "evidence": "/mf/categories \u2192 200 with 'staleness' metadata (2071ms)",
+          "evidence": "/mf/categories \u2192 200 with 'staleness' metadata (33ms)",
           "plain_english": "Categories response must include staleness metadata (data_as_of or staleness field). Maps to SC-009 (structured provenance in pipeline outputs).\n",
           "fix": "See \u00a724.4 for intent.",
           "severity": "info",
@@ -990,7 +990,7 @@
           "name": "MF response times within budget: universe < 2s, deep-dive < 500ms (SC-005)",
           "score": 0,
           "max_score": 10,
-          "evidence": "/mf/universe OK (559ms) but could not get mstar_id for deep-dive check",
+          "evidence": "/mf/universe OK (138ms) but could not get mstar_id for deep-dive check",
           "plain_english": "Both /mf/universe (budget 2000ms) and /mf/{mstar_id} (budget 500ms) respond within their latency budgets. Maps to SC-005 (API latency p95 < budget).\n",
           "fix": "See \u00a724.4 for intent.",
           "severity": "critical",
@@ -1050,9 +1050,64 @@
           "fix": "See \u00a78 for intent.",
           "severity": "info",
           "status": "RUN"
+        },
+        {
+          "check_id": "v4-01",
+          "name": "atlas_portfolios table exists with required columns",
+          "score": 10,
+          "max_score": 10,
+          "evidence": "count=10 (\u226510)",
+          "plain_english": "",
+          "fix": "See \u00a711 for intent.",
+          "severity": "info",
+          "status": "RUN"
+        },
+        {
+          "check_id": "v4-02",
+          "name": "atlas_portfolio_holdings table exists with required columns",
+          "score": 10,
+          "max_score": 10,
+          "evidence": "count=12 (\u226510)",
+          "plain_english": "",
+          "fix": "See \u00a711 for intent.",
+          "severity": "info",
+          "status": "RUN"
+        },
+        {
+          "check_id": "v4-03",
+          "name": "POST /api/v1/portfolio/create endpoint exists",
+          "score": 0,
+          "max_score": 10,
+          "evidence": "http://127.0.0.1:8010/api/v1/portfolio/create unreachable: HTTP Error 404: Not Found",
+          "plain_english": "",
+          "fix": "See \u00a711 for intent.",
+          "severity": "critical",
+          "status": "RUN"
+        },
+        {
+          "check_id": "v4-04",
+          "name": "No float in portfolio models (Decimal-only)",
+          "score": 10,
+          "max_score": 10,
+          "evidence": "0 float annotations across 4 portfolio files",
+          "plain_english": "",
+          "fix": "See \u00a711 for intent.",
+          "severity": "info",
+          "status": "RUN"
+        },
+        {
+          "check_id": "v4-05",
+          "name": "No print() in portfolio code (structlog only)",
+          "score": 10,
+          "max_score": 10,
+          "evidence": "0 print() calls across 3 portfolio files",
+          "plain_english": "",
+          "fix": "See \u00a711 for intent.",
+          "severity": "info",
+          "status": "RUN"
         }
       ]
     }
   },
-  "generated_at": "2026-04-15T00:26:46.497965+05:30"
+  "generated_at": "2026-04-15T00:56:06.041774+05:30"
 }

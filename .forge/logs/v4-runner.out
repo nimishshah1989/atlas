@@ -4,3 +4,10 @@
 2026-04-14 18:57:12 [info     ] chunk_marked_in_progress       chunk_id=V4-1 pid=659568 started_at=2026-04-15T00:27:12+05:30
 2026-04-14 18:57:12 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V4-1
 INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
+2026-04-14 19:27:15 [info     ] verifier_all_passed            chunk_id=V4-1
+2026-04-14 19:27:15 [info     ] loop_advance_ok                chunk_id=V4-1 chunks_completed=1
+2026-04-14 19:27:15 [info     ] picker_selected                chunk_id=V4-2 depends_on=['V4-1']
+2026-04-14 19:27:15 [info     ] stage_pick_ok                  chunk_id=V4-2
+2026-04-14 19:27:15 [info     ] chunk_marked_in_progress       chunk_id=V4-2 pid=659568 started_at=2026-04-15T00:57:15+05:30
+2026-04-14 19:27:15 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V4-2
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

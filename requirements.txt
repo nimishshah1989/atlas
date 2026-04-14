@@ -18,3 +18,5 @@ pip-audit>=2.7.0
 ruamel.yaml>=0.18.0
 optuna>=3.6.0
 croniter>=3.0.0
+casparser==0.8.1
+rapidfuzz==3.14.5

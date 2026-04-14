@@ -10,6 +10,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+# Minimum confidence score to consider a scheme mapped (inclusive)
+MAPPING_CONFIDENCE_THRESHOLD = Decimal("0.70")
+
 
 # --- Enums ---
 
@@ -133,6 +136,35 @@ class PortfolioAnalysisResponse(BaseModel):
     weighted_rs: Optional[Decimal] = None
 
     model_config = {"from_attributes": True}
+
+
+# --- Import result models ---
+
+
+class ParsedHolding(BaseModel):
+    """A single holding parsed from a CAS PDF before scheme mapping."""
+
+    scheme_name: str
+    folio_number: Optional[str] = None
+    units: Decimal
+    nav: Optional[Decimal] = None
+    value: Optional[Decimal] = None
+    mstar_id: Optional[str] = None
+    mapping_confidence: Optional[Decimal] = None
+    mapping_status: MappingStatus = MappingStatus.pending
+
+
+class PortfolioImportResult(BaseModel):
+    """Response for POST /api/v1/portfolio/import-cams."""
+
+    portfolio_id: UUID
+    portfolio_name: Optional[str]
+    holdings: list[HoldingResponse]
+    needs_review: list[HoldingResponse]
+    mapped_count: int
+    pending_count: int
+    total_count: int
+    data_as_of: datetime
 
 
 # --- Scheme mapping override models ---

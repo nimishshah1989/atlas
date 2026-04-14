@@ -1,6 +1,6 @@
 """Portfolio routes — V4 endpoints.
 
-POST /import-cams      — V4-2: CAMS PDF import (stub)
+POST /import-cams      — V4-2: CAMS PDF import
 GET  /                 — V4-1: list portfolios
 POST /create           — V4-1: create portfolio
 GET  /{id}             — V4-1: get portfolio detail
@@ -17,21 +17,26 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from decimal import Decimal
 from typing import Optional
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import AtlasPortfolio, AtlasPortfolioHolding
 from backend.db.session import get_db
 from backend.models.portfolio import (
     HoldingResponse,
+    MappingStatus,
     PortfolioCreateRequest,
+    PortfolioImportResult,
     PortfolioListResponse,
     PortfolioResponse,
 )
+from backend.services.portfolio.cams_import import CamsImportError, CamsParseResult, parse_cas_pdf
 from backend.services.portfolio.repo import PortfolioRepo
+from backend.services.portfolio.scheme_mapper import MappedHolding, SchemeMapper
 
 router = APIRouter(prefix="/api/v1/portfolio", tags=["portfolio"])
 
@@ -43,21 +48,49 @@ log = structlog.get_logger()
 # ---------------------------------------------------------------------------
 
 
-@router.post("/import-cams", status_code=501)
+@router.post("/import-cams", response_model=PortfolioImportResult, status_code=201)
 async def import_cams(
+    file: UploadFile,
+    password: Optional[str] = Form(default=None),
+    portfolio_name: Optional[str] = Form(default=None),
+    user_id: Optional[str] = Form(default=None),
     session: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
-    """Import portfolio holdings from a CAMS PDF statement.
+) -> PortfolioImportResult:
+    """Import portfolio holdings from a CAMS/KFintech CAS PDF statement.
 
-    Parses scheme names, folio numbers, and unit counts.
-    Applies fuzzy matching to map schemes to mstar_id via JIP data.
+    Parses scheme names, folio numbers, and unit counts via casparser.
+    Applies fuzzy matching to map schemes to mstar_id via the JIP MF master table.
+    Manual overrides in atlas_scheme_mapping_overrides short-circuit fuzzy match.
 
-    V4-2 implementation pending.
+    Raw PDF bytes are processed in-memory and never stored permanently.
     """
-    raise HTTPException(
-        status_code=501,
-        detail="CAMS import not yet implemented — coming in V4-2",
-    )
+    # Read and parse file — never store raw PDF
+    try:
+        file_bytes = await file.read()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Failed to read uploaded file: {exc}") from exc
+
+    if not file_bytes:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty")
+
+    try:
+        parse_result = parse_cas_pdf(file_bytes, password=password)
+    except CamsImportError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    log.info("cams_import_parsed", holdings=len(parse_result.holdings))
+
+    name = _resolve_portfolio_name(portfolio_name, parse_result.investor_name)
+    scheme_names = [h.scheme_name for h in parse_result.holdings]
+    mapped = await SchemeMapper(session).map_holdings(scheme_names)
+
+    portfolio_orm, holdings_orm = _build_cams_orm(name, user_id, parse_result, mapped)
+    repo = PortfolioRepo(session)
+    async with session.begin():
+        portfolio_orm = await repo.create_portfolio(portfolio_orm, holdings_orm)
+
+    holdings_loaded = await repo.get_holdings(portfolio_orm.id)
+    return _build_import_result(portfolio_orm, holdings_loaded)
 
 
 @router.post("/create", response_model=PortfolioResponse, status_code=201)
@@ -212,6 +245,98 @@ async def get_portfolio_optimize(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _resolve_portfolio_name(
+    requested: Optional[str],
+    investor_name: Optional[str],
+) -> str:
+    """Determine the portfolio name from form input or CAS investor info."""
+    if requested:
+        return requested
+    if investor_name:
+        return f"{investor_name} — CAMS Import"
+    return f"CAMS Import {datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d')}"
+
+
+def _build_cams_orm(
+    name: str,
+    user_id: Optional[str],
+    parse_result: CamsParseResult,
+    mapped: list[MappedHolding],
+) -> tuple[AtlasPortfolio, list[AtlasPortfolioHolding]]:
+    """Build portfolio + holdings ORM objects from parsed + mapped data."""
+    portfolio = AtlasPortfolio(
+        name=name,
+        portfolio_type="cams_import",
+        owner_type="retail",
+        user_id=user_id,
+    )
+    holdings_orm: list[AtlasPortfolioHolding] = []
+    for parsed, mapping in zip(parse_result.holdings, mapped):
+        current_value: Optional[Decimal] = None
+        if parsed.units and parsed.nav is not None:
+            current_value = parsed.units * parsed.nav
+        holdings_orm.append(
+            AtlasPortfolioHolding(
+                scheme_name=parsed.scheme_name,
+                folio_number=parsed.folio_number,
+                units=parsed.units,
+                nav=parsed.nav,
+                current_value=current_value,
+                mstar_id=mapping.mstar_id,
+                mapping_confidence=mapping.confidence,
+                mapping_status=mapping.mapping_status.value,
+            )
+        )
+    return portfolio, holdings_orm
+
+
+def _build_import_result(
+    portfolio: AtlasPortfolio,
+    holdings_loaded: list[AtlasPortfolioHolding],
+) -> PortfolioImportResult:
+    """Assemble PortfolioImportResult from persisted ORM objects."""
+    holding_responses = [
+        HoldingResponse(
+            id=h.id,
+            portfolio_id=h.portfolio_id,
+            scheme_name=h.scheme_name,
+            folio_number=h.folio_number,
+            units=h.units,
+            nav=h.nav,
+            mstar_id=h.mstar_id,
+            mapping_confidence=h.mapping_confidence,
+            mapping_status=MappingStatus(h.mapping_status),
+            current_value=h.current_value,
+            cost_value=h.cost_value,
+            created_at=h.created_at,
+            updated_at=h.updated_at,
+        )
+        for h in holdings_loaded
+    ]
+    needs_review = [hr for hr in holding_responses if hr.mapping_status == MappingStatus.pending]
+    mapped_count = sum(1 for hr in holding_responses if hr.mapping_status == MappingStatus.mapped)
+    override_count = sum(
+        1 for hr in holding_responses if hr.mapping_status == MappingStatus.manual_override
+    )
+    log.info(
+        "cams_import_complete",
+        portfolio_id=str(portfolio.id),
+        total=len(holding_responses),
+        mapped=mapped_count + override_count,
+        pending=len(needs_review),
+    )
+    return PortfolioImportResult(
+        portfolio_id=portfolio.id,
+        portfolio_name=portfolio.name,
+        holdings=holding_responses,
+        needs_review=needs_review,
+        mapped_count=mapped_count + override_count,
+        pending_count=len(needs_review),
+        total_count=len(holding_responses),
+        data_as_of=datetime.datetime.now(tz=datetime.timezone.utc),
+    )
 
 
 def _build_portfolio_response(
