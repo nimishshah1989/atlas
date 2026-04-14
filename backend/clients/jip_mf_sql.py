@@ -64,6 +64,10 @@ CATEGORIES_SQL = """
             AS active_fund_count,
         AVG(d.derived_rs_composite) AS avg_rs_composite,
         AVG(d.manager_alpha) AS avg_manager_alpha,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY d.manager_alpha)
+            AS manager_alpha_p50,
+        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.manager_alpha)
+            AS manager_alpha_p90,
         f.month_date AS latest_flow_date,
         f.net_flow_cr, f.gross_inflow_cr, f.gross_outflow_cr,
         f.aum_cr, f.sip_flow_cr
@@ -81,6 +85,8 @@ CATEGORIES_SQL = """
 CATEGORIES_DECIMAL_FIELDS = (
     "avg_rs_composite",
     "avg_manager_alpha",
+    "manager_alpha_p50",
+    "manager_alpha_p90",
     "net_flow_cr",
     "gross_inflow_cr",
     "gross_outflow_cr",

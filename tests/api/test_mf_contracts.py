@@ -123,9 +123,7 @@ def test_endpoint_declared_with_response_model(method: str, path: str, model: ty
 
 
 SKELETON_CALLS: list[tuple[str, str]] = [
-    ("GET", "/api/v1/mf/universe"),
-    ("GET", "/api/v1/mf/categories"),
-    ("GET", "/api/v1/mf/flows"),
+    # /universe, /categories, /flows wired in V2-4 — removed from 501 list
     ("GET", "/api/v1/mf/overlap?funds=A,B"),
     ("GET", "/api/v1/mf/holding-stock/RELIANCE"),
     ("GET", "/api/v1/mf/F00000ABCD"),
@@ -139,7 +137,7 @@ SKELETON_CALLS: list[tuple[str, str]] = [
 
 @pytest.mark.parametrize("method,url", SKELETON_CALLS)
 def test_skeleton_returns_501(client: TestClient, method: str, url: str) -> None:
-    """Until V2-2+ wires real data, every MF endpoint must 501 (no synthetic data)."""
+    """Endpoints not yet wired must still 501 (no synthetic data)."""
     resp = client.request(method, url)
     assert resp.status_code == 501, f"{method} {url} → {resp.status_code} body={resp.text}"
     body = resp.json()

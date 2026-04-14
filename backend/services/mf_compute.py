@@ -147,6 +147,68 @@ def enrich_fund_with_computations(
     return enriched
 
 
+def compute_category_rollup(
+    universe_rows: list[dict[str, Any]],
+    cat_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Merge category base data with quadrant distribution computed from universe rows.
+
+    Args:
+        universe_rows: Enriched universe dicts (each must have 'category_name'
+                       and 'quadrant' already set via enrich_fund_with_computations
+                       or classify_fund_quadrant).
+        cat_rows: Raw category rows from JIP get_mf_categories() — expected to have
+                  active_fund_count, avg_rs_composite, manager_alpha_p50,
+                  manager_alpha_p90, net_flow_cr, sip_flow_cr, aum_cr.
+
+    Returns:
+        List of dicts ready for CategoryRow construction. Quadrant distribution
+        is computed by iterating enriched universe rows per category.
+        NULL inputs propagate as None (never silently zeroed).
+    """
+    if not cat_rows:
+        return []
+
+    # Build quadrant counts per category from enriched universe rows
+    # Only count rows where quadrant is not None
+    quadrant_by_category: dict[str, dict[str, int]] = {}
+    for row in universe_rows:
+        cat = row.get("category_name")
+        if not cat:
+            continue
+        quadrant = row.get("quadrant")
+        if quadrant is None:
+            continue
+        quadrant_str = quadrant.value if hasattr(quadrant, "value") else str(quadrant)
+        if cat not in quadrant_by_category:
+            quadrant_by_category[cat] = {}
+        quadrant_by_category[cat][quadrant_str] = quadrant_by_category[cat].get(quadrant_str, 0) + 1
+
+    rollup_rows: list[dict[str, Any]] = []
+    for cat in cat_rows:
+        cat_name = cat.get("category_name", "")
+        cat_rollup = {
+            "category_name": cat_name,
+            "broad_category": cat.get("broad_category", ""),
+            "fund_count": int(cat.get("active_fund_count") or 0),
+            "avg_rs_composite": cat.get("avg_rs_composite"),
+            "quadrant_distribution": quadrant_by_category.get(cat_name, {}),
+            "net_flow_cr": cat.get("net_flow_cr"),
+            "sip_flow_cr": cat.get("sip_flow_cr"),
+            "total_aum_cr": cat.get("aum_cr"),
+            "manager_alpha_p50": cat.get("manager_alpha_p50"),
+            "manager_alpha_p90": cat.get("manager_alpha_p90"),
+        }
+        rollup_rows.append(cat_rollup)
+
+    log.info(
+        "mf_compute.category_rollup_built",
+        categories=len(rollup_rows),
+        with_quadrant_data=sum(1 for r in rollup_rows if r["quadrant_distribution"]),
+    )
+    return rollup_rows
+
+
 def compute_universe_metrics(
     universe_rows: list[dict[str, Any]],
     rs_histories: dict[str, list[dict[str, Any]]],

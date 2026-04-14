@@ -164,6 +164,9 @@ class JIPDataService:
     async def get_mf_data_freshness(self) -> dict[str, Any]:
         return await self._mf.get_mf_data_freshness()
 
+    async def get_mf_rs_momentum_batch(self) -> dict[str, dict[str, Any]]:
+        return await self._mf.get_mf_rs_momentum_batch()
+
     async def get_latest_rs_date(self) -> Optional[str]:
         return await self._market.get_latest_rs_date()
 

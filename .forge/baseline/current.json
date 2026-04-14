@@ -121,9 +121,9 @@
     },
     "code": {
       "dimension": "code",
-      "score": 82,
+      "score": 76,
       "gating": true,
-      "passed": 70,
+      "passed": 65,
       "eligible": 85,
       "checks": [
         {
@@ -175,7 +175,7 @@
           "name": "Function size and complexity",
           "score": 0,
           "max_score": 10,
-          "evidence": "over_80=4 over_50=21 cc>15=1 cc>10=8",
+          "evidence": "over_80=4 over_50=22 cc>15=1 cc>10=8",
           "plain_english": "Are functions small and focused, or monster functions?",
           "fix": "Break up large/complex functions into smaller helpers.",
           "severity": "medium",
@@ -391,7 +391,7 @@
           "name": "Endpoint response time",
           "score": 15,
           "max_score": 15,
-          "evidence": "avg=50ms p95=165ms over 8 endpoints",
+          "evidence": "avg=50ms p95=167ms over 8 endpoints",
           "plain_english": "Are API responses fast enough for users?",
           "fix": "Profile slow endpoints; add DB indexes or cache.",
           "severity": "info",
@@ -671,7 +671,7 @@
           "name": "/stocks/universe returns valid data matching contract",
           "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 184ms (budget 2000ms, 4096B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 251ms (budget 2000ms, 4096B sampled)",
           "plain_english": "GET /api/v1/stocks/universe returns 200 under the 2s budget.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -682,7 +682,7 @@
           "name": "/stocks/sectors returns 31 sectors with 22 metrics each",
           "score": 10,
           "max_score": 10,
-          "evidence": "31 sectors \u00d7 22 metrics (169ms)",
+          "evidence": "31 sectors \u00d7 22 metrics (166ms)",
           "plain_english": "Each sector row must carry at least 22 metric columns beyond the sector label.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -693,7 +693,7 @@
           "name": "/stocks/{symbol} returns deep-dive for any stock",
           "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/stocks/RELIANCE \u2192 200 in 131ms (budget 500ms, 2940B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/stocks/RELIANCE \u2192 200 in 136ms (budget 500ms, 2940B sampled)",
           "plain_english": "GET /api/v1/stocks/RELIANCE returns 200 under the 500ms budget.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -748,7 +748,7 @@
           "name": "FM can accept / ignore / override decisions",
           "score": 10,
           "max_score": 10,
-          "evidence": "/decisions \u2192 200, routes/decisions.py present (10ms)",
+          "evidence": "/decisions \u2192 200, routes/decisions.py present (12ms)",
           "plain_english": "Decisions endpoint exposed and decisions route module present.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -770,7 +770,7 @@
           "name": "RS momentum present and numeric on deep-dive",
           "score": 10,
           "max_score": 10,
-          "evidence": "rs_momentum=-4.7613 at conviction.rs.rs_momentum (130ms)",
+          "evidence": "rs_momentum=-4.7613 at conviction.rs.rs_momentum (136ms)",
           "plain_english": "GET /stocks/RELIANCE carries an rs_momentum field convertible to float.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -781,7 +781,7 @@
           "name": "pct_above_200dma exposed on /sectors and in [0,100]",
           "score": 10,
           "max_score": 10,
-          "evidence": "31/31 sectors in [0,100] (164ms)",
+          "evidence": "31/31 sectors in [0,100] (169ms)",
           "plain_english": "Every sector row must carry pct_above_200dma in [0,100].",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -900,5 +900,5 @@
       ]
     }
   },
-  "generated_at": "2026-04-14T14:27:21.985070+05:30"
+  "generated_at": "2026-04-14T14:39:34.110122+05:30"
 }
