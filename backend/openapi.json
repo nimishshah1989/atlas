@@ -1909,6 +1909,385 @@
         }
       }
     },
+    "/api/v1/portfolio/import-cams": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Import Cams",
+        "description": "Import portfolio holdings from a CAMS/KFintech CAS PDF statement.\n\nParses scheme names, folio numbers, and unit counts via casparser.\nApplies fuzzy matching to map schemes to mstar_id via the JIP MF master table.\nManual overrides in atlas_scheme_mapping_overrides short-circuit fuzzy match.\n\nRaw PDF bytes are processed in-memory and never stored permanently.",
+        "operationId": "import_cams_api_v1_portfolio_import_cams_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_cams_api_v1_portfolio_import_cams_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/create": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Create Portfolio",
+        "description": "Create a new portfolio with optional initial holdings.\n\nAccepts a list of holdings; scheme-to-mstar_id mapping is performed\nasynchronously in V4-2. For now, holdings are stored with mapping_status='pending'.",
+        "operationId": "create_portfolio_api_v1_portfolio_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "List Portfolios",
+        "description": "List all portfolios, newest first, excluding soft-deleted.",
+        "operationId": "list_portfolios_api_v1_portfolio__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/{portfolio_id}": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Get Portfolio",
+        "description": "Fetch full detail for a single portfolio by ID.",
+        "operationId": "get_portfolio_api_v1_portfolio__portfolio_id__get",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Update Portfolio",
+        "description": "Update portfolio metadata.\n\nV4-2 implementation pending.",
+        "operationId": "update_portfolio_api_v1_portfolio__portfolio_id__put",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Update Portfolio Api V1 Portfolio  Portfolio Id  Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/{portfolio_id}/analysis": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Get Portfolio Analysis",
+        "description": "Return portfolio analysis snapshot (sector weights, quadrant distribution, RS).\n\nV4-3 implementation pending.",
+        "operationId": "get_portfolio_analysis_api_v1_portfolio__portfolio_id__analysis_get",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Portfolio Analysis Api V1 Portfolio  Portfolio Id  Analysis Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/{portfolio_id}/attribution": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Get Portfolio Attribution",
+        "description": "Return sector attribution for a portfolio.\n\nV4-4 implementation pending.",
+        "operationId": "get_portfolio_attribution_api_v1_portfolio__portfolio_id__attribution_get",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Portfolio Attribution Api V1 Portfolio  Portfolio Id  Attribution Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/{portfolio_id}/optimize": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Get Portfolio Optimize",
+        "description": "Return portfolio optimization suggestions.\n\nV4-5 implementation pending.",
+        "operationId": "get_portfolio_optimize_api_v1_portfolio__portfolio_id__optimize_get",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Portfolio Optimize Api V1 Portfolio  Portfolio Id  Optimize Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -2271,6 +2650,53 @@
         ],
         "title": "AutoLoopResultItem",
         "description": "Result for a single simulation re-run in an auto-loop pass."
+      },
+      "Body_import_cams_api_v1_portfolio_import_cams_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_cams_api_v1_portfolio_import_cams_post"
       },
       "BreadthSnapshot": {
         "properties": {
@@ -4092,6 +4518,223 @@
         ],
         "title": "Holding"
       },
+      "HoldingBase": {
+        "properties": {
+          "scheme_name": {
+            "type": "string",
+            "title": "Scheme Name",
+            "description": "Original scheme name from CAMS/broker"
+          },
+          "folio_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folio Number",
+            "description": "Folio number if available"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Units",
+            "description": "Number of units held"
+          },
+          "nav": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav",
+            "description": "Latest NAV at import time"
+          },
+          "mstar_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mstar Id",
+            "description": "Mapped Morningstar identifier"
+          },
+          "mapping_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Confidence",
+            "description": "Fuzzy match confidence score (0-1)"
+          },
+          "mapping_status": {
+            "$ref": "#/components/schemas/MappingStatus",
+            "description": "Current mapping status",
+            "default": "pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheme_name",
+          "units"
+        ],
+        "title": "HoldingBase",
+        "description": "Core holding fields used both in create requests and responses."
+      },
+      "HoldingResponse": {
+        "properties": {
+          "scheme_name": {
+            "type": "string",
+            "title": "Scheme Name",
+            "description": "Original scheme name from CAMS/broker"
+          },
+          "folio_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folio Number",
+            "description": "Folio number if available"
+          },
+          "units": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Units",
+            "description": "Number of units held"
+          },
+          "nav": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav",
+            "description": "Latest NAV at import time"
+          },
+          "mstar_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mstar Id",
+            "description": "Mapped Morningstar identifier"
+          },
+          "mapping_confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Confidence",
+            "description": "Fuzzy match confidence score (0-1)"
+          },
+          "mapping_status": {
+            "$ref": "#/components/schemas/MappingStatus",
+            "description": "Current mapping status",
+            "default": "pending"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "current_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Value",
+            "description": "Current value in paise (units * nav)"
+          },
+          "cost_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Value",
+            "description": "Purchase cost in paise"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheme_name",
+          "units",
+          "id",
+          "portfolio_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "HoldingResponse",
+        "description": "Full holding response including DB-assigned fields."
+      },
       "HoldingStockResponse": {
         "properties": {
           "symbol": {
@@ -4241,6 +4884,15 @@
           "effective_date"
         ],
         "title": "MFLifecycleEvent"
+      },
+      "MappingStatus": {
+        "type": "string",
+        "enum": [
+          "mapped",
+          "pending",
+          "manual_override"
+        ],
+        "title": "MappingStatus"
       },
       "MarketBreadthResponse": {
         "properties": {
@@ -4596,6 +5248,15 @@
           "staleness"
         ],
         "title": "OverlapResponse"
+      },
+      "OwnerType": {
+        "type": "string",
+        "enum": [
+          "pms",
+          "ria_client",
+          "retail"
+        ],
+        "title": "OwnerType"
       },
       "ParamRange": {
         "properties": {
@@ -5017,6 +5678,237 @@
         },
         "type": "object",
         "title": "PillarTechnical"
+      },
+      "PortfolioCreateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Portfolio display name"
+          },
+          "portfolio_type": {
+            "$ref": "#/components/schemas/PortfolioType",
+            "description": "Type of portfolio"
+          },
+          "owner_type": {
+            "$ref": "#/components/schemas/OwnerType",
+            "description": "Owner classification"
+          },
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingBase"
+            },
+            "type": "array",
+            "title": "Holdings",
+            "description": "Initial holdings to import"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "User identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_type",
+          "owner_type"
+        ],
+        "title": "PortfolioCreateRequest",
+        "description": "POST /api/v1/portfolio/create request body."
+      },
+      "PortfolioImportResult": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name"
+          },
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingResponse"
+            },
+            "type": "array",
+            "title": "Holdings"
+          },
+          "needs_review": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingResponse"
+            },
+            "type": "array",
+            "title": "Needs Review"
+          },
+          "mapped_count": {
+            "type": "integer",
+            "title": "Mapped Count"
+          },
+          "pending_count": {
+            "type": "integer",
+            "title": "Pending Count"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "portfolio_name",
+          "holdings",
+          "needs_review",
+          "mapped_count",
+          "pending_count",
+          "total_count",
+          "data_as_of"
+        ],
+        "title": "PortfolioImportResult",
+        "description": "Response for POST /api/v1/portfolio/import-cams."
+      },
+      "PortfolioListResponse": {
+        "properties": {
+          "portfolios": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioResponse"
+            },
+            "type": "array",
+            "title": "Portfolios"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolios",
+          "count",
+          "data_as_of"
+        ],
+        "title": "PortfolioListResponse",
+        "description": "GET /api/v1/portfolio/ response."
+      },
+      "PortfolioResponse": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Portfolio display name"
+          },
+          "portfolio_type": {
+            "$ref": "#/components/schemas/PortfolioType",
+            "description": "Type of portfolio"
+          },
+          "owner_type": {
+            "$ref": "#/components/schemas/OwnerType",
+            "description": "Owner classification"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingResponse"
+            },
+            "type": "array",
+            "title": "Holdings"
+          },
+          "analysis_cache": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Cache"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_type",
+          "owner_type",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PortfolioResponse",
+        "description": "Full portfolio response including holdings and metadata."
+      },
+      "PortfolioType": {
+        "type": "string",
+        "enum": [
+          "cams_import",
+          "manual",
+          "model"
+        ],
+        "title": "PortfolioType"
       },
       "Quadrant": {
         "type": "string",
