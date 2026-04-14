@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from datetime import date
 from decimal import Decimal
 from typing import Optional
 
@@ -24,16 +25,19 @@ import structlog
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.clients.jip_mf_service import JIPMFService
 from backend.db.models import AtlasPortfolio, AtlasPortfolioHolding
 from backend.db.session import get_db
 from backend.models.portfolio import (
     HoldingResponse,
     MappingStatus,
     PortfolioCreateRequest,
+    PortfolioFullAnalysisResponse,
     PortfolioImportResult,
     PortfolioListResponse,
     PortfolioResponse,
 )
+from backend.services.portfolio.analysis import PortfolioAnalysisService
 from backend.services.portfolio.cams_import import CamsImportError, CamsParseResult, parse_cas_pdf
 from backend.services.portfolio.repo import PortfolioRepo
 from backend.services.portfolio.scheme_mapper import MappedHolding, SchemeMapper
@@ -197,19 +201,40 @@ async def update_portfolio(
     )
 
 
-@router.get("/{portfolio_id}/analysis", status_code=501)
+@router.get("/{portfolio_id}/analysis", response_model=PortfolioFullAnalysisResponse)
 async def get_portfolio_analysis(
     portfolio_id: uuid.UUID,
+    data_as_of: Optional[date] = Query(
+        default=None,
+        description="Date for analysis (ISO 8601). Defaults to today.",
+    ),
     session: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
-    """Return portfolio analysis snapshot (sector weights, quadrant distribution, RS).
+) -> PortfolioFullAnalysisResponse:
+    """Return full portfolio analysis: per-holding JIP enrichment + portfolio-level aggregates.
 
-    V4-3 implementation pending.
+    Per-holding metrics (from JIP): NAV + returns, RS composite + momentum + quadrant,
+    derived metrics (Sharpe, Sortino, Alpha, Beta), weighted technicals (RSI, breadth, MACD),
+    sector exposure.
+
+    Portfolio-level aggregates: weighted RS (value-weighted), sector concentration,
+    quadrant distribution, weighted average Sharpe/Sortino/Beta, pairwise fund overlap.
+
+    Graceful degradation: if JIP data is unavailable for a holding, it appears
+    in the `unavailable` list and the analysis continues with remaining holdings.
     """
-    raise HTTPException(
-        status_code=501,
-        detail="Portfolio analysis not yet implemented — coming in V4-3",
-    )
+    repo = PortfolioRepo(session)
+    jip = JIPMFService(session)
+    service = PortfolioAnalysisService(repo=repo, jip=jip)
+
+    try:
+        analysis = await service.analyze_portfolio(
+            portfolio_id=portfolio_id,
+            data_as_of=data_as_of,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return analysis
 
 
 @router.get("/{portfolio_id}/attribution", status_code=501)

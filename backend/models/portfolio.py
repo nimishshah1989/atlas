@@ -123,7 +123,10 @@ class PortfolioUpdateRequest(BaseModel):
 
 
 class PortfolioAnalysisResponse(BaseModel):
-    """Response for a portfolio snapshot/analysis record."""
+    """Response for a portfolio snapshot/analysis record (legacy slim version).
+
+    Kept for backward compatibility. New callers should use PortfolioFullAnalysisResponse.
+    """
 
     id: UUID
     portfolio_id: UUID
@@ -136,6 +139,133 @@ class PortfolioAnalysisResponse(BaseModel):
     weighted_rs: Optional[Decimal] = None
 
     model_config = {"from_attributes": True}
+
+
+# --- Rich analysis models (V4-3) ---
+
+
+class AnalysisProvenance(BaseModel):
+    """Source table + formula for a computed metric (traceability requirement)."""
+
+    source_table: str = Field(description="JIP de_* table or atlas table this metric comes from")
+    formula: str = Field(description="Human-readable formula or derivation")
+
+
+class HoldingAnalysis(BaseModel):
+    """Per-holding analysis combining JIP data with holding weight in portfolio."""
+
+    holding_id: UUID
+    mstar_id: str
+    scheme_name: str
+    units: Decimal
+    nav: Optional[Decimal] = Field(default=None, description="Latest NAV from JIP")
+    current_value: Optional[Decimal] = Field(
+        default=None, description="Current value = units × NAV"
+    )
+    weight_pct: Optional[Decimal] = Field(
+        default=None, description="Holding weight in portfolio (0-100)"
+    )
+
+    # Returns from JIP
+    return_1m: Optional[Decimal] = None
+    return_3m: Optional[Decimal] = None
+    return_6m: Optional[Decimal] = None
+    return_1y: Optional[Decimal] = None
+    return_3y: Optional[Decimal] = None
+    return_5y: Optional[Decimal] = None
+
+    # RS / momentum
+    rs_composite: Optional[Decimal] = None
+    rs_momentum_28d: Optional[Decimal] = None
+    quadrant: Optional[str] = None
+
+    # Derived metrics
+    sharpe_ratio: Optional[Decimal] = None
+    sortino_ratio: Optional[Decimal] = None
+    alpha: Optional[Decimal] = None
+    beta: Optional[Decimal] = None
+
+    # Weighted technicals
+    weighted_rsi: Optional[Decimal] = None
+    weighted_breadth_pct_above_200dma: Optional[Decimal] = None
+    weighted_macd_bullish_pct: Optional[Decimal] = None
+
+    # Sectors (top 3)
+    top_sectors: list[dict[str, Any]] = Field(default_factory=list)
+
+    # Provenance
+    provenance: dict[str, AnalysisProvenance] = Field(
+        default_factory=dict,
+        description="Metric name → source_table + formula for traceability",
+    )
+
+
+class PortfolioLevelAnalysis(BaseModel):
+    """Aggregated portfolio-level metrics computed from per-holding JIP data."""
+
+    total_value: Decimal = Field(description="Sum of all holding current_values")
+    total_cost: Optional[Decimal] = Field(
+        default=None, description="Sum of cost_value across holdings from atlas"
+    )
+    holdings_count: int
+    mapped_count: int = Field(description="Holdings with a valid mstar_id mapping")
+    unmapped_count: int = Field(description="Holdings without mstar_id (pending/unresolved)")
+
+    # Weighted RS
+    weighted_rs: Optional[Decimal] = Field(
+        default=None,
+        description="Value-weighted average RS composite across mapped holdings",
+    )
+
+    # Sector concentration (sector → aggregated weight_pct across portfolio)
+    sector_weights: dict[str, Decimal] = Field(default_factory=dict)
+
+    # Quadrant distribution
+    quadrant_distribution: dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of holdings per quadrant (LEADING/LAGGING/IMPROVING/WEAKENING/UNKNOWN)",
+    )
+
+    # Weighted averages
+    weighted_sharpe: Optional[Decimal] = None
+    weighted_sortino: Optional[Decimal] = None
+    weighted_beta: Optional[Decimal] = None
+
+    # Fund overlap summary (only computed when ≥2 mapped holdings)
+    overlap_pairs: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Pairwise overlap between fund pairs (top 5 by overlap_pct)",
+    )
+
+    # Provenance
+    provenance: dict[str, AnalysisProvenance] = Field(
+        default_factory=dict,
+        description="Metric name → source_table + formula for traceability",
+    )
+
+
+class PortfolioFullAnalysisResponse(BaseModel):
+    """Rich analysis response for GET /{portfolio_id}/analysis.
+
+    Combines per-holding JIP data with portfolio-level aggregations.
+    Gracefully degrades: unavailable list records which holdings had JIP fetch failures.
+    """
+
+    portfolio_id: UUID
+    portfolio_name: Optional[str] = None
+    data_as_of: date = Field(description="Date for which analysis is computed")
+    computed_at: datetime = Field(description="UTC timestamp when this response was computed")
+
+    holdings: list[HoldingAnalysis] = Field(default_factory=list)
+    portfolio: PortfolioLevelAnalysis
+    unavailable: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Holdings that could not be enriched with JIP data, with reason",
+    )
+    rs_data_available: bool = Field(
+        default=True,
+        description="False when batch RS fetch failed; RS metrics will be None",
+    )
 
 
 # --- Import result models ---

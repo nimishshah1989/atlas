@@ -80,11 +80,26 @@ def test_update_portfolio_returns_501(client: TestClient) -> None:
     assert resp.status_code == 501, f"Expected 501, got {resp.status_code}: {resp.text}"
 
 
-def test_get_portfolio_analysis_returns_501(client: TestClient) -> None:
-    """GET /api/v1/portfolio/{id}/analysis must return 501 Not Implemented."""
+def test_get_portfolio_analysis_is_wired(client: TestClient) -> None:
+    """GET /api/v1/portfolio/{id}/analysis must NOT return 501 (wired in V4-3).
+
+    Returns 404 for unknown portfolio_id — which proves the route is registered
+    and the analysis service is running (not stubbed).
+    """
+    from unittest.mock import AsyncMock, patch
+
     portfolio_id = str(uuid.uuid4())
-    resp = client.get(f"/api/v1/portfolio/{portfolio_id}/analysis")
-    assert resp.status_code == 501, f"Expected 501, got {resp.status_code}: {resp.text}"
+    with patch("backend.routes.portfolio.PortfolioAnalysisService") as MockSvc:
+        mock_svc = MagicMock()
+        mock_svc.analyze_portfolio = AsyncMock(
+            side_effect=ValueError(f"Portfolio {portfolio_id} not found")
+        )
+        MockSvc.return_value = mock_svc
+
+        resp = client.get(f"/api/v1/portfolio/{portfolio_id}/analysis")
+
+    assert resp.status_code != 501, "Route must no longer return 501 stub"
+    assert resp.status_code == 404, f"Expected 404 for unknown portfolio, got {resp.status_code}"
 
 
 def test_get_portfolio_attribution_returns_501(client: TestClient) -> None:
@@ -228,11 +243,18 @@ def test_create_portfolio_missing_required_fields_returns_400(client: TestClient
 )
 def test_no_500_errors(client: TestClient, method: str, path: str) -> None:
     """No portfolio route must return 500 Internal Server Error."""
-    with patch("backend.routes.portfolio.PortfolioRepo") as MockRepo:
+    with (
+        patch("backend.routes.portfolio.PortfolioRepo") as MockRepo,
+        patch("backend.routes.portfolio.PortfolioAnalysisService") as MockAnalysis,
+    ):
         mock_repo = MagicMock()
         mock_repo.list_portfolios = AsyncMock(return_value=[])
         mock_repo.get_portfolio = AsyncMock(return_value=None)
         MockRepo.return_value = mock_repo
+
+        mock_svc = MagicMock()
+        mock_svc.analyze_portfolio = AsyncMock(side_effect=ValueError("Portfolio not found"))
+        MockAnalysis.return_value = mock_svc
 
         resp = client.request(method, path)
 
