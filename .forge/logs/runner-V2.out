@@ -1,0 +1,7 @@
+2026-04-14 10:51:45 [info     ] loop_started                   filter_regex=^V2-([5-9]|10)$ once=False runner_pid=450581
+2026-04-14 10:51:45 [debug    ] picker_dep_not_done            chunk_id=V2-10 dep_id=V2-6 dep_status=FAILED
+2026-04-14 10:51:45 [info     ] picker_selected                chunk_id=V2-7 depends_on=['V2-5']
+2026-04-14 10:51:45 [info     ] stage_pick_ok                  chunk_id=V2-7
+2026-04-14 10:51:45 [info     ] chunk_marked_in_progress       chunk_id=V2-7 pid=450581 started_at=2026-04-14T16:21:45+05:30
+2026-04-14 10:51:45 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V2-7
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

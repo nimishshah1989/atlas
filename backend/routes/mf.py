@@ -28,6 +28,7 @@ from backend.models.mf import (
     Fund,
     FundDailyMetrics,
     FundDeepDiveResponse,
+    FundHoldingStockEntry,
     FundIdentity,
     FundRSHistoryResponse,
     FundSector,
@@ -37,6 +38,8 @@ from backend.models.mf import (
     HoldingStockResponse,
     MFLifecycleEvent,
     NAVHistoryResponse,
+    NAVPoint,
+    OverlapHolding,
     OverlapResponse,
     PillarFlows,
     PillarHoldingsQuality,
@@ -356,13 +359,96 @@ async def get_flows(
 @router.get("/overlap", response_model=OverlapResponse)
 async def get_overlap(
     funds: str = Query(..., description="Comma-separated mstar_ids: A,B"),
+    db: AsyncSession = Depends(get_db),
 ) -> OverlapResponse:
-    raise _not_implemented()
+    """Compute portfolio overlap between exactly two funds.
+
+    Returns overlap_pct (Jaccard-style weight overlap) and common_holdings list.
+    Exactly 2 mstar_ids must be supplied; 400 otherwise.
+    """
+    fund_ids = [f.strip() for f in funds.split(",") if f.strip()]
+    if len(fund_ids) != 2:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Exactly 2 fund IDs required (comma-separated), got {len(fund_ids)}",
+        )
+    fund_a, fund_b = fund_ids[0], fund_ids[1]
+
+    svc = JIPDataService(db)
+    overlap_data = await svc.get_fund_overlap(fund_a, fund_b)
+    freshness = await svc.get_mf_data_freshness()
+
+    common_holdings = [
+        OverlapHolding(
+            instrument_id=str(h.get("instrument_id") or ""),
+            symbol=str(h.get("holding_name") or ""),
+            weight_a=safe_decimal(h.get("weight_pct_a")) or Decimal("0"),
+            weight_b=safe_decimal(h.get("weight_pct_b")) or Decimal("0"),
+        )
+        for h in overlap_data.get("common_holdings", [])
+    ]
+
+    data_as_of = _data_as_of_from_freshness(freshness)
+    staleness = _compute_staleness(freshness)
+
+    log.info(
+        "mf_overlap_route_complete",
+        fund_a=fund_a,
+        fund_b=fund_b,
+        overlap_pct=str(overlap_data.get("overlap_pct")),
+        common_count=overlap_data.get("common_count"),
+    )
+
+    return OverlapResponse(
+        fund_a=fund_a,
+        fund_b=fund_b,
+        overlap_pct=overlap_data.get("overlap_pct") or Decimal("0"),
+        common_holdings=common_holdings,
+        data_as_of=data_as_of,
+        staleness=staleness,
+    )
 
 
 @router.get("/holding-stock/{symbol}", response_model=HoldingStockResponse)
-async def get_holding_stock(symbol: str) -> HoldingStockResponse:
-    raise _not_implemented()
+async def get_holding_stock(
+    symbol: str,
+    db: AsyncSession = Depends(get_db),
+) -> HoldingStockResponse:
+    """Get all mutual funds that hold a specific stock symbol.
+
+    Returns funds sorted by weight_pct descending.
+    """
+    svc = JIPDataService(db)
+    holder_rows = await svc.get_mf_holders(symbol)
+    freshness = await svc.get_mf_data_freshness()
+
+    funds = [
+        FundHoldingStockEntry(
+            mstar_id=str(row.get("mstar_id") or ""),
+            fund_name=str(row.get("fund_name") or ""),
+            weight_pct=safe_decimal(row.get("weight_pct")) or Decimal("0"),
+        )
+        for row in holder_rows
+        if row.get("weight_pct") is not None
+    ]
+    # Sort by weight_pct descending
+    funds.sort(key=lambda f: f.weight_pct, reverse=True)
+
+    data_as_of = _data_as_of_from_freshness(freshness)
+    staleness = _compute_staleness(freshness)
+
+    log.info(
+        "mf_holding_stock_route_complete",
+        symbol=symbol.upper(),
+        fund_count=len(funds),
+    )
+
+    return HoldingStockResponse(
+        symbol=symbol.upper(),
+        funds=funds,
+        data_as_of=data_as_of,
+        staleness=staleness,
+    )
 
 
 def _parse_as_of_date(raw: Any) -> datetime.date:
@@ -483,8 +569,54 @@ async def get_fund_nav_history(
     mstar_id: str,
     date_from: Optional[str] = Query(None, alias="from"),
     date_to: Optional[str] = Query(None, alias="to"),
+    db: AsyncSession = Depends(get_db),
 ) -> NAVHistoryResponse:
-    raise _not_implemented()
+    """Get NAV history for a fund with optional date range.
+
+    coverage_gap_days = total calendar days between first and last point minus
+    actual data point count. Surfaces missing days (including weekends/holidays).
+    Zero when < 2 data points or no gaps.
+    """
+    svc = JIPDataService(db)
+    nav_rows = await svc.get_fund_nav_history(mstar_id, date_from=date_from, date_to=date_to)
+    freshness = await svc.get_mf_data_freshness()
+
+    points = []
+    for row in nav_rows:
+        nav_val = safe_decimal(row.get("nav"))
+        nav_date = row.get("nav_date")
+        if nav_val is None or nav_date is None:
+            continue
+        if isinstance(nav_date, datetime.datetime):
+            nav_date = nav_date.date()
+        points.append(NAVPoint(nav_date=nav_date, nav=nav_val))
+
+    # Gap detection: calendar days between first and last point minus actual count
+    if len(points) >= 2:
+        min_date = points[0].nav_date
+        max_date = points[-1].nav_date
+        coverage_gap_days = (max_date - min_date).days + 1 - len(points)
+        coverage_gap_days = max(0, coverage_gap_days)
+    else:
+        coverage_gap_days = 0
+
+    data_as_of = _data_as_of_from_freshness(freshness)
+    staleness = _compute_staleness(freshness)
+
+    log.info(
+        "mf_nav_history_route_complete",
+        mstar_id=mstar_id,
+        point_count=len(points),
+        coverage_gap_days=coverage_gap_days,
+    )
+
+    return NAVHistoryResponse(
+        mstar_id=mstar_id,
+        points=points,
+        coverage_gap_days=coverage_gap_days,
+        data_as_of=data_as_of,
+        staleness=staleness,
+    )
 
 
 def _build_deep_dive_identity(detail: dict[str, Any]) -> FundIdentity:
