@@ -143,6 +143,7 @@ class AtlasSimulation(Base):
     is_auto_loop: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     auto_loop_cron: Mapped[str | None] = mapped_column(String(50), nullable=True)
     last_auto_run: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    drift_history: Mapped[list[Any] | None] = mapped_column(JSONB, nullable=True)
     user_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

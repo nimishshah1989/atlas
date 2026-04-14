@@ -336,10 +336,10 @@ class JIPMFService:
                 raise
             elapsed_ms = int((time.monotonic() - start_time) * 1000)
             log.info("mf_rs_momentum_batch_fetched", count=len(rows), ms=elapsed_ms)
-            result = {row["mstar_id"]: row for row in rows}
-            _mf_rs_momentum_cache["default"] = (time.monotonic(), result)
+            momentum_map = {row["mstar_id"]: row for row in rows}
+            _mf_rs_momentum_cache["default"] = (time.monotonic(), momentum_map)
             _mf_rs_momentum_last_failure.pop("default", None)  # clear negative cache on success
-            return result
+            return momentum_map
 
     async def get_fund_lifecycle(self, mstar_id: str) -> list[dict[str, Any]]:
         """Get lifecycle events for a fund."""
@@ -382,8 +382,8 @@ class JIPMFService:
             return out
 
         sql = "SELECT " + ", ".join(select_parts)
-        result = await self.session.execute(text(sql))
-        row = result.mappings().first()
+        freshness_rows = await self.session.execute(text(sql))
+        row = freshness_rows.mappings().first()
         if row:
             out.update(dict(row))
         return out

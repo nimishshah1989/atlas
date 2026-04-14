@@ -1,4 +1,4 @@
-"""Simulation service helpers — JSONB sanitization, price parsing."""
+"""Simulation service helpers — JSONB sanitization, price parsing, KPI deltas."""
 
 from __future__ import annotations
 
@@ -60,3 +60,29 @@ def parse_price_data(
 def get_remaining_lots_value(result: BacktestResult) -> list[Decimal]:
     """Return list of unrealized gain per remaining lot (approx from final nav)."""
     return []
+
+
+def compute_summary_delta(
+    new_summary: Any,
+    prev_summary: dict[str, Any],
+) -> dict[str, str]:
+    """Compute KPI deltas between new and previous summary.
+
+    Args:
+        new_summary: SimulationSummary with current KPI attributes.
+        prev_summary: Dict of previous KPI values (Decimal-as-str from JSONB).
+
+    Returns:
+        Dict of KPI name → delta string (Decimal-as-str differences).
+    """
+    delta: dict[str, str] = {}
+    for kpi in ("xirr", "cagr", "final_value", "max_drawdown"):
+        prev_val = prev_summary.get(kpi)
+        new_val = getattr(new_summary, kpi, None)
+        if prev_val is not None and new_val is not None:
+            try:
+                diff = Decimal(str(new_val)) - Decimal(str(prev_val))
+                delta[kpi] = str(diff)
+            except (ValueError, TypeError, ArithmeticError):
+                pass
+    return delta

@@ -136,6 +136,16 @@ async def startup() -> None:
         git_sha=GIT_SHA,
     )
 
+    # Start in-process auto-loop scheduler for V3-7
+    try:
+        from backend.db.session import async_session_factory
+        from backend.services.simulation.scheduler import scheduler as sim_scheduler
+
+        sim_scheduler.start(async_session_factory)
+        log.info("simulation_scheduler_started")
+    except Exception as exc:
+        log.warning("simulation_scheduler_start_failed", error=str(exc))
+
     # Cache pre-warming: kick off the heavy aggregate queries on a
     # background task so the first user request hits a populated cache
     # instead of a cold 200-second JIP query that would 504 via nginx.
@@ -201,3 +211,12 @@ async def _prewarm_caches() -> None:
 @app.on_event("shutdown")
 async def shutdown() -> None:
     log.info("atlas_shutting_down")
+
+    # Stop the simulation scheduler cleanly
+    try:
+        from backend.services.simulation.scheduler import scheduler as sim_scheduler
+
+        await sim_scheduler.stop()
+        log.info("simulation_scheduler_stopped")
+    except Exception as exc:
+        log.warning("simulation_scheduler_stop_failed", error=str(exc))

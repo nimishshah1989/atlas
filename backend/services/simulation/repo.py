@@ -35,8 +35,8 @@ class SimulationRepo:
             .where(AtlasSimulation.id == sim_id)
             .where(AtlasSimulation.is_deleted.is_(False))
         )
-        result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        rows = await self._session.execute(stmt)
+        return rows.scalar_one_or_none()
 
     async def list_simulations(
         self,
@@ -52,8 +52,8 @@ class SimulationRepo:
         )
         if user_id is not None:
             stmt = stmt.where(AtlasSimulation.user_id == user_id)
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
+        rows = await self._session.execute(stmt)
+        return list(rows.scalars().all())
 
     async def lock_for_update(self, sim_id: uuid.UUID) -> Optional[AtlasSimulation]:
         """SELECT ... FOR UPDATE to prevent concurrent auto-loop races."""
@@ -63,8 +63,8 @@ class SimulationRepo:
             .where(AtlasSimulation.is_deleted.is_(False))
             .with_for_update()
         )
-        result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        rows = await self._session.execute(stmt)
+        return rows.scalar_one_or_none()
 
     async def soft_delete(self, sim_id: uuid.UUID) -> bool:
         """Soft-delete a simulation."""

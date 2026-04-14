@@ -155,8 +155,8 @@ async def _upsert_finding(
         "tags": list(tags or []),
         "confidence": str(confidence),
     }
-    result = await db.execute(upsert_sql, params)
-    returned_id: uuid.UUID = result.scalar_one()
+    upsert_result = await db.execute(upsert_sql, params)
+    returned_id: uuid.UUID = upsert_result.scalar_one()
     return returned_id
 
 
@@ -248,15 +248,15 @@ def _build_search_filters(
         "min_confidence": str(min_confidence),
         "min_data_as_of": now - timedelta(hours=max_age_hours),
     }
-    for name, val in [
+    for name, filter_val in [
         ("entity", entity),
         ("entity_type", entity_type),
         ("finding_type", finding_type),
         ("agent_id", agent_id),
     ]:
-        if val is not None:
+        if filter_val is not None:
             clauses.append(f"{name} = :{name}")
-            params[name] = val
+            params[name] = filter_val
     return " AND ".join(clauses), params
 
 

@@ -16,14 +16,17 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import Any, Optional
 
 from backend.clients.jip_data_service import JIPDataService
 from backend.db.session import get_db
 from backend.models.simulation import (
     AutoLoopResponse,
+    DriftHistoryResponse,
     OptimizeRequest,
     OptimizeResponse,
+    ReoptimizeRequest,
+    SchedulerStatusResponse,
     SimulationDetailResponse,
     SimulationListResponse,
     SimulationRunRequest,
@@ -148,6 +151,118 @@ async def optimize_simulation(
 
     try:
         response = await service.optimize(request=request, jip=jip)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except NotImplementedError as exc:
+        raise HTTPException(status_code=501, detail=str(exc))
+
+    return response
+
+
+@router.get("/scheduler/status", response_model=SchedulerStatusResponse)
+async def get_scheduler_status() -> SchedulerStatusResponse:
+    """Return current status of the in-process auto-loop scheduler.
+
+    Reports whether the scheduler is running, how many simulations are active,
+    and when the last/next scheduled run will occur.
+    """
+    from backend.services.simulation.scheduler import scheduler as sim_scheduler
+
+    status = sim_scheduler.status()
+    return SchedulerStatusResponse(
+        is_running=status["is_running"],
+        active_simulations=status["active_simulations"],
+        last_run_at=status.get("last_run_at"),
+        next_run_at=status.get("next_run_at"),
+    )
+
+
+@router.get("/{sim_id}/drift-history", response_model=DriftHistoryResponse)
+async def get_drift_history(
+    sim_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+) -> DriftHistoryResponse:
+    """Return drift alert history for a simulation.
+
+    Drift events are stored as JSONB on the simulation record and updated
+    each time the auto-loop detects KPI deviation above threshold.
+    """
+    service = SimulationService(session)
+    sim = await service.get_simulation(str(sim_id))
+
+    if sim is None:
+        raise HTTPException(status_code=404, detail=f"Simulation {sim_id} not found")
+
+    drift_events: list[dict[str, Any]] = sim.drift_history or []
+
+    return DriftHistoryResponse(
+        simulation_id=sim_id,
+        drift_events=drift_events,
+        data_as_of=datetime.datetime.now(tz=datetime.timezone.utc),
+    )
+
+
+@router.post("/{sim_id}/reoptimize", response_model=OptimizeResponse)
+async def reoptimize_simulation(
+    sim_id: uuid.UUID,
+    request: ReoptimizeRequest,
+    session: AsyncSession = Depends(get_db),
+) -> OptimizeResponse:
+    """Dispatch re-optimization for a simulation that has detected drift.
+
+    Reads the simulation's config and runs Optuna TPE optimization with
+    the given n_trials and objective. param_ranges defaults to sensible
+    ranges around the current config's parameters if not provided.
+    """
+    service = SimulationService(session)
+    sim = await service.get_simulation(str(sim_id))
+
+    if sim is None:
+        raise HTTPException(status_code=404, detail=f"Simulation {sim_id} not found")
+
+    from backend.models.simulation import ParamRange, SimulationConfig, OptimizeRequest
+
+    try:
+        config = SimulationConfig.model_validate(sim.config or {})
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Simulation config is malformed: {exc}",
+        )
+
+    # Build default param_ranges from current config if not provided
+    from decimal import Decimal as _D
+
+    if request.param_ranges is not None:
+        param_ranges = request.param_ranges
+    else:
+        # Default: search ±50% around current buy/sell levels
+        buy = config.parameters.buy_level
+        sell = config.parameters.sell_level
+        param_ranges = {
+            "buy_level": ParamRange(
+                min_val=max(_D("1"), buy * _D("0.5")),
+                max_val=buy * _D("1.5"),
+                step=_D("1"),
+            ),
+            "sell_level": ParamRange(
+                min_val=max(_D("1"), sell * _D("0.5")),
+                max_val=sell * _D("1.5"),
+                step=_D("1"),
+            ),
+        }
+
+    optimize_request = OptimizeRequest(
+        config=config,
+        param_ranges=param_ranges,
+        n_trials=request.n_trials,
+        objective=request.objective,
+    )
+
+    jip = JIPDataService(session)
+
+    try:
+        response = await service.optimize(request=optimize_request, jip=jip)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except NotImplementedError as exc:

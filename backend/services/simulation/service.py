@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.models import AtlasSimulation
 from backend.models.simulation import (
     AutoLoopResultItem,
+    DriftThresholds,
     OptimizeResponse,
     OptimizeRequest,
     SimulationConfig,
@@ -32,31 +33,14 @@ from backend.services.simulation.signal_adapters import (
     combine_signals,
     get_adapter,
 )
+from backend.services.simulation.drift_detector import detect_drift
 from backend.services.simulation.helpers import (
+    compute_summary_delta,
     get_remaining_lots_value,
     parse_price_data,
     sanitize_for_jsonb,
 )
 from backend.services.simulation.tax_engine import compute_annual_tax_summary
-
-
-def _compute_summary_delta(
-    new_summary: SimulationSummary,
-    prev_summary: dict[str, Any],
-) -> dict[str, str]:
-    """Compute KPI deltas between new and previous summary."""
-    delta: dict[str, str] = {}
-    for kpi in ("xirr", "cagr", "final_value", "max_drawdown"):
-        prev_val = prev_summary.get(kpi)
-        new_val = getattr(new_summary, kpi, None)
-        if prev_val is not None and new_val is not None:
-            try:
-                diff = Decimal(str(new_val)) - Decimal(str(prev_val))
-                delta[kpi] = str(diff)
-            except (ValueError, TypeError, ArithmeticError):
-                pass
-    return delta
-
 
 log = structlog.get_logger()
 
@@ -224,8 +208,8 @@ class SimulationService:
 
         results: list[AutoLoopResultItem] = []
         for sim in auto_loop_sims:
-            item = await self._rerun_single_sim(sim, jip)
-            results.append(item)
+            loop_result = await self._rerun_single_sim(sim, jip)
+            results.append(loop_result)
 
         log.info(
             "auto_loop_complete",
@@ -262,7 +246,26 @@ class SimulationService:
             sim_log.info("auto_loop_sim_rerun_start", signal=config.signal.value)
             rerun_result = await self.run_backtest(config=config, jip=jip)
 
-            delta = _compute_summary_delta(rerun_result.summary, prev_summary)
+            delta = compute_summary_delta(rerun_result.summary, prev_summary)
+
+            # Detect drift and store in drift_history
+            drift_alerts = detect_drift(
+                summary_delta=delta,
+                previous_summary=prev_summary,
+                thresholds=DriftThresholds(),
+            )
+
+            # Persist drift_history to DB if column exists
+            if drift_alerts:
+                existing_history = locked.drift_history or []
+                new_event: dict[str, object] = {
+                    "ran_at": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                    "alerts": sanitize_for_jsonb([a.model_dump() for a in drift_alerts]),
+                }
+                updated_history = list(existing_history) + [new_event]
+                locked.drift_history = sanitize_for_jsonb(updated_history)
+
+            needs_reoptimization = any(a.severity in ("HIGH", "CRITICAL") for a in drift_alerts)
 
             locked.last_auto_run = datetime.datetime.now(tz=datetime.timezone.utc)
             await self._session.flush()
@@ -272,6 +275,8 @@ class SimulationService:
                 simulation_id=_uuid.UUID(sim_id_str),
                 status="success",
                 summary_delta=delta if delta else None,
+                drift_alerts=drift_alerts if drift_alerts else None,
+                needs_reoptimization=needs_reoptimization,
             )
 
         except Exception as exc:
@@ -308,7 +313,7 @@ class SimulationService:
             for name, pr in request.param_ranges.items()
         }
 
-        result = run_optimization(
+        opt_result = run_optimization(
             base_config=config,
             param_ranges=param_ranges_dc,
             price_series=price_series,
@@ -319,24 +324,20 @@ class SimulationService:
 
         trial_results = [
             TrialResult(trial_number=tr.trial_number, params=tr.params, value=tr.value)
-            for tr in result.optimization_history
+            for tr in opt_result.optimization_history
         ]
         data_as_of = datetime.datetime.now(tz=datetime.timezone.utc)
-        log.info("optimize_complete", best_value=str(result.best_value))
+        log.info("optimize_complete", best_value=str(opt_result.best_value))
 
         return OptimizeResponse(
-            best_params=result.best_params,
-            best_value=result.best_value,
-            objective=result.objective,
-            n_trials=result.n_trials_completed,
+            best_params=opt_result.best_params,
+            best_value=opt_result.best_value,
+            objective=opt_result.objective,
+            n_trials=opt_result.n_trials_completed,
             trials=trial_results,
             base_config=config,
             data_as_of=data_as_of,
         )
-
-    # -----------------------------------------------------------------------
-    # Private helpers
-    # -----------------------------------------------------------------------
 
     async def _get_price_series(
         self,

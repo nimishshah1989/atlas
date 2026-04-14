@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -227,6 +227,14 @@ class AutoLoopResultItem(BaseModel):
         default=None,
         description="Key KPI deltas vs previous run (Decimal as str)",
     )
+    drift_alerts: Optional[list["DriftAlert"]] = Field(
+        default=None,
+        description="Drift alerts raised for this re-run",
+    )
+    needs_reoptimization: bool = Field(
+        default=False,
+        description="True when any HIGH or CRITICAL drift alert was raised",
+    )
 
 
 class AutoLoopResponse(BaseModel):
@@ -277,3 +285,51 @@ class OptimizeResponse(BaseModel):
     trials: list[TrialResult]
     base_config: SimulationConfig
     data_as_of: datetime
+
+
+# --- V3-7 Drift + Scheduler models ---
+
+
+class DriftAlert(BaseModel):
+    """A single drift alert for one KPI metric."""
+
+    metric: str
+    previous_value: Decimal
+    current_value: Decimal
+    delta: Decimal
+    delta_pct: Decimal
+    severity: str = Field(description="HIGH | CRITICAL")
+
+
+class DriftThresholds(BaseModel):
+    """Thresholds controlling when drift alerts are raised."""
+
+    xirr_pct: Decimal = Decimal("5")
+    cagr_pct: Decimal = Decimal("5")
+    max_drawdown_pct: Decimal = Decimal("10")
+    sharpe_abs: Decimal = Decimal("0.5")
+
+
+class SchedulerStatusResponse(BaseModel):
+    """GET /api/v1/simulate/scheduler/status response."""
+
+    is_running: bool
+    active_simulations: int
+    last_run_at: Optional[datetime] = None
+    next_run_at: Optional[datetime] = None
+
+
+class DriftHistoryResponse(BaseModel):
+    """GET /api/v1/simulate/{sim_id}/drift-history response."""
+
+    simulation_id: UUID
+    drift_events: list[dict[str, Any]]
+    data_as_of: datetime
+
+
+class ReoptimizeRequest(BaseModel):
+    """POST /api/v1/simulate/{sim_id}/reoptimize request body."""
+
+    n_trials: int = Field(default=50, ge=10, le=500)
+    objective: str = Field(default="xirr", pattern="^(xirr|sharpe|cagr|sortino)$")
+    param_ranges: Optional[dict[str, ParamRange]] = None

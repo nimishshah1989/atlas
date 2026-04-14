@@ -382,11 +382,11 @@ def _apply_sampled_params(
 ) -> SimulationConfig:
     """Build a new SimulationConfig with sampled values replacing base values."""
     params_dict = base_config.parameters.model_dump()
-    for param_name, val in sampled.items():
+    for param_name, sampled_val in sampled.items():
         if param_name == "cooldown_days":
-            params_dict[param_name] = int(val)
+            params_dict[param_name] = int(sampled_val)
         else:
-            params_dict[param_name] = Decimal(str(round(val, 6)))
+            params_dict[param_name] = Decimal(str(round(sampled_val, 6)))
 
     return SimulationConfig(
         signal=base_config.signal,
@@ -404,14 +404,14 @@ def _extract_metric(summary: Any, objective_metric: str) -> Any:
 
     Return type is Any to avoid bare float annotation (AST scan).
     """
-    val = getattr(summary, objective_metric, None)
-    if val is None:
+    metric_val = getattr(summary, objective_metric, None)
+    if metric_val is None:
         return float(_FAILED_TRIAL_VALUE)
     try:
-        result = float(str(val))
-        if result != result or abs(result) == float("inf"):
+        numeric = float(str(metric_val))
+        if numeric != numeric or abs(numeric) == float("inf"):
             return float(_FAILED_TRIAL_VALUE)
-        return result
+        return numeric
     except (ValueError, TypeError, OverflowError):
         return float(_FAILED_TRIAL_VALUE)
 
@@ -422,14 +422,14 @@ def _config_to_param_dict(
 ) -> dict[str, Decimal]:
     """Extract param values from config for only the keys in param_ranges."""
     params = config.parameters
-    result: dict[str, Decimal] = {}
+    extracted: dict[str, Decimal] = {}
     for key in param_ranges:
-        val = getattr(params, key, None)
-        if val is None:
-            result[key] = param_ranges[key].min_val
+        param_val = getattr(params, key, None)
+        if param_val is None:
+            extracted[key] = param_ranges[key].min_val
         else:
-            result[key] = Decimal(str(val))
-    return result
+            extracted[key] = Decimal(str(param_val))
+    return extracted
 
 
 # ---------------------------------------------------------------------------
