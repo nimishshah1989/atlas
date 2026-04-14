@@ -1,5 +1,7 @@
 """V3 Simulation Engine — foundation package."""
 
+from backend.services.simulation.analytics import compute_analytics
+from backend.services.simulation.backtest_engine import BacktestEngine, BacktestResult
 from backend.services.simulation.service import SimulationService
 from backend.services.simulation.signal_adapters import (
     SignalPoint,
@@ -26,6 +28,11 @@ from backend.services.simulation.tax_engine import (
 
 __all__ = [
     "SimulationService",
+    # Backtest engine
+    "BacktestEngine",
+    "BacktestResult",
+    # Analytics
+    "compute_analytics",
     # Signal adapters
     "SignalState",
     "SignalPoint",
