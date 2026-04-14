@@ -1,7 +1,7 @@
 {
-  "chunk": "forge: V2-9 \u2014 single-fetch deep-dive refactor + NAV sparkline + overlap widget",
+  "chunk": "V2-9: MF deep-dive panel \u2014 single-fetch pillars, NAV sparkline, overlap widget",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776167021
+  "ts": 1776167201
 }
