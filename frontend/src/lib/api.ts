@@ -325,3 +325,41 @@ export async function getFindings(params?: {
     `/api/v1/intelligence/findings${q ? `?${q}` : ""}`
   );
 }
+
+// --- MF API (re-exported from api-mf.ts) ------------------------------------
+
+export {
+  getMfUniverse,
+  getMfCategories,
+  getMfFlows,
+  getMfFundDeepDive,
+  getMfHoldings,
+  getMfSectors,
+  getMfNavHistory,
+  type MFStaleness,
+  type MFFund,
+  type MFCategoryGroup,
+  type MFBroadCategoryGroup,
+  type MFUniverseResponse,
+  type MFCategoryRow,
+  type MFCategoriesResponse,
+  type MFFlowRow,
+  type MFFlowsResponse,
+  type MFFundIdentity,
+  type MFFundDailyMetrics,
+  type MFPillarPerformance,
+  type MFPillarRSStrength,
+  type MFPillarFlows,
+  type MFPillarHoldingsQuality,
+  type MFConvictionPillars,
+  type MFSectorExposure,
+  type MFTopHolding,
+  type MFWeightedTechnicals,
+  type MFFundDeepDiveResponse,
+  type MFHolding,
+  type MFHoldingsResponse,
+  type MFFundSector,
+  type MFFundSectorsResponse,
+  type MFNAVPoint,
+  type MFNAVHistoryResponse,
+} from "./api-mf";
