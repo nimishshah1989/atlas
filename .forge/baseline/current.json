@@ -391,7 +391,7 @@
           "name": "Endpoint response time",
           "score": 15,
           "max_score": 15,
-          "evidence": "avg=115ms p95=234ms over 8 endpoints",
+          "evidence": "avg=26ms p95=59ms over 8 endpoints",
           "plain_english": "Are API responses fast enough for users?",
           "fix": "Profile slow endpoints; add DB indexes or cache.",
           "severity": "info",
@@ -424,7 +424,7 @@
           "name": "DB query performance",
           "score": 10,
           "max_score": 10,
-          "evidence": "/api/v1/stocks/universe 11ms",
+          "evidence": "/api/v1/stocks/universe 14ms",
           "plain_english": "Are DB-backed endpoints fast?",
           "fix": "Add indexes on filter columns; review slow query log.",
           "severity": "info",
@@ -661,9 +661,9 @@
     },
     "product": {
       "dimension": "product",
-      "score": 69,
+      "score": 63,
       "gating": false,
-      "passed": 240,
+      "passed": 220,
       "eligible": 350,
       "checks": [
         {
@@ -671,7 +671,7 @@
           "name": "/stocks/universe returns valid data matching contract",
           "score": 10,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 10ms (budget 2000ms, 4096B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/stocks/universe \u2192 200 in 13ms (budget 2000ms, 4096B sampled)",
           "plain_english": "GET /api/v1/stocks/universe returns 200 under the 2s budget.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -704,7 +704,7 @@
           "name": "/query handles basic equity queries (filters + sort)",
           "score": 10,
           "max_score": 10,
-          "evidence": "POST /query \u2192 200 (128ms)",
+          "evidence": "POST /query \u2192 200 (36ms)",
           "plain_english": "POST /api/v1/query with a minimal filter returns 200.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -748,7 +748,7 @@
           "name": "FM can accept / ignore / override decisions",
           "score": 10,
           "max_score": 10,
-          "evidence": "/decisions \u2192 200, routes/decisions.py present (19ms)",
+          "evidence": "/decisions \u2192 200, routes/decisions.py present (21ms)",
           "plain_english": "Decisions endpoint exposed and decisions route module present.",
           "fix": "See \u00a724.3 for intent.",
           "severity": "info",
@@ -900,23 +900,23 @@
         {
           "check_id": "v2-01",
           "name": "/mf/universe returns valid MF data",
-          "score": 10,
+          "score": 0,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/mf/universe \u2192 200 in 223ms (budget 2000ms, 4096B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/mf/universe unreachable: timed out",
           "plain_english": "GET /api/v1/mf/universe returns 200 under the 2s budget with fund data.",
           "fix": "See \u00a724.4 for intent.",
-          "severity": "info",
+          "severity": "critical",
           "status": "RUN"
         },
         {
           "check_id": "v2-02",
           "name": "/mf/categories returns category hierarchy",
-          "score": 10,
+          "score": 0,
           "max_score": 10,
-          "evidence": "http://127.0.0.1:8010/api/v1/mf/categories \u2192 200 in 81ms (budget 2000ms, 4096B sampled)",
+          "evidence": "http://127.0.0.1:8010/api/v1/mf/categories unreachable: timed out",
           "plain_english": "GET /api/v1/mf/categories returns 200 with category groups.",
           "fix": "See \u00a724.4 for intent.",
-          "severity": "info",
+          "severity": "critical",
           "status": "RUN"
         },
         {
@@ -935,7 +935,7 @@
           "name": "/mf/categories response includes data_as_of staleness (SC-009: structured data)",
           "score": 10,
           "max_score": 10,
-          "evidence": "/mf/categories \u2192 200 with 'staleness' metadata (46ms)",
+          "evidence": "/mf/categories \u2192 200 with 'staleness' metadata (2071ms)",
           "plain_english": "Categories response must include staleness metadata (data_as_of or staleness field). Maps to SC-009 (structured provenance in pipeline outputs).\n",
           "fix": "See \u00a724.4 for intent.",
           "severity": "info",
@@ -990,7 +990,7 @@
           "name": "MF response times within budget: universe < 2s, deep-dive < 500ms (SC-005)",
           "score": 0,
           "max_score": 10,
-          "evidence": "/mf/universe OK (137ms) but could not get mstar_id for deep-dive check",
+          "evidence": "/mf/universe OK (559ms) but could not get mstar_id for deep-dive check",
           "plain_english": "Both /mf/universe (budget 2000ms) and /mf/{mstar_id} (budget 500ms) respond within their latency budgets. Maps to SC-005 (API latency p95 < budget).\n",
           "fix": "See \u00a724.4 for intent.",
           "severity": "critical",
@@ -1054,5 +1054,5 @@
       ]
     }
   },
-  "generated_at": "2026-04-15T00:22:54.438155+05:30"
+  "generated_at": "2026-04-15T00:26:46.497965+05:30"
 }

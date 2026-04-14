@@ -1,1 +1,4 @@
 [2026-04-14T18:46:41+00:00] chain-v4 waiting on pid=522325
+[2026-04-14T18:57:11+00:00] v3 runner pid=522325 exited
+[2026-04-14T18:57:11+00:00] V3-9 status=DONE
+[2026-04-14T18:57:11+00:00] launching V4 runner

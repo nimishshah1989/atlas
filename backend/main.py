@@ -20,6 +20,7 @@ from backend.routes import (
     errors as uql_errors,
     intelligence,
     mf,
+    portfolio,
     query,
     simulate,
     stocks,
@@ -85,6 +86,7 @@ app.include_router(decisions.router)
 app.include_router(intelligence.router)
 app.include_router(mf.router)
 app.include_router(simulate.router)
+app.include_router(portfolio.router)
 app.include_router(system.router)
 
 

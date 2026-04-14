@@ -22,6 +22,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -186,4 +187,114 @@ class AtlasWatchlist(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+
+# --- ATLAS Portfolio (V4) ---
+
+
+class AtlasPortfolio(Base):
+    __tablename__ = "atlas_portfolios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    portfolio_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    owner_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    user_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    analysis_cache: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class AtlasPortfolioHolding(Base):
+    __tablename__ = "atlas_portfolio_holdings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    mstar_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    scheme_name: Mapped[str] = mapped_column(Text, nullable=False)
+    folio_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    units: Mapped[Decimal] = mapped_column(Numeric(20, 4), nullable=False)
+    nav: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    current_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    cost_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    mapping_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    mapping_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="pending"
+    )
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class AtlasSchemeMappingOverride(Base):
+    __tablename__ = "atlas_scheme_mapping_overrides"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scheme_name_pattern: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    mstar_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class AtlasPortfolioSnapshot(Base):
+    __tablename__ = "atlas_portfolio_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    total_value: Mapped[Decimal] = mapped_column(Numeric(20, 4), nullable=False)
+    total_cost: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    holdings_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    sector_weights: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    quadrant_distribution: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    weighted_rs: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (
+        Index(
+            "uq_portfolio_snapshot_date",
+            "portfolio_id",
+            "snapshot_date",
+            unique=True,
+            postgresql_where="is_deleted = false",
+        ),
     )
