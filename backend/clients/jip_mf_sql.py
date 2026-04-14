@@ -452,3 +452,10 @@ HOLDERS_SQL = """
     ORDER BY h.weight_pct DESC NULLS LAST
     LIMIT 50
 """
+
+from backend.clients.jip_mf_sql_attribution import (  # noqa: E402, F401
+    CATEGORY_ALPHA_DECIMAL_FIELDS,
+    CATEGORY_ALPHA_SQL,
+    CATEGORY_NAV_RETURNS_DECIMAL_FIELDS,
+    CATEGORY_NAV_RETURNS_SQL,
+)

@@ -31,6 +31,7 @@ from backend.db.session import get_db
 from backend.models.portfolio import (
     HoldingResponse,
     MappingStatus,
+    PortfolioAttributionResponse,
     PortfolioCreateRequest,
     PortfolioFullAnalysisResponse,
     PortfolioImportResult,
@@ -38,6 +39,7 @@ from backend.models.portfolio import (
     PortfolioResponse,
 )
 from backend.services.portfolio.analysis import PortfolioAnalysisService
+from backend.services.portfolio.attribution import BrinsonAttributionService
 from backend.services.portfolio.cams_import import CamsImportError, CamsParseResult, parse_cas_pdf
 from backend.services.portfolio.repo import PortfolioRepo
 from backend.services.portfolio.scheme_mapper import MappedHolding, SchemeMapper
@@ -237,19 +239,48 @@ async def get_portfolio_analysis(
     return analysis
 
 
-@router.get("/{portfolio_id}/attribution", status_code=501)
+@router.get("/{portfolio_id}/attribution", response_model=PortfolioAttributionResponse)
 async def get_portfolio_attribution(
     portfolio_id: uuid.UUID,
+    data_as_of: Optional[date] = Query(
+        default=None,
+        description="Date for attribution (ISO 8601). Defaults to today.",
+    ),
     session: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
-    """Return sector attribution for a portfolio.
+) -> PortfolioAttributionResponse:
+    """Return Brinson-Fachler attribution analysis for a portfolio.
 
-    V4-4 implementation pending.
+    Computes allocation, selection, and interaction effects per MF category.
+
+    Brinson-Fachler model:
+      allocation_effect   = (w_p - w_b) * (R_b_sector - R_b_total)
+      selection_effect    = w_b * (R_p_sector - R_b_sector)
+      interaction_effect  = (w_p - w_b) * (R_p_sector - R_b_sector)
+
+    Where:
+      w_p = portfolio weight in category (value / total_value)
+      w_b = benchmark weight (active_fund_count / total_active_funds, equal-weight)
+      R_b_sector = category avg 1Y return from NAV history (via JIP MF service)
+      R_p_sector = value-weighted avg manager_alpha for portfolio holdings in category
+
+    Returns returns_available=False when NAV history is insufficient for benchmark
+    returns. Category weights are always computed.
+
+    Response includes formula, tolerance, and data_as_of for full traceability.
     """
-    raise HTTPException(
-        status_code=501,
-        detail="Portfolio attribution not yet implemented — coming in V4-4",
-    )
+    repo = PortfolioRepo(session)
+    jip = JIPMFService(session)
+    service = BrinsonAttributionService(repo=repo, jip=jip)
+
+    try:
+        attribution = await service.compute_attribution(
+            portfolio_id=portfolio_id,
+            data_as_of=data_as_of,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return attribution
 
 
 @router.get("/{portfolio_id}/optimize", status_code=501)

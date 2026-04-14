@@ -268,6 +268,127 @@ class PortfolioFullAnalysisResponse(BaseModel):
     )
 
 
+# --- Brinson Attribution models (V4-4) ---
+
+
+class BrinsonCategoryEffect(BaseModel):
+    """Brinson-Fachler attribution effects for a single MF category."""
+
+    category_name: str = Field(description="MF category (e.g. 'Large Cap', 'Flexi Cap')")
+
+    # Portfolio weight in this category (0-1 scale)
+    portfolio_weight: Decimal = Field(description="Portfolio weight in category (0-1)")
+    # Benchmark weight in this category (fund_count / total_active_funds)
+    benchmark_weight: Decimal = Field(description="Benchmark weight in category (0-1)")
+
+    # Category-level returns (may be None if NAV history insufficient)
+    portfolio_return: Optional[Decimal] = Field(
+        default=None,
+        description="Value-weighted avg manager_alpha for portfolio holdings in category",
+    )
+    benchmark_return: Optional[Decimal] = Field(
+        default=None,
+        description="Category average 1Y return from NAV history",
+    )
+
+    # Brinson-Fachler effects (None when returns unavailable)
+    allocation_effect: Optional[Decimal] = Field(
+        default=None,
+        description="(w_p - w_b) * (R_b_sector - R_b_total)",
+    )
+    selection_effect: Optional[Decimal] = Field(
+        default=None,
+        description="w_b * (R_p_sector - R_b_sector) — uses manager_alpha as proxy",
+    )
+    interaction_effect: Optional[Decimal] = Field(
+        default=None,
+        description="(w_p - w_b) * (R_p_sector - R_b_sector)",
+    )
+    total_effect: Optional[Decimal] = Field(
+        default=None,
+        description="allocation + selection + interaction for this category",
+    )
+
+    # Holdings in this category (mstar_id list)
+    holding_count: int = Field(default=0, description="Number of portfolio holdings in category")
+
+    provenance: AnalysisProvenance = Field(
+        description="Source tables and formulas for this category's effects"
+    )
+
+
+class BrinsonAttributionSummary(BaseModel):
+    """Portfolio-level Brinson attribution summary."""
+
+    total_allocation_effect: Optional[Decimal] = Field(
+        default=None, description="Sum of allocation effects across all categories"
+    )
+    total_selection_effect: Optional[Decimal] = Field(
+        default=None, description="Sum of selection effects across all categories"
+    )
+    total_interaction_effect: Optional[Decimal] = Field(
+        default=None, description="Sum of interaction effects across all categories"
+    )
+    total_active_return: Optional[Decimal] = Field(
+        default=None,
+        description=(
+            "Total active return = sum of all effects (allocation + selection + interaction)"
+        ),
+    )
+
+    benchmark_total_return: Optional[Decimal] = Field(
+        default=None, description="Benchmark total return (weighted avg of category returns)"
+    )
+
+    formula: str = Field(
+        description="Brinson-Fachler model description",
+        default=(
+            "Brinson-Fachler: allocation=(w_p-w_b)*(R_b_sector-R_b_total); "
+            "selection=w_b*(R_p_sector-R_b_sector); interaction=(w_p-w_b)*(R_p_sector-R_b_sector)"
+        ),
+    )
+    tolerance: str = Field(
+        description="Precision and rounding used in calculations",
+        default="Decimal arithmetic with 6dp intermediate, rounded to 4dp for display",
+    )
+
+
+class PortfolioAttributionResponse(BaseModel):
+    """Response for GET /{portfolio_id}/attribution.
+
+    Returns Brinson-Fachler allocation, selection, and interaction effects per MF category.
+    """
+
+    portfolio_id: UUID
+    portfolio_name: Optional[str] = None
+    data_as_of: date = Field(description="Date for which attribution is computed")
+    computed_at: datetime = Field(description="UTC timestamp when this response was computed")
+
+    # Per-category attribution effects
+    categories: list[BrinsonCategoryEffect] = Field(
+        default_factory=list, description="Per-category Brinson effects"
+    )
+
+    # Portfolio-level summary
+    summary: BrinsonAttributionSummary
+
+    # Metadata
+    returns_available: bool = Field(
+        default=True,
+        description=(
+            "False when category NAV returns could not be computed (insufficient history)"
+        ),
+    )
+    benchmark_description: str = Field(
+        default="Equal-weighted by active fund count per category",
+        description="How the benchmark weights were derived",
+    )
+    unavailable_holdings: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Holdings that could not be enriched with JIP data",
+    )
+
+
 # --- Import result models ---
 
 

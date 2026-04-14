@@ -102,11 +102,14 @@ def test_get_portfolio_analysis_is_wired(client: TestClient) -> None:
     assert resp.status_code == 404, f"Expected 404 for unknown portfolio, got {resp.status_code}"
 
 
-def test_get_portfolio_attribution_returns_501(client: TestClient) -> None:
-    """GET /api/v1/portfolio/{id}/attribution must return 501 Not Implemented."""
+def test_get_portfolio_attribution_no_longer_501(client: TestClient) -> None:
+    """GET /api/v1/portfolio/{id}/attribution must NOT return 501 (V4-4 wired)."""
     portfolio_id = str(uuid.uuid4())
     resp = client.get(f"/api/v1/portfolio/{portfolio_id}/attribution")
-    assert resp.status_code == 501, f"Expected 501, got {resp.status_code}: {resp.text}"
+    # Must not be 501 (stub) — will be 404 (portfolio not found) or 200
+    assert resp.status_code != 501, (
+        f"Route must no longer return 501 stub, got: {resp.status_code}: {resp.text}"
+    )
 
 
 def test_get_portfolio_optimize_returns_501(client: TestClient) -> None:
@@ -246,6 +249,7 @@ def test_no_500_errors(client: TestClient, method: str, path: str) -> None:
     with (
         patch("backend.routes.portfolio.PortfolioRepo") as MockRepo,
         patch("backend.routes.portfolio.PortfolioAnalysisService") as MockAnalysis,
+        patch("backend.routes.portfolio.BrinsonAttributionService") as MockAttrib,
     ):
         mock_repo = MagicMock()
         mock_repo.list_portfolios = AsyncMock(return_value=[])
@@ -255,6 +259,12 @@ def test_no_500_errors(client: TestClient, method: str, path: str) -> None:
         mock_svc = MagicMock()
         mock_svc.analyze_portfolio = AsyncMock(side_effect=ValueError("Portfolio not found"))
         MockAnalysis.return_value = mock_svc
+
+        mock_attrib_svc = MagicMock()
+        mock_attrib_svc.compute_attribution = AsyncMock(
+            side_effect=ValueError("Portfolio not found")
+        )
+        MockAttrib.return_value = mock_attrib_svc
 
         resp = client.request(method, path)
 

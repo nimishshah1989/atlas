@@ -13,6 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.clients.jip_mf_sql import (  # type: ignore[attr-defined]
     CATEGORIES_DECIMAL_FIELDS,
     CATEGORIES_SQL,
+    CATEGORY_ALPHA_DECIMAL_FIELDS,
+    CATEGORY_ALPHA_SQL,
+    CATEGORY_NAV_RETURNS_DECIMAL_FIELDS,
+    CATEGORY_NAV_RETURNS_SQL,
     FLOWS_DECIMAL_FIELDS,
     FLOWS_SQL,
     FRESHNESS_PROBE_KEYS,
@@ -340,6 +344,46 @@ class JIPMFService:
             _mf_rs_momentum_cache["default"] = (time.monotonic(), momentum_map)
             _mf_rs_momentum_last_failure.pop("default", None)  # clear negative cache on success
             return momentum_map
+
+    async def get_category_nav_returns(self) -> list[dict[str, Any]]:
+        """Get per-category 1Y average return computed from NAV history.
+
+        Used by Brinson attribution as benchmark category returns.
+        Returns rows with: category_name, fund_count, avg_return_1y, benchmark_weight.
+        benchmark_weight = fund_count / total_active_funds (equal-weight benchmark).
+
+        Returns empty list if de_mf_nav_daily has insufficient history.
+        """
+        try:
+            query_result = await self.session.execute(text(CATEGORY_NAV_RETURNS_SQL))
+            rows = [
+                _decimalize(row, CATEGORY_NAV_RETURNS_DECIMAL_FIELDS)
+                for row in query_result.mappings().all()
+            ]
+            log.info("category_nav_returns_fetched", count=len(rows))
+            return rows
+        except SQLAlchemyError as exc:
+            log.warning("category_nav_returns_failed", error=str(exc))
+            return []
+
+    async def get_category_alpha(self) -> list[dict[str, Any]]:
+        """Get per-category average manager_alpha.
+
+        Used as selection effect proxy in Brinson attribution when
+        per-fund raw returns are unavailable.
+        Returns rows with: category_name, fund_count, avg_manager_alpha.
+        """
+        try:
+            query_result = await self.session.execute(text(CATEGORY_ALPHA_SQL))
+            rows = [
+                _decimalize(row, CATEGORY_ALPHA_DECIMAL_FIELDS)
+                for row in query_result.mappings().all()
+            ]
+            log.info("category_alpha_fetched", count=len(rows))
+            return rows
+        except SQLAlchemyError as exc:
+            log.warning("category_alpha_failed", error=str(exc))
+            return []
 
     async def get_fund_lifecycle(self, mstar_id: str) -> list[dict[str, Any]]:
         """Get lifecycle events for a fund."""
