@@ -938,6 +938,7 @@
           "mf"
         ],
         "summary": "Get Universe",
+        "description": "Get MF universe grouped by broad_category \u2192 category \u2192 funds.\n\nWires real JIP data. ETFs are always excluded (enforced by JIP service).",
         "operationId": "get_universe_api_v1_mf_universe_get",
         "parameters": [
           {
@@ -1036,6 +1037,7 @@
           "mf"
         ],
         "summary": "Get Categories",
+        "description": "Get category-level rollup: fund counts, RS composite, flows, quadrant distribution.\n\np50/p90 manager_alpha computed in SQL via PERCENTILE_CONT.\nQuadrant distribution computed from enriched universe rows.",
         "operationId": "get_categories_api_v1_mf_categories_get",
         "responses": {
           "200": {
@@ -1057,6 +1059,7 @@
           "mf"
         ],
         "summary": "Get Flows",
+        "description": "Get category-level flows for the last N months (default 12).",
         "operationId": "get_flows_api_v1_mf_flows_get",
         "parameters": [
           {

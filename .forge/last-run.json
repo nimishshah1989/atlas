@@ -1,7 +1,7 @@
 {
-  "chunk": "V2-4",
+  "chunk": "V2-4-SYNC: post-chunk openapi.json regen from MF route docstrings",
   "tests_ok": true,
   "quality_ok": true,
   "memory_ok": true,
-  "ts": 1776159049
+  "ts": 1776160703
 }
