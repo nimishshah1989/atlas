@@ -119,7 +119,7 @@ export default function SimulationResults({ response, config }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e8" />
                 <XAxis dataKey="date" tickFormatter={dateTick} tick={{ fontSize: 11, fill: "#9a9aad" }} interval="preserveStartEnd" />
                 <YAxis tickFormatter={(v: number) => formatCurrency(v)} tick={{ fontSize: 11, fill: "#9a9aad" }} width={90} />
-                <Tooltip formatter={(v: number, n: string) => [formatCurrency(v), n === "total" ? "Total Portfolio" : "Fund Value"]} labelFormatter={(l: string) => `Date: ${l}`} contentStyle={{ fontSize: 12, border: "1px solid #e4e4e8", borderRadius: 4 }} />
+                <Tooltip formatter={(v: unknown, n: unknown) => [formatCurrency(Number(v ?? 0)), n === "total" ? "Total Portfolio" : "Fund Value"]} labelFormatter={(l: unknown) => `Date: ${String(l ?? "")}`} contentStyle={{ fontSize: 12, border: "1px solid #e4e4e8", borderRadius: 4 }} />
                 <Area type="monotone" dataKey="total" stroke="#0d8a7a" strokeWidth={2} fill="url(#totalGrad)" dot={false} name="total" />
               </AreaChart>
             </ResponsiveContainer>
