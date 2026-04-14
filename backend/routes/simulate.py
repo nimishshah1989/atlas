@@ -6,6 +6,7 @@ GET  /{id}            — V3-5: get full simulation detail
 POST /save            — V3-5: save config (without running)
 DELETE /{id}          — V3-5: soft-delete a simulation
 POST /auto-loop/run   — V3-5: trigger auto-loop re-run for all configured sims
+POST /optimize        — V3-6: Optuna TPE parameter optimizer
 """
 
 from __future__ import annotations
@@ -21,6 +22,8 @@ from backend.clients.jip_data_service import JIPDataService
 from backend.db.session import get_db
 from backend.models.simulation import (
     AutoLoopResponse,
+    OptimizeRequest,
+    OptimizeResponse,
     SimulationDetailResponse,
     SimulationListResponse,
     SimulationRunRequest,
@@ -123,6 +126,34 @@ async def trigger_auto_loop(
         failed=failed,
         ran_at=ran_at,
     )
+
+
+@router.post("/optimize", response_model=OptimizeResponse)
+async def optimize_simulation(
+    request: OptimizeRequest,
+    session: AsyncSession = Depends(get_db),
+) -> OptimizeResponse:
+    """Run Optuna TPE parameter optimization for a simulation config.
+
+    Searches the parameter space defined in param_ranges to find the
+    combination that maximizes the chosen objective metric (xirr, sharpe,
+    cagr, or sortino).
+
+    The optimizer fetches price and signal data once, then runs n_trials
+    backtests with different sampled parameter combinations. Returns the
+    best parameter set found and the full trial history.
+    """
+    jip = JIPDataService(session)
+    service = SimulationService(session)
+
+    try:
+        response = await service.optimize(request=request, jip=jip)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except NotImplementedError as exc:
+        raise HTTPException(status_code=501, detail=str(exc))
+
+    return response
 
 
 @router.get("/", response_model=SimulationListResponse)

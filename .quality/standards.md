@@ -111,6 +111,13 @@ Walks `backend/routes/*.py` and counts route bodies typed as
 >80% Pydantic → 3/5, otherwise 0/5. **Plain English:** "Do we validate
 data coming in, or blindly trust it?" **Severity:** high if 0.
 
+### 1.10 No API key leaks in runner logs / spec files
+
+Scans `scripts/forge_runner/`, `.forge/`, and `docs/specs/` for patterns
+matching Anthropic API keys (`sk-ant-*`). Any match → 0/5, clean → 5/5.
+**Plain English:** "Have we accidentally committed API keys into runner
+logs or spec files?" **Severity:** critical if found.
+
 ---
 
 ## Dimension 2 — Code  *(gating)*

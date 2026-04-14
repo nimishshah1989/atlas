@@ -128,79 +128,46 @@ def _compute_cagr(
 
 
 def _compute_xirr(result: BacktestResult, final_value: Decimal) -> Decimal:
-    """Compute XIRR using Newton's method on the cashflow series.
-
-    Cashflows: each buy is negative (outflow), terminal value is positive.
-    Uses dates from transactions + a terminal cashflow at last date.
-    All arithmetic is pure Decimal — no float conversions.
-    """
-    if not result.transactions:
+    """Compute XIRR using Newton's method on the cashflow series."""
+    cashflows = _build_cashflows(result, final_value)
+    if not cashflows:
         return Decimal("0")
+    return _newton_xirr(cashflows)
 
-    # Build cashflow list: (date, amount) where buys are negative
-    cashflows: list[tuple[date, Decimal]] = []
+
+def _build_cashflows(
+    result: BacktestResult,
+    final_value: Decimal,
+) -> list[tuple[date, Decimal]]:
+    """Build cashflow list: buys negative, terminal value positive."""
+    if not result.transactions:
+        return []
 
     from backend.models.simulation import TransactionAction
 
+    cashflows: list[tuple[date, Decimal]] = []
     for tx in result.transactions:
         if tx.action in (TransactionAction.SIP_BUY, TransactionAction.LUMPSUM_BUY):
             cashflows.append((tx.date, -tx.amount))
-        # REDEPLOY is not an external cashflow (money stays in the system)
 
     if not cashflows:
-        return Decimal("0")
+        return []
 
-    # Terminal cashflow
     last_date = result.daily_values[-1].date if result.daily_values else cashflows[-1][0]
     cashflows.append((last_date, final_value))
+    return cashflows
 
-    # Use the first cashflow date as reference
+
+def _newton_xirr(cashflows: list[tuple[date, Decimal]]) -> Decimal:
+    """Solve XIRR via Newton's method — 20 iterations, all Decimal."""
     ref_date = cashflows[0][0]
-
-    def _years(cf_date: date) -> Decimal:
-        """Days difference as Decimal years."""
-        return Decimal(str((cf_date - ref_date).days)) / Decimal("365.25")
-
-    def npv(rate: Decimal) -> Decimal:
-        total = Decimal("0")
-        base = Decimal("1") + rate
-        if base <= Decimal("0"):
-            return Decimal("0")
-        for cf_date, amount in cashflows:
-            yr = _years(cf_date)
-            try:
-                factor = base**yr
-                if factor == Decimal("0"):
-                    return Decimal("0")
-                total += amount / factor
-            except (InvalidOperation, ZeroDivisionError, OverflowError):
-                return Decimal("0")
-        return total
-
-    def npv_derivative(rate: Decimal) -> Decimal:
-        total = Decimal("0")
-        base = Decimal("1") + rate
-        if base <= Decimal("0"):
-            return Decimal("0")
-        for cf_date, amount in cashflows:
-            yr = _years(cf_date)
-            try:
-                factor = base ** (yr + Decimal("1"))
-                if factor == Decimal("0"):
-                    continue
-                total -= amount * yr / factor
-            except (InvalidOperation, ZeroDivisionError, OverflowError):
-                continue
-        return total
-
-    # Newton's method — 20 iterations
-    rate = Decimal("0.10")  # Initial guess: 10%
+    rate = Decimal("0.10")
     tolerance = Decimal("0.0001")
 
     for _ in range(20):
         try:
-            f_val = npv(rate)
-            f_deriv = npv_derivative(rate)
+            f_val = _xirr_npv(rate, cashflows, ref_date)
+            f_deriv = _xirr_npv_deriv(rate, cashflows, ref_date)
             if f_deriv == Decimal("0"):
                 break
             new_rate = rate - f_val / f_deriv
@@ -211,11 +178,53 @@ def _compute_xirr(result: BacktestResult, final_value: Decimal) -> Decimal:
         except (InvalidOperation, ZeroDivisionError, OverflowError):
             return Decimal("0")
 
-    # Sanity check: XIRR must be within reasonable bounds
     if rate < Decimal("-0.999") or rate > Decimal("100"):
         return Decimal("0")
-
     return rate
+
+
+def _xirr_npv(
+    rate: Decimal,
+    cashflows: list[tuple[date, Decimal]],
+    ref_date: date,
+) -> Decimal:
+    """Compute NPV at given rate for XIRR Newton's method."""
+    total = Decimal("0")
+    base = Decimal("1") + rate
+    if base <= Decimal("0"):
+        return Decimal("0")
+    for cf_date, amount in cashflows:
+        yr = Decimal(str((cf_date - ref_date).days)) / Decimal("365.25")
+        try:
+            factor = base**yr
+            if factor == Decimal("0"):
+                return Decimal("0")
+            total += amount / factor
+        except (InvalidOperation, ZeroDivisionError, OverflowError):
+            return Decimal("0")
+    return total
+
+
+def _xirr_npv_deriv(
+    rate: Decimal,
+    cashflows: list[tuple[date, Decimal]],
+    ref_date: date,
+) -> Decimal:
+    """Compute NPV derivative at given rate for XIRR Newton's method."""
+    total = Decimal("0")
+    base = Decimal("1") + rate
+    if base <= Decimal("0"):
+        return Decimal("0")
+    for cf_date, amount in cashflows:
+        yr = Decimal(str((cf_date - ref_date).days)) / Decimal("365.25")
+        try:
+            factor = base ** (yr + Decimal("1"))
+            if factor == Decimal("0"):
+                continue
+            total -= amount * yr / factor
+        except (InvalidOperation, ZeroDivisionError, OverflowError):
+            continue
+    return total
 
 
 # ---------------------------------------------------------------------------

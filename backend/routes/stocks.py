@@ -269,15 +269,7 @@ async def get_stock_deep_dive(
     ),
     db: AsyncSession = Depends(get_db),
 ) -> StockDeepDiveResponse:
-    """Get complete deep-dive for a stock with conviction pillars.
-
-    When ``include`` is supplied the modules are validated through the
-    shared UQL include layer (:mod:`backend.services.uql.includes`) and
-    surfaced via ``meta.includes_loaded`` per spec §18.2 — keeping this
-    fixed endpoint conformant with the §17/§18/§20 standard. Unknown or
-    deferred modules raise :class:`UQLError(INCLUDE_NOT_AVAILABLE)` which
-    the registered envelope handler converts to a §20.5 400 response.
-    """
+    """Get complete deep-dive for a stock with conviction pillars."""
     t0 = time.monotonic()
     includes_loaded: Optional[list[str]] = None
     if include is not None:

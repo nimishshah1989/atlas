@@ -237,3 +237,43 @@ class AutoLoopResponse(BaseModel):
     succeeded: int
     failed: int
     ran_at: datetime
+
+
+# --- Optimizer models (V3-6) ---
+
+
+class ParamRange(BaseModel):
+    """Range definition for a single optimizable parameter."""
+
+    min_val: Decimal
+    max_val: Decimal
+    step: Optional[Decimal] = None
+
+
+class OptimizeRequest(BaseModel):
+    """POST /api/v1/simulate/optimize request body."""
+
+    config: SimulationConfig
+    param_ranges: dict[str, ParamRange]
+    n_trials: int = Field(default=100, ge=10, le=1000)
+    objective: str = Field(default="xirr", pattern="^(xirr|sharpe|cagr|sortino)$")
+
+
+class TrialResult(BaseModel):
+    """Single Optuna trial result (in OptimizeResponse)."""
+
+    trial_number: int
+    params: dict[str, Decimal]
+    value: Decimal
+
+
+class OptimizeResponse(BaseModel):
+    """POST /api/v1/simulate/optimize response."""
+
+    best_params: dict[str, Decimal]
+    best_value: Decimal
+    objective: str
+    n_trials: int
+    trials: list[TrialResult]
+    base_config: SimulationConfig
+    data_as_of: datetime

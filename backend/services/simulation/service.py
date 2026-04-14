@@ -16,10 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.models import AtlasSimulation
 from backend.models.simulation import (
     AutoLoopResultItem,
+    OptimizeResponse,
+    OptimizeRequest,
     SimulationConfig,
     SimulationResult,
     SimulationSummary,
     TaxSummary,
+    TrialResult,
 )
 from backend.services.simulation.analytics import compute_analytics
 from backend.services.simulation.backtest_engine import BacktestEngine, BacktestResult
@@ -35,6 +38,25 @@ from backend.services.simulation.helpers import (
     sanitize_for_jsonb,
 )
 from backend.services.simulation.tax_engine import compute_annual_tax_summary
+
+
+def _compute_summary_delta(
+    new_summary: SimulationSummary,
+    prev_summary: dict[str, Any],
+) -> dict[str, str]:
+    """Compute KPI deltas between new and previous summary."""
+    delta: dict[str, str] = {}
+    for kpi in ("xirr", "cagr", "final_value", "max_drawdown"):
+        prev_val = prev_summary.get(kpi)
+        new_val = getattr(new_summary, kpi, None)
+        if prev_val is not None and new_val is not None:
+            try:
+                diff = Decimal(str(new_val)) - Decimal(str(prev_val))
+                delta[kpi] = str(diff)
+            except (ValueError, TypeError, ArithmeticError):
+                pass
+    return delta
+
 
 log = structlog.get_logger()
 
@@ -194,87 +216,16 @@ class SimulationService:
 
         Each simulation is independently locked, re-run, and updated.
         A failure on one simulation does not stop others.
-
-        Returns:
-            List of AutoLoopResultItem for each attempted re-run.
         """
-        import uuid as _uuid
-
         active_sims = await self._repo.list_simulations(user_id=None, limit=500)
         auto_loop_sims = [s for s in active_sims if s.is_auto_loop and not s.is_deleted]
 
         log.info("auto_loop_start", total_candidates=len(auto_loop_sims))
 
         results: list[AutoLoopResultItem] = []
-
         for sim in auto_loop_sims:
-            sim_id_str = str(sim.id)
-            sim_log = log.bind(simulation_id=sim_id_str)
-
-            try:
-                # Lock to prevent concurrent auto-loop races
-                locked = await self._repo.lock_for_update(sim.id)
-                if locked is None:
-                    sim_log.info("auto_loop_sim_skipped_locked")
-                    results.append(
-                        AutoLoopResultItem(
-                            simulation_id=sim.id,
-                            status="skipped",
-                            error="Could not acquire lock",
-                        )
-                    )
-                    continue
-
-                # Parse config back from JSONB
-                config_dict = locked.config or {}
-                config = SimulationConfig.model_validate(config_dict)
-
-                # Store previous summary for delta computation
-                prev_summary = locked.result_summary or {}
-
-                # Re-run backtest with latest data
-                sim_log.info("auto_loop_sim_rerun_start", signal=config.signal.value)
-                rerun_result = await self.run_backtest(config=config, jip=jip)
-
-                # Compute summary delta (key KPIs)
-                new_summary = rerun_result.summary
-                delta: dict[str, str] = {}
-                for field in ("xirr", "cagr", "final_value", "max_drawdown"):
-                    prev_val = prev_summary.get(field)
-                    new_val = getattr(new_summary, field, None)
-                    if prev_val is not None and new_val is not None:
-                        try:
-                            diff = Decimal(str(new_val)) - Decimal(str(prev_val))
-                            delta[field] = str(diff)
-                        except (ValueError, TypeError, ArithmeticError):
-                            pass
-
-                # Update last_auto_run timestamp
-                locked.last_auto_run = datetime.datetime.now(tz=datetime.timezone.utc)
-                await self._session.flush()
-
-                sim_log.info(
-                    "auto_loop_sim_rerun_complete",
-                    xirr=str(new_summary.xirr),
-                )
-
-                results.append(
-                    AutoLoopResultItem(
-                        simulation_id=_uuid.UUID(sim_id_str),
-                        status="success",
-                        summary_delta=delta if delta else None,
-                    )
-                )
-
-            except Exception as exc:
-                sim_log.error("auto_loop_sim_error", error=str(exc))
-                results.append(
-                    AutoLoopResultItem(
-                        simulation_id=_uuid.UUID(sim_id_str),
-                        status="error",
-                        error=str(exc),
-                    )
-                )
+            item = await self._rerun_single_sim(sim, jip)
+            results.append(item)
 
         log.info(
             "auto_loop_complete",
@@ -282,8 +233,106 @@ class SimulationService:
             succeeded=sum(1 for r in results if r.status == "success"),
             failed=sum(1 for r in results if r.status == "error"),
         )
-
         return results
+
+    async def _rerun_single_sim(
+        self,
+        sim: Any,
+        jip: Any,
+    ) -> AutoLoopResultItem:
+        """Lock, re-run, and compute delta for one auto-loop simulation."""
+        import uuid as _uuid
+
+        sim_id_str = str(sim.id)
+        sim_log = log.bind(simulation_id=sim_id_str)
+
+        try:
+            locked = await self._repo.lock_for_update(sim.id)
+            if locked is None:
+                sim_log.info("auto_loop_sim_skipped_locked")
+                return AutoLoopResultItem(
+                    simulation_id=sim.id,
+                    status="skipped",
+                    error="Could not acquire lock",
+                )
+
+            config = SimulationConfig.model_validate(locked.config or {})
+            prev_summary = locked.result_summary or {}
+
+            sim_log.info("auto_loop_sim_rerun_start", signal=config.signal.value)
+            rerun_result = await self.run_backtest(config=config, jip=jip)
+
+            delta = _compute_summary_delta(rerun_result.summary, prev_summary)
+
+            locked.last_auto_run = datetime.datetime.now(tz=datetime.timezone.utc)
+            await self._session.flush()
+
+            sim_log.info("auto_loop_sim_rerun_complete", xirr=str(rerun_result.summary.xirr))
+            return AutoLoopResultItem(
+                simulation_id=_uuid.UUID(sim_id_str),
+                status="success",
+                summary_delta=delta if delta else None,
+            )
+
+        except Exception as exc:
+            sim_log.error("auto_loop_sim_error", error=str(exc))
+            return AutoLoopResultItem(
+                simulation_id=_uuid.UUID(sim_id_str),
+                status="error",
+                error=str(exc),
+            )
+
+    async def optimize(
+        self,
+        request: OptimizeRequest,
+        jip: Optional[Any] = None,
+        price_data: Optional[list[dict[str, Any]]] = None,
+        signal_data: Optional[list[dict[str, Any]]] = None,
+    ) -> OptimizeResponse:
+        """Run Optuna TPE parameter optimization.
+
+        Fetches price + signal data once, then dispatches to run_optimization()
+        for n_trials backtests. Returns best params and full trial history.
+        """
+        from backend.services.simulation.optimizer import ParameterRange, run_optimization
+
+        config = request.config
+        log.info("optimize_start", signal=config.signal.value, n_trials=request.n_trials)
+
+        price_series = await self._get_price_series(config, price_data, jip)
+        raw_signal_data = await self._get_signal_data(config, signal_data, jip)
+        signal_series = self._build_signal_series(config, raw_signal_data)
+
+        param_ranges_dc: dict[str, ParameterRange] = {
+            name: ParameterRange(min_val=pr.min_val, max_val=pr.max_val, step=pr.step)
+            for name, pr in request.param_ranges.items()
+        }
+
+        result = run_optimization(
+            base_config=config,
+            param_ranges=param_ranges_dc,
+            price_series=price_series,
+            signal_series=signal_series,
+            n_trials=request.n_trials,
+            objective_metric=request.objective,
+        )
+
+        trial_results = [
+            TrialResult(trial_number=tr.trial_number, params=tr.params, value=tr.value)
+            for tr in result.optimization_history
+        ]
+        data_as_of = datetime.datetime.now(tz=datetime.timezone.utc)
+        log.info("optimize_complete", best_value=str(result.best_value))
+
+        return OptimizeResponse(
+            best_params=result.best_params,
+            best_value=result.best_value,
+            objective=result.objective,
+            n_trials=result.n_trials_completed,
+            trials=trial_results,
+            base_config=config,
+            data_as_of=data_as_of,
+        )
 
     # -----------------------------------------------------------------------
     # Private helpers

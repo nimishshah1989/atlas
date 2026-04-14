@@ -16,3 +16,4 @@ pytest-asyncio>=0.23.0
 slowapi>=0.1.9
 pip-audit>=2.7.0
 ruamel.yaml>=0.18.0
+optuna>=3.6.0

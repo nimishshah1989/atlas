@@ -62,16 +62,18 @@ class TestEmbeddingFaultTolerance:
     """Test that store_finding works without embedding service."""
 
     def test_store_finding_handles_embedding_error(self) -> None:
-        """Verify the embedding fault-tolerance code path exists in store_finding."""
+        """Verify the embedding fault-tolerance code path exists in the intelligence module."""
         import inspect
 
-        from backend.services.intelligence import store_finding
+        import backend.services.intelligence as intel_mod
 
-        source = inspect.getsource(store_finding)
-        assert "EmbeddingError" in source, "store_finding must handle EmbeddingError"
-        assert "embedding_unavailable" in source, "store_finding must log embedding_unavailable"
+        source = inspect.getsource(intel_mod)
+        assert "EmbeddingError" in source, "intelligence module must handle EmbeddingError"
+        assert "embedding_unavailable" in source, (
+            "intelligence module must log embedding_unavailable"
+        )
         assert "embedding_vector is not None" in source, (
-            "store_finding must conditionally skip embedding UPDATE"
+            "intelligence module must conditionally skip embedding UPDATE"
         )
 
     def test_embedding_error_is_imported(self) -> None:

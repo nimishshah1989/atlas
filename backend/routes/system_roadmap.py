@@ -132,82 +132,89 @@ def _compute_milestones(
     wiki_index: set[str],
     memory_mtime: datetime | None,
 ) -> list[MilestoneResponse]:
-    """Derive the 7-dot process strip for one chunk. Order is fixed and
-    matches the frontend strip — do not reorder without updating the
-    chunk card. Each milestone is one of: green | amber | red | pending."""
-
-    out: list[MilestoneResponse] = []
+    """Derive the 7-dot process strip for one chunk."""
     states_seen: set[str] = signals.get("states_seen", set())
-    latest_quality = signals.get("latest_quality")
-    post_chunk_exit = signals.get("post_chunk_exit")
     is_done = chunk_status == "DONE"
     is_failed = chunk_status == "FAILED"
 
-    # 1. planned — chunk entered PLANNING at least once.
-    if "PLANNING" in states_seen:
-        out.append(_milestone("planned", "green", "transitioned to PLANNING"))
-    else:
-        out.append(_milestone("planned", "pending", "no PLANNING transition yet"))
+    out: list[MilestoneResponse] = _pipeline_milestones(states_seen, is_failed)
+    out.append(_quality_milestone(signals.get("latest_quality")))
+    out.append(_post_chunk_milestone(signals.get("post_chunk_exit"), is_done))
+    out.append(_wiki_milestone(chunk_id, wiki_index, is_done))
+    out.append(_memory_milestone(memory_mtime, finished_at, is_done))
+    return out
 
-    # 2. implemented — chunk reached IMPLEMENTING (claude session ran).
-    if "IMPLEMENTING" in states_seen:
-        out.append(_milestone("implemented", "green", "transitioned to IMPLEMENTING"))
-    elif is_failed:
-        out.append(_milestone("implemented", "red", "failed before IMPLEMENTING"))
-    else:
-        out.append(_milestone("implemented", "pending", "not yet IMPLEMENTING"))
 
-    # 3. tests — chunk reached TESTING (verifier ran).
-    if "TESTING" in states_seen:
-        out.append(_milestone("tests", "green", "transitioned to TESTING"))
-    elif is_failed:
-        out.append(_milestone("tests", "red", "failed before TESTING"))
-    else:
-        out.append(_milestone("tests", "pending", "not yet TESTING"))
+def _pipeline_milestones(
+    states_seen: set[str],
+    is_failed: bool,
+) -> list[MilestoneResponse]:
+    """Milestones 1-3: planned, implemented, tests."""
+    out: list[MilestoneResponse] = []
+    for name, state in [
+        ("planned", "PLANNING"),
+        ("implemented", "IMPLEMENTING"),
+        ("tests", "TESTING"),
+    ]:
+        if state in states_seen:
+            out.append(_milestone(name, "green", f"transitioned to {state}"))
+        elif is_failed:
+            out.append(_milestone(name, "red", f"failed before {state}"))
+        else:
+            out.append(_milestone(name, "pending", f"not yet {state}"))
+    return out
 
-    # 4. quality_gate — quality_runs.passed for the latest run.
+
+def _quality_milestone(latest_quality: dict[str, Any] | None) -> MilestoneResponse:
+    """Milestone 4: quality gate."""
     if latest_quality is None:
-        out.append(_milestone("quality_gate", "pending", "no quality_runs row"))
-    elif latest_quality["passed"]:
-        score = latest_quality.get("overall_score")
-        out.append(_milestone("quality_gate", "green", f"7-dim gate passed (score={score})"))
-    else:
-        score = latest_quality.get("overall_score")
-        out.append(_milestone("quality_gate", "red", f"7-dim gate failed (score={score})"))
+        return _milestone("quality_gate", "pending", "no quality_runs row")
+    score = latest_quality.get("overall_score")
+    if latest_quality["passed"]:
+        return _milestone("quality_gate", "green", f"7-dim gate passed (score={score})")
+    return _milestone("quality_gate", "red", f"7-dim gate failed (score={score})")
 
-    # 5. post_chunk — POST_CHUNK session exit code from sessions table.
-    # exit 0 = post-chunk.sh ran clean (commit+push+restart+smoke).
-    # exit !=0 = sync gap (most often forge-compile or memory step failed).
+
+def _post_chunk_milestone(
+    post_chunk_exit: int | None,
+    is_done: bool,
+) -> MilestoneResponse:
+    """Milestone 5: post_chunk.sh exit code."""
     if post_chunk_exit is None:
         if is_done:
-            out.append(_milestone("post_chunk", "amber", "DONE but no POST_CHUNK session row"))
-        else:
-            out.append(_milestone("post_chunk", "pending", "post_chunk not yet run"))
-    elif post_chunk_exit == 0:
-        out.append(_milestone("post_chunk", "green", "post_chunk.sh exit 0"))
-    else:
-        out.append(_milestone("post_chunk", "red", f"post_chunk.sh exit {post_chunk_exit}"))
+            return _milestone("post_chunk", "amber", "DONE but no POST_CHUNK session row")
+        return _milestone("post_chunk", "pending", "post_chunk not yet run")
+    if post_chunk_exit == 0:
+        return _milestone("post_chunk", "green", "post_chunk.sh exit 0")
+    return _milestone("post_chunk", "red", f"post_chunk.sh exit {post_chunk_exit}")
 
-    # 6. wiki — raw learnings file exists for this chunk.
-    in_wiki = chunk_id.lower() in wiki_index
-    if in_wiki:
-        out.append(_milestone("wiki", "green", "raw learnings file present"))
-    elif is_done:
-        out.append(_milestone("wiki", "amber", "DONE but no learnings file yet"))
-    else:
-        out.append(_milestone("wiki", "pending", "no learnings file"))
 
-    # 7. memory — MEMORY.md mtime ≥ chunk.finished_at.
+def _wiki_milestone(
+    chunk_id: str,
+    wiki_index: set[str],
+    is_done: bool,
+) -> MilestoneResponse:
+    """Milestone 6: wiki learnings file."""
+    if chunk_id.lower() in wiki_index:
+        return _milestone("wiki", "green", "raw learnings file present")
+    if is_done:
+        return _milestone("wiki", "amber", "DONE but no learnings file yet")
+    return _milestone("wiki", "pending", "no learnings file")
+
+
+def _memory_milestone(
+    memory_mtime: datetime | None,
+    finished_at: datetime | None,
+    is_done: bool,
+) -> MilestoneResponse:
+    """Milestone 7: MEMORY.md freshness."""
     if memory_mtime is None:
-        out.append(_milestone("memory", "pending", "MEMORY.md missing"))
-    elif finished_at is not None and memory_mtime >= finished_at:
-        out.append(_milestone("memory", "green", "MEMORY.md updated after chunk finished"))
-    elif is_done:
-        out.append(_milestone("memory", "amber", "DONE but MEMORY.md older than finish time"))
-    else:
-        out.append(_milestone("memory", "pending", "chunk not finished"))
-
-    return out
+        return _milestone("memory", "pending", "MEMORY.md missing")
+    if finished_at is not None and memory_mtime >= finished_at:
+        return _milestone("memory", "green", "MEMORY.md updated after chunk finished")
+    if is_done:
+        return _milestone("memory", "amber", "DONE but MEMORY.md older than finish time")
+    return _milestone("memory", "pending", "chunk not finished")
 
 
 log = structlog.get_logger()

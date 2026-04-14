@@ -41,59 +41,21 @@ async def store_finding(
 ) -> AtlasIntelligence:
     """Store a finding. Idempotent: same (agent_id, entity, title, data_as_of) upserts.
 
-    Args:
-        db: Async DB session.
-        agent_id: Identifier of the agent producing this finding.
-        agent_type: Type/class of the agent.
-        entity: Target entity (e.g. stock ticker).
-        entity_type: Type of entity (e.g. "equity").
-        finding_type: Category of finding (e.g. "technical", "sentiment").
-        title: Short title for the finding.
-        content: Full text of the finding.
-        confidence: Decimal confidence score in [0, 1].
-        data_as_of: Timezone-aware datetime this data applies to.
-        evidence: Optional supporting evidence dict (no Decimal values — use str).
-        tags: Optional list of tag strings.
-        expires_hours: Hours until this finding expires (default 168 = 1 week).
-
-    Returns:
-        The stored AtlasIntelligence ORM row.
-
     Raises:
         ValueError: if confidence is not in [0, 1] or data_as_of is naive.
-        EmbeddingError: never raised — embedding failures are logged and skipped
-            (System Guarantee #3: fault-tolerant, partial data > no data).
     """
     if data_as_of.tzinfo is None:
         raise ValueError("data_as_of must be timezone-aware")
     if not (Decimal("0") <= confidence <= Decimal("1")):
         raise ValueError(f"confidence must be in [0, 1], got {confidence}")
 
-    embed_text = f"{title} | {content} | Entity: {entity}"
-    embedding_vector: list[float] | None = None
-    try:
-        embedding_vector = await embed(embed_text)
-    except EmbeddingError:
-        log.warning(
-            "embedding_unavailable",
-            agent_id=agent_id,
-            entity=entity,
-            detail="Finding will be stored without embedding vector",
-        )
-
+    embedding_vector = await _try_embed(agent_id, entity, title, content)
     expires_at = data_as_of + timedelta(hours=expires_hours)
-
-    # Sanitize evidence: Decimal values break JSONB INSERT
     safe_evidence = _sanitize_for_jsonb(evidence or {})
 
-    # ON CONFLICT using named partial unique index uq_intel_natural_key
-    # Index: (agent_id, COALESCE(entity, ''), title, data_as_of) WHERE is_deleted = false
-    # We reference it by constraint name in on_conflict_do_update.
-    row_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
-
     values: dict[str, Any] = {
-        "id": row_id,
+        "id": uuid.uuid4(),
         "agent_id": agent_id,
         "agent_type": agent_type,
         "entity": entity,
@@ -112,15 +74,55 @@ async def store_finding(
         "updated_at": now,
     }
 
-    # Use raw SQL for the upsert to handle the functional index constraint
-    # and to avoid pgvector NULL type mismatch on the embedding column.
-    # Two-phase: upsert the row without embedding, then update embedding separately.
-    #
-    # PostgreSQL ON CONFLICT with partial+functional indexes requires specifying
-    # the exact index expression in the conflict_target, not the constraint name.
-    # The index is: (agent_id, COALESCE(entity, ''), title, data_as_of) WHERE is_deleted = false
-    # Use CAST() not ::type — asyncpg rejects ::type when :param names are present
-    # (SQLAlchemy Param-Cast Collision bug pattern)
+    returned_id = await _upsert_finding(db, values, safe_evidence, confidence, tags)
+
+    if embedding_vector is not None:
+        await _update_embedding(db, returned_id, embedding_vector)
+
+    await db.commit()
+
+    stmt = select(AtlasIntelligence).where(AtlasIntelligence.id == returned_id)
+    row = (await db.execute(stmt)).scalar_one()
+
+    log.info(
+        "finding_stored",
+        id=str(returned_id),
+        agent_id=agent_id,
+        entity=entity,
+        finding_type=finding_type,
+    )
+    return row
+
+
+async def _try_embed(
+    agent_id: str,
+    entity: str,
+    title: str,
+    content: str,
+) -> list[float] | None:
+    """Attempt embedding, returning None on failure (fault-tolerant)."""
+    try:
+        return await embed(f"{title} | {content} | Entity: {entity}")
+    except EmbeddingError:
+        log.warning(
+            "embedding_unavailable",
+            agent_id=agent_id,
+            entity=entity,
+            detail="Finding will be stored without embedding vector",
+        )
+        return None
+
+
+async def _upsert_finding(
+    db: AsyncSession,
+    values: dict[str, Any],
+    safe_evidence: dict[str, Any],
+    confidence: Decimal,
+    tags: list[str] | None,
+) -> uuid.UUID:
+    """Execute the ON CONFLICT upsert, return the row ID."""
+    import json as _json
+
     upsert_sql = text(
         """
         INSERT INTO atlas_intelligence (
@@ -147,42 +149,25 @@ async def store_finding(
         """
     )
 
-    import json as _json
-
     params = {
         **values,
         "evidence": _json.dumps(safe_evidence),
         "tags": list(tags or []),
+        "confidence": str(confidence),
     }
-    # Convert Decimal to string for the query param (asyncpg doesn't accept Decimal directly)
-    params["confidence"] = str(confidence)
+    result = await db.execute(upsert_sql, params)
+    returned_id: uuid.UUID = result.scalar_one()
+    return returned_id
 
-    upsert_result = await db.execute(upsert_sql, params)
-    returned_id = upsert_result.scalar_one()
 
-    # Update embedding via raw SQL to avoid pgvector type mismatch (only if embedding available)
-    # Use CAST() not ::vector — asyncpg rejects ::type with :param syntax
-    if embedding_vector is not None:
-        embed_sql = text(
-            "UPDATE atlas_intelligence SET embedding = CAST(:vec AS vector) WHERE id = :rid"
-        )
-        await db.execute(embed_sql, {"vec": str(embedding_vector), "rid": str(returned_id)})
-
-    await db.commit()
-
-    # Fetch and return the full ORM object
-    stmt = select(AtlasIntelligence).where(AtlasIntelligence.id == returned_id)
-    fetch_result = await db.execute(stmt)
-    row = fetch_result.scalar_one()
-
-    log.info(
-        "finding_stored",
-        id=str(returned_id),
-        agent_id=agent_id,
-        entity=entity,
-        finding_type=finding_type,
-    )
-    return row
+async def _update_embedding(
+    db: AsyncSession,
+    row_id: uuid.UUID,
+    vector: list[float],
+) -> None:
+    """Update embedding via raw SQL (two-phase write for pgvector)."""
+    sql = text("UPDATE atlas_intelligence SET embedding = CAST(:vec AS vector) WHERE id = :rid")
+    await db.execute(sql, {"vec": str(vector), "rid": str(row_id)})
 
 
 async def get_relevant_intelligence(
@@ -196,32 +181,60 @@ async def get_relevant_intelligence(
     max_age_hours: int = 168,
     top_k: int = 10,
 ) -> list[AtlasIntelligence]:
-    """Vector similarity search with metadata filters.
-
-    Args:
-        db: Async DB session.
-        query: Natural language query string for semantic search.
-        entity: Optional filter by entity name.
-        entity_type: Optional filter by entity type.
-        finding_type: Optional filter by finding type.
-        agent_id: Optional filter by agent ID.
-        min_confidence: Minimum confidence score (Decimal). Default 0.5.
-        max_age_hours: Maximum age of findings in hours. Default 168.
-        top_k: Number of results to return. Default 10.
-
-    Returns:
-        List of AtlasIntelligence rows ordered by cosine similarity (most similar first).
-    """
+    """Vector similarity search with metadata filters."""
     query_vector = await embed(query)
-    vec_str = str(query_vector)
-
     now = datetime.now(timezone.utc)
-    min_data_as_of = now - timedelta(hours=max_age_hours)
 
-    # Build the vector search query using pgvector cosine distance (<=>)
-    # Lower cosine distance = more similar. ORDER BY ASC for most-similar first.
-    # Use raw SQL to avoid ORM limitations with pgvector operators.
-    where_clauses = [
+    where_str, params = _build_search_filters(
+        str(query_vector),
+        now,
+        min_confidence,
+        max_age_hours,
+        top_k,
+        entity,
+        entity_type,
+        finding_type,
+        agent_id,
+    )
+
+    search_sql = text(f"""
+        SELECT id FROM atlas_intelligence
+        WHERE {where_str}
+        ORDER BY embedding <=> CAST(:query_vec AS vector)
+        LIMIT :top_k
+    """)
+
+    ids = [row[0] for row in (await db.execute(search_sql, params)).fetchall()]
+    if not ids:
+        return []
+
+    stmt = select(AtlasIntelligence).where(AtlasIntelligence.id.in_(ids))
+    rows_by_id = {r.id: r for r in (await db.execute(stmt)).scalars().all()}
+    ordered = [rows_by_id[rid] for rid in ids if rid in rows_by_id]
+
+    log.info(
+        "intelligence_searched",
+        query_len=len(query),
+        results=len(ordered),
+        entity=entity,
+        finding_type=finding_type,
+    )
+    return ordered
+
+
+def _build_search_filters(
+    vec_str: str,
+    now: datetime,
+    min_confidence: Decimal,
+    max_age_hours: int,
+    top_k: int,
+    entity: str | None,
+    entity_type: str | None,
+    finding_type: str | None,
+    agent_id: str | None,
+) -> tuple[str, dict[str, Any]]:
+    """Build WHERE clause and params for vector search."""
+    clauses = [
         "is_deleted = false",
         "(expires_at IS NULL OR expires_at > :now)",
         "(confidence IS NULL OR confidence >= :min_confidence)",
@@ -233,57 +246,18 @@ async def get_relevant_intelligence(
         "top_k": top_k,
         "now": now,
         "min_confidence": str(min_confidence),
-        "min_data_as_of": min_data_as_of,
+        "min_data_as_of": now - timedelta(hours=max_age_hours),
     }
-
-    if entity is not None:
-        where_clauses.append("entity = :entity")
-        params["entity"] = entity
-    if entity_type is not None:
-        where_clauses.append("entity_type = :entity_type")
-        params["entity_type"] = entity_type
-    if finding_type is not None:
-        where_clauses.append("finding_type = :finding_type")
-        params["finding_type"] = finding_type
-    if agent_id is not None:
-        where_clauses.append("agent_id = :agent_id")
-        params["agent_id"] = agent_id
-
-    where_str = " AND ".join(where_clauses)
-
-    # Use CAST() not ::vector — asyncpg rejects ::type with :param syntax
-    search_sql = text(
-        f"""
-        SELECT id
-        FROM atlas_intelligence
-        WHERE {where_str}
-        ORDER BY embedding <=> CAST(:query_vec AS vector)
-        LIMIT :top_k
-        """
-    )
-
-    id_result = await db.execute(search_sql, params)
-    ids = [row[0] for row in id_result.fetchall()]
-
-    if not ids:
-        return []
-
-    # Fetch full ORM objects in similarity order
-    stmt = select(AtlasIntelligence).where(AtlasIntelligence.id.in_(ids))
-    fetch_result = await db.execute(stmt)
-    rows_by_id = {row.id: row for row in fetch_result.scalars().all()}
-
-    # Preserve similarity ordering from vector search
-    ordered = [rows_by_id[row_id] for row_id in ids if row_id in rows_by_id]
-
-    log.info(
-        "intelligence_searched",
-        query_len=len(query),
-        results=len(ordered),
-        entity=entity,
-        finding_type=finding_type,
-    )
-    return ordered
+    for name, val in [
+        ("entity", entity),
+        ("entity_type", entity_type),
+        ("finding_type", finding_type),
+        ("agent_id", agent_id),
+    ]:
+        if val is not None:
+            clauses.append(f"{name} = :{name}")
+            params[name] = val
+    return " AND ".join(clauses), params
 
 
 async def get_finding_by_id(
