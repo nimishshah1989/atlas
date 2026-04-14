@@ -77,6 +77,16 @@ class StepResponse(BaseModel):
     detail: str
 
 
+class MilestoneResponse(BaseModel):
+    """One R/A/G dot in the per-chunk process strip. `status` is one of
+    green | amber | red | pending; `detail` is a short hover-tooltip
+    explaining where the value came from."""
+
+    name: str
+    status: str
+    detail: Optional[str] = None
+
+
 class ChunkResponse(BaseModel):
     id: str
     title: str
@@ -91,6 +101,11 @@ class ChunkResponse(BaseModel):
     # last ship went through the enforced tests+gate+memory chain.
     last_shipped_at: Optional[datetime] = None
     last_ship_ok: Optional[bool] = None
+    # Process-audit strip: 7 fixed milestones per chunk derived from
+    # state.db (sessions, quality_runs, transitions, chunks.finished_at)
+    # and filesystem (wiki raw learnings, MEMORY.md mtime). Always 7
+    # entries in the same order; missing data → status="pending".
+    milestones: list[MilestoneResponse] = []
 
 
 class RollupResponse(BaseModel):

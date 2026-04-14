@@ -20,6 +20,7 @@ from .system import (
     _STATE_DB,
     ChunkResponse,
     DemoGateResponse,
+    MilestoneResponse,
     RollupResponse,
     StepResponse,
     SystemRoadmapResponse,
@@ -28,6 +29,177 @@ from .system import (
     _cache_set,
     router,
 )
+
+# Filesystem signals consumed by the milestone strip. Wiki raw learnings
+# live under ~/.forge/knowledge/raw/atlas/chunk-{id}-learnings.md (mixed
+# case in the wild — case-insensitive match required). MEMORY.md is the
+# orchestrator's auto-memory index; mtime ≥ chunk.finished_at means the
+# memory sync ran after the chunk completed.
+_WIKI_RAW_DIR = Path.home() / ".forge" / "knowledge" / "raw" / "atlas"
+_MEMORY_MD = Path.home() / ".claude" / "projects" / "-home-ubuntu-atlas" / "memory" / "MEMORY.md"
+
+
+def _milestone(name: str, status: str, detail: str | None = None) -> MilestoneResponse:
+    return MilestoneResponse(name=name, status=status, detail=detail)
+
+
+def _parse_iso_utc(s: str | None) -> datetime | None:
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
+
+def _load_milestone_signals(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+    """One pass over transitions, quality_runs, sessions — return a per
+    chunk_id dict the milestone computer can consume without further IO.
+
+    The forge-runner state machine moves a chunk through PLANNING →
+    IMPLEMENTING → TESTING → QUALITY_GATE → DONE; we read the
+    `transitions` table (not `sessions.phase`, which uses different
+    names like CLAUDE/POST_CHUNK) to know which states a chunk has
+    actually entered."""
+    signals: dict[str, dict[str, Any]] = {}
+
+    for row in conn.execute("SELECT chunk_id, to_state FROM transitions"):
+        cid, to_state = row
+        chunk_signals = signals.setdefault(cid, {})
+        states = chunk_signals.setdefault("states_seen", set())
+        states.add(to_state)
+
+    for row in conn.execute(
+        "SELECT chunk_id, passed, overall_score, at FROM quality_runs ORDER BY id ASC"
+    ):
+        cid, passed, overall_score, at = row
+        chunk_signals = signals.setdefault(cid, {})
+        chunk_signals["latest_quality"] = {
+            "passed": bool(passed),
+            "overall_score": overall_score,
+            "at": at,
+        }
+
+    # Post-chunk session exit code — surfaces post-chunk.sh failures
+    # (forge-compile, memory sync, smoke probe). Last row wins per chunk.
+    for row in conn.execute(
+        "SELECT chunk_id, exit_code FROM sessions WHERE phase='POST_CHUNK' ORDER BY id ASC"
+    ):
+        cid, exit_code = row
+        signals.setdefault(cid, {})["post_chunk_exit"] = exit_code
+
+    return signals
+
+
+def _load_wiki_chunk_index() -> set[str]:
+    """Return the set of lowercase chunk ids that have a wiki raw
+    learnings file. Single directory listing, cached for the request."""
+    if not _WIKI_RAW_DIR.exists():
+        return set()
+    out: set[str] = set()
+    prefix = "chunk-"
+    suffix = "-learnings.md"
+    for entry in _WIKI_RAW_DIR.iterdir():
+        name = entry.name
+        if name.startswith(prefix) and name.endswith(suffix):
+            out.add(name[len(prefix) : -len(suffix)].lower())
+    return out
+
+
+def _memory_md_mtime() -> datetime | None:
+    if not _MEMORY_MD.exists():
+        return None
+    return datetime.fromtimestamp(_MEMORY_MD.stat().st_mtime, tz=timezone.utc)
+
+
+def _compute_milestones(
+    chunk_id: str,
+    chunk_status: str,
+    finished_at: datetime | None,
+    signals: dict[str, Any],
+    wiki_index: set[str],
+    memory_mtime: datetime | None,
+) -> list[MilestoneResponse]:
+    """Derive the 7-dot process strip for one chunk. Order is fixed and
+    matches the frontend strip — do not reorder without updating the
+    chunk card. Each milestone is one of: green | amber | red | pending."""
+
+    out: list[MilestoneResponse] = []
+    states_seen: set[str] = signals.get("states_seen", set())
+    latest_quality = signals.get("latest_quality")
+    post_chunk_exit = signals.get("post_chunk_exit")
+    is_done = chunk_status == "DONE"
+    is_failed = chunk_status == "FAILED"
+
+    # 1. planned — chunk entered PLANNING at least once.
+    if "PLANNING" in states_seen:
+        out.append(_milestone("planned", "green", "transitioned to PLANNING"))
+    else:
+        out.append(_milestone("planned", "pending", "no PLANNING transition yet"))
+
+    # 2. implemented — chunk reached IMPLEMENTING (claude session ran).
+    if "IMPLEMENTING" in states_seen:
+        out.append(_milestone("implemented", "green", "transitioned to IMPLEMENTING"))
+    elif is_failed:
+        out.append(_milestone("implemented", "red", "failed before IMPLEMENTING"))
+    else:
+        out.append(_milestone("implemented", "pending", "not yet IMPLEMENTING"))
+
+    # 3. tests — chunk reached TESTING (verifier ran).
+    if "TESTING" in states_seen:
+        out.append(_milestone("tests", "green", "transitioned to TESTING"))
+    elif is_failed:
+        out.append(_milestone("tests", "red", "failed before TESTING"))
+    else:
+        out.append(_milestone("tests", "pending", "not yet TESTING"))
+
+    # 4. quality_gate — quality_runs.passed for the latest run.
+    if latest_quality is None:
+        out.append(_milestone("quality_gate", "pending", "no quality_runs row"))
+    elif latest_quality["passed"]:
+        score = latest_quality.get("overall_score")
+        out.append(_milestone("quality_gate", "green", f"7-dim gate passed (score={score})"))
+    else:
+        score = latest_quality.get("overall_score")
+        out.append(_milestone("quality_gate", "red", f"7-dim gate failed (score={score})"))
+
+    # 5. post_chunk — POST_CHUNK session exit code from sessions table.
+    # exit 0 = post-chunk.sh ran clean (commit+push+restart+smoke).
+    # exit !=0 = sync gap (most often forge-compile or memory step failed).
+    if post_chunk_exit is None:
+        if is_done:
+            out.append(_milestone("post_chunk", "amber", "DONE but no POST_CHUNK session row"))
+        else:
+            out.append(_milestone("post_chunk", "pending", "post_chunk not yet run"))
+    elif post_chunk_exit == 0:
+        out.append(_milestone("post_chunk", "green", "post_chunk.sh exit 0"))
+    else:
+        out.append(_milestone("post_chunk", "red", f"post_chunk.sh exit {post_chunk_exit}"))
+
+    # 6. wiki — raw learnings file exists for this chunk.
+    in_wiki = chunk_id.lower() in wiki_index
+    if in_wiki:
+        out.append(_milestone("wiki", "green", "raw learnings file present"))
+    elif is_done:
+        out.append(_milestone("wiki", "amber", "DONE but no learnings file yet"))
+    else:
+        out.append(_milestone("wiki", "pending", "no learnings file"))
+
+    # 7. memory — MEMORY.md mtime ≥ chunk.finished_at.
+    if memory_mtime is None:
+        out.append(_milestone("memory", "pending", "MEMORY.md missing"))
+    elif finished_at is not None and memory_mtime >= finished_at:
+        out.append(_milestone("memory", "green", "MEMORY.md updated after chunk finished"))
+    elif is_done:
+        out.append(_milestone("memory", "amber", "DONE but MEMORY.md older than finish time"))
+    else:
+        out.append(_milestone("memory", "pending", "chunk not finished"))
+
+    return out
+
 
 log = structlog.get_logger()
 
@@ -63,29 +235,44 @@ def _load_chunk_states() -> dict[str, dict[str, Any]]:
     states: dict[str, dict[str, Any]] = {}
     if not _STATE_DB.exists():
         return states
+    wiki_index = _load_wiki_chunk_index()
+    memory_mtime = _memory_md_mtime()
     try:
         conn = sqlite3.connect(f"file:{_STATE_DB}?mode=ro&immutable=1", uri=True)
         try:
+            signals = _load_milestone_signals(conn)
             rows = conn.execute(
-                "SELECT id, title, status, attempts, last_error, updated_at FROM chunks"
+                "SELECT id, title, status, attempts, last_error, updated_at,"
+                " finished_at FROM chunks"
             ).fetchall()
             for row in rows:
-                chunk_id, title, status, attempts, last_error, updated_at_str = row
-                dt = None
-                if updated_at_str:
-                    try:
-                        dt = datetime.fromisoformat(updated_at_str)
-                        if dt.tzinfo is None:
-                            dt = dt.replace(tzinfo=timezone.utc)
-                        dt = dt.astimezone(IST)
-                    except ValueError:
-                        pass
+                (
+                    chunk_id,
+                    title,
+                    status,
+                    attempts,
+                    last_error,
+                    updated_at_str,
+                    finished_at_str,
+                ) = row
+                updated_dt = _parse_iso_utc(updated_at_str)
+                finished_dt = _parse_iso_utc(finished_at_str)
+                mapped_status = _CHUNK_STATUS_MAP.get(status, status)
+                milestones = _compute_milestones(
+                    chunk_id=chunk_id,
+                    chunk_status=mapped_status,
+                    finished_at=finished_dt,
+                    signals=signals.get(chunk_id, {}),
+                    wiki_index=wiki_index,
+                    memory_mtime=memory_mtime,
+                )
                 states[chunk_id] = {
                     "title": title or "",
-                    "status": _CHUNK_STATUS_MAP.get(status, status),
+                    "status": mapped_status,
                     "attempts": attempts or 0,
                     "last_error": last_error,
-                    "updated_at": dt,
+                    "updated_at": (updated_dt.astimezone(IST) if updated_dt else None),
+                    "milestones": milestones,
                 }
         finally:
             conn.close()
@@ -153,6 +340,7 @@ async def _build_chunk_response(
         last_error=state.get("last_error"),
         last_shipped_at=last_shipped_at,
         last_ship_ok=last_ship_ok,
+        milestones=state.get("milestones", []),
     )
 
 
@@ -195,6 +383,7 @@ def _build_orphan_lane(
                 last_error=chunk_states[cid].get("last_error"),
                 last_shipped_at=dt,
                 last_ship_ok=ok,
+                milestones=chunk_states[cid].get("milestones", []),
             )
         )
     return VersionResponse(
