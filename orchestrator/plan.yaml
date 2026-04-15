@@ -980,3 +980,204 @@ chunks:
       - "No synthetic data in any component (Four Laws L2)"
       - "Backend-first rule honored — this chunk only opens after chunks 2-6 are DONE"
 
+
+
+  # --- V5 Intelligence Slice -------------------------------------------------
+
+  - id: V5-1
+    title: "Pin V5 deps + enable pgvector extension"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "pip install -r backend/requirements.txt succeeds"
+      - "alembic upgrade head creates the vector extension"
+      - "SELECT extname FROM pg_extension WHERE extname='vector' returns 1 row"
+
+  - id: V5-2
+    title: "V5 Alembic migration + SQLAlchemy models"
+    status: PENDING
+    depends_on: [V5-1]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head clean"
+      - "psql describe on atlas_intelligence shows the HNSW index"
+      - "SELECT COUNT(*) FROM atlas_intelligence returns 0"
+      - "CHECK constraint on atlas_agent_weights rejects weight=0.2 and weight=3.0"
+      - "mypy clean on the new models"
+
+  - id: V5-3
+    title: "Embeddings service (primary + fallback)"
+    status: PENDING
+    depends_on: [V5-2]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Unit tests cover primary success, primary-5xx fallback, both-down raises, dimensionality invariance across providers"
+      - "pytest tests/unit/intelligence/test_embeddings_fallback.py -v green"
+
+  - id: V5-4
+    title: "Intelligence memory service (store_finding + get_relevant_intelligence)"
+    status: PENDING
+    depends_on: [V5-3]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "≥95% unit coverage on store_finding and get_relevant_intelligence"
+      - "tests cover store happy path, every read filter combination, expired-exclusion, Decimal enforcement (float rejected), IST enforcement (naive datetime rejected), and a structlog-context read-path log event per FR-023"
+      - "pytest green"
+
+  - id: V5-5
+    title: "Intelligence Memory API — 3 read-only routes"
+    status: PENDING
+    depends_on: [V5-4]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "scripts/check-api-standard.py green for the 3 new routes"
+      - "every route returns the standard envelope"
+      - "OpenAPI diff vs contracts/v5-api.openapi.yaml shows zero drift"
+      - "pytest tests/api/test_intelligence_*.py -v green"
+
+  - id: V5-6
+    title: "LLM cost ledger ($2/day rolling window)"
+    status: PENDING
+    depends_on: [V5-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Unit tests cover under-budget, at-budget, over-budget halt, rolling-window arithmetic, and the atlas_alerts side-effect"
+      - "pytest green"
+
+  - id: V5-7
+    title: "LangGraph agent orchestration scaffold"
+    status: PENDING
+    depends_on: [V5-6]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Integration test proves a 2-node graph with one source missing still produces a result flagged is_stale=true"
+      - "no exception escapes the graph on partial data"
+
+  - id: V5-8
+    title: "Briefing writer pipeline (TradingAgents debate fork)"
+    status: PENDING
+    depends_on: [V5-7]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Integration tests assert: (a) exactly one atlas_briefings row per trading day after one run, (b) rerun updates in place not duplicates, (c) same data_as_of → identical key_signals/theses/conviction/model_used fields, (d) missing upstream source still produces a briefing with staleness flag"
+
+  - id: V5-9
+    title: "Global Intelligence API — 5 read-only routes"
+    status: PENDING
+    depends_on: [V5-8]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "scripts/check-api-standard.py green for all 5 new routes"
+      - "pytest tests/api/test_global_*.py -v green"
+      - "OpenAPI drift = 0 vs contracts/v5-api.openapi.yaml"
+
+  - id: V5-10
+    title: "Goldilocks analyst agent"
+    status: PENDING
+    depends_on: [V5-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Integration test on a real trading day with published Goldilocks ideas produces ≥5 real findings each with evidence pointing to both the Goldilocks source row and the matching RS row"
+      - "missing-ticker path logs a data gap without aborting the pipeline"
+
+  - id: V5-10a
+    title: "Investor persona agents (4 personas, ai-hedge-fund fork)"
+    status: PENDING
+    depends_on: [V5-10]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Integration test runs all 4 personas on a real trading day, asserts each persona writes ≥1 finding tagged with its persona identifier and full provenance, and confirms LLM calls pass through the cost ledger"
+
+  - id: V5-11
+    title: "Darwinian nightly accuracy scoring + specialist auto-spawn"
+    status: PENDING
+    depends_on: [V5-9]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Unit tests cover the full window-elapsed matrix (not-yet, just-elapsed, long-elapsed), the non-scored-agent skip, the 60-prediction rolling window, the holiday no-op, and the 3-errors-in-5-days specialist-spawn trigger"
+      - "pytest green"
+
+  - id: V5-12
+    title: "Darwinian daily weight adjustment"
+    status: PENDING
+    depends_on: [V5-11]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Unit tests cover each quartile, floor and ceiling clamps, even distribution tie-break, and holiday no-op"
+      - "DB CHECK constraint rejects any drift"
+      - "pytest green"
+
+  - id: V5-13
+    title: "Darwinian mutation runner (shadow-mode merge/revert)"
+    status: PENDING
+    depends_on: [V5-12]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Integration test drives one full merge path and one full revert path on real predictions in shadow mode"
+      - "advisory lock prevents a second concurrent cycle on the same agent"
+      - "mutation history persists the outcome"
+      - "pytest green"
+
+  - id: V5-14
+    title: "Pro shell /pro/global page"
+    status: PENDING
+    depends_on: [V5-9]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "Smoke test opens /pro/global against real API, asserts real numbers render in lakh/crore, dates render DD-MMM-YYYY IST, each panel has a visible data_as_of, and a forced single-panel failure degrades independently without crashing the page"
+
+  - id: V5-15
+    title: "Pro shell /pro/intelligence page"
+    status: PENDING
+    depends_on: [V5-5]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "Smoke test runs a real semantic query, asserts the top-k findings render with confidence + evidence + agent + timestamp, and asserts the empty-state message appears when min_confidence is set to 0.99 with no matches"
+
+  - id: V5-16
+    title: "V5 polish + 7-dimension quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V5-10, V5-10a, V5-13, V5-14, V5-15]
+    quality_targets:
+      devops: 80
+      docs: 80
+    punch_list:
+      - "All 7 quality dimensions ≥ 80%"
+      - "scripts/check-spec-coverage.py green"
+      - "scripts/check-api-standard.py green"
+      - "SC-001..SC-012 each have recorded evidence"
+      - "scripts/post-chunk.sh exits 0"
+      - "MEMORY.md project_v15_chunk_status.md shows V5-1..V5-16 (plus V5-10a) all DONE"
+
