@@ -18,7 +18,7 @@ import {
   type SimulationConfig,
 } from "@/lib/api-simulate";
 
-type Tab = "equity" | "mf" | "simulate";
+type Tab = "equity" | "mf" | "simulate" | "portfolio";
 
 type View =
   | { type: "sectors" }
@@ -114,6 +114,12 @@ export default function Home() {
               >
                 Simulate
               </button>
+              <a
+                href="/pro/portfolio"
+                className="px-3 py-1 text-xs font-medium transition-colors text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+              >
+                Portfolio
+              </a>
             </div>
 
             {/* Breadcrumb */}
