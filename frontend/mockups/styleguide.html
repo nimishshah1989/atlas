@@ -121,6 +121,31 @@
           </div>
         </div>
 
+        <!-- ═══ SVG icon library (reused by reference below) ═══ -->
+        <svg width="0" height="0" style="position:absolute">
+          <defs>
+            <symbol id="i-check"    viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-alert"    viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-warn"     viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+            <symbol id="i-info"     viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+            <symbol id="i-up"       viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-down"     viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-trend-up" viewBox="0 0 24 24"><path d="M23 6 13.5 15.5l-5-5L1 18M17 6h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-trend-dn" viewBox="0 0 24 24"><path d="M23 18 13.5 8.5l-5 5L1 6M17 18h6v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-flat"     viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+            <symbol id="i-shield"   viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+            <symbol id="i-target"   viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="currentColor"/></symbol>
+            <symbol id="i-pulse"    viewBox="0 0 24 24"><path d="M3 12h4l3-9 4 18 3-9h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-clock"    viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+            <symbol id="i-stale"    viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+            <symbol id="i-sparkle"  viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+            <symbol id="i-eye"      viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+            <symbol id="i-flag"     viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+            <symbol id="i-x"        viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+            <symbol id="i-arrow-r"  viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+          </defs>
+        </svg>
+
         <!-- ═══ 0. THE MOST IMPORTANT PRIMITIVE: explainability ═══ -->
         <section class="section">
           <div class="section__heading">
@@ -164,8 +189,8 @@
                 <text class="chart__axis" x="0" y="180">100</text>
                 <line class="chart__grid" x1="32" y1="180" x2="760" y2="180"/>
                 <path class="chart__line" stroke="#8A909C" stroke-dasharray="3 3" d="M32,180 L90,176 L150,168 L210,164 L270,156 L330,160 L390,148 L450,140 L510,136 L570,128 L630,126 L690,118 L750,116"/>
-                <path class="chart__line" stroke="#0E5A43" stroke-width="2" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50"/>
-                <path class="chart__area" fill="#0E5A43" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50 L750,180 Z"/>
+                <path class="chart__line" stroke="#1B3A8A" stroke-width="2" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50"/>
+                <path class="chart__area" fill="#1B3A8A" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50 L750,180 Z"/>
                 <text class="chart__axis" x="32" y="230">Apr &#39;25</text>
                 <text class="chart__axis" x="210" y="230">Jul</text>
                 <text class="chart__axis" x="390" y="230">Oct</text>
@@ -173,7 +198,7 @@
                 <text class="chart__axis" x="720" y="230">Apr</text>
               </svg>
               <div class="kit-row" style="margin-top:var(--space-3); font-size: var(--fs-xs); color: var(--text-secondary);">
-                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#0E5A43;"></span> HDFC Mid Cap Opps · +28.4%</span>
+                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#1B3A8A;"></span> HDFC Mid Cap Opps · +28.4%</span>
                 <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#8A909C;"></span> Nifty Midcap 150 TRI · +19.1%</span>
               </div>
             </div>
@@ -311,6 +336,88 @@ With the actual numbers plugged in:
           </div>
         </section>
 
+        <!-- ═══ 0.5 R / A / G signaling system ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Signals — red · amber · green</h2>
+            <div class="note">A first-class vocabulary. Every row, card, metric, and insight that
+              carries a judgment gets classified. Color is never the only signal — always paired
+              with an icon AND a label.</div>
+          </div>
+
+          <h6 style="margin-bottom: var(--space-3);">The atoms — dot, pill, flag card</h6>
+          <div class="card" style="margin-bottom: var(--space-5);"><div class="card__body">
+            <div style="display:grid; grid-template-columns: 200px 1fr; gap: var(--space-5) var(--space-6); align-items:center;">
+              <div class="eyebrow">Status dot</div>
+              <div class="kit-row" style="gap:var(--space-5);">
+                <span style="display:inline-flex; align-items:center; gap:8px;"><span class="status-dot status-dot--g"></span> Green · healthy</span>
+                <span style="display:inline-flex; align-items:center; gap:8px;"><span class="status-dot status-dot--a"></span> Amber · watch</span>
+                <span style="display:inline-flex; align-items:center; gap:8px;"><span class="status-dot status-dot--r"></span> Red · flagged</span>
+                <span style="display:inline-flex; align-items:center; gap:8px;"><span class="status-dot status-dot--n"></span> Neutral · no signal</span>
+              </div>
+
+              <div class="eyebrow">Status pill</div>
+              <div class="kit-row">
+                <span class="status-pill status-pill--g"><svg><use href="#i-check"/></svg> Healthy</span>
+                <span class="status-pill status-pill--g"><svg><use href="#i-trend-up"/></svg> Outperforming</span>
+                <span class="status-pill status-pill--a"><svg><use href="#i-warn"/></svg> Watch</span>
+                <span class="status-pill status-pill--a"><svg><use href="#i-stale"/></svg> Stale · 3d</span>
+                <span class="status-pill status-pill--r"><svg><use href="#i-alert"/></svg> Breach</span>
+                <span class="status-pill status-pill--r"><svg><use href="#i-trend-dn"/></svg> Drawdown</span>
+                <span class="status-pill status-pill--n"><svg><use href="#i-info"/></svg> Draft</span>
+              </div>
+
+              <div class="eyebrow">Quality grade</div>
+              <div class="kit-row">
+                <span class="status-pill status-pill--g"><svg><use href="#i-sparkle"/></svg> A+ · 94</span>
+                <span class="status-pill status-pill--g"><svg><use href="#i-check"/></svg> A · 87</span>
+                <span class="status-pill status-pill--a"><svg><use href="#i-warn"/></svg> B · 71</span>
+                <span class="status-pill status-pill--r"><svg><use href="#i-alert"/></svg> C · 54</span>
+              </div>
+            </div>
+          </div></div>
+
+          <h6 style="margin-bottom: var(--space-3);">Signal stream — flag cards</h6>
+          <div class="stack-3">
+            <div class="flag-card flag-card--r">
+              <div class="flag-card__icon"><svg><use href="#i-alert"/></svg></div>
+              <div class="flag-card__body">
+                <div class="flag-card__title">
+                  DSP Mid Cap drew down 4.1% this week
+                  <span class="status-pill status-pill--r" style="margin-left:auto;"><svg><use href="#i-trend-dn"/></svg> −4.1%</span>
+                </div>
+                <div class="flag-card__meta">
+                  Held in <strong>3 client portfolios</strong> · peer avg −1.2% · <a href="#">Open fund →</a>
+                </div>
+              </div>
+            </div>
+            <div class="flag-card flag-card--a">
+              <div class="flag-card__icon"><svg><use href="#i-stale"/></svg></div>
+              <div class="flag-card__body">
+                <div class="flag-card__title">
+                  NAV data for 2 funds is 3 days stale
+                  <span class="status-pill status-pill--a" style="margin-left:auto;"><svg><use href="#i-clock"/></svg> Stale</span>
+                </div>
+                <div class="flag-card__meta">
+                  AMFI feed delay · last refresh 12 Apr 16:45 · <a href="#">Show affected →</a>
+                </div>
+              </div>
+            </div>
+            <div class="flag-card flag-card--g">
+              <div class="flag-card__icon"><svg><use href="#i-sparkle"/></svg></div>
+              <div class="flag-card__body">
+                <div class="flag-card__title">
+                  HDFC Mid Cap quality score improved 4 months in a row
+                  <span class="status-pill status-pill--g" style="margin-left:auto;"><svg><use href="#i-trend-up"/></svg> +6 pts</span>
+                </div>
+                <div class="flag-card__meta">
+                  Concentration down to 34% · low-ROCE exposure at 5Y low · <a href="#">See why →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ═══ 1. Color ═══ -->
         <section class="section">
           <div class="section__heading">
@@ -329,24 +436,24 @@ With the actual numbers plugged in:
             <div class="swatch"><div class="swatch__color" style="background:#8A909C"></div><div class="swatch__meta"><div class="name">text-tertiary</div><div class="val">#8A909C</div></div></div>
           </div>
 
-          <h6 style="margin-bottom: var(--space-3);">Accent (used sparingly)</h6>
+          <h6 style="margin-bottom: var(--space-3);">Accent — institutional blue (brand + interaction)</h6>
           <div class="swatch-grid" style="margin-bottom: var(--space-5);">
-            <div class="swatch"><div class="swatch__color" style="background:#063024"></div><div class="swatch__meta"><div class="name">accent-900</div><div class="val">#063024</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#0E5A43"></div><div class="swatch__meta"><div class="name">accent-700 ◆</div><div class="val">#0E5A43</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#1D9E75"></div><div class="swatch__meta"><div class="name">accent-500</div><div class="val">#1D9E75</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#9BD4BD"></div><div class="swatch__meta"><div class="name">accent-300</div><div class="val">#9BD4BD</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#E6F2ED"></div><div class="swatch__meta"><div class="name">accent-100</div><div class="val">#E6F2ED</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#0B1F4D"></div><div class="swatch__meta"><div class="name">accent-900</div><div class="val">#0B1F4D</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#1B3A8A"></div><div class="swatch__meta"><div class="name">accent-700 ◆</div><div class="val">#1B3A8A</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#3457C1"></div><div class="swatch__meta"><div class="name">accent-500</div><div class="val">#3457C1</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#B0BEE5"></div><div class="swatch__meta"><div class="name">accent-300</div><div class="val">#B0BEE5</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#EBEFF9"></div><div class="swatch__meta"><div class="name">accent-100</div><div class="val">#EBEFF9</div></div></div>
             <div class="swatch"></div>
           </div>
 
-          <h6 style="margin-bottom: var(--space-3);">Semantic (signed deltas + states only)</h6>
+          <h6 style="margin-bottom: var(--space-3);">R / A / G — signaling (never color alone — pair with icon + label)</h6>
           <div class="swatch-grid">
-            <div class="swatch"><div class="swatch__color" style="background:#0B7A4E"></div><div class="swatch__meta"><div class="name">pos-700</div><div class="val">gains</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#B63030"></div><div class="swatch__meta"><div class="name">neg-700</div><div class="val">losses</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#8A5A0C"></div><div class="swatch__meta"><div class="name">warn-700</div><div class="val">stale / flag</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#1E4E8C"></div><div class="swatch__meta"><div class="name">info-700</div><div class="val">info</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#E4F5EC"></div><div class="swatch__meta"><div class="name">pos-100</div><div class="val">badge bg</div></div></div>
-            <div class="swatch"><div class="swatch__color" style="background:#FBE9E9"></div><div class="swatch__meta"><div class="name">neg-100</div><div class="val">badge bg</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#10A368"></div><div class="swatch__meta"><div class="name">rag-green-500</div><div class="val">healthy</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#D9871A"></div><div class="swatch__meta"><div class="name">rag-amber-500</div><div class="val">watch</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#DB4343"></div><div class="swatch__meta"><div class="name">rag-red-500</div><div class="val">flagged</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#E4F5EC"></div><div class="swatch__meta"><div class="name">rag-green-100</div><div class="val">pill bg</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#FBF1DC"></div><div class="swatch__meta"><div class="name">rag-amber-100</div><div class="val">pill bg</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#FBE9E9"></div><div class="swatch__meta"><div class="name">rag-red-100</div><div class="val">pill bg</div></div></div>
           </div>
         </section>
 
@@ -439,18 +546,21 @@ With the actual numbers plugged in:
             <table class="table">
               <thead>
                 <tr>
+                  <th class="status"></th>
                   <th>Fund</th>
                   <th>Category</th>
                   <th class="num">AUM (₹ Cr)</th>
                   <th class="num">1Y</th>
                   <th class="num">3Y CAGR</th>
                   <th class="num">Sharpe</th>
-                  <th class="num">Exp. ratio</th>
+                  <th class="num">Exp.</th>
                   <th>Quality</th>
+                  <th>Flags</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
+                  <td class="status"><span class="status-dot status-dot--g"></span></td>
                   <td class="primary-cell">HDFC Mid Cap Opportunities<div class="meta">Direct · Growth · Mid Cap</div></td>
                   <td><span class="badge badge--neutral">Mid cap</span></td>
                   <td class="num">78,412</td>
@@ -458,9 +568,11 @@ With the actual numbers plugged in:
                   <td class="num">22.1%</td>
                   <td class="num">1.42</td>
                   <td class="num">0.76%</td>
-                  <td><span class="badge badge--accent">A+ · 94</span></td>
+                  <td><span class="status-pill status-pill--g"><svg><use href="#i-sparkle"/></svg> A+ · 94</span></td>
+                  <td><span class="icon icon--g" title="Outperforming benchmark"><svg><use href="#i-trend-up"/></svg></span></td>
                 </tr>
                 <tr>
+                  <td class="status"><span class="status-dot status-dot--g"></span></td>
                   <td class="primary-cell">Kotak Emerging Equity<div class="meta">Direct · Growth · Mid Cap</div></td>
                   <td><span class="badge badge--neutral">Mid cap</span></td>
                   <td class="num">52,018</td>
@@ -468,9 +580,11 @@ With the actual numbers plugged in:
                   <td class="num">19.8%</td>
                   <td class="num">1.31</td>
                   <td class="num">0.58%</td>
-                  <td><span class="badge badge--accent">A · 89</span></td>
+                  <td><span class="status-pill status-pill--g"><svg><use href="#i-check"/></svg> A · 89</span></td>
+                  <td><span class="icon icon--g"><svg><use href="#i-trend-up"/></svg></span></td>
                 </tr>
                 <tr>
+                  <td class="status"><span class="status-dot status-dot--g"></span></td>
                   <td class="primary-cell">Nippon India Small Cap<div class="meta">Direct · Growth · Small Cap</div></td>
                   <td><span class="badge badge--neutral">Small cap</span></td>
                   <td class="num">64,889</td>
@@ -478,9 +592,14 @@ With the actual numbers plugged in:
                   <td class="num">26.4%</td>
                   <td class="num">1.18</td>
                   <td class="num">0.78%</td>
-                  <td><span class="badge badge--accent">A · 87</span></td>
+                  <td><span class="status-pill status-pill--g"><svg><use href="#i-check"/></svg> A · 87</span></td>
+                  <td style="display:flex; gap:6px;">
+                    <span class="icon icon--g"><svg><use href="#i-trend-up"/></svg></span>
+                    <span class="icon icon--a" title="High volatility"><svg><use href="#i-shield"/></svg></span>
+                  </td>
                 </tr>
                 <tr>
+                  <td class="status"><span class="status-dot status-dot--g"></span></td>
                   <td class="primary-cell">Parag Parikh Flexi Cap<div class="meta">Direct · Growth · Flexi Cap</div></td>
                   <td><span class="badge badge--neutral">Flexi cap</span></td>
                   <td class="num">89,201</td>
@@ -488,9 +607,11 @@ With the actual numbers plugged in:
                   <td class="num">20.4%</td>
                   <td class="num">1.51</td>
                   <td class="num">0.63%</td>
-                  <td><span class="badge badge--accent">A+ · 96</span></td>
+                  <td><span class="status-pill status-pill--g"><svg><use href="#i-sparkle"/></svg> A+ · 96</span></td>
+                  <td><span class="icon icon--g"><svg><use href="#i-trend-up"/></svg></span></td>
                 </tr>
-                <tr>
+                <tr class="row--a">
+                  <td class="status"><span class="status-dot status-dot--a"></span></td>
                   <td class="primary-cell">Axis Midcap<div class="meta">Direct · Growth · Mid Cap</div></td>
                   <td><span class="badge badge--neutral">Mid cap</span></td>
                   <td class="num">31,402</td>
@@ -498,9 +619,14 @@ With the actual numbers plugged in:
                   <td class="num">14.9%</td>
                   <td class="num">0.98</td>
                   <td class="num">0.59%</td>
-                  <td><span class="badge badge--warn">B · 71</span></td>
+                  <td><span class="status-pill status-pill--a"><svg><use href="#i-warn"/></svg> B · 71</span></td>
+                  <td style="display:flex; gap:6px;">
+                    <span class="icon icon--a" title="Quality slipping"><svg><use href="#i-trend-dn"/></svg></span>
+                    <span class="icon icon--a" title="Style drift"><svg><use href="#i-flag"/></svg></span>
+                  </td>
                 </tr>
-                <tr>
+                <tr class="row--r">
+                  <td class="status"><span class="status-dot status-dot--r"></span></td>
                   <td class="primary-cell">DSP Mid Cap<div class="meta">Direct · Growth · Mid Cap</div></td>
                   <td><span class="badge badge--neutral">Mid cap</span></td>
                   <td class="num">18,247</td>
@@ -508,9 +634,14 @@ With the actual numbers plugged in:
                   <td class="num">11.4%</td>
                   <td class="num">0.72</td>
                   <td class="num">0.82%</td>
-                  <td><span class="badge badge--warn">B− · 64</span></td>
+                  <td><span class="status-pill status-pill--r"><svg><use href="#i-alert"/></svg> C · 54</span></td>
+                  <td style="display:flex; gap:6px;">
+                    <span class="icon icon--r" title="Drawdown breach"><svg><use href="#i-trend-dn"/></svg></span>
+                    <span class="icon icon--r" title="Held in 3 client portfolios"><svg><use href="#i-alert"/></svg></span>
+                  </td>
                 </tr>
                 <tr>
+                  <td class="status"><span class="status-dot status-dot--g"></span></td>
                   <td class="primary-cell">SBI Small Cap<div class="meta">Direct · Growth · Small Cap</div></td>
                   <td><span class="badge badge--neutral">Small cap</span></td>
                   <td class="num">27,889</td>
@@ -518,7 +649,11 @@ With the actual numbers plugged in:
                   <td class="num">21.8%</td>
                   <td class="num">1.09</td>
                   <td class="num">0.69%</td>
-                  <td><span class="badge badge--accent">A · 85</span></td>
+                  <td><span class="status-pill status-pill--g"><svg><use href="#i-check"/></svg> A · 85</span></td>
+                  <td style="display:flex; gap:6px;">
+                    <span class="icon icon--g"><svg><use href="#i-trend-up"/></svg></span>
+                    <span class="icon icon--a" title="NAV stale 3d"><svg><use href="#i-stale"/></svg></span>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -562,9 +697,9 @@ With the actual numbers plugged in:
                   <!-- Benchmark (Nifty Midcap 150) — muted -->
                   <path class="chart__line" stroke="#8A909C" stroke-dasharray="3 3" d="M32,192 L90,188 L150,180 L210,176 L270,168 L330,172 L390,160 L450,152 L510,148 L570,140 L630,138 L690,130 L750,128"/>
                   <!-- Fund line — accent -->
-                  <path class="chart__line" stroke="#0E5A43" stroke-width="2" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62"/>
+                  <path class="chart__line" stroke="#1B3A8A" stroke-width="2" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62"/>
                   <!-- Area fill -->
-                  <path class="chart__area" fill="#0E5A43" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62 L750,192 Z"/>
+                  <path class="chart__area" fill="#1B3A8A" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62 L750,192 Z"/>
                   <!-- X axis -->
                   <text class="chart__axis" x="32" y="258">Apr &#39;25</text>
                   <text class="chart__axis" x="210" y="258">Jul</text>
@@ -574,7 +709,7 @@ With the actual numbers plugged in:
                   <!-- Legend row under chart -->
                 </svg>
                 <div class="kit-row" style="margin-top: var(--space-4); font-size: var(--fs-xs); color: var(--text-secondary);">
-                  <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#0E5A43;"></span> HDFC Mid Cap Opps · +28.4%</span>
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#1B3A8A;"></span> HDFC Mid Cap Opps · +28.4%</span>
                   <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#8A909C; border-top:2px dashed;"></span> Nifty Midcap 150 TRI · +19.1%</span>
                   <span style="margin-left:auto;" class="eyebrow">source: jip · rebased 01 apr 2025 = 100</span>
                 </div>

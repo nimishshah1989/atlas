@@ -22,10 +22,13 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+_JEA = text("'[]'::jsonb")  # JSONB empty-array server default
 
 
 class Base(DeclarativeBase):
@@ -452,4 +455,46 @@ class AtlasCostLedger(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+
+# --- ATLAS Briefings (V5-8) ---
+class AtlasBriefing(Base):
+    """LLM-generated morning briefings — one per trading day per scope."""
+
+    __tablename__ = "atlas_briefings"
+    __table_args__ = (
+        Index(
+            "uq_briefings_date_scope",
+            "date",
+            "scope",
+            text("COALESCE(scope_key, '__null__')"),
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(20), nullable=False)
+    scope_key: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    headline: Mapped[str] = mapped_column(Text, nullable=False)
+    narrative: Mapped[str] = mapped_column(Text, nullable=False)
+    key_signals: Mapped[Any] = mapped_column(JSONB, nullable=True, server_default=_JEA)
+    theses: Mapped[Any] = mapped_column(JSONB, nullable=True, server_default=_JEA)
+    patterns: Mapped[Any] = mapped_column(JSONB, nullable=True, server_default=_JEA)
+    india_implication: Mapped[str | None] = mapped_column(Text, nullable=True)
+    risk_scenario: Mapped[str | None] = mapped_column(Text, nullable=True)
+    conviction: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    model_used: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    staleness_flags: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )

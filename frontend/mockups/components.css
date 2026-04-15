@@ -378,6 +378,122 @@
 .atlas-insight__why a { color: var(--text-tertiary); border-bottom: 1px dotted var(--text-tertiary); }
 .atlas-insight__actions { display: flex; gap: var(--space-1); }
 
+/* ═══ R / A / G signaling — first-class status vocabulary ═════════════
+ * Every piece of data in ATLAS that carries a judgment gets classified
+ * R / A / G. Color is never the only signal — pair with icon AND label.
+ */
+
+/* Status dot — the atomic signaling unit. Use in table rows, lists,
+ * metric labels, anywhere a quick traffic-light read is useful.    */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+.status-dot--g { background: var(--rag-green-500); box-shadow: 0 0 0 3px var(--rag-green-100); }
+.status-dot--a { background: var(--rag-amber-500); box-shadow: 0 0 0 3px var(--rag-amber-100); }
+.status-dot--r { background: var(--rag-red-500);   box-shadow: 0 0 0 3px var(--rag-red-100); }
+.status-dot--n { background: var(--text-tertiary); box-shadow: 0 0 0 3px var(--bg-inset); }
+
+/* Status pill — icon + label + color. Use when rows/cards need more than a dot. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.status-pill svg { width: 12px; height: 12px; flex-shrink: 0; }
+.status-pill--g { background: var(--rag-green-100); color: var(--rag-green-900); }
+.status-pill--a { background: var(--rag-amber-100); color: var(--rag-amber-900); }
+.status-pill--r { background: var(--rag-red-100);   color: var(--rag-red-900); }
+.status-pill--n { background: var(--bg-inset);      color: var(--text-secondary); }
+
+/* Card with a prominent left-edge R/A/G flag. Use for alerts, signals
+ * in the insight panel, rows in a signal stream. */
+.flag-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: var(--border-card);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+}
+.flag-card--g { border-left-color: var(--rag-green-500); }
+.flag-card--a { border-left-color: var(--rag-amber-500); }
+.flag-card--r { border-left-color: var(--rag-red-500); }
+.flag-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.flag-card__icon svg { width: 16px; height: 16px; }
+.flag-card--g .flag-card__icon { background: var(--rag-green-100); color: var(--rag-green-700); }
+.flag-card--a .flag-card__icon { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+.flag-card--r .flag-card__icon { background: var(--rag-red-100);   color: var(--rag-red-700); }
+.flag-card__body { flex: 1; min-width: 0; }
+.flag-card__title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.flag-card__meta {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+}
+.flag-card__meta strong { color: var(--text-secondary); font-weight: var(--fw-medium); }
+
+/* Inline icon helper — for icons embedded in body text / table cells.
+ * Inherits color from parent by default; add .icon--g/a/r to colorize. */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: currentColor;
+  flex-shrink: 0;
+  vertical-align: -2px;
+}
+.icon svg { width: 100%; height: 100%; }
+.icon--lg  { width: 18px; height: 18px; }
+.icon--xl  { width: 24px; height: 24px; }
+.icon--g   { color: var(--rag-green-700); }
+.icon--a   { color: var(--rag-amber-700); }
+.icon--r   { color: var(--rag-red-700); }
+.icon--blue{ color: var(--accent-700); }
+.icon--mute{ color: var(--text-tertiary); }
+
+/* Table status column — first column gets a narrow fixed-width slot
+ * for the R/A/G dot + optional mini icon. */
+.table td.status, .table th.status { width: 42px; padding-right: 0; }
+.table td.status .status-dot { vertical-align: middle; }
+
+/* Row-level R/A/G background wash — used sparingly, for the signal
+ * stream / watchlist where the whole row carries the verdict. */
+.table tr.row--r > td { background: #FCF5F5; }
+.table tr.row--a > td { background: #FBF7EC; }
+.table tr.row--g > td { background: #F3FAF6; }
+.table tr.row--r:hover > td { background: #F9EBEB; }
+.table tr.row--a:hover > td { background: #F6EED7; }
+.table tr.row--g:hover > td { background: #E8F4EE; }
+
 /* ═══ Reading — the most important primitive ══════════════════════════
  * Every chart / table / metric in the product is wrapped in a `.reading`.
  * This is the "sentient analyst" lever: every number has a verdict, an

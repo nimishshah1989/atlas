@@ -19,13 +19,13 @@
   --bg-surface-alt:   #FBFBFC;  /* zebra stripes, subtle variants */
   --bg-inset:         #F2F4F7;  /* inset wells, code, quiet backgrounds */
   --bg-hover:         #F4F6F8;  /* row + button hover */
-  --bg-selected:      #EDF2F0;  /* selected row tint (teal-washed) */
+  --bg-selected:      #EBEFF9;  /* selected row tint (navy-washed) */
 
   /* ─── Borders (no shadows anywhere — these do the lifting) ──────────── */
   --border-subtle:    #EEF0F3;  /* barely-there, internal card divisions */
   --border-default:   #E3E6EB;  /* default card + table borders */
   --border-strong:    #CDD2DA;  /* emphasized edges, active inputs */
-  --border-focus:     #0E5A43;  /* focus ring, matches accent */
+  --border-focus:     #1B3A8A;  /* focus ring, matches accent */
 
   /* ─── Text ──────────────────────────────────────────────────────────── */
   --text-primary:     #1A1F2C;  /* body, headlines — charcoal with a hint of blue */
@@ -33,32 +33,58 @@
   --text-tertiary:    #8A909C;  /* captions, meta, timestamps */
   --text-disabled:    #B4B9C2;
   --text-inverse:     #FFFFFF;
-  --text-accent:      #0E5A43;  /* links, accent text */
+  --text-accent:      #1B3A8A;  /* links, accent text */
 
-  /* ─── Accent (ONE color, used sparingly) ────────────────────────────── */
-  --accent-900:       #063024;  /* darkest, text on light */
-  --accent-700:       #0E5A43;  /* primary — this is THE brand color */
-  --accent-500:       #1D9E75;  /* hover, interactive */
-  --accent-300:       #9BD4BD;  /* borders, chart fills */
-  --accent-100:       #E6F2ED;  /* selection tints, badge backgrounds */
+  /* ─── Accent: royal navy (institutional, deeper than "SaaS blue")
+   * Reference: think Addepar / private bank / research house, not startup.
+   * Brand dot, buttons, focus ring, sidebar active state. One hue, five tiers.
+   */
+  --accent-900:       #0B1F4D;  /* darkest — headings emphasis, dark surfaces */
+  --accent-700:       #1B3A8A;  /* primary — THE brand color (buttons, brand dot) */
+  --accent-500:       #3457C1;  /* hover / interactive */
+  --accent-300:       #B0BEE5;  /* borders, chart fills */
+  --accent-100:       #EBEFF9;  /* selection tints, badge backgrounds */
 
-  /* ─── Semantic (signed financial values only) ───────────────────────── */
-  --pos-700:          #0B7A4E;  /* gains text */
-  --pos-500:          #10A368;  /* gains chart */
-  --pos-100:          #E4F5EC;  /* gains badge bg */
-  --neg-700:          #B63030;  /* losses text */
-  --neg-500:          #DB4343;  /* losses chart */
-  --neg-100:          #FBE9E9;  /* losses badge bg */
-  --warn-700:         #8A5A0C;  /* stale data, flags */
-  --warn-500:         #C28A1C;
-  --warn-100:         #FAF0DB;
-  --info-700:         #1E4E8C;
-  --info-100:         #E4EEF9;
+  /* ─── R / A / G — first-class signaling system ──────────────────────────
+   * These are NOT decoration. Every row, card, metric, and insight gets
+   * classified R / A / G where it has a signal. Use with an icon AND a
+   * label, never color alone (accessibility + redundancy). */
+  --rag-green-900:    #06502E;  /* text on light */
+  --rag-green-700:    #0B7A4E;  /* primary green */
+  --rag-green-500:    #10A368;  /* charts, chart lines, large surfaces */
+  --rag-green-300:    #7FD4AC;  /* borders */
+  --rag-green-100:    #E4F5EC;  /* pill backgrounds, row tints */
+
+  --rag-amber-900:    #5C3A04;
+  --rag-amber-700:    #9A6410;  /* primary amber */
+  --rag-amber-500:    #D9871A;  /* brighter for charts, dots */
+  --rag-amber-300:    #F3C17D;
+  --rag-amber-100:    #FBF1DC;
+
+  --rag-red-900:      #6E0E0E;
+  --rag-red-700:      #B63030;  /* primary red */
+  --rag-red-500:      #DB4343;
+  --rag-red-300:      #F0A0A0;
+  --rag-red-100:      #FBE9E9;
+
+  /* Legacy semantic aliases kept for back-compat with existing classes.
+   * New code should reference --rag-*. */
+  --pos-700: var(--rag-green-700);
+  --pos-500: var(--rag-green-500);
+  --pos-100: var(--rag-green-100);
+  --neg-700: var(--rag-red-700);
+  --neg-500: var(--rag-red-500);
+  --neg-100: var(--rag-red-100);
+  --warn-700: var(--rag-amber-700);
+  --warn-500: var(--rag-amber-500);
+  --warn-100: var(--rag-amber-100);
+  --info-700:         #1B3A8A;
+  --info-100:         #EBEFF9;
 
   /* ─── Chart palette (6 categorical, chosen for white bg, no neon) ──── */
-  --chart-1: #0E5A43;   /* accent / primary series */
-  --chart-2: #1E4E8C;   /* secondary blue */
-  --chart-3: #8A5A0C;   /* ochre */
+  --chart-1: #1B3A8A;   /* accent navy / primary series */
+  --chart-2: #0B7A4E;   /* deep green */
+  --chart-3: #9A6410;   /* ochre / amber */
   --chart-4: #5B3A8A;   /* muted violet */
   --chart-5: #A84A4A;   /* clay red */
   --chart-6: #3D6B7A;   /* slate teal */

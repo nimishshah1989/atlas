@@ -429,4 +429,4 @@ class TestV52AlembicMigration:
         script = ScriptDirectory.from_config(cfg)
         heads = script.get_heads()
         assert len(heads) == 1, f"Expected 1 alembic head, got: {heads}"
-        assert heads[0] == "b1c2d3e4f5g6", f"Expected head b1c2d3e4f5g6, got: {heads[0]}"
+        assert heads[0] == "g6b7c8d9e0f1", f"Expected head g6b7c8d9e0f1, got: {heads[0]}"
