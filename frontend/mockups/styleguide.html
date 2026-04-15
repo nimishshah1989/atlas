@@ -919,6 +919,17 @@ With the actual numbers plugged in:
                     <circle cx="830" cy="80"  r="36" fill="none" stroke="#134F5C" stroke-width="2"/>
                     <circle cx="830" cy="80"  r="40" fill="none" stroke="#134F5C" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
                   </g>
+                  <!-- BENCHMARK ANCHOR — Nifty Midcap 150 TRI · Pattern C reference marker
+                       Position: 3Y CAGR ≈19.1% → x≈669; Sharpe ≈0.85 → y≈168
+                       Diamond shape = passive/index. Grey ring = reference, not a fund. -->
+                  <g>
+                    <!-- outer dashed ring to distinguish from fund bubbles -->
+                    <circle cx="669" cy="168" r="22" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+                    <!-- inner fill — grey, clearly passive -->
+                    <polygon points="669,148 689,168 669,188 649,168" fill="#E3E6EB" stroke="#8A909C" stroke-width="1.5"/>
+                    <text x="695" y="164" font-size="10" font-family="Inter" fill="#565E6E" font-weight="600">Nifty MC 150</text>
+                    <text x="695" y="176" font-size="9" font-family="Inter" fill="#8A909C">+19.1% · Sharpe 0.85</text>
+                  </g>
                   <!-- Labels on standouts — colored by the bubble they annotate -->
                   <g class="chart__label">
                     <text x="850"  y="44"  font-weight="600" fill="#134F5C">HDFC Mid Cap Opps  ◆ yours</text>
@@ -933,6 +944,7 @@ With the actual numbers plugged in:
                   <span class="chart__legend-item"><span class="chart__legend-swatch" style="background:#B4B9C2;"></span>Middling (noise)</span>
                   <span class="chart__legend-item"><span class="chart__legend-swatch" style="background:#DB4343;"></span>Low on both</span>
                   <span class="chart__legend-item"><span class="chart__legend-swatch" style="background:transparent; border:2px solid #134F5C;"></span>Your fund</span>
+                  <span class="chart__legend-item"><span style="display:inline-block; width:10px; height:10px; background:#E3E6EB; border:1.5px solid #8A909C; transform:rotate(45deg); margin-right:4px;"></span>Nifty MC 150 (benchmark)</span>
                   <span style="margin-left:auto; font-size:10px; color:var(--text-tertiary);">bubble area ∝ AUM · 142 funds</span>
                 </div>
               </div>
@@ -951,7 +963,9 @@ With the actual numbers plugged in:
             <h2>Advanced visualizations</h2>
             <div class="note">Not all data is a line chart. These are the creative/advanced viz patterns
               we'll use for the hard questions. Every one carries the reading primitive in production.
-              Each card is tagged with the library we'll ship it with.</div>
+              Each card is tagged with the library we'll ship it with.
+              <strong>Design law:</strong> every quantitative visual shows fund vs benchmark.
+              Dashed grey line = benchmark (Nifty TRI). Solid line / bar / bubble = fund. Alpha labeled in green/red.</div>
           </div>
 
           <div class="card-grid">
@@ -1194,6 +1208,12 @@ With the actual numbers plugged in:
                   <!-- Fund 28.4 — green because fund > bench (alpha delivered) -->
                   <rect x="500" y="25" width="40" height="175" fill="#10A368"/>
                   <text x="520" y="17" text-anchor="middle" font-size="10" font-weight="600" fill="#0B7A4E">28.4</text>
+                  <!-- Alpha gap annotation: dashed line at benchmark level (y=90) across fund bar -->
+                  <line x1="490" y1="90" x2="550" y2="90" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                  <text x="555" y="94" font-size="9" font-family="Inter" fill="#8A909C">bm 19.1</text>
+                  <!-- Alpha label: the gap from 90 to 25 -->
+                  <line x1="548" y1="28" x2="548" y2="88" stroke="#0B7A4E" stroke-width="1"/>
+                  <text x="552" y="58" font-size="9" font-family="Inter" fill="#0B7A4E" font-weight="600">+9.3pp α</text>
                 </svg>
               </div>
               <div class="verdict-strip">
@@ -1203,86 +1223,284 @@ With the actual numbers plugged in:
               </div>
             </div>
 
-            <!-- SMALL MULTIPLES — grid of sparklines -->
+            <!-- SMALL MULTIPLES — grid of sparklines + benchmark overlay -->
             <div class="card card--lg span-12">
               <div class="card__header">
                 <div class="card__header-group">
                   <div class="card__title"><svg><use href="#i-layers"/></svg> Small multiples · 12 funds at a glance</div>
-                  <div class="card__subtitle">Rebased NAV · 12 months · identical y-axis</div>
+                  <div class="card__subtitle">Rebased NAV · 12 months · identical y-axis · vs Nifty Midcap 150 TRI (+19.1%)</div>
                 </div>
-                <span class="viz-lib">visx / Recharts</span>
+                <div style="display:flex; align-items:center; gap:var(--space-4);">
+                  <!-- Micro-legend — always rendered on every small-multiples card -->
+                  <div style="display:flex; gap:var(--space-4); font-size:10px; color:var(--text-secondary); align-items:center;">
+                    <span style="display:inline-flex; align-items:center; gap:5px;">
+                      <svg width="18" height="6" style="overflow:visible;"><line x1="0" y1="3" x2="18" y2="3" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                      Fund
+                    </span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">
+                      <svg width="18" height="6" style="overflow:visible;"><line x1="0" y1="3" x2="18" y2="3" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/></svg>
+                      Nifty MC 150
+                    </span>
+                  </div>
+                  <span class="viz-lib">visx / Recharts</span>
+                </div>
               </div>
               <div class="card__body" style="padding:var(--space-3);">
                 <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:var(--space-3);">
-                  <!-- 12 sparkline tiles -->
+                  <!-- 12 sparkline tiles — each tile has fund line (solid) + benchmark (dashed grey) + alpha label -->
+                  <!-- Benchmark path constant across all tiles: Nifty MC 150 +19.1%
+                       SVG coords: y=32 start → y=13 end (higher = lower return) -->
+
+                  <!-- GREEN tiles: outperforming benchmark by >2pp -->
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">HDFC Mid Cap</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+28.4%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,34 L10,32 L20,28 L30,26 L40,22 L50,20 L60,14 L70,18 L80,12 L90,8 L100,5 L120,2" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+28.4%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+9.3pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,34 L10,32 L20,28 L30,26 L40,22 L50,20 L60,14 L70,18 L80,12 L90,8 L100,5 L120,2" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Kotak Emerging</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+24.9%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,34 L10,31 L20,29 L30,24 L40,23 L50,19 L60,17 L70,20 L80,16 L90,11 L100,9 L120,6" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+24.9%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+5.8pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,34 L10,31 L20,29 L30,24 L40,23 L50,19 L60,17 L70,20 L80,16 L90,11 L100,9 L120,6" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Nippon Sm Cap</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+31.2%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,36 L10,33 L20,28 L30,31 L40,22 L50,14 L60,18 L70,11 L80,15 L90,7 L100,4 L120,1" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+31.2%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+12.1pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,36 L10,33 L20,28 L30,31 L40,22 L50,14 L60,18 L70,11 L80,15 L90,7 L100,4 L120,1" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Parag Parikh FC</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+21.7%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,34 L10,33 L20,30 L30,29 L40,25 L50,22 L60,19 L70,17 L80,15 L90,12 L100,10 L120,8" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+21.7%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+2.6pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,34 L10,33 L20,30 L30,29 L40,25 L50,22 L60,19 L70,17 L80,15 L90,12 L100,10 L120,8" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">SBI Small Cap</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+22.6%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,36 L10,34 L20,28 L30,25 L40,27 L50,20 L60,23 L70,15 L80,18 L90,12 L100,10 L120,7" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
-                  </div>
-                  <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
-                    <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Mirae LC</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+16.2%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,34 L10,34 L20,32 L30,30 L40,28 L50,27 L60,24 L70,22 L80,19 L90,17 L100,14 L120,12" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
-                  </div>
-                  <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
-                    <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Motilal MC</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+19.8%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,36 L10,32 L20,30 L30,26 L40,24 L50,22 L60,18 L70,20 L80,16 L90,13 L100,11 L120,9" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+22.6%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+3.5pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,36 L10,34 L20,28 L30,25 L40,27 L50,20 L60,23 L70,15 L80,18 L90,12 L100,10 L120,7" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:4px; background:var(--bg-surface);">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Quant Sm Cap</div>
-                    <div style="font-size:10px; color:var(--pos-700); font-variant-numeric:tabular-nums;">+34.1%</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,38 L10,34 L20,36 L30,28 L40,30 L50,20 L60,22 L70,12 L80,16 L90,4 L100,8 L120,0" fill="none" stroke="#0B7A4E" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+34.1%</div>
+                      <div style="font-size:9px; color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+15.0pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,38 L10,34 L20,36 L30,28 L40,30 L50,20 L60,22 L70,12 L80,16 L90,4 L100,8 L120,0" fill="none" stroke="#0B7A4E" stroke-width="1.5"/>
+                    </svg>
                   </div>
-                  <!-- amber row -->
+
+                  <!-- AMBER tiles: within ±2pp of benchmark — a decision is needed -->
+                  <div style="padding:10px; border:1px solid var(--rag-amber-300); border-radius:4px; background:#FBF7EC;">
+                    <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Motilal MC</div>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-amber-700); font-variant-numeric:tabular-nums;">+19.8%</div>
+                      <div style="font-size:9px; color:var(--rag-amber-700); font-variant-numeric:tabular-nums;">+0.7pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,36 L10,32 L20,30 L30,26 L40,24 L50,22 L60,18 L70,20 L80,16 L90,13 L100,12 L120,11" fill="none" stroke="#9A6410" stroke-width="1.5"/>
+                    </svg>
+                  </div>
                   <div style="padding:10px; border:1px solid var(--rag-amber-300); border-radius:4px; background:#FBF7EC;">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Axis Midcap</div>
-                    <div style="font-size:10px; color:var(--rag-amber-700); font-variant-numeric:tabular-nums;">+18.3% ▼</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,34 L10,30 L20,28 L30,22 L40,18 L50,15 L60,18 L70,20 L80,19 L90,21 L100,23 L120,24" fill="none" stroke="#9A6410" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-amber-700); font-variant-numeric:tabular-nums;">+18.3%</div>
+                      <div style="font-size:9px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−0.8pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,34 L10,30 L20,28 L30,22 L40,18 L50,15 L60,18 L70,20 L80,19 L90,21 L100,23 L120,24" fill="none" stroke="#9A6410" stroke-width="1.5"/>
+                    </svg>
                   </div>
-                  <div style="padding:10px; border:1px solid var(--rag-amber-300); border-radius:4px; background:#FBF7EC;">
+                  <!-- Mirae underperforming — fund line converges below benchmark line, signal = red -->
+                  <div style="padding:10px; border:1px solid var(--rag-red-300); border-radius:4px; background:#FCF5F5;">
+                    <div style="font-size:10px; font-weight:600; color:var(--text-primary);">Mirae LC</div>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">+16.2%</div>
+                      <div style="font-size:9px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−2.9pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <!-- benchmark sits above fund line — fund is losing to index -->
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <path d="M0,34 L10,34 L20,32 L30,30 L40,28 L50,27 L60,24 L70,22 L80,20 L90,18 L100,16 L120,16" fill="none" stroke="#B63030" stroke-width="1.5"/>
+                    </svg>
+                  </div>
+
+                  <!-- RED tiles: underperforming benchmark by >5pp or negative return -->
+                  <div style="padding:10px; border:1px solid var(--rag-red-300); border-radius:4px; background:#FCF5F5;">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">UTI Mid Cap</div>
-                    <div style="font-size:10px; color:var(--rag-amber-700); font-variant-numeric:tabular-nums;">+12.1% →</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,30 L10,31 L20,29 L30,30 L40,28 L50,27 L60,28 L70,27 L80,25 L90,26 L100,25 L120,24" fill="none" stroke="#9A6410" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">+12.1%</div>
+                      <div style="font-size:9px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−7.0pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <!-- fund well below benchmark -->
+                      <path d="M0,30 L10,31 L20,29 L30,30 L40,28 L50,27 L60,28 L70,27 L80,25 L90,26 L100,25 L120,24" fill="none" stroke="#B63030" stroke-width="1.5"/>
+                    </svg>
                   </div>
-                  <!-- red row -->
                   <div style="padding:10px; border:1px solid var(--rag-red-300); border-radius:4px; background:#FCF5F5;">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">DSP Mid Cap</div>
-                    <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−2.1% ▼</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,20 L10,22 L20,19 L30,24 L40,26 L50,22 L60,28 L70,30 L80,32 L90,34 L100,33 L120,36" fill="none" stroke="#B63030" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−2.1%</div>
+                      <div style="font-size:9px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−21.2pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <!-- fund losing money while benchmark gains -->
+                      <path d="M0,20 L10,22 L20,19 L30,24 L40,26 L50,22 L60,28 L70,30 L80,32 L90,34 L100,33 L120,36" fill="none" stroke="#B63030" stroke-width="1.5"/>
+                    </svg>
                   </div>
                   <div style="padding:10px; border:1px solid var(--rag-red-300); border-radius:4px; background:#FCF5F5;">
                     <div style="font-size:10px; font-weight:600; color:var(--text-primary);">HDFC Small Cap</div>
-                    <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−4.8% ▼</div>
-                    <svg viewBox="0 0 120 40" style="width:100%; height:36px;"><path d="M0,18 L10,20 L20,22 L30,20 L40,25 L50,26 L60,24 L70,28 L80,30 L90,33 L100,34 L120,36" fill="none" stroke="#B63030" stroke-width="1.5"/></svg>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <div style="font-size:10px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−4.8%</div>
+                      <div style="font-size:9px; color:var(--rag-red-700); font-variant-numeric:tabular-nums;">−23.9pp α</div>
+                    </div>
+                    <svg viewBox="0 0 120 40" style="width:100%; height:40px;">
+                      <path d="M0,32 L20,29 L40,27 L60,24 L80,20 L100,17 L120,13" fill="none" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/>
+                      <!-- fund falling while benchmark rises — maximum visual divergence -->
+                      <path d="M0,18 L10,20 L20,22 L30,20 L40,25 L50,26 L60,24 L70,28 L80,30 L90,33 L100,34 L120,36" fill="none" stroke="#B63030" stroke-width="1.5"/>
+                    </svg>
                   </div>
                 </div>
               </div>
               <div class="verdict-strip">
                 <span class="verdict-strip__mark">A</span>
-                <div>8 of 12 are trending up; <em>2 are drawing down</em> (DSP, HDFC SC) and held in your book. Axis is flatlining — the momentum rolled off in January.</div>
+                <div>6 of 12 beating the benchmark; <em>3 below benchmark</em> (Mirae, UTI, DSP, HDFC SC). DSP and HDFC SC are negative absolute — returning money to index would have been better. Axis is tracking the benchmark with no alpha.</div>
                 <span class="verdict-strip__more">Compare pair →</span>
+              </div>
+            </div>
+
+            <!-- BENCHMARK COMPARISON PATTERN — design rule reference -->
+            <div class="card card--lg span-12">
+              <div class="card__header">
+                <div class="card__header-group">
+                  <div class="card__title"><svg><use href="#i-pulse"/></svg> Design rule: vs benchmark — three canonical patterns</div>
+                  <div class="card__subtitle">Every quantitative visual must show performance relative to benchmark. This card shows how.</div>
+                </div>
+              </div>
+              <div class="card__body" style="padding:var(--space-4);">
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-5);">
+
+                  <!-- Pattern A: Dual line -->
+                  <div style="border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); background:var(--bg-surface-alt);">
+                    <div style="font-size:var(--fs-xs); color:var(--text-accent); font-weight:var(--fw-semibold); letter-spacing:var(--tracking-wide); text-transform:uppercase; margin-bottom:var(--space-3);">Pattern A — Dual line</div>
+                    <div style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:var(--space-3);">Line + area charts, performance charts, NAV series. Fund solid, benchmark dashed grey.</div>
+                    <svg viewBox="0 0 240 100" style="width:100%; height:90px; margin-bottom:var(--space-3);">
+                      <!-- grid -->
+                      <line x1="20" y1="10" x2="230" y2="10" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="20" y1="40" x2="230" y2="40" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="20" y1="70" x2="230" y2="70" stroke="#EEF0F3" stroke-width="1"/>
+                      <!-- benchmark dashed -->
+                      <path d="M20,70 L70,62 L120,55 L170,48 L230,40" fill="none" stroke="#8A909C" stroke-width="1.2" stroke-dasharray="4 3"/>
+                      <!-- fund solid green -->
+                      <path d="M20,70 L70,55 L120,38 L170,22 L230,14" fill="none" stroke="#0B7A4E" stroke-width="2"/>
+                      <!-- alpha gap annotation -->
+                      <line x1="230" y1="14" x2="230" y2="40" stroke="#0B7A4E" stroke-width="1" stroke-dasharray="2 2"/>
+                      <text x="234" y="28" font-size="8" fill="#0B7A4E" font-family="Inter" font-weight="600">α</text>
+                    </svg>
+                    <div style="display:flex; gap:var(--space-4); font-size:10px; color:var(--text-secondary);">
+                      <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#0B7A4E" stroke-width="1.5"/></svg> Fund</span>
+                      <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#8A909C" stroke-width="1" stroke-dasharray="3 2"/></svg> Benchmark</span>
+                    </div>
+                  </div>
+
+                  <!-- Pattern B: Active weight bar -->
+                  <div style="border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); background:var(--bg-surface-alt);">
+                    <div style="font-size:var(--fs-xs); color:var(--text-accent); font-weight:var(--fw-semibold); letter-spacing:var(--tracking-wide); text-transform:uppercase; margin-bottom:var(--space-3);">Pattern B — Active weight bar</div>
+                    <div style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:var(--space-3);">Bar charts, sector allocation. Zero line = benchmark. Bar color = Brinson contribution sign.</div>
+                    <svg viewBox="0 0 240 100" style="width:100%; height:90px; margin-bottom:var(--space-3);">
+                      <!-- zero axis -->
+                      <line x1="90" y1="8" x2="90" y2="90" stroke="#CDD2DA" stroke-width="1"/>
+                      <text x="90" y="100" text-anchor="middle" font-size="8" font-family="Inter" fill="#8A909C">0 = Benchmark</text>
+                      <g font-family="Inter" font-size="9" fill="#565E6E">
+                        <text x="0" y="24" text-anchor="start">Fins</text>   <rect x="90" y="14" width="60" height="12" fill="#10A368"/> <text x="155" y="24" fill="#0B7A4E" font-weight="600">+3.2 ✓</text>
+                        <text x="0" y="44" text-anchor="start">Inds</text>   <rect x="90" y="34" width="38" height="12" fill="#10A368"/> <text x="133" y="44" fill="#0B7A4E" font-weight="600">+2.0 ✓</text>
+                        <text x="0" y="64" text-anchor="start">Tech</text>   <rect x="65" y="54" width="25" height="12" fill="#DB4343"/> <text x="60" y="64" fill="#B63030" font-weight="600" text-anchor="end">−1.4 ✗</text>
+                        <text x="0" y="84" text-anchor="start">Util</text>   <rect x="78" y="74" width="12" height="12" fill="#B4B9C2"/> <text x="95" y="84" fill="#565E6E">−0.6</text>
+                      </g>
+                    </svg>
+                    <div style="font-size:10px; color:var(--text-secondary);">
+                      <span style="display:inline-flex; align-items:center; gap:4px; margin-right:10px;"><span style="display:inline-block; width:8px; height:8px; background:#10A368; border-radius:1px;"></span> Overweight + right call</span>
+                      <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:8px; height:8px; background:#DB4343; border-radius:1px;"></span> Wrong call</span>
+                    </div>
+                  </div>
+
+                  <!-- Pattern C: Reference dot -->
+                  <div style="border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); background:var(--bg-surface-alt);">
+                    <div style="font-size:var(--fs-xs); color:var(--text-accent); font-weight:var(--fw-semibold); letter-spacing:var(--tracking-wide); text-transform:uppercase; margin-bottom:var(--space-3);">Pattern C — Reference marker</div>
+                    <div style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:var(--space-3);">Scatter plots, bubble charts. Benchmark is a labelled anchor. All dots colored RAG relative to it.</div>
+                    <svg viewBox="0 0 240 100" style="width:100%; height:90px; margin-bottom:var(--space-3);">
+                      <!-- grid lines -->
+                      <line x1="30" y1="10" x2="230" y2="10" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="30" y1="55" x2="230" y2="55" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="30" y1="100" x2="230" y2="100" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="30" y1="10" x2="30" y2="100" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="130" y1="10" x2="130" y2="100" stroke="#EEF0F3" stroke-width="1"/>
+                      <line x1="230" y1="10" x2="230" y2="100" stroke="#EEF0F3" stroke-width="1"/>
+                      <!-- benchmark dot — anchor, grey, labelled -->
+                      <circle cx="120" cy="58" r="8" fill="#E3E6EB" stroke="#8A909C" stroke-width="1.5"/>
+                      <text x="130" y="50" font-size="8" font-family="Inter" fill="#565E6E">Index</text>
+                      <!-- green dots: better risk/return than benchmark -->
+                      <circle cx="160" cy="30" r="10" fill="#E4F5EC" stroke="#0B7A4E" stroke-width="1.5"/>
+                      <circle cx="185" cy="20" r="7" fill="#E4F5EC" stroke="#0B7A4E" stroke-width="1.5"/>
+                      <circle cx="145" cy="42" r="12" fill="#E4F5EC" stroke="#0B7A4E" stroke-width="1.5"/>
+                      <!-- red dots: worse risk/return -->
+                      <circle cx="85" cy="72" r="9" fill="#FBE9E9" stroke="#B63030" stroke-width="1.5"/>
+                      <circle cx="65" cy="80" r="6" fill="#FBE9E9" stroke="#B63030" stroke-width="1.5"/>
+                      <!-- axis labels -->
+                      <text x="30" y="108" font-size="7" font-family="Inter" fill="#8A909C">Low risk</text>
+                      <text x="200" y="108" font-size="7" font-family="Inter" fill="#8A909C">High risk</text>
+                      <text x="2" y="58" font-size="7" font-family="Inter" fill="#8A909C" transform="rotate(-90 2 58)">Return</text>
+                    </svg>
+                    <div style="font-size:10px; color:var(--text-secondary);">
+                      <span style="display:inline-flex; align-items:center; gap:4px; margin-right:10px;"><span style="display:inline-block; width:8px; height:8px; background:#E3E6EB; border:1.5px solid #8A909C; border-radius:50%;"></span> Benchmark anchor</span>
+                      <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:8px; height:8px; background:#E4F5EC; border:1.5px solid #0B7A4E; border-radius:50%;"></span> Better than bm</span>
+                    </div>
+                  </div>
+
+                </div>
+                <!-- Alpha display convention -->
+                <div style="margin-top:var(--space-4); padding:var(--space-3) var(--space-4); background:var(--bg-inset); border-radius:var(--radius-sm); border-left:3px solid var(--accent-300);">
+                  <div style="font-size:var(--fs-xs); color:var(--text-accent); font-weight:var(--fw-semibold); letter-spacing:var(--tracking-wide); text-transform:uppercase; margin-bottom:var(--space-2);">Alpha display convention</div>
+                  <div style="display:flex; gap:var(--space-6); font-size:var(--fs-sm); color:var(--text-secondary);">
+                    <span><span style="color:var(--rag-green-700); font-weight:600; font-variant-numeric:tabular-nums;">+9.3pp α</span> — Outperforming (green)</span>
+                    <span><span style="color:var(--rag-amber-700); font-weight:600; font-variant-numeric:tabular-nums;">+0.7pp α</span> — Within noise band (&lt;1pp) → amber</span>
+                    <span><span style="color:var(--rag-red-700); font-weight:600; font-variant-numeric:tabular-nums;">−2.9pp α</span> — Underperforming (red)</span>
+                    <span style="margin-left:auto; color:var(--text-tertiary); font-size:var(--fs-xs);">Always TRI. Always same time window as fund. Never price-only index.</span>
+                  </div>
+                </div>
               </div>
             </div>
 
