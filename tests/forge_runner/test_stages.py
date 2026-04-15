@@ -328,3 +328,74 @@ class TestVerifyInvokesPostChunkSync:
             loop.close()
 
         assert result.status == "ok"  # missing script logs a warning but doesn't fail verify
+
+
+# ---------------------------------------------------------------------------
+# Lint cache invalidation (V5-2 hang root-cause fix)
+# ---------------------------------------------------------------------------
+
+
+class TestInvalidateLintCaches:
+    """Every chunk must start with fresh .ruff_cache / .mypy_cache.
+
+    Regression guard for the V5-2 hang: a stale ruff cache reported a phantom
+    F401 error in backend/main.py, which trapped the implementer agent for
+    45 minutes until wall-clock killed the session. Any chunk must start with
+    empty lint/type caches so the gate reflects disk truth.
+    """
+
+    def test_removes_ruff_and_mypy_caches_anywhere_under_repo(self, tmp_path):
+        from scripts.forge_runner.stages import _invalidate_lint_caches
+
+        (tmp_path / ".ruff_cache").mkdir()
+        (tmp_path / ".ruff_cache" / "stamp").write_text("stale")
+        (tmp_path / ".mypy_cache").mkdir()
+        (tmp_path / ".mypy_cache" / "stamp").write_text("stale")
+        nested = tmp_path / "scripts" / "forge_runner" / ".ruff_cache"
+        nested.mkdir(parents=True)
+        (nested / "stamp").write_text("stale")
+
+        removed = _invalidate_lint_caches(tmp_path)
+
+        assert not (tmp_path / ".ruff_cache").exists()
+        assert not (tmp_path / ".mypy_cache").exists()
+        assert not nested.exists()
+        assert len(removed) == 3
+
+    def test_noop_when_no_caches_present(self, tmp_path):
+        from scripts.forge_runner.stages import _invalidate_lint_caches
+
+        (tmp_path / "src").mkdir()
+        (tmp_path / "src" / "foo.py").write_text("x = 1\n")
+
+        removed = _invalidate_lint_caches(tmp_path)
+
+        assert removed == []
+
+    def test_survives_permission_error_on_one_cache(self, tmp_path, monkeypatch):
+        """A permission error on one cache dir must not block chunk start."""
+        from scripts.forge_runner import stages as stages_mod
+
+        (tmp_path / ".ruff_cache").mkdir()
+        (tmp_path / ".mypy_cache").mkdir()
+        (tmp_path / ".mypy_cache" / "stamp").write_text("ok")
+
+        calls: list[str] = []
+
+        def flaky_rmtree(path, *args, **kwargs):
+            calls.append(str(path))
+            if ".ruff_cache" in str(path):
+                raise OSError("permission denied")
+            import shutil as _real
+
+            _real.rmtree.__wrapped__(path) if False else None  # noqa
+            # do nothing — the ruff_cache failure is what we assert on
+
+        monkeypatch.setattr("shutil.rmtree", flaky_rmtree)
+
+        # Must not raise — lint cache invalidation is best-effort
+        stages_mod._invalidate_lint_caches(tmp_path)
+
+        # Both caches were attempted; the ruff failure was swallowed
+        assert any(".ruff_cache" in c for c in calls)
+        assert any(".mypy_cache" in c for c in calls)

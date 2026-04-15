@@ -241,6 +241,14 @@ class LocalImplementStage:
         state.mark_in_progress(chunk.id, ctx.runner_pid, ctx.state_db_path)
         ctx.session_started_at = now_ist()
 
+        # Invalidate lint/type caches before the agent sees the quality gate.
+        # Why: a stale `.ruff_cache` once trapped V5-2 for 45 minutes reporting
+        # a phantom `F401 sqlalchemy.text` error in a file that did not contain
+        # that import on disk. The agent kept "fixing" the file, the cache kept
+        # replaying the ghost, and wall-clock killed the session. A chunk must
+        # start with an empty cache so the gate reflects disk truth.
+        _invalidate_lint_caches(ctx.repo)
+
         # Snapshot quality baseline so forge-ship.sh can delta-gate this chunk
         # against the last-shipped state. Missing report.json = first chunk or
         # manual run; delta check becomes a no-op.
@@ -573,6 +581,41 @@ class HostedStageBase(Stage, ABC):
 def _elapsed_ms(t0: datetime) -> int:
     delta = now_ist() - t0
     return int(delta.total_seconds() * 1000)
+
+
+_LINT_CACHE_DIRS = (".ruff_cache", ".mypy_cache")
+
+
+def _invalidate_lint_caches(repo: Path) -> list[Path]:
+    """Delete every ``.ruff_cache`` / ``.mypy_cache`` under *repo*.
+
+    Returns the list of directories removed (for test assertions + logging).
+    Never raises — cache invalidation is best-effort; a failure here must
+    not block chunk start.
+    """
+    import shutil as _shutil
+
+    removed: list[Path] = []
+    for cache_name in _LINT_CACHE_DIRS:
+        for cache_dir in repo.rglob(cache_name):
+            if not cache_dir.is_dir():
+                continue
+            try:
+                _shutil.rmtree(cache_dir)
+                removed.append(cache_dir)
+            except OSError as exc:
+                logger.warning(
+                    "lint_cache_invalidate_failed",
+                    cache_dir=str(cache_dir),
+                    error=str(exc),
+                )
+    if removed:
+        logger.info(
+            "lint_cache_invalidated",
+            count=len(removed),
+            dirs=[str(p.relative_to(repo)) for p in removed],
+        )
+    return removed
 
 
 def _update_runner_state(
