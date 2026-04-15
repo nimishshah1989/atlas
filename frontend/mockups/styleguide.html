@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Style Guide</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* Page-local styles — only for the style guide itself, not reusable */
+    .swatch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
+    .swatch { border: var(--border-card); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface); }
+    .swatch__color { height: 56px; border-bottom: var(--border-inner); }
+    .swatch__meta { padding: 8px 10px; font-size: var(--fs-xs); }
+    .swatch__meta .name { color: var(--text-primary); font-weight: var(--fw-medium); }
+    .swatch__meta .val  { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 10px; }
+
+    .type-row { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+    .type-row:last-child { border-bottom: none; }
+    .type-row .label { width: 120px; flex-shrink: 0; }
+    .type-row .sample { color: var(--text-primary); }
+
+    .section { margin-bottom: var(--space-10); }
+    .section__heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-5); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-default); }
+    .section__heading h2 { font-family: var(--font-serif); font-size: var(--fs-2xl); }
+    .section__heading .note { font-size: var(--fs-xs); color: var(--text-tertiary); max-width: 420px; text-align: right; }
+
+    .icon-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: var(--space-3); }
+    .icon-grid > div { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--space-3); border: var(--border-card); border-radius: var(--radius-md); background: var(--bg-surface); }
+    .icon-grid svg { width: 20px; height: 20px; color: var(--text-secondary); }
+    .icon-grid span { font-size: 10px; color: var(--text-tertiary); }
+
+    .kit-row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+    .spec-note { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: var(--space-2); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ═══ Sidebar ═══ -->
+    <aside class="sidebar">
+      <div class="sidebar__section">
+        <div class="topbar__brand" style="padding: 0 12px 20px;">atlas<strong style="color:var(--accent-700)">.</strong></div>
+      </div>
+      <div class="sidebar__section">
+        <div class="sidebar__section-label">Workbench</div>
+        <div class="sidebar__link sidebar__link--active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+          Morning pulse
+        </div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          Explore funds
+        </div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          Portfolios
+        </div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
+          Build & simulate
+        </div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Explain
+        </div>
+      </div>
+      <div class="sidebar__section">
+        <div class="sidebar__section-label">Research</div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          Notebook
+        </div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Clients
+        </div>
+      </div>
+      <div class="sidebar__section">
+        <div class="sidebar__section-label">System</div>
+        <div class="sidebar__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ Main ═══ -->
+    <main class="app__main">
+
+      <!-- ═══ Top bar ═══ -->
+      <div class="topbar">
+        <div class="topbar__search">
+          <svg class="topbar__search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input placeholder="Search funds, AMCs, factors, clients…" />
+        </div>
+        <div style="flex:1"></div>
+        <div class="topbar__meta">
+          <span>Data as of <strong style="color:var(--text-secondary)">15 Apr 2026, 16:45 IST</strong></span>
+          <span class="badge badge--accent">● Live</span>
+          <span>NS · Equity desk</span>
+        </div>
+      </div>
+
+      <!-- ═══ Page ═══ -->
+      <div class="page">
+        <div class="page__header">
+          <div class="page__title-group">
+            <span class="eyebrow">Design system · v0.1</span>
+            <h1>Style guide</h1>
+            <p style="color:var(--text-secondary); font-size:var(--fs-md); max-width:640px;">
+              The visual contract for every ATLAS surface. Stripe-dense, Koyfin-rich, institutionally restrained.
+              Every page in the product is a composition of the primitives below.
+            </p>
+          </div>
+          <div class="page__actions">
+            <button class="btn btn--ghost">Export tokens</button>
+            <button class="btn btn--secondary">Open in browser</button>
+            <button class="btn btn--primary">Approve & freeze</button>
+          </div>
+        </div>
+
+        <!-- ═══ 1. Color ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Color</h2>
+            <div class="note">One accent (deep teal). Color is information, not decoration.
+              Green and red reserved strictly for signed financial deltas.</div>
+          </div>
+
+          <h6 style="margin-bottom: var(--space-3);">Surfaces + text</h6>
+          <div class="swatch-grid" style="margin-bottom: var(--space-5);">
+            <div class="swatch"><div class="swatch__color" style="background:#F7F8FA"></div><div class="swatch__meta"><div class="name">bg-app</div><div class="val">#F7F8FA</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#FFFFFF; border-bottom: 1px solid #E3E6EB"></div><div class="swatch__meta"><div class="name">bg-surface</div><div class="val">#FFFFFF</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#F2F4F7"></div><div class="swatch__meta"><div class="name">bg-inset</div><div class="val">#F2F4F7</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#1A1F2C"></div><div class="swatch__meta"><div class="name">text-primary</div><div class="val">#1A1F2C</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#565E6E"></div><div class="swatch__meta"><div class="name">text-secondary</div><div class="val">#565E6E</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#8A909C"></div><div class="swatch__meta"><div class="name">text-tertiary</div><div class="val">#8A909C</div></div></div>
+          </div>
+
+          <h6 style="margin-bottom: var(--space-3);">Accent (used sparingly)</h6>
+          <div class="swatch-grid" style="margin-bottom: var(--space-5);">
+            <div class="swatch"><div class="swatch__color" style="background:#063024"></div><div class="swatch__meta"><div class="name">accent-900</div><div class="val">#063024</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#0E5A43"></div><div class="swatch__meta"><div class="name">accent-700 ◆</div><div class="val">#0E5A43</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#1D9E75"></div><div class="swatch__meta"><div class="name">accent-500</div><div class="val">#1D9E75</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#9BD4BD"></div><div class="swatch__meta"><div class="name">accent-300</div><div class="val">#9BD4BD</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#E6F2ED"></div><div class="swatch__meta"><div class="name">accent-100</div><div class="val">#E6F2ED</div></div></div>
+            <div class="swatch"></div>
+          </div>
+
+          <h6 style="margin-bottom: var(--space-3);">Semantic (signed deltas + states only)</h6>
+          <div class="swatch-grid">
+            <div class="swatch"><div class="swatch__color" style="background:#0B7A4E"></div><div class="swatch__meta"><div class="name">pos-700</div><div class="val">gains</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#B63030"></div><div class="swatch__meta"><div class="name">neg-700</div><div class="val">losses</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#8A5A0C"></div><div class="swatch__meta"><div class="name">warn-700</div><div class="val">stale / flag</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#1E4E8C"></div><div class="swatch__meta"><div class="name">info-700</div><div class="val">info</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#E4F5EC"></div><div class="swatch__meta"><div class="name">pos-100</div><div class="val">badge bg</div></div></div>
+            <div class="swatch"><div class="swatch__color" style="background:#FBE9E9"></div><div class="swatch__meta"><div class="name">neg-100</div><div class="val">badge bg</div></div></div>
+          </div>
+        </section>
+
+        <!-- ═══ 2. Typography ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Typography</h2>
+            <div class="note">Two families. <strong>Source Serif 4</strong> for headlines only.
+              <strong>Inter tabular</strong> for everything else, including all numbers.</div>
+          </div>
+
+          <div class="card"><div class="card__body">
+            <div class="type-row"><div class="label eyebrow">Page title · serif</div>
+              <div class="sample" style="font-family:var(--font-serif); font-size:34px; font-weight:400; letter-spacing:-0.01em;">A quiet revolution in mid-cap quality</div></div>
+            <div class="type-row"><div class="label eyebrow">Section · serif</div>
+              <div class="sample" style="font-family:var(--font-serif); font-size:26px; font-weight:400;">Factor attribution — trailing 12M</div></div>
+            <div class="type-row"><div class="label eyebrow">Heading · sans</div>
+              <div class="sample" style="font-size:20px; font-weight:500;">Top holdings</div></div>
+            <div class="type-row"><div class="label eyebrow">Card title · sans</div>
+              <div class="sample" style="font-size:16px; font-weight:600;">HDFC Mid Cap Opportunities</div></div>
+            <div class="type-row"><div class="label eyebrow">Body emphasized</div>
+              <div class="sample" style="font-size:14px; font-weight:500;">14px Inter Medium — primary calls to action, emphasized body copy.</div></div>
+            <div class="type-row"><div class="label eyebrow">Body default</div>
+              <div class="sample" style="font-size:13px;">13px Inter Regular — the base UI size. Dense, legible, enough contrast for 8-hour screens.</div></div>
+            <div class="type-row"><div class="label eyebrow">Table cell</div>
+              <div class="sample" style="font-size:12px;">12px Inter — data rows, form labels, secondary information.</div></div>
+            <div class="type-row"><div class="label eyebrow">Eyebrow / meta</div>
+              <div class="sample eyebrow" style="font-size:11px;">11px · TRAILING 12 MONTHS · AS OF 15 APR 2026</div></div>
+            <div class="type-row"><div class="label eyebrow">Hero metric</div>
+              <div class="sample num" style="font-size:44px; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-0.01em;">₹12,48,31,402</div></div>
+          </div></div>
+          <p class="spec-note">All numeric content uses <code>font-variant-numeric: tabular-nums</code> so columns align. Indian
+            grouping (lakh/crore) is a display-time formatter, not a font feature.</p>
+        </section>
+
+        <!-- ═══ 3. Metric row (Stripe-style) ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Metrics &amp; deltas</h2>
+            <div class="note">Numbers are the hero. Labels eyebrow, value large + tabular, meta row for delta + context.</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric">
+              <div class="metric__label">Book NAV</div>
+              <div class="metric__value">₹427.82 Cr</div>
+              <div class="metric__meta"><span class="delta delta--pos">+1.42%</span><span>vs yesterday</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">1M return</div>
+              <div class="metric__value">+3.87%</div>
+              <div class="metric__meta"><span class="delta delta--pos">+82 bps</span><span>vs Nifty 500</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">Sharpe · 3Y</div>
+              <div class="metric__value">1.34</div>
+              <div class="metric__meta"><span class="badge badge--accent">top decile</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">Max drawdown · 5Y</div>
+              <div class="metric__value">−18.4%</div>
+              <div class="metric__meta"><span>vs −22.1% cat avg</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">Active share</div>
+              <div class="metric__value">64.2%</div>
+              <div class="metric__meta"><span class="delta delta--neg">−4.1 pp</span><span>q-o-q</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ 4. Data table (the hero of the whole system) ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Data table</h2>
+            <div class="note">Dense rows, right-aligned numbers, sticky header, zebra off by default.
+              Hover state on full row. This is the single most-used pattern in the product.</div>
+          </div>
+          <div class="table-wrap">
+            <div class="card__header">
+              <div>
+                <div class="card__title">Flex-cap equity — quality screen</div>
+                <div class="card__subtitle">14 funds · filtered · trailing 12M</div>
+              </div>
+              <div class="kit-row">
+                <span class="badge badge--neutral">14 rows</span>
+                <button class="btn btn--ghost btn--sm">Filter</button>
+                <button class="btn btn--secondary btn--sm">Export CSV</button>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fund</th>
+                  <th>Category</th>
+                  <th class="num">AUM (₹ Cr)</th>
+                  <th class="num">1Y</th>
+                  <th class="num">3Y CAGR</th>
+                  <th class="num">Sharpe</th>
+                  <th class="num">Exp. ratio</th>
+                  <th>Quality</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="primary-cell">HDFC Mid Cap Opportunities<div class="meta">Direct · Growth · Mid Cap</div></td>
+                  <td><span class="badge badge--neutral">Mid cap</span></td>
+                  <td class="num">78,412</td>
+                  <td class="num delta delta--pos">+28.4%</td>
+                  <td class="num">22.1%</td>
+                  <td class="num">1.42</td>
+                  <td class="num">0.76%</td>
+                  <td><span class="badge badge--accent">A+ · 94</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">Kotak Emerging Equity<div class="meta">Direct · Growth · Mid Cap</div></td>
+                  <td><span class="badge badge--neutral">Mid cap</span></td>
+                  <td class="num">52,018</td>
+                  <td class="num delta delta--pos">+24.9%</td>
+                  <td class="num">19.8%</td>
+                  <td class="num">1.31</td>
+                  <td class="num">0.58%</td>
+                  <td><span class="badge badge--accent">A · 89</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">Nippon India Small Cap<div class="meta">Direct · Growth · Small Cap</div></td>
+                  <td><span class="badge badge--neutral">Small cap</span></td>
+                  <td class="num">64,889</td>
+                  <td class="num delta delta--pos">+31.2%</td>
+                  <td class="num">26.4%</td>
+                  <td class="num">1.18</td>
+                  <td class="num">0.78%</td>
+                  <td><span class="badge badge--accent">A · 87</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">Parag Parikh Flexi Cap<div class="meta">Direct · Growth · Flexi Cap</div></td>
+                  <td><span class="badge badge--neutral">Flexi cap</span></td>
+                  <td class="num">89,201</td>
+                  <td class="num delta delta--pos">+21.7%</td>
+                  <td class="num">20.4%</td>
+                  <td class="num">1.51</td>
+                  <td class="num">0.63%</td>
+                  <td><span class="badge badge--accent">A+ · 96</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">Axis Midcap<div class="meta">Direct · Growth · Mid Cap</div></td>
+                  <td><span class="badge badge--neutral">Mid cap</span></td>
+                  <td class="num">31,402</td>
+                  <td class="num delta delta--pos">+18.3%</td>
+                  <td class="num">14.9%</td>
+                  <td class="num">0.98</td>
+                  <td class="num">0.59%</td>
+                  <td><span class="badge badge--warn">B · 71</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">DSP Mid Cap<div class="meta">Direct · Growth · Mid Cap</div></td>
+                  <td><span class="badge badge--neutral">Mid cap</span></td>
+                  <td class="num">18,247</td>
+                  <td class="num delta delta--neg">−2.1%</td>
+                  <td class="num">11.4%</td>
+                  <td class="num">0.72</td>
+                  <td class="num">0.82%</td>
+                  <td><span class="badge badge--warn">B− · 64</span></td>
+                </tr>
+                <tr>
+                  <td class="primary-cell">SBI Small Cap<div class="meta">Direct · Growth · Small Cap</div></td>
+                  <td><span class="badge badge--neutral">Small cap</span></td>
+                  <td class="num">27,889</td>
+                  <td class="num delta delta--pos">+22.6%</td>
+                  <td class="num">21.8%</td>
+                  <td class="num">1.09</td>
+                  <td class="num">0.69%</td>
+                  <td><span class="badge badge--accent">A · 85</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="card__footer">Source: JIP · NAV snapshot 15 Apr 2026 · Quality score per ATLAS V3 engine</div>
+          </div>
+        </section>
+
+        <!-- ═══ 5. Chart + Atlas insight (side by side) ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Charts &amp; the signature insight component</h2>
+            <div class="note">Charts are restrained: no borders, baseline gridline only, body-type axis labels.
+              The "Atlas noticed" component is the sentient lever — editorial, quiet, persistent.</div>
+          </div>
+          <div class="with-rail">
+            <div class="card">
+              <div class="card__header">
+                <div>
+                  <div class="card__title">NAV · HDFC Mid Cap Opportunities</div>
+                  <div class="card__subtitle">Rebased to 100 · 1 Apr 2025 → 15 Apr 2026</div>
+                </div>
+                <div class="tabs" style="border:none; padding:0;">
+                  <div class="tab">1M</div>
+                  <div class="tab">3M</div>
+                  <div class="tab">6M</div>
+                  <div class="tab tab--active">1Y</div>
+                  <div class="tab">3Y</div>
+                  <div class="tab">Max</div>
+                </div>
+              </div>
+              <div class="chart">
+                <svg viewBox="0 0 760 260" preserveAspectRatio="none">
+                  <!-- Y axis labels -->
+                  <text class="chart__axis" x="0" y="24">130</text>
+                  <text class="chart__axis" x="0" y="80">120</text>
+                  <text class="chart__axis" x="0" y="136">110</text>
+                  <text class="chart__axis" x="0" y="192">100</text>
+                  <text class="chart__axis" x="0" y="248">90</text>
+                  <!-- Baseline only, no grid -->
+                  <line class="chart__grid" x1="32" y1="192" x2="760" y2="192"/>
+                  <!-- Benchmark (Nifty Midcap 150) — muted -->
+                  <path class="chart__line" stroke="#8A909C" stroke-dasharray="3 3" d="M32,192 L90,188 L150,180 L210,176 L270,168 L330,172 L390,160 L450,152 L510,148 L570,140 L630,138 L690,130 L750,128"/>
+                  <!-- Fund line — accent -->
+                  <path class="chart__line" stroke="#0E5A43" stroke-width="2" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62"/>
+                  <!-- Area fill -->
+                  <path class="chart__area" fill="#0E5A43" d="M32,192 L90,184 L150,170 L210,162 L270,148 L330,156 L390,132 L450,118 L510,104 L570,92 L630,88 L690,70 L750,62 L750,192 Z"/>
+                  <!-- X axis -->
+                  <text class="chart__axis" x="32" y="258">Apr &#39;25</text>
+                  <text class="chart__axis" x="210" y="258">Jul</text>
+                  <text class="chart__axis" x="390" y="258">Oct</text>
+                  <text class="chart__axis" x="570" y="258">Jan &#39;26</text>
+                  <text class="chart__axis" x="720" y="258">Apr</text>
+                  <!-- Legend row under chart -->
+                </svg>
+                <div class="kit-row" style="margin-top: var(--space-4); font-size: var(--fs-xs); color: var(--text-secondary);">
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#0E5A43;"></span> HDFC Mid Cap Opps · +28.4%</span>
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#8A909C; border-top:2px dashed;"></span> Nifty Midcap 150 TRI · +19.1%</span>
+                  <span style="margin-left:auto;" class="eyebrow">source: jip · rebased 01 apr 2025 = 100</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Atlas insight — signature component -->
+            <div class="atlas-insight">
+              <div class="atlas-insight__eyebrow">Atlas noticed</div>
+              <div class="atlas-insight__body">
+                HDFC Mid Cap's <em>quality score</em> has improved for four consecutive months — its
+                portfolio concentration in top-10 names dropped from 41% to 34%, and its exposure to
+                low-ROCE names is now at a 5-year low. Three of your flex-cap clients are underweight
+                mid caps versus their risk-target.
+              </div>
+              <div class="atlas-insight__footer">
+                <div class="atlas-insight__why"><a href="#">Why am I seeing this?</a></div>
+                <div class="atlas-insight__actions">
+                  <button class="btn btn--ghost btn--sm">Dismiss</button>
+                  <button class="btn btn--secondary btn--sm">Open →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ 6. Buttons + inputs + tabs ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Controls</h2>
+            <div class="note">Buttons never carry shadows or gradients. Sizes sm / default / lg.
+              Inputs focus with a 3px accent wash, never a browser outline.</div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card__body">
+              <h6 style="margin-bottom: var(--space-4);">Buttons</h6>
+              <div class="kit-row" style="margin-bottom: var(--space-3);">
+                <button class="btn btn--primary">Run simulation</button>
+                <button class="btn btn--secondary">Save draft</button>
+                <button class="btn btn--ghost">Cancel</button>
+                <button class="btn btn--destructive">Delete</button>
+              </div>
+              <div class="kit-row" style="margin-bottom: var(--space-3);">
+                <button class="btn btn--primary btn--sm">Apply</button>
+                <button class="btn btn--secondary btn--sm">Reset</button>
+                <button class="btn btn--ghost btn--sm">More</button>
+              </div>
+              <div class="kit-row">
+                <button class="btn btn--primary btn--lg">Generate report</button>
+                <button class="btn btn--secondary btn--lg">Preview</button>
+              </div>
+            </div></div>
+
+            <div class="card"><div class="card__body">
+              <h6 style="margin-bottom: var(--space-4);">Inputs &amp; tabs</h6>
+              <div class="stack-3">
+                <input class="input" placeholder="Search funds by name, ISIN, or AMC…" />
+                <select class="select">
+                  <option>Category · All equity</option>
+                  <option>Mid cap</option>
+                  <option>Small cap</option>
+                </select>
+                <div class="kit-row">
+                  <span class="badge badge--pos">+4.2%</span>
+                  <span class="badge badge--neg">−2.1%</span>
+                  <span class="badge badge--accent">A+ · 94</span>
+                  <span class="badge badge--warn">Stale · 3d</span>
+                  <span class="badge badge--neutral">Draft</span>
+                  <span class="badge badge--info">SEBI</span>
+                </div>
+              </div>
+              <div class="tabs" style="margin-top: var(--space-5); padding: 0;">
+                <div class="tab">Overview</div>
+                <div class="tab tab--active">Holdings</div>
+                <div class="tab">Factors</div>
+                <div class="tab">Simulation</div>
+                <div class="tab">Explain</div>
+              </div>
+            </div></div>
+          </div>
+        </section>
+
+        <!-- ═══ 7. Icon set ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Iconography</h2>
+            <div class="note">Phosphor Regular at 1.5px stroke, 20px default.
+              Always paired with a label on first appearance.</div>
+          </div>
+          <div class="icon-grid">
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg><span>pulse</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>search</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>portfolio</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg><span>add</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>explain</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>notebook</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>client</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg><span>layers</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-7"/></svg><span>chart</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>time</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>risk</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg><span>doc</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M12 8v4l3 2"/></svg><span>schedule</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>edit</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>download</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg><span>upload</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg><span>check</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>alert</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6 9 17l-5-5"/></svg><span>done</span></div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"/></svg><span>close</span></div>
+          </div>
+        </section>
+
+        <!-- ═══ 8. Spacing + radius + layout ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2>Spacing, radius &amp; motion</h2>
+            <div class="note">4px base grid. Small radii (max 8px on cards) — never pill-shaped except deltas.
+              Motion budget: 150ms, ease-out. That's it.</div>
+          </div>
+          <div class="card"><div class="card__body">
+            <h6 style="margin-bottom: var(--space-3);">Spacing scale (4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64)</h6>
+            <div style="display:flex; gap:var(--space-2); align-items:flex-end; margin-bottom: var(--space-5);">
+              <div style="width:4px; height:4px; background:var(--accent-700);"></div>
+              <div style="width:8px; height:8px; background:var(--accent-700);"></div>
+              <div style="width:12px; height:12px; background:var(--accent-700);"></div>
+              <div style="width:16px; height:16px; background:var(--accent-700);"></div>
+              <div style="width:20px; height:20px; background:var(--accent-700);"></div>
+              <div style="width:24px; height:24px; background:var(--accent-700);"></div>
+              <div style="width:32px; height:32px; background:var(--accent-700);"></div>
+              <div style="width:40px; height:40px; background:var(--accent-700);"></div>
+              <div style="width:48px; height:48px; background:var(--accent-700);"></div>
+              <div style="width:64px; height:64px; background:var(--accent-700);"></div>
+            </div>
+            <h6 style="margin-bottom: var(--space-3);">Radii (2 · 4 · 6 · 8)</h6>
+            <div style="display:flex; gap:var(--space-3);">
+              <div style="width:48px; height:48px; background:var(--accent-100); border: 1px solid var(--accent-300); border-radius:2px;"></div>
+              <div style="width:48px; height:48px; background:var(--accent-100); border: 1px solid var(--accent-300); border-radius:4px;"></div>
+              <div style="width:48px; height:48px; background:var(--accent-100); border: 1px solid var(--accent-300); border-radius:6px;"></div>
+              <div style="width:48px; height:48px; background:var(--accent-100); border: 1px solid var(--accent-300); border-radius:8px;"></div>
+            </div>
+          </div></div>
+        </section>
+
+        <div style="padding: var(--space-8) 0; text-align:center; color: var(--text-tertiary); font-size: var(--fs-xs); border-top: 1px solid var(--border-subtle); margin-top: var(--space-10);">
+          ATLAS style guide · v0.1 · /home/ubuntu/atlas/frontend/mockups/ · locked after approval
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
