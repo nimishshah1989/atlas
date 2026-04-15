@@ -932,6 +932,214 @@
         }
       }
     },
+    "/api/v1/global/briefing": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Briefing",
+        "description": "Return the latest market briefing from atlas_briefings.\n\nIf no briefing exists, returns data=null with stale=True in _meta.",
+        "operationId": "get_global_briefing_api_v1_global_briefing_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/global/ratios": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Macro Ratios",
+        "description": "Return key macro ratios with sparklines from JIP macro tables.",
+        "operationId": "get_macro_ratios_api_v1_global_ratios_get",
+        "parameters": [
+          {
+            "name": "tickers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated ticker list",
+              "title": "Tickers"
+            },
+            "description": "Comma-separated ticker list"
+          },
+          {
+            "name": "sparkline_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 50,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 10,
+              "title": "Sparkline N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MacroRatiosResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/global/rs-heatmap": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Rs Heatmap",
+        "description": "Return all global instruments with RS, momentum, and latest price.",
+        "operationId": "get_global_rs_heatmap_api_v1_global_rs_heatmap_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSHeatmapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/global/regime": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Regime",
+        "description": "Return current market regime + breadth summary.",
+        "operationId": "get_global_regime_api_v1_global_regime_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalRegimeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/global/patterns": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Patterns",
+        "description": "Return recent inter-market patterns from atlas_intelligence.",
+        "operationId": "get_global_patterns_api_v1_global_patterns_get",
+        "parameters": [
+          {
+            "name": "finding_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by finding type",
+              "title": "Finding Type"
+            },
+            "description": "Filter by finding type"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 200,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalPatternsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mf/universe": {
       "get": {
         "tags": [
@@ -2947,6 +3155,285 @@
         ],
         "title": "BreadthSnapshot"
       },
+      "BreadthSummary": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "advance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advance"
+          },
+          "decline": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline"
+          },
+          "unchanged": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unchanged"
+          },
+          "total_stocks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Stocks"
+          },
+          "ad_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ad Ratio"
+          },
+          "pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 200Dma"
+          },
+          "pct_above_50dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 50Dma"
+          },
+          "new_52w_highs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New 52W Highs"
+          },
+          "new_52w_lows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New 52W Lows"
+          }
+        },
+        "type": "object",
+        "title": "BreadthSummary",
+        "description": "Breadth data from de_breadth_daily."
+      },
+      "BriefingDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "scope_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Key"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "narrative": {
+            "type": "string",
+            "title": "Narrative"
+          },
+          "key_signals": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Signals"
+          },
+          "theses": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theses"
+          },
+          "patterns": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patterns"
+          },
+          "india_implication": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "India Implication"
+          },
+          "risk_scenario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Scenario"
+          },
+          "conviction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conviction"
+          },
+          "model_used": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Used"
+          },
+          "staleness_flags": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staleness Flags"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "scope",
+          "headline",
+          "narrative",
+          "generated_at"
+        ],
+        "title": "BriefingDetail",
+        "description": "A single market briefing from atlas_briefings."
+      },
+      "BriefingResponse": {
+        "properties": {
+          "briefing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BriefingDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta"
+        ],
+        "title": "BriefingResponse",
+        "description": "Response for GET /global/briefing.\n\nReturns the latest briefing (or null data when table is empty).\nEmits both ``data`` (\u00a720.4 standard) and ``briefing`` (V1 compat).\n``_meta`` mirrors ``meta``."
+      },
       "BrinsonAttributionSummary": {
         "properties": {
           "total_allocation_effect": {
@@ -4782,6 +5269,179 @@
         ],
         "title": "FundSectorsResponse"
       },
+      "GlobalPatternsResponse": {
+        "properties": {
+          "patterns": {
+            "items": {
+              "$ref": "#/components/schemas/PatternFinding"
+            },
+            "type": "array",
+            "title": "Patterns"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patterns",
+          "meta"
+        ],
+        "title": "GlobalPatternsResponse",
+        "description": "Response for GET /global/patterns.\n\nEmits ``data`` (\u00a720.4) and ``patterns`` (V1 compat). ``_meta`` mirrors ``meta``."
+      },
+      "GlobalRSEntry": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          },
+          "rs_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Date"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "price_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "GlobalRSEntry",
+        "description": "One row in the global RS heatmap."
+      },
+      "GlobalRegimeResponse": {
+        "properties": {
+          "regime": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RegimeSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "breadth": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BreadthSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta"
+        ],
+        "title": "GlobalRegimeResponse",
+        "description": "Response for GET /global/regime.\n\nEmits ``data`` (\u00a720.4) containing both regime + breadth, plus ``_meta``."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -5526,6 +6186,122 @@
         ],
         "title": "MFLifecycleEvent"
       },
+      "MacroRatioItem": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "latest_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Value"
+          },
+          "latest_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Date"
+          },
+          "sparkline": {
+            "items": {
+              "$ref": "#/components/schemas/MacroSparkItem"
+            },
+            "type": "array",
+            "title": "Sparkline",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker"
+        ],
+        "title": "MacroRatioItem",
+        "description": "A single macro series with its latest value and sparkline."
+      },
+      "MacroRatiosResponse": {
+        "properties": {
+          "ratios": {
+            "items": {
+              "$ref": "#/components/schemas/MacroRatioItem"
+            },
+            "type": "array",
+            "title": "Ratios"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ratios",
+          "meta"
+        ],
+        "title": "MacroRatiosResponse",
+        "description": "Response for GET /global/ratios.\n\nEmits ``data`` (\u00a720.4) and ``ratios`` (V1 compat). ``_meta`` mirrors ``meta``."
+      },
+      "MacroSparkItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "MacroSparkItem",
+        "description": "One data point in a sparkline series."
+      },
       "MappingStatus": {
         "type": "string",
         "enum": [
@@ -6075,6 +6851,96 @@
         ],
         "title": "ParamRange",
         "description": "Range definition for a single optimizable parameter."
+      },
+      "PatternFinding": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "finding_type": {
+            "type": "string",
+            "title": "Finding Type"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "finding_type",
+          "title",
+          "content",
+          "data_as_of",
+          "created_at"
+        ],
+        "title": "PatternFinding",
+        "description": "One inter-market pattern finding from atlas_intelligence."
       },
       "PillarFlows": {
         "properties": {
@@ -7081,6 +7947,27 @@
         ],
         "title": "RSDataPoint"
       },
+      "RSHeatmapResponse": {
+        "properties": {
+          "heatmap": {
+            "items": {
+              "$ref": "#/components/schemas/GlobalRSEntry"
+            },
+            "type": "array",
+            "title": "Heatmap"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "heatmap",
+          "meta"
+        ],
+        "title": "RSHeatmapResponse",
+        "description": "Response for GET /global/rs-heatmap.\n\nEmits ``data`` (\u00a720.4) and ``heatmap`` (V1 compat). ``_meta`` mirrors ``meta``."
+      },
       "RSHistoryPoint": {
         "properties": {
           "as_of_date": {
@@ -7230,6 +8117,108 @@
           "regime"
         ],
         "title": "RegimeSnapshot"
+      },
+      "RegimeSummary": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "breadth_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Score"
+          },
+          "momentum_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Momentum Score"
+          },
+          "volume_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Score"
+          },
+          "global_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Score"
+          },
+          "fii_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fii Score"
+          }
+        },
+        "type": "object",
+        "title": "RegimeSummary",
+        "description": "Regime data from de_market_regime."
       },
       "ReoptimizeRequest": {
         "properties": {
