@@ -1,0 +1,179 @@
+version: "1"
+slice: "V5"
+source: "ATLAS-DEFINITIVE-SPEC.md §6 (The Central Intelligence Engine)"
+
+# V5 Central Intelligence Engine completion criteria.
+# V5-1..V5-15 shipped all agent infrastructure, embedding, briefing,
+# global intelligence API, and darwinian scoring.
+#
+# These criteria provide evidence for SC-001..SC-012 of the V5 slice.
+# §6 covers agent infrastructure, embedding, cost ledger, and the
+# global intelligence API layer.
+
+criteria:
+  - id: v5-01
+    title: "atlas_intelligence table exists with required columns"
+    description: >
+      The atlas_intelligence table must exist with all core columns:
+      id, agent_id, agent_type, entity, entity_type, finding_type,
+      title, content, confidence, evidence, embedding, tags,
+      data_as_of, expires_at, is_validated, validation_result,
+      created_at, updated_at. min: 18 (excludes soft-delete columns).
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_intelligence'
+        AND column_name IN (
+          'id', 'agent_id', 'agent_type', 'entity', 'entity_type',
+          'finding_type', 'title', 'content', 'confidence', 'evidence',
+          'embedding', 'tags', 'data_as_of', 'expires_at',
+          'is_validated', 'validation_result', 'created_at', 'updated_at'
+        )
+      min: 18
+
+  - id: v5-02
+    title: "HNSW vector index exists on atlas_intelligence"
+    description: >
+      The HNSW index idx_intelligence_embedding must exist on the
+      atlas_intelligence table for fast vector similarity search.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM pg_indexes
+        WHERE tablename = 'atlas_intelligence'
+        AND indexname = 'idx_intelligence_embedding'
+      min: 1
+
+  - id: v5-03
+    title: "atlas_agent_scores table exists with required columns"
+    description: >
+      The atlas_agent_scores table must exist with core tracking columns:
+      id, agent_id, accuracy_score, prediction_date, entity,
+      actual_outcome, evaluation_date, created_at, updated_at.
+      This table supports the Darwinian scorer pipeline.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_agent_scores'
+        AND column_name IN (
+          'id', 'agent_id', 'accuracy_score', 'prediction_date',
+          'entity', 'actual_outcome', 'evaluation_date',
+          'created_at', 'updated_at'
+        )
+      min: 9
+
+  - id: v5-04
+    title: "atlas_cost_ledger table exists with required columns"
+    description: >
+      The atlas_cost_ledger table must exist with columns for tracking
+      LLM API costs: id, agent_id, model, cost_usd, total_tokens,
+      created_at, updated_at.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_cost_ledger'
+        AND column_name IN (
+          'id', 'agent_id', 'model', 'cost_usd',
+          'total_tokens', 'created_at', 'updated_at'
+        )
+      min: 7
+
+  - id: v5-05
+    title: "GET /api/v1/intelligence/findings endpoint exists"
+    description: >
+      The intelligence findings list endpoint must be registered.
+      Acceptable: 200/400/422/501. Failures: 404/5xx.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_intelligence_findings_endpoint"
+
+  - id: v5-06
+    title: "GET /api/v1/intelligence/search endpoint exists"
+    description: >
+      The intelligence vector search endpoint must be registered.
+      Acceptable: 200/400/422/501. Failures: 404/5xx.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_intelligence_search_endpoint"
+
+  - id: v5-07
+    title: "GET /api/v1/global/briefing endpoint exists"
+    description: >
+      The global briefing endpoint must be registered and return non-404/5xx.
+      Acceptable: 200/400/422/501.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_global_briefing_endpoint"
+
+  - id: v5-08
+    title: "GET /api/v1/global/regime endpoint exists"
+    description: >
+      The global regime endpoint must be registered and return non-404/5xx.
+      Acceptable: 200/400/422/501.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_global_regime_endpoint"
+
+  - id: v5-09
+    title: "GET /api/v1/global/rs-heatmap endpoint exists"
+    description: >
+      The RS heatmap endpoint must be registered and return non-404/5xx.
+      Acceptable: 200/400/422/501.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_global_rs_heatmap_endpoint"
+
+  - id: v5-10
+    title: "No float in V5 intelligence/agent code (Decimal-only)"
+    description: >
+      AST scan of backend/services/intelligence.py, backend/services/embedding.py,
+      backend/services/cost_ledger.py, and backend/agents/ finds zero
+      ': float' annotations. All financial values must be Decimal.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_v5_no_float"
+
+  - id: v5-11
+    title: "No print() in V5 backend code (structlog only)"
+    description: >
+      AST scan of the same V5 directories finds zero print() calls.
+      All logging must go through structlog per project conventions.
+    severity: high
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_v5_no_print"
+
+  - id: v5-12
+    title: "Cost ledger budget gate exists"
+    description: >
+      backend/services/cost_ledger.py must contain DAILY_BUDGET_USD constant
+      and BudgetExhaustedError exception class, enforcing the $2/day hard gate.
+    severity: critical
+    source_spec_section: "§6"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v5.check_cost_ledger_budget"

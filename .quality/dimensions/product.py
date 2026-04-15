@@ -25,6 +25,7 @@ CRITERIA_PATH = ROOT / "docs" / "specs" / "v1-criteria.yaml"
 V2_CRITERIA_PATH = ROOT / "docs" / "specs" / "v2-criteria.yaml"
 V3_CRITERIA_PATH = ROOT / "docs" / "specs" / "v3-criteria.yaml"
 V4_CRITERIA_PATH = ROOT / "docs" / "specs" / "v4-criteria.yaml"
+V5_CRITERIA_PATH = ROOT / "docs" / "specs" / "v5-criteria.yaml"
 SCHEMA_PATH = ROOT / "docs" / "specs" / "v1-criteria.schema.json"
 API_STANDARD_PATH = ROOT / "docs" / "specs" / "api-standard-criteria.yaml"
 API_STANDARD_SCRIPT = ROOT / "scripts" / "check-api-standard.py"
@@ -215,5 +216,6 @@ def dim_product() -> DimensionResult:
     checks.extend(_extra_criteria_checks(V2_CRITERIA_PATH))
     checks.extend(_extra_criteria_checks(V3_CRITERIA_PATH))
     checks.extend(_extra_criteria_checks(V4_CRITERIA_PATH))
+    checks.extend(_extra_criteria_checks(V5_CRITERIA_PATH))
 
     return DimensionResult("product", checks, gating=True)

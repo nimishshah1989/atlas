@@ -1,150 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1440" />
-  <title>ATLAS · HDFC Mid-Cap Opportunities · Fund Detail</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=1440" />
+  <title>ATLAS · HDFC Mid-Cap Opportunities · Fund Deep Dive</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="components.css" />
   <style>
-    /* ── Tooltip (CSS-only, formula hints) ── */
-    .tip { position:relative; display:inline-flex; align-items:center; gap:3px; cursor:help; }
-    .tip .tipbody { visibility:hidden; opacity:0; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); width:260px; background:var(--accent-900); color:#fff; font-size:10px; padding:8px 10px; border-radius:var(--radius-sm); line-height:1.6; z-index:200; pointer-events:none; transition:opacity 80ms; }
-    .tip .tipbody::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--accent-900); }
-    .tip:hover .tipbody { visibility:visible; opacity:1; }
-    .info-i { display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--bg-inset); border:1px solid var(--border-strong); font-size:8px; line-height:12px; text-align:center; color:var(--text-tertiary); font-weight:700; flex-shrink:0; font-style:normal; }
+    /* ── Tooltips ── */
+    .tip{position:relative;display:inline-flex;align-items:center;gap:3px;cursor:help}
+    .tip .tb{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);width:260px;background:var(--accent-900);color:#fff;font-size:10px;padding:8px 10px;border-radius:var(--radius-sm);line-height:1.6;z-index:300;pointer-events:none;transition:opacity 80ms}
+    .tip .tb::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--accent-900)}
+    .tip:hover .tb{visibility:visible;opacity:1}
+    .ii{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--bg-inset);border:1px solid var(--border-strong);font-size:8px;line-height:12px;text-align:center;color:var(--text-tertiary);font-weight:700;flex-shrink:0;font-style:normal}
 
-    /* ── Dense metric grid ── */
-    .mgrid { display:grid; gap:1px; background:var(--border-subtle); border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow:hidden; }
-    .mgrid--2 { grid-template-columns:repeat(2,1fr); }
-    .mgrid--3 { grid-template-columns:repeat(3,1fr); }
-    .mgrid--4 { grid-template-columns:repeat(4,1fr); }
-    .mbox { background:var(--bg-surface); padding:10px 12px; }
-    .mbox__l { font-size:10px; color:var(--text-tertiary); font-weight:var(--fw-medium); margin-bottom:3px; display:flex; align-items:center; gap:3px; }
-    .mbox__v { font-size:var(--fs-md); font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary); line-height:1.2; }
-    .mbox__d { font-size:10px; font-variant-numeric:tabular-nums; margin-top:2px; }
-    .mbox__d--pos { color:var(--rag-green-700); }
-    .mbox__d--neg { color:var(--rag-red-700); }
-    .mbox__d--neu { color:var(--text-tertiary); }
-    .mbox--g { background:var(--rag-green-100); }
-    .mbox--a { background:var(--rag-amber-100); }
-    .mbox--r { background:var(--rag-red-100); }
+    /* ── Layout ── */
+    .page{padding:0 var(--space-6) var(--space-10);max-width:var(--maxw-page);margin:0 auto}
+    .crumb{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--text-tertiary);padding:var(--space-4) 0 var(--space-2)}
+    .crumb a{color:var(--text-accent);cursor:pointer}
+    .crumb__sep{color:var(--border-strong)}
 
-    /* ── Section label ── */
-    .sec-label { font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-2); display:flex; align-items:center; gap:var(--space-3); }
-    .sec-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
-
-    /* ── Detail tabs ── */
-    .dtabs { display:flex; border-bottom:2px solid var(--border-default); margin-bottom:var(--space-5); }
-    .dtab { padding:10px var(--space-5); font-size:var(--fs-sm); font-weight:var(--fw-medium); color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
-    .dtab--active { color:var(--accent-700); border-bottom-color:var(--accent-700); }
-
-    /* ── Chart wrap ── */
-    .chart-wrap { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); }
-    .chart-title { font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--text-primary); margin-bottom:var(--space-3); display:flex; align-items:center; justify-content:space-between; }
-
-    /* ── Rolling returns table ── */
-    .rtable { width:100%; border-collapse:collapse; font-size:11px; }
-    .rtable th { padding:7px 10px; text-align:right; font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; position:sticky; top:0; background:var(--bg-surface); }
-    .rtable th:first-child { text-align:left; position:sticky; left:0; z-index:2; background:var(--bg-surface); min-width:120px; }
-    .rtable td { padding:8px 10px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
-    .rtable td:first-child { text-align:left; font-weight:var(--fw-medium); color:var(--text-secondary); font-size:10px; position:sticky; left:0; background:var(--bg-surface); border-right:1px solid var(--border-default); }
-    .rtable tr.r-highlight td { background:var(--accent-100); font-weight:var(--fw-semibold); }
-    .rtable tr.r-sep td { background:var(--bg-inset); font-size:10px; color:var(--text-tertiary); font-style:italic; }
-    .rtable tr:hover:not(.r-sep) td { background:var(--bg-hover); }
-    .r-pos { color:var(--rag-green-700); }
-    .r-neg { color:var(--rag-red-700); }
-    .r-warn { color:var(--rag-amber-700); }
-    .r-na  { color:var(--text-tertiary); font-style:italic; }
-
-    /* ── Holdings table ── */
-    .htable { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
-    .htable th { padding:6px 10px; font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); text-align:right; white-space:nowrap; }
-    .htable th:first-child { text-align:left; }
-    .htable td { padding:8px 10px; border-bottom:1px solid var(--border-subtle); text-align:right; font-variant-numeric:tabular-nums; }
-    .htable td:first-child { text-align:left; font-weight:var(--fw-medium); }
-    .htable tr:hover td { background:var(--bg-hover); }
-
-    /* ── Allocation bar ── */
-    .alloc-bar { height:8px; border-radius:var(--radius-sm); background:var(--bg-inset); overflow:hidden; margin-top:2px; }
-    .alloc-fill { height:100%; background:var(--accent-700); border-radius:var(--radius-sm); }
-
-    /* ── Peer / fund table ── */
-    .ftable { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
-    .ftable th { padding:6px 10px; text-align:right; font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; }
-    .ftable th:first-child { text-align:left; }
-    .ftable td { padding:8px 10px; border-bottom:1px solid var(--border-subtle); text-align:right; font-variant-numeric:tabular-nums; }
-    .ftable td:first-child { text-align:left; font-weight:var(--fw-medium); }
-    .ftable tr.f-highlight td { background:var(--accent-100); }
-    .ftable tr:hover td { background:var(--bg-hover); }
-
-    /* ── RS mini bar ── */
-    .rs-bar { display:flex; align-items:center; gap:6px; }
-    .rs-track { flex:1; height:4px; background:var(--bg-inset); border-radius:2px; }
-    .rs-fill { height:4px; border-radius:2px; }
-
-    /* ── SIP calc panel ── */
-    .sip-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); }
-    .sip-box { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); }
-    .sip-label { font-size:10px; color:var(--text-tertiary); font-weight:var(--fw-medium); margin-bottom:var(--space-2); }
-    .sip-val { font-size:var(--fs-xl); font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary); }
-    .sip-sub { font-size:var(--fs-xs); color:var(--text-tertiary); margin-top:3px; }
-
-    /* ── Fund manager card ── */
-    .mgr-card { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); display:flex; gap:var(--space-4); }
-    .mgr-avatar { width:44px; height:44px; border-radius:50%; background:var(--accent-100); display:flex; align-items:center; justify-content:center; font-size:var(--fs-lg); font-weight:var(--fw-bold); color:var(--accent-700); flex-shrink:0; }
-    .mgr-body { flex:1; }
-    .mgr-name { font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--text-primary); }
-    .mgr-meta { font-size:var(--fs-xs); color:var(--text-tertiary); margin-top:2px; }
-    .mgr-funds { display:flex; flex-wrap:wrap; gap:4px; margin-top:var(--space-2); }
-    .mgr-tag { font-size:9px; padding:2px 7px; border-radius:var(--radius-full); background:var(--bg-inset); color:var(--text-secondary); font-weight:var(--fw-medium); }
-
-    /* ── Legend row ── */
-    .legend { display:flex; gap:var(--space-5); font-size:10px; color:var(--text-tertiary); margin-top:var(--space-3); }
-    .legend__item { display:flex; align-items:center; gap:5px; }
-    .legend__line { width:18px; height:2px; }
-    .legend__line--solid { background:var(--accent-700); }
-    .legend__line--dash { background:repeating-linear-gradient(90deg,#8A909C 0,#8A909C 3px,transparent 3px,transparent 5px); }
-    .legend__line--gold { background:#B8860B; }
-
-    /* ── Alpha pill ── */
-    .alpha-pill { font-size:10px; font-weight:var(--fw-semibold); padding:2px 7px; border-radius:var(--radius-full); }
-    .alpha-pill--pos { background:var(--rag-green-100); color:var(--rag-green-700); }
-    .alpha-pill--neg { background:var(--rag-red-100); color:var(--rag-red-700); }
-
-    /* ── Donut / sector chart placeholder ── */
-    .donut-legend { display:grid; grid-template-columns:repeat(2,1fr); gap:4px 16px; margin-top:var(--space-3); }
-    .donut-row { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--text-secondary); }
-    .donut-swatch { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
-
-    .page { padding:0 var(--space-6) var(--space-10); max-width:var(--maxw-page); margin:0 auto; }
-    .crumb { display:flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:var(--text-tertiary); padding:var(--space-4) 0 var(--space-2); }
-    .crumb a { color:var(--text-accent); cursor:pointer; }
-    .crumb__sep { color:var(--border-strong); }
+    /* ── Section headers ── */
+    .shd{display:flex;align-items:baseline;gap:var(--space-3);margin:var(--space-7) 0 var(--space-4);padding-bottom:var(--space-3);border-bottom:2px solid var(--border-default)}
+    .shd__badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-700);color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+    .shd__q{font-family:var(--font-serif);font-size:var(--fs-lg);font-weight:600;color:var(--text-primary)}
+    .shd__sub{font-size:var(--fs-sm);color:var(--text-tertiary);margin-left:auto}
 
     /* ── Key stats strip ── */
-    .kstrip { display:grid; grid-template-columns:repeat(10,1fr); background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; margin-bottom:var(--space-4); }
-    .kstrip__cell { padding:10px 12px; border-right:1px solid var(--border-subtle); }
-    .kstrip__cell:last-child { border-right:none; }
-    .kstrip__l { font-size:9px; color:var(--text-tertiary); font-weight:var(--fw-medium); text-transform:uppercase; letter-spacing:.03em; }
-    .kstrip__v { font-size:var(--fs-sm); font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary); margin-top:2px; }
+    .kstrip{display:grid;grid-template-columns:repeat(10,1fr);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden}
+    .kstrip__cell{padding:10px 12px;border-right:1px solid var(--border-subtle)}
+    .kstrip__cell:last-child{border-right:none}
+    .kstrip__l{font-size:9px;color:var(--text-tertiary);font-weight:var(--fw-medium);text-transform:uppercase;letter-spacing:.03em}
+    .kstrip__v{font-size:var(--fs-sm);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;color:var(--text-primary);margin-top:2px}
 
-    /* ── Category badge ── */
-    .cat-badge { font-size:10px; padding:2px 8px; border-radius:var(--radius-full); background:var(--accent-100); color:var(--accent-700); font-weight:var(--fw-semibold); }
+    /* ── Fund tag chips ── */
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin:var(--space-3) 0}
+    .tag{font-size:10px;padding:3px 10px;border-radius:var(--radius-full);font-weight:var(--fw-semibold);border:1px solid transparent;cursor:default}
+    .tag--buy{background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7}
+    .tag--hold{background:#FFF8E1;color:#795548;border-color:#FFE082}
+    .tag--risk{background:#FFF3E0;color:#BF360C;border-color:#FFCC80}
+    .tag--info{background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-300)}
+    .tag--neutral{background:var(--bg-inset);color:var(--text-secondary);border-color:var(--border-default)}
 
-    /* ── Tracker strip (NAV history mini chart) ── */
-    .navchip { display:inline-flex; align-items:center; gap:8px; background:var(--bg-inset); border-radius:var(--radius-sm); padding:4px 10px; font-size:10px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
-    .navchip--pos { color:var(--rag-green-700); }
-    .navchip--neg { color:var(--rag-red-700); }
+    /* ── Detail tabs ── */
+    .dtabs{display:flex;border-bottom:2px solid var(--border-default);margin-bottom:var(--space-5)}
+    .dtab{padding:10px var(--space-5);font-size:var(--fs-sm);font-weight:var(--fw-medium);color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+    .dtab--active{color:var(--accent-700);border-bottom-color:var(--accent-700)}
 
-    /* ── Overlap & turn ── */
-    .overlap-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); }
+    /* ── Dense metric grid ── */
+    .mgrid{display:grid;gap:1px;background:var(--border-subtle);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden}
+    .mgrid--2{grid-template-columns:repeat(2,1fr)}
+    .mgrid--3{grid-template-columns:repeat(3,1fr)}
+    .mgrid--4{grid-template-columns:repeat(4,1fr)}
+    .mbox{background:var(--bg-surface);padding:10px 12px}
+    .mbox--g{background:var(--rag-green-100)}
+    .mbox--a{background:var(--rag-amber-100)}
+    .mbox--r{background:var(--rag-red-100)}
+    .ml{font-size:10px;color:var(--text-tertiary);font-weight:var(--fw-medium);margin-bottom:3px;display:flex;align-items:center;gap:3px}
+    .mv{font-size:var(--fs-md);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;color:var(--text-primary);line-height:1.2}
+    .md{font-size:10px;font-variant-numeric:tabular-nums;margin-top:2px}
+    .md--pos{color:var(--rag-green-700)}.md--neg{color:var(--rag-red-700)}.md--neu{color:var(--text-tertiary)}
+
+    /* ── Chart wrap ── */
+    .cw{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4)}
+    .ct{font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+    .csub{font-size:10px;color:var(--text-tertiary);margin-bottom:var(--space-3)}
+
+    /* ── Alpha pill ── */
+    .ap{font-size:10px;font-weight:var(--fw-bold);padding:2px 8px;border-radius:var(--radius-full)}
+    .ap--pos{background:var(--rag-green-100);color:var(--rag-green-700)}
+    .ap--neg{background:var(--rag-red-100);color:var(--rag-red-700)}
+    .ap--neu{background:var(--rag-amber-100);color:var(--rag-amber-700)}
+
+    /* ── Legend ── */
+    .leg{display:flex;flex-wrap:wrap;gap:var(--space-4);font-size:10px;color:var(--text-tertiary);margin-top:var(--space-3)}
+    .leg__i{display:flex;align-items:center;gap:5px}
+    .leg__l{width:18px;height:2px}
+    .leg__l--solid{background:var(--accent-700)}
+    .leg__l--dash{background:repeating-linear-gradient(90deg,#8A909C 0,#8A909C 3px,transparent 3px,transparent 5px)}
+    .leg__l--dotgold{background:repeating-linear-gradient(90deg,#B8860B 0,#B8860B 1px,transparent 1px,transparent 4px)}
+
+    /* ── Returns table ── */
+    .rtable{width:100%;border-collapse:collapse;font-size:11px}
+    .rtable th{padding:7px 10px;text-align:right;font-size:10px;font-weight:var(--fw-semibold);color:var(--text-tertiary);border-bottom:2px solid var(--border-default);white-space:nowrap;position:sticky;top:0;background:var(--bg-surface)}
+    .rtable th:first-child{text-align:left;position:sticky;left:0;z-index:2;background:var(--bg-surface);min-width:110px}
+    .rtable td{padding:7px 10px;border-bottom:1px solid var(--border-subtle);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+    .rtable td:first-child{text-align:left;font-weight:var(--fw-medium);color:var(--text-secondary);font-size:10px;position:sticky;left:0;background:var(--bg-surface);border-right:1px solid var(--border-default)}
+    .rtable tr.rhi td{background:var(--accent-100);font-weight:var(--fw-semibold)}
+    .rtable tr.rsep td{background:var(--bg-inset);font-size:10px;color:var(--text-tertiary);font-style:italic}
+    .rtable tr:hover:not(.rsep) td{background:var(--bg-hover)}
+    .rpos{color:var(--rag-green-700)}.rneg{color:var(--rag-red-700)}.rwarn{color:var(--rag-amber-700)}.rna{color:var(--text-tertiary);font-style:italic}
+
+    /* ── Sector signal grid ── */
+    .ssgrid{width:100%;border-collapse:collapse;font-size:11px}
+    .ssgrid th{padding:7px 12px;font-size:10px;font-weight:var(--fw-semibold);color:var(--text-tertiary);border-bottom:2px solid var(--border-default);text-align:right;white-space:nowrap}
+    .ssgrid th:first-child{text-align:left}
+    .ssgrid td{padding:8px 12px;border-bottom:1px solid var(--border-subtle);text-align:right;font-variant-numeric:tabular-nums;vertical-align:middle}
+    .ssgrid td:first-child{text-align:left;font-weight:var(--fw-medium);color:var(--text-primary)}
+    .ssgrid tr:hover td{background:var(--bg-hover)}
+    .sig{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:var(--fw-bold);padding:2px 7px;border-radius:var(--radius-full)}
+    .sig--bull{background:var(--rag-green-100);color:var(--rag-green-700)}
+    .sig--neu{background:var(--bg-inset);color:var(--text-secondary)}
+    .sig--bear{background:var(--rag-red-100);color:var(--rag-red-700)}
+    .conv{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:var(--fw-bold);padding:2px 8px;border-radius:var(--radius-full)}
+    .conv--hi{background:#E3F2FD;color:#0D47A1}
+    .conv--lo{background:#FCE4EC;color:#880E4F}
+    .conv--ok{background:var(--bg-inset);color:var(--text-secondary)}
+
+    /* ── Holdings table ── */
+    .htable{width:100%;border-collapse:collapse;font-size:11px}
+    .htable th{padding:7px 10px;font-size:10px;font-weight:var(--fw-semibold);color:var(--text-tertiary);border-bottom:2px solid var(--border-default);text-align:right;white-space:nowrap}
+    .htable th:first-child{text-align:left;min-width:160px}
+    .htable td{padding:8px 10px;border-bottom:1px solid var(--border-subtle);text-align:right;font-variant-numeric:tabular-nums;vertical-align:middle}
+    .htable td:first-child{text-align:left}
+    .htable tr:hover td{background:var(--bg-hover)}
+    .htable tr.hhi td{background:var(--bg-surface-alt)}
+    .rsbar{display:flex;align-items:center;gap:5px}
+    .rstrack{width:44px;height:4px;background:var(--bg-inset);border-radius:2px;flex-shrink:0}
+    .rsfill{height:4px;border-radius:2px}
+
+    /* ── Peer table ── */
+    .ptable{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+    .ptable th{padding:7px 10px;text-align:right;font-size:10px;font-weight:var(--fw-semibold);color:var(--text-tertiary);border-bottom:2px solid var(--border-default);white-space:nowrap}
+    .ptable th:first-child{text-align:left;min-width:190px}
+    .ptable td{padding:8px 10px;border-bottom:1px solid var(--border-subtle);text-align:right;font-variant-numeric:tabular-nums}
+    .ptable td:first-child{text-align:left;font-weight:var(--fw-medium)}
+    .ptable tr.phi td{background:var(--accent-100)}
+    .ptable tr.psep td{background:var(--bg-inset);color:var(--text-tertiary);font-size:10px;font-style:italic}
+    .ptable tr:hover:not(.psep) td{background:var(--bg-hover)}
+
+    /* ── SIP card ── */
+    .sipc{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4)}
+
+    /* ── Suitability matrix ── */
+    .suit-row{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle);font-size:11px}
+    .suit-row:last-child{border-bottom:none}
   </style>
 </head>
 <body>
 <div class="app">
-<!-- Topbar -->
 <header class="topbar">
   <div class="topbar__brand">atlas<strong>.</strong></div>
   <nav class="topnav">
@@ -161,1098 +155,1147 @@
 </header>
 
 <main class="page">
-  <!-- Breadcrumb -->
   <div class="crumb">
-    <a>Global</a><span class="crumb__sep">›</span>
-    <a>India</a><span class="crumb__sep">›</span>
-    <a>Mid Cap</a><span class="crumb__sep">›</span>
-    <a>Mutual Funds</a><span class="crumb__sep">›</span>
-    <strong style="color:var(--text-primary);">HDFC Mid-Cap Opportunities</strong>
+    <a>India</a><span class="crumb__sep">›</span><a>Mid Cap</a><span class="crumb__sep">›</span><a>Mutual Funds</a><span class="crumb__sep">›</span>
+    <strong style="color:var(--text-primary)">HDFC Mid-Cap Opportunities</strong>
   </div>
 
-  <!-- ── Hero strip ── -->
-  <div style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-3) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
+  <!-- ════ HERO ════ -->
+  <div style="display:grid;grid-template-columns:1fr auto;gap:var(--space-6);padding:var(--space-3) 0 var(--space-3);border-bottom:1px solid var(--border-default);margin-bottom:var(--space-4)">
     <div>
-      <div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap; margin-bottom:var(--space-2);">
-        <h1 style="font-family:var(--font-serif); font-size:22px; font-weight:700; color:var(--text-primary); margin:0;">HDFC Mid-Cap Opportunities Fund</h1>
-        <span class="cat-badge">Mid Cap</span>
-        <span class="badge badge--neutral">Direct · Growth</span>
-        <span style="font-size:var(--fs-xs); color:var(--text-tertiary);">SEBI: MF/020/14 · AMFI: 100233</span>
+      <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:6px">
+        <h1 style="font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--text-primary);margin:0">HDFC Mid-Cap Opportunities Fund</h1>
+        <span class="badge badge--neutral" style="font-size:10px">Mid Cap · Direct · Growth</span>
+        <span style="font-size:var(--fs-xs);color:var(--text-tertiary)">AMFI 100233 · Inception 25-Jun-2007</span>
       </div>
-      <div style="display:flex; align-items:baseline; gap:var(--space-4); flex-wrap:wrap;">
+      <div style="display:flex;align-items:baseline;gap:var(--space-5);flex-wrap:wrap;margin-bottom:var(--space-3)">
         <div>
-          <span style="font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary);">₹148.23</span>
-          <span style="font-size:var(--fs-sm); color:var(--text-tertiary); margin-left:6px;">NAV</span>
+          <span style="font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text-primary)">₹148.23</span>
+          <span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">NAV · 14-Apr-2026</span>
         </div>
-        <span class="navchip navchip--pos">▲ +1.04% today</span>
-        <div style="display:flex; gap:var(--space-5); font-size:var(--fs-xs); color:var(--text-tertiary);">
-          <span>AUM <strong style="color:var(--text-primary); font-variant-numeric:tabular-nums;">₹71,842 Cr</strong></span>
-          <span>Inception <strong style="color:var(--text-primary);">25-Jun-2007</strong></span>
-          <span>Exit load <strong style="color:var(--text-primary);">1% &lt; 12M</strong></span>
-          <span>Min. SIP <strong style="color:var(--text-primary);">₹500/mo</strong></span>
+        <span style="font-size:12px;font-weight:600;color:var(--rag-green-700)">▲ +1.04% today</span>
+        <div style="display:flex;gap:var(--space-5);font-size:var(--fs-xs);color:var(--text-tertiary)">
+          <span>AUM <strong style="color:var(--text-primary);font-variant-numeric:tabular-nums">₹71,842 Cr</strong></span>
+          <span>Expense <strong style="color:var(--text-primary)">0.54%</strong></span>
+          <span>Exit load <strong style="color:var(--text-primary)">1% &lt;12M</strong></span>
+          <span>Min SIP <strong style="color:var(--text-primary)">₹500/mo</strong></span>
         </div>
+      </div>
+      <!-- Fund tags -->
+      <div class="tags">
+        <span class="tag tag--buy">★ Quality Compounder</span>
+        <span class="tag tag--buy">Consistent Alpha Generator</span>
+        <span class="tag tag--info">High Active Share (68%)</span>
+        <span class="tag tag--info">Growth-tilted Portfolio</span>
+        <span class="tag tag--hold">Large AUM — Impact Risk</span>
+        <span class="tag tag--neutral">5Y+ Horizon Required</span>
+        <span class="tag tag--neutral">Aggressive Risk Profile</span>
+        <span class="tag tag--risk">IT Concentration (18.4%)</span>
       </div>
     </div>
-    <div style="display:flex; flex-direction:column; gap:var(--space-2); align-items:flex-end;">
-      <div style="display:flex; gap:var(--space-2);">
+    <div style="display:flex;flex-direction:column;gap:var(--space-3);align-items:flex-end">
+      <div style="display:flex;gap:var(--space-2)">
         <button class="btn btn--outline btn--sm">+ Watchlist</button>
         <button class="btn btn--outline btn--sm">Add to Portfolio</button>
         <button class="btn btn--primary btn--sm">SIP Calculator</button>
       </div>
-      <div style="display:flex; gap:var(--space-3); align-items:center; font-size:var(--fs-xs); color:var(--text-tertiary);">
-        <span>RS Score</span>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <div style="width:80px; height:5px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:76%; height:5px; background:var(--rag-green-500); border-radius:2px;"></div></div>
-          <strong style="color:var(--rag-green-700); font-size:var(--fs-sm); font-variant-numeric:tabular-nums;">76/100</strong>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">Atlas RS Score · <span class="tip">Category rank 12th/342<i class="ii">i</i><span class="tb">Relative Strength composite: Momentum (25) + Risk-adjusted returns (22) + Drawdown quality (18) + Category rank (11) = 76/100</span></span></div>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+          <div style="width:100px;height:6px;background:linear-gradient(90deg,var(--rag-red-400),var(--rag-amber-400),var(--rag-green-400));border-radius:3px;position:relative">
+            <div style="position:absolute;top:-3px;left:76%;width:3px;height:12px;background:var(--text-primary);border-radius:2px"></div>
+          </div>
+          <span style="font-size:20px;font-weight:800;color:var(--rag-green-700);font-variant-numeric:tabular-nums">76</span>
+          <span class="badge badge--green">Strong</span>
         </div>
-        <span class="badge badge--green">Strong</span>
       </div>
+      <div style="font-size:10px;color:var(--text-tertiary);text-align:right">Atlas Verdict: <strong style="color:var(--rag-green-700)">HOLD / ADD ON DIPS</strong></div>
     </div>
   </div>
 
-  <!-- ── Key stats bar (10-col) ── -->
-  <div class="kstrip" style="margin-bottom:var(--space-5);">
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Expense Ratio</div>
-      <div class="kstrip__v">0.54%</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">1Y Return</div>
-      <div class="kstrip__v" style="color:var(--rag-green-700);">+34.8%</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">3Y CAGR</div>
-      <div class="kstrip__v" style="color:var(--rag-green-700);">+28.3%</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">5Y CAGR</div>
-      <div class="kstrip__v" style="color:var(--rag-green-700);">+22.1%</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Sharpe (3Y)</div>
-      <div class="kstrip__v">1.28</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Sortino (3Y)</div>
-      <div class="kstrip__v">1.84</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Max Drawdown</div>
-      <div class="kstrip__v" style="color:var(--rag-amber-700);">−18.4%</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Beta (vs bmark)</div>
-      <div class="kstrip__v">0.93</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Portfolio P/E</div>
-      <div class="kstrip__v">28.4×</div>
-    </div>
-    <div class="kstrip__cell">
-      <div class="kstrip__l">Fund Age</div>
-      <div class="kstrip__v">17Y 9M</div>
-    </div>
+  <!-- Key stats strip -->
+  <div class="kstrip" style="margin-bottom:var(--space-5)">
+    <div class="kstrip__cell"><div class="kstrip__l">1Y Return</div><div class="kstrip__v" style="color:var(--rag-green-700)">+34.8%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">3Y CAGR</div><div class="kstrip__v" style="color:var(--rag-green-700)">+28.3%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">5Y CAGR</div><div class="kstrip__v" style="color:var(--rag-green-700)">+22.1%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Alpha 3Y</div><div class="kstrip__v" style="color:var(--rag-green-700)">+9.2pp</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Sharpe (3Y)</div><div class="kstrip__v">1.28</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Max Drawdown</div><div class="kstrip__v" style="color:var(--rag-amber-700)">−18.4%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Upside Capture</div><div class="kstrip__v" style="color:var(--rag-green-700)">114%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Downside Cap.</div><div class="kstrip__v" style="color:var(--rag-green-700)">88%</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Portfolio P/E</div><div class="kstrip__v">28.4×</div></div>
+    <div class="kstrip__cell"><div class="kstrip__l">Fund Manager</div><div class="kstrip__v" style="font-size:10px">C. Setalvad 11Y</div></div>
   </div>
 
-  <!-- ── Detail tabs ── -->
+  <!-- Detail tabs -->
   <div class="dtabs">
     <div class="dtab dtab--active">Overview</div>
-    <div class="dtab">Portfolio Holdings</div>
-    <div class="dtab">Returns Analysis</div>
-    <div class="dtab">Risk &amp; Ratios</div>
-    <div class="dtab">SIP Simulator</div>
-    <div class="dtab">Compare Funds</div>
-    <div class="dtab">Events</div>
+    <div class="dtab">Holdings</div>
+    <div class="dtab">Returns</div>
+    <div class="dtab">Risk</div>
+    <div class="dtab">Fundamentals</div>
+    <div class="dtab">Simulate</div>
+    <div class="dtab">Compare</div>
   </div>
 
-  <!-- ════════════════════════════════════════
-       OVERVIEW TAB — 3-column dense layout
-       Left: NAV chart + verdict + fund manager
-       Center: risk grid + portfolio metrics + composition
-       Right: RS panel + rolling returns + similar funds
-       ════════════════════════════════════════ -->
-  <div style="display:grid; grid-template-columns:1fr 1fr 300px; gap:var(--space-5); align-items:start;">
+  <!-- ════════════════════════════════════
+       SECTION A — PERFORMANCE
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">A</div>
+    <div class="shd__q">Is this fund generating alpha above its benchmark?</div>
+    <div class="shd__sub">Nifty Midcap 150 TRI · 3Y window</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);align-items:start">
 
-    <!-- ──────────── COL 1: Chart + Verdict + Manager ──────────── -->
-    <div style="display:flex; flex-direction:column; gap:var(--space-4);">
-
-      <!-- NAV chart vs benchmark -->
-      <div class="chart-wrap">
-        <div class="chart-title">
-          <span>NAV vs Benchmark · 3Y</span>
-          <span class="alpha-pill alpha-pill--pos">+9.2pp α</span>
-        </div>
-        <!-- Period tabs -->
-        <div style="display:flex; gap:2px; margin-bottom:var(--space-3);">
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">1M</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">3M</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">6M</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">1Y</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--accent-700); color:#fff; cursor:pointer;">3Y</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">5Y</span>
-          <span style="font-size:9px; padding:2px 6px; border-radius:var(--radius-sm); background:var(--bg-inset); color:var(--text-tertiary); cursor:pointer;">SI</span>
-        </div>
-        <!-- SVG chart: Pattern A — fund solid line vs benchmark dashed grey vs Gold dotted -->
-        <svg viewBox="0 0 400 130" style="width:100%; display:block;">
-          <!-- Y-axis guide lines -->
-          <line x1="0" y1="24" x2="400" y2="24" stroke="#E8EAF0" stroke-width="0.5"/>
-          <line x1="0" y1="56" x2="400" y2="56" stroke="#E8EAF0" stroke-width="0.5"/>
-          <line x1="0" y1="88" x2="400" y2="88" stroke="#E8EAF0" stroke-width="0.5"/>
-          <text x="0" y="23" fill="#8A909C" font-size="8">+120%</text>
-          <text x="0" y="55" fill="#8A909C" font-size="8">+80%</text>
-          <text x="0" y="87" fill="#8A909C" font-size="8">+40%</text>
-          <text x="0" y="113" fill="#8A909C" font-size="8">0%</text>
-          <!-- Zero / base line -->
-          <line x1="28" y1="110" x2="400" y2="110" stroke="#CBD0DC" stroke-width="0.8"/>
-          <!-- Fund line (solid, petrol/green tinted — "your fund") -->
-          <polyline points="28,110 80,97 120,88 160,72 200,58 240,45 280,32 320,22 360,18 400,16"
-                    fill="none" stroke="var(--rag-green-500)" stroke-width="2"/>
-          <!-- Benchmark line (Nifty MC 150 TRI, dashed grey) -->
-          <polyline points="28,110 80,101 120,95 160,83 200,73 240,64 280,56 320,50 360,46 400,44"
-                    fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
-          <!-- Gold reference line (dotted gold) -->
-          <polyline points="28,110 80,105 120,100 160,93 200,87 240,81 280,76 320,72 360,70 400,68"
-                    fill="none" stroke="#B8860B" stroke-width="1.2" stroke-dasharray="1 3"/>
-          <!-- Alpha gap shading -->
-          <polygon points="28,110 80,97 120,88 160,72 200,58 240,45 280,32 320,22 360,18 400,16 400,44 360,46 320,50 280,56 240,64 200,73 160,83 120,95 80,101 28,110"
-                   fill="var(--rag-green-100)" opacity="0.5"/>
-          <!-- Alpha annotation -->
-          <text x="310" y="30" fill="var(--rag-green-700)" font-size="9" font-weight="700">+9.2pp α</text>
-          <!-- Labels right -->
-          <text x="402" y="19" fill="var(--rag-green-700)" font-size="8" font-weight="600">+105.3%</text>
-          <text x="402" y="47" fill="#8A909C" font-size="8">+96.1%</text>
-          <text x="402" y="71" fill="#B8860B" font-size="8">+51.4%</text>
-          <!-- X axis labels -->
-          <text x="28" y="126" fill="#8A909C" font-size="8">Apr'22</text>
-          <text x="160" y="126" fill="#8A909C" font-size="8">Apr'23</text>
-          <text x="290" y="126" fill="#8A909C" font-size="8">Apr'24</text>
-          <text x="368" y="126" fill="#8A909C" font-size="8">Apr'25</text>
-        </svg>
-        <!-- Legend — Pattern A -->
-        <div class="legend">
-          <div class="legend__item"><div class="legend__line legend__line--solid"></div><span>HDFC Mid-Cap +105.3%</span></div>
-          <div class="legend__item"><div class="legend__line legend__line--dash"></div><span>Nifty MC 150 TRI +96.1%</span></div>
-          <div class="legend__item"><div style="width:18px; height:2px; background:repeating-linear-gradient(90deg,#B8860B 0,#B8860B 1px,transparent 1px,transparent 4px);"></div><span>Gold +51.4%</span></div>
+    <!-- NAV chart -->
+    <div class="cw">
+      <div class="ct">
+        <span>NAV vs Benchmark vs Gold · 3Y</span>
+        <div style="display:flex;gap:4px">
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--bg-inset);color:var(--text-tertiary);cursor:pointer">1M</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--bg-inset);color:var(--text-tertiary);cursor:pointer">6M</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--bg-inset);color:var(--text-tertiary);cursor:pointer">1Y</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--accent-700);color:#fff;cursor:pointer">3Y</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--bg-inset);color:var(--text-tertiary);cursor:pointer">5Y</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--bg-inset);color:var(--text-tertiary);cursor:pointer">SI</span>
         </div>
       </div>
-
-      <!-- Atlas Verdict -->
-      <div class="reading">
-        <div class="reading__verdict reading__verdict--green">
-          Consistent alpha generator. 9.2pp above Nifty MC 150 TRI over 3Y — top quartile within category. Risk-adjusted quality is high (Sharpe 1.28).
-        </div>
-        <div class="reading__tabs">
-          <div class="reading__tab reading__tab--active">How to Read</div>
-          <div class="reading__tab">Formula</div>
-          <div class="reading__tab">Actions</div>
-        </div>
-        <div class="reading__body">
-          <p style="font-size:var(--fs-sm); color:var(--text-secondary); line-height:1.6; margin:0;">NAV performance is shown indexed to 100 at start date. Alpha is excess return above benchmark (Nifty Midcap 150 TRI) over the same period. All returns are absolute for &lt;1Y and annualised (CAGR) for ≥1Y. Gold shown as alternative asset reference.</p>
-        </div>
-        <div class="reading__actions">
-          <div class="reading__action">Add to Model Portfolio</div>
-          <div class="reading__action">Download Factsheet</div>
-          <div class="reading__action">View Category Peers</div>
-        </div>
+      <div class="csub">Indexed to 100 at start. Pattern A — fund solid line, benchmark dashed grey, gold dotted.</div>
+      <svg viewBox="0 0 520 155" style="width:100%;display:block">
+        <!-- grid -->
+        <line x1="36" y1="20" x2="520" y2="20" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="36" y1="52" x2="520" y2="52" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="36" y1="84" x2="520" y2="84" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="36" y1="116" x2="520" y2="116" stroke="#E8EAF0" stroke-width=".5"/>
+        <text x="0" y="20" fill="#8A909C" font-size="8.5">+120</text>
+        <text x="0" y="52" fill="#8A909C" font-size="8.5">+80</text>
+        <text x="0" y="84" fill="#8A909C" font-size="8.5">+40</text>
+        <text x="0" y="116" fill="#8A909C" font-size="8.5">0</text>
+        <!-- baseline -->
+        <line x1="36" y1="116" x2="520" y2="116" stroke="#CBD0DC" stroke-width=".8"/>
+        <!-- alpha fill -->
+        <polygon points="36,116 100,100 170,87 240,70 310,54 380,38 450,26 520,20 520,44 450,54 380,66 310,80 240,94 170,104 100,108 36,116" fill="var(--rag-green-100)" opacity=".55"/>
+        <!-- fund line (solid petrol/green) -->
+        <polyline points="36,116 100,100 170,87 240,70 310,54 380,38 450,26 520,20" fill="none" stroke="var(--accent-700)" stroke-width="2.2"/>
+        <!-- benchmark (dashed grey) -->
+        <polyline points="36,116 100,108 170,104 240,94 310,80 380,66 450,54 520,44" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <!-- gold (dotted amber) -->
+        <polyline points="36,116 100,112 170,108 240,100 310,93 380,87 450,82 520,78" fill="none" stroke="#B8860B" stroke-width="1.2" stroke-dasharray="1 3"/>
+        <!-- alpha annotation -->
+        <text x="400" y="32" fill="var(--rag-green-700)" font-size="9" font-weight="700">+9.2pp α</text>
+        <!-- end labels -->
+        <text x="522" y="22" fill="var(--accent-700)" font-size="8" font-weight="600">+105%</text>
+        <text x="522" y="46" fill="#8A909C" font-size="8">+96%</text>
+        <text x="522" y="80" fill="#B8860B" font-size="8">+51%</text>
+        <!-- x labels -->
+        <text x="36" y="135" fill="#8A909C" font-size="8">Apr'22</text>
+        <text x="170" y="135" fill="#8A909C" font-size="8">Apr'23</text>
+        <text x="310" y="135" fill="#8A909C" font-size="8">Apr'24</text>
+        <text x="450" y="135" fill="#8A909C" font-size="8">Apr'25</text>
+        <text x="490" y="135" fill="#8A909C" font-size="8">Now</text>
+      </svg>
+      <div class="leg">
+        <div class="leg__i"><div class="leg__l leg__l--solid"></div><span>HDFC Mid-Cap Opps +105.3%</span></div>
+        <div class="leg__i"><div class="leg__l leg__l--dash"></div><span>Nifty MC150 TRI +96.1%</span></div>
+        <div class="leg__i"><div class="leg__l leg__l--dotgold"></div><span>Gold +51.4%</span></div>
       </div>
+    </div>
 
-      <!-- Fund Manager card -->
-      <div>
-        <div class="sec-label">Fund Manager</div>
-        <div class="mgr-card">
-          <div class="mgr-avatar">CK</div>
-          <div class="mgr-body">
-            <div class="mgr-name">Chirag Setalvad</div>
-            <div class="mgr-meta">Managing this fund since Feb-2014 · 11Y 2M tenure · 22Y industry experience</div>
-            <div class="mgr-funds">
-              <span class="mgr-tag">HDFC Mid-Cap Opps (₹71,842Cr)</span>
-              <span class="mgr-tag">HDFC Retirement Savings (₹4,201Cr)</span>
-              <span class="mgr-tag">HDFC Children's Gift (₹2,918Cr)</span>
-            </div>
-          </div>
-          <div style="text-align:right; flex-shrink:0;">
-            <div style="font-size:10px; color:var(--text-tertiary);">Since inception</div>
-            <div style="font-size:var(--fs-md); font-weight:var(--fw-bold); color:var(--rag-green-700); font-variant-numeric:tabular-nums;">+24.7% CAGR</div>
-            <div style="font-size:9px; color:var(--text-tertiary);">vs 19.4% benchmark</div>
-          </div>
-        </div>
-
-        <!-- AMC info strip -->
-        <div style="display:flex; gap:var(--space-5); margin-top:var(--space-3); padding:var(--space-3) var(--space-4); background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md);">
-          <div><div style="font-size:9px; color:var(--text-tertiary);">AMC</div><div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">HDFC Asset Management</div></div>
-          <div><div style="font-size:9px; color:var(--text-tertiary);">Total AUM (AMC)</div><div style="font-size:var(--fs-sm); font-weight:var(--fw-medium); font-variant-numeric:tabular-nums;">₹7,34,218 Cr</div></div>
-          <div><div style="font-size:9px; color:var(--text-tertiary);">Schemes</div><div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">43 open-ended</div></div>
-          <div><div style="font-size:9px; color:var(--text-tertiary);">SEBI Category</div><div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Mid Cap Fund</div></div>
-        </div>
-      </div>
-
-    </div><!-- /col 1 -->
-
-    <!-- ──────────── COL 2: Metrics + Portfolio composition ──────────── -->
-    <div style="display:flex; flex-direction:column; gap:var(--space-4);">
-
-      <!-- Risk metrics grid (3×3) -->
-      <div>
-        <div class="sec-label">Risk Metrics <span style="font-weight:normal; font-style:italic; text-transform:none; letter-spacing:0;">(3Y rolling)</span></div>
-        <div class="mgrid mgrid--3">
-          <div class="mbox mbox--g">
-            <div class="mbox__l">
-              <span class="tip">Sharpe<i class="info-i">i</i><span class="tipbody">Sharpe = (Fund Return − Risk-Free Rate) ÷ Std Dev of Returns. Risk-free = 6.5% (91-day T-bill). Higher = better risk-adjusted return.</span></span>
-            </div>
-            <div class="mbox__v">1.28</div>
-            <div class="mbox__d mbox__d--pos">cat. avg 0.94</div>
-          </div>
-          <div class="mbox mbox--g">
-            <div class="mbox__l">
-              <span class="tip">Sortino<i class="info-i">i</i><span class="tipbody">Sortino = (Fund Return − Risk-Free Rate) ÷ Downside Deviation. Only penalises downside volatility, not upside. Higher = better.</span></span>
-            </div>
-            <div class="mbox__v">1.84</div>
-            <div class="mbox__d mbox__d--pos">cat. avg 1.31</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Beta<i class="info-i">i</i><span class="tipbody">Beta = Cov(Fund, Benchmark) ÷ Var(Benchmark). Beta &lt;1 = less volatile than index. Beta &gt;1 = amplifies market moves.</span></span>
-            </div>
-            <div class="mbox__v">0.93</div>
-            <div class="mbox__d mbox__d--neu">vs Nifty MC150</div>
-          </div>
-          <div class="mbox mbox--a">
-            <div class="mbox__l">
-              <span class="tip">Max Drawdown<i class="info-i">i</i><span class="tipbody">Max Drawdown = (Trough NAV − Peak NAV) ÷ Peak NAV. Largest peak-to-trough decline. Lower (less negative) = better capital protection.</span></span>
-            </div>
-            <div class="mbox__v">−18.4%</div>
-            <div class="mbox__d mbox__d--pos">cat. avg −21.7%</div>
-          </div>
-          <div class="mbox mbox--g">
-            <div class="mbox__l">
-              <span class="tip">Calmar<i class="info-i">i</i><span class="tipbody">Calmar = Annualised Return ÷ |Max Drawdown|. Measures how much return you get per unit of drawdown risk. Higher = better.</span></span>
-            </div>
-            <div class="mbox__v">1.54</div>
-            <div class="mbox__d mbox__d--pos">cat. avg 1.09</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Std Dev (Ann.)<i class="info-i">i</i><span class="tipbody">Annualised standard deviation of monthly returns × √12. Measures total volatility. Lower = smoother ride.</span></span>
-            </div>
-            <div class="mbox__v">17.2%</div>
-            <div class="mbox__d mbox__d--neu">cat. avg 18.9%</div>
-          </div>
-          <div class="mbox mbox--g">
-            <div class="mbox__l">
-              <span class="tip">Info. Ratio<i class="info-i">i</i><span class="tipbody">IR = Alpha ÷ Tracking Error. Measures consistency of outperformance. IR &gt; 0.5 considered good; &gt; 1.0 excellent.</span></span>
-            </div>
-            <div class="mbox__v">0.82</div>
-            <div class="mbox__d mbox__d--pos">excellent</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Tracking Error<i class="info-i">i</i><span class="tipbody">Tracking Error = Std Dev of (Fund Return − Benchmark Return). Measures how closely the fund tracks the benchmark. Active funds deliberately have higher TE.</span></span>
-            </div>
-            <div class="mbox__v">5.8%</div>
-            <div class="mbox__d mbox__d--neu">high active share</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Capture Ratio<i class="info-i">i</i><span class="tipbody">Upside Capture = Fund return in up months ÷ Benchmark return. Downside Capture = same for down months. Up/Down &gt; 1 = ideal (capture more gains, less losses).</span></span>
-            </div>
-            <div class="mbox__v">1.14 / 0.88</div>
-            <div class="mbox__d mbox__d--pos">up↑ / down↓</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Portfolio characteristics grid (3×3) -->
-      <div>
-        <div class="sec-label">Portfolio Characteristics <span style="font-weight:normal; font-style:italic; text-transform:none; letter-spacing:0;">(as of 31-Mar-2026)</span></div>
-        <div class="mgrid mgrid--3">
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Wtd. P/E<i class="info-i">i</i><span class="tipbody">Weighted average P/E of all holdings by portfolio weight. Measures valuation premium investors pay for the portfolio's earnings.</span></span>
-            </div>
-            <div class="mbox__v">28.4×</div>
-            <div class="mbox__d mbox__d--neu">cat. 31.2×</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Wtd. P/B<i class="info-i">i</i><span class="tipbody">Weighted average Price-to-Book ratio. P/B &lt; 1 = trading below book value. Higher P/B implies expectations of above-average ROE.</span></span>
-            </div>
-            <div class="mbox__v">4.8×</div>
-            <div class="mbox__d mbox__d--neu">cat. 5.3×</div>
-          </div>
-          <div class="mbox mbox--g">
-            <div class="mbox__l">
-              <span class="tip">Wtd. ROE<i class="info-i">i</i><span class="tipbody">Weighted average Return on Equity of portfolio companies. ROE = Net Profit ÷ Shareholders' Equity. Higher = more capital-efficient businesses.</span></span>
-            </div>
-            <div class="mbox__v">21.3%</div>
-            <div class="mbox__d mbox__d--pos">cat. 17.8%</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">Holdings</div>
-            <div class="mbox__v">64</div>
-            <div class="mbox__d mbox__d--neu">Top 10 = 42.1%</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">Turnover</div>
-            <div class="mbox__v">34%</div>
-            <div class="mbox__d mbox__d--neu">low churn</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">Cash &amp; Equiv.</div>
-            <div class="mbox__v">2.4%</div>
-            <div class="mbox__d mbox__d--pos">fully deployed</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">
-              <span class="tip">Avg Mkt Cap<i class="info-i">i</i><span class="tipbody">Simple average market capitalisation of equity holdings. For mid cap funds, SEBI mandates ≥65% in 101st–250th largest cos by market cap.</span></span>
-            </div>
-            <div class="mbox__v">₹38,412 Cr</div>
-            <div class="mbox__d mbox__d--neu">pure mid-cap</div>
-          </div>
-          <div class="mbox mbox--g">
-            <div class="mbox__l">Earnings Growth (Wtd.)</div>
-            <div class="mbox__v">+23.4%</div>
-            <div class="mbox__d mbox__d--pos">3Y fwd est.</div>
-          </div>
-          <div class="mbox">
-            <div class="mbox__l">Debt-to-Equity (Wtd.)</div>
-            <div class="mbox__v">0.22×</div>
-            <div class="mbox__d mbox__d--pos">low leverage</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Market cap allocation -->
-      <div>
-        <div class="sec-label">Market Cap Allocation</div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
-          <!-- Stacked bar -->
-          <div style="display:flex; border-radius:var(--radius-sm); overflow:hidden; height:12px; margin-bottom:var(--space-3);">
-            <div style="width:12%; background:#134F5C;" title="Large Cap 12%"></div>
-            <div style="width:68%; background:#1A6B7A;" title="Mid Cap 68%"></div>
-            <div style="width:17%; background:#2E8B9A;" title="Small Cap 17%"></div>
-            <div style="width:3%; background:var(--bg-inset);" title="Cash 3%"></div>
-          </div>
-          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3);">
-            <div style="font-size:10px;">
-              <div style="color:var(--text-tertiary);">Large Cap</div>
-              <div style="font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums;">12.0%</div>
-              <div style="font-size:9px; color:var(--rag-amber-700);">↑ from 9.2%</div>
-            </div>
-            <div style="font-size:10px;">
-              <div style="color:var(--text-tertiary);">Mid Cap</div>
-              <div style="font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums;">68.3%</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">stable</div>
-            </div>
-            <div style="font-size:10px;">
-              <div style="color:var(--text-tertiary);">Small Cap</div>
-              <div style="font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums;">17.3%</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">within SEBI limit</div>
-            </div>
-            <div style="font-size:10px;">
-              <div style="color:var(--text-tertiary);">Cash</div>
-              <div style="font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums;">2.4%</div>
-              <div style="font-size:9px; color:var(--rag-green-700);">low, bullish</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /col 2 -->
-
-    <!-- ──────────── COL 3: RS panel + rolling summary + events ──────────── -->
-    <div style="display:flex; flex-direction:column; gap:var(--space-4);">
-
-      <!-- RS Score detailed panel -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
-        <div style="font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">
-          <span class="tip">RS Score Breakdown<i class="info-i">i</i><span class="tipbody">Relative Strength Score = weighted composite of: Momentum (1M/3M/6M/12M), Risk-Adjusted Returns (Sharpe/Sortino), Drawdown recovery, Category rank. Scale 0–100.</span></span>
-        </div>
-        <div style="text-align:center; margin-bottom:var(--space-3);">
-          <div style="font-size:40px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--rag-green-700); line-height:1;">76</div>
-          <div style="font-size:10px; color:var(--text-tertiary);">/100 · Top 12% of 342 mid-cap funds</div>
-          <div style="margin-top:var(--space-2); height:6px; border-radius:3px; background:linear-gradient(90deg,var(--rag-red-400),var(--rag-amber-400),var(--rag-green-400)); position:relative;">
-            <div style="position:absolute; top:-3px; left:76%; width:2px; height:12px; background:var(--text-primary); border-radius:1px;"></div>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-tertiary); margin-top:2px;"><span>0</span><span>50</span><span>100</span></div>
-        </div>
-        <!-- Sub-scores -->
-        <div style="display:flex; flex-direction:column; gap:var(--space-2);">
-          <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px;">
-            <span class="tip" style="color:var(--text-secondary);">Momentum Score<i class="info-i">i</i><span class="tipbody">Weighted avg of 1M(10%), 3M(20%), 6M(30%), 12M(40%) returns vs category peers. Score 0–25.</span></span>
-            <span style="display:flex; align-items:center; gap:6px; font-weight:var(--fw-semibold);">
-              <div style="width:60px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:84%; height:4px; background:var(--rag-green-500);"></div></div>
-              <span style="color:var(--rag-green-700);">21/25</span>
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px;">
-            <span class="tip" style="color:var(--text-secondary);">Risk-Adj. Returns<i class="info-i">i</i><span class="tipbody">Composite of Sharpe + Sortino + Calmar vs category. Score 0–25.</span></span>
-            <span style="display:flex; align-items:center; gap:6px; font-weight:var(--fw-semibold);">
-              <div style="width:60px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:88%; height:4px; background:var(--rag-green-500);"></div></div>
-              <span style="color:var(--rag-green-700);">22/25</span>
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px;">
-            <span class="tip" style="color:var(--text-secondary);">Drawdown Quality<i class="info-i">i</i><span class="tipbody">Max Drawdown severity + recovery speed vs category peers. Score 0–25.</span></span>
-            <span style="display:flex; align-items:center; gap:6px; font-weight:var(--fw-semibold);">
-              <div style="width:60px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:72%; height:4px; background:var(--rag-amber-500);"></div></div>
-              <span style="color:var(--rag-amber-700);">18/25</span>
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px;">
-            <span class="tip" style="color:var(--text-secondary);">Category Rank<i class="info-i">i</i><span class="tipbody">Percentile rank within SEBI mid cap category for 1Y, 3Y, 5Y returns. Score 0–25.</span></span>
-            <span style="display:flex; align-items:center; gap:6px; font-weight:var(--fw-semibold);">
-              <div style="width:60px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:60%; height:4px; background:var(--rag-green-400);"></div></div>
-              <span style="color:var(--rag-green-700);">15/25</span>
-            </span>
-          </div>
-        </div>
-        <!-- Rank trend -->
-        <div style="margin-top:var(--space-3); padding-top:var(--space-3); border-top:1px solid var(--border-subtle);">
-          <div style="font-size:9px; color:var(--text-tertiary); margin-bottom:4px;">Category rank trend (1Y · 3Y · 5Y)</div>
-          <div style="display:flex; justify-content:space-between; font-size:10px;">
-            <div style="text-align:center;"><div style="font-weight:var(--fw-bold); color:var(--rag-amber-700);">38th</div><div style="color:var(--text-tertiary); font-size:9px;">1Y</div></div>
-            <div style="text-align:center;"><div style="font-weight:var(--fw-bold); color:var(--rag-green-700);">12th</div><div style="color:var(--text-tertiary); font-size:9px;">3Y</div></div>
-            <div style="text-align:center;"><div style="font-weight:var(--fw-bold); color:var(--rag-green-700);">8th</div><div style="color:var(--text-tertiary); font-size:9px;">5Y</div></div>
-            <div style="text-align:center;"><div style="font-weight:var(--fw-bold); color:var(--rag-green-700);">4th</div><div style="color:var(--text-tertiary); font-size:9px;">SI</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SIP quick summary -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
-        <div style="font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">SIP of ₹10,000/month</div>
-        <div style="display:flex; flex-direction:column; gap:var(--space-3);">
-          <div style="display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:var(--space-2);">
-            <span style="font-size:10px; color:var(--text-tertiary); min-width:28px;">3Y</span>
-            <div style="height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden; align-self:center;"><div style="width:55%; height:4px; background:var(--rag-green-500);"></div></div>
-            <div style="text-align:right; min-width:90px;">
-              <span style="font-size:11px; font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary);">₹4.89 L</span>
-              <span style="font-size:9px; color:var(--rag-green-700); margin-left:4px;">+₹1.29 L</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:var(--space-2);">
-            <span style="font-size:10px; color:var(--text-tertiary); min-width:28px;">5Y</span>
-            <div style="height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden; align-self:center;"><div style="width:78%; height:4px; background:var(--rag-green-500);"></div></div>
-            <div style="text-align:right; min-width:90px;">
-              <span style="font-size:11px; font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary);">₹10.24 L</span>
-              <span style="font-size:9px; color:var(--rag-green-700); margin-left:4px;">+₹4.24 L</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:var(--space-2);">
-            <span style="font-size:10px; color:var(--text-tertiary); min-width:28px;">10Y</span>
-            <div style="height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden; align-self:center;"><div style="width:100%; height:4px; background:var(--rag-green-500);"></div></div>
-            <div style="text-align:right; min-width:90px;">
-              <span style="font-size:11px; font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary);">₹31.72 L</span>
-              <span style="font-size:9px; color:var(--rag-green-700); margin-left:4px;">+₹19.72 L</span>
-            </div>
-          </div>
-        </div>
-        <div style="font-size:9px; color:var(--text-tertiary); margin-top:var(--space-3); border-top:1px solid var(--border-subtle); padding-top:var(--space-2);">Based on actual historical XIRR. Not a guarantee of future returns.</div>
-      </div>
-
-      <!-- Upcoming events -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
-        <div style="font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">Fund Events</div>
-        <div style="display:flex; flex-direction:column; gap:var(--space-2);">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-xs); padding:var(--space-2) 0; border-bottom:1px solid var(--border-subtle);">
-            <span style="color:var(--text-secondary);">Portfolio disclosure</span>
-            <span style="color:var(--rag-amber-700); font-weight:var(--fw-semibold);">30-Apr-2026</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-xs); padding:var(--space-2) 0; border-bottom:1px solid var(--border-subtle);">
-            <span style="color:var(--text-secondary);">Dividend declaration (Growth)</span>
-            <span style="color:var(--text-tertiary);">N/A — reinvested</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-xs); padding:var(--space-2) 0; border-bottom:1px solid var(--border-subtle);">
-            <span style="color:var(--text-secondary);">AUM milestone</span>
-            <span style="color:var(--rag-green-700); font-weight:var(--fw-medium);">₹71,842 Cr → Top 5 mid-cap</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-xs); padding:var(--space-2) 0;">
-            <span style="color:var(--text-secondary);">Annual report FY26</span>
-            <span style="color:var(--rag-amber-700);">Jun-2026</span>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /col 3 -->
-
-  </div><!-- /3-col overview -->
-
-  <!-- ════════════════════════════════════════
-       HOLDINGS & SECTOR section (below 3-col)
-       ════════════════════════════════════════ -->
-  <div style="margin-top:var(--space-6);">
-    <div class="sec-label">Top Holdings &amp; Sector Allocation <span style="font-weight:normal; font-style:italic; text-transform:none; letter-spacing:0;">(Mar-2026)</span></div>
-    <div style="display:grid; grid-template-columns:1fr 340px 280px; gap:var(--space-5); align-items:start;">
-
-      <!-- Top 10 holdings table -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden;">
-        <table class="htable">
-          <thead>
-            <tr style="background:var(--bg-inset);">
-              <th style="text-align:left; padding:8px 12px;">#</th>
-              <th style="text-align:left;">Holding</th>
-              <th>Sector</th>
-              <th>
-                <span class="tip">Wt.%<i class="info-i">i</i><span class="tipbody">Portfolio weight = (Market value of holding ÷ Total portfolio NAV) × 100. SEBI mandates no single stock &gt;10% for mid-cap funds.</span></span>
-              </th>
-              <th>Δ vs Last</th>
-              <th>
-                <span class="tip">RS<i class="info-i">i</i><span class="tipbody">Relative Strength of this stock within its sector. Score 0–100.</span></span>
-              </th>
-              <th>
-                <span class="tip">3M Ret.<i class="info-i">i</i><span class="tipbody">3-month absolute return of the underlying stock, measured over last 91 calendar days.</span></span>
-              </th>
-            </tr>
-          </thead>
+    <!-- Returns table + Atlas verdict -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
+        <table class="rtable">
+          <thead><tr>
+            <th style="text-align:left">Period</th>
+            <th style="background:var(--accent-100)">Fund</th>
+            <th>Bmark</th>
+            <th><span class="tip">α<i class="ii">i</i><span class="tb">Alpha = Fund Return − Nifty MC150 TRI return for same period.</span></span></th>
+            <th>Cat. Rank</th>
+          </tr></thead>
           <tbody>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">1</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Cholamandalam Inv</div><div style="font-size:9px; color:var(--text-tertiary);">CHOLAFIN</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">NBFC</span></td>
-              <td>5.8%</td>
-              <td style="color:var(--rag-green-700);">+0.3pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:82%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">82</span></div></td>
-              <td style="color:var(--rag-green-700);">+14.2%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">2</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Persistent Systems</div><div style="font-size:9px; color:var(--text-tertiary);">PERSISTENT</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">IT</span></td>
-              <td>5.1%</td>
-              <td style="color:var(--rag-red-700);">−0.2pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:74%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">74</span></div></td>
-              <td style="color:var(--rag-green-700);">+9.8%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">3</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Cummins India</div><div style="font-size:9px; color:var(--text-tertiary);">CUMMINSIND</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">Industrial</span></td>
-              <td>4.6%</td>
-              <td style="color:var(--text-tertiary);">—</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:78%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">78</span></div></td>
-              <td style="color:var(--rag-green-700);">+11.4%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">4</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Max Healthcare</div><div style="font-size:9px; color:var(--text-tertiary);">MAXHEALTH</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">Healthcare</span></td>
-              <td>4.2%</td>
-              <td style="color:var(--rag-green-700);">+0.1pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:71%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">71</span></div></td>
-              <td style="color:var(--rag-green-700);">+8.1%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">5</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Mphasis</div><div style="font-size:9px; color:var(--text-tertiary);">MPHASIS</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">IT</span></td>
-              <td>3.8%</td>
-              <td style="color:var(--rag-red-700);">−0.4pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:59%; background:var(--rag-amber-500);"></div></div><span style="font-size:10px; color:var(--rag-amber-700); min-width:20px;">59</span></div></td>
-              <td style="color:var(--rag-amber-700);">+3.2%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">6</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Krishna Institute</div><div style="font-size:9px; color:var(--text-tertiary);">KIMS</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">Healthcare</span></td>
-              <td>3.6%</td>
-              <td style="color:var(--rag-green-700);">+0.2pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:68%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">68</span></div></td>
-              <td style="color:var(--rag-green-700);">+12.9%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">7</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Ramkrishna Forgings</div><div style="font-size:9px; color:var(--text-tertiary);">RKFORGE</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">Auto Ancil.</span></td>
-              <td>3.1%</td>
-              <td style="color:var(--text-tertiary);">—</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:63%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">63</span></div></td>
-              <td style="color:var(--rag-green-700);">+6.7%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">8</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Sundaram Finance</div><div style="font-size:9px; color:var(--text-tertiary);">SUNDARMFIN</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">NBFC</span></td>
-              <td>2.9%</td>
-              <td style="color:var(--rag-red-700);">−0.1pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:55%; background:var(--rag-amber-500);"></div></div><span style="font-size:10px; color:var(--rag-amber-700); min-width:20px;">55</span></div></td>
-              <td style="color:var(--rag-amber-700);">+2.1%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">9</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Coforge</div><div style="font-size:9px; color:var(--text-tertiary);">COFORGE</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">IT</span></td>
-              <td>2.8%</td>
-              <td style="color:var(--rag-green-700);">+0.3pp</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:69%; background:var(--rag-green-500);"></div></div><span style="font-size:10px; color:var(--rag-green-700); min-width:20px;">69</span></div></td>
-              <td style="color:var(--rag-green-700);">+17.3%</td>
-            </tr>
-            <tr>
-              <td style="text-align:left; color:var(--text-tertiary); font-size:10px; padding-left:12px;">10</td>
-              <td style="text-align:left;"><div style="font-weight:var(--fw-semibold);">Emami</div><div style="font-size:9px; color:var(--text-tertiary);">EMAMILTD</div></td>
-              <td><span style="font-size:10px; color:var(--text-secondary);">FMCG</span></td>
-              <td>2.2%</td>
-              <td style="color:var(--text-tertiary);">—</td>
-              <td><div class="rs-bar"><div class="rs-track"><div class="rs-fill" style="width:42%; background:var(--rag-red-400);"></div></div><span style="font-size:10px; color:var(--rag-red-700); min-width:20px;">42</span></div></td>
-              <td style="color:var(--rag-red-700);">−3.8%</td>
-            </tr>
-            <tr style="background:var(--bg-inset);">
-              <td style="text-align:left; padding-left:12px; color:var(--text-tertiary); font-size:10px;" colspan="2"><em>Top 10 subtotal</em></td>
-              <td></td>
-              <td style="font-weight:var(--fw-bold); color:var(--text-primary);">38.1%</td>
-              <td colspan="3" style="text-align:left; font-size:10px; color:var(--text-tertiary);">+ 54 more holdings</td>
-            </tr>
+            <tr class="rsep"><td colspan="5">— Short term —</td></tr>
+            <tr><td>1M</td><td style="background:var(--accent-100)" class="rpos">+3.8%</td><td class="rpos">+2.9%</td><td class="rpos">+0.9pp</td><td>41/342</td></tr>
+            <tr><td>3M</td><td style="background:var(--accent-100)" class="rpos">+11.4%</td><td class="rpos">+9.1%</td><td class="rpos">+2.3pp</td><td>28/338</td></tr>
+            <tr><td>6M</td><td style="background:var(--accent-100)" class="rpos">+19.3%</td><td class="rpos">+15.8%</td><td class="rpos">+3.5pp</td><td>18/334</td></tr>
+            <tr class="rsep"><td colspan="5">— CAGR —</td></tr>
+            <tr><td>1Y</td><td style="background:var(--accent-100)" class="rpos">+34.8%</td><td class="rpos">+28.9%</td><td class="rpos">+5.9pp</td><td>38/318</td></tr>
+            <tr><td>2Y</td><td style="background:var(--accent-100)" class="rpos">+31.2%</td><td class="rpos">+27.4%</td><td class="rpos">+3.8pp</td><td>24/298</td></tr>
+            <tr class="rhi"><td>3Y ★</td><td style="background:var(--accent-100);font-weight:700" class="rpos">+28.3%</td><td class="rpos">+19.1%</td><td style="font-weight:700" class="rpos">+9.2pp</td><td style="font-weight:700;color:var(--rag-green-700)">12/284</td></tr>
+            <tr><td>5Y</td><td style="background:var(--accent-100)" class="rpos">+22.1%</td><td class="rpos">+18.4%</td><td class="rpos">+3.7pp</td><td>8/248</td></tr>
+            <tr><td>10Y</td><td style="background:var(--accent-100)" class="rpos">+18.8%</td><td class="rpos">+15.2%</td><td class="rpos">+3.6pp</td><td>5/148</td></tr>
+            <tr><td>Since Inc.</td><td style="background:var(--accent-100)" class="rpos">+24.7%</td><td class="rpos">+19.4%</td><td class="rpos">+5.3pp</td><td class="rna">—</td></tr>
           </tbody>
         </table>
       </div>
-
-      <!-- Sector allocation vertical chart -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
-        <div style="font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">Sector Allocation vs Benchmark</div>
-        <!-- Pattern B: Active weight bars (fund - benchmark = signed delta) -->
-        <div style="display:flex; flex-direction:column; gap:var(--space-2); font-size:11px;">
-          <!-- Row format: sector name | delta bar | delta value | fund wt -->
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Financials</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; right:50%; width:8%; height:8px; background:var(--rag-red-400); border-radius:2px 0 0 2px;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-red-700);">−1.2pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">22.1%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">IT</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; left:50%; width:12%; height:8px; background:var(--rag-green-400); border-radius:0 2px 2px 0;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-green-700);">+2.1pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">18.4%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Healthcare</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; left:50%; width:18%; height:8px; background:var(--rag-green-400); border-radius:0 2px 2px 0;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-green-700);">+3.4pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">14.2%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Industrials</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; left:50%; width:6%; height:8px; background:var(--rag-green-400); border-radius:0 2px 2px 0;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-green-700);">+1.0pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">10.8%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Chemicals</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; right:50%; width:4%; height:8px; background:var(--rag-red-300); border-radius:2px 0 0 2px;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-red-700);">−0.6pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">7.3%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Consumer</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; left:50%; width:2%; height:8px; background:var(--bg-inset); border-radius:0 2px 2px 0;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--text-tertiary);">0.0pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">6.2%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Auto</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; right:50%; width:10%; height:8px; background:var(--rag-red-400); border-radius:2px 0 0 2px;"></div>
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--rag-red-700);">−1.8pp</span>
-            <span style="text-align:right; color:var(--text-tertiary);">5.9%</span>
-          </div>
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; align-items:center; gap:6px;">
-            <span style="color:var(--text-secondary); font-size:10px;">Others</span>
-            <div style="position:relative; height:8px; background:var(--bg-inset); border-radius:2px;">
-              <div style="position:absolute; left:50%; width:0; top:-1px; height:10px; border-left:1px solid var(--border-strong);"></div>
-            </div>
-            <span style="text-align:right; color:var(--text-tertiary);">—</span>
-            <span style="text-align:right; color:var(--text-tertiary);">12.7%</span>
-          </div>
-          <!-- Legend header -->
-          <div style="display:grid; grid-template-columns:90px 1fr 36px 36px; font-size:9px; color:var(--text-tertiary); border-top:1px solid var(--border-subtle); padding-top:var(--space-2); margin-top:var(--space-1);">
-            <span></span>
-            <span style="text-align:center;">← Under · Over →</span>
-            <span style="text-align:right;">Δ bmark</span>
-            <span style="text-align:right;">Fund wt</span>
-          </div>
-        </div>
-        <div style="font-size:9px; color:var(--text-tertiary); margin-top:var(--space-3); border-top:1px solid var(--border-subtle); padding-top:var(--space-2);">
-          Zero line = Nifty MC 150 weight. Bars = active tilt (fund − benchmark).
+      <!-- Mini verdict -->
+      <div class="reading">
+        <div class="reading__verdict reading__verdict--green">Consistent outperformer. +9.2pp alpha over 3Y — beats benchmark in 8 of last 10 calendar years. Alpha is not a one-year event.</div>
+        <div class="reading__actions">
+          <div class="reading__action">Add to Model Portfolio</div>
+          <div class="reading__action">Download Factsheet</div>
         </div>
       </div>
-
-      <!-- Overlap & similarity panel -->
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
-        <div style="font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">Portfolio Overlap</div>
-        <div style="display:flex; flex-direction:column; gap:var(--space-2); font-size:11px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary); font-size:10px;">Kotak Emerging Equity</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="width:50px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:62%; height:4px; background:var(--rag-amber-400);"></div></div>
-              <span style="font-weight:var(--fw-semibold); color:var(--rag-amber-700);">62%</span>
-            </div>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary); font-size:10px;">Axis Mid Cap</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="width:50px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:48%; height:4px; background:var(--rag-green-400);"></div></div>
-              <span style="font-weight:var(--fw-semibold); color:var(--rag-green-700);">48%</span>
-            </div>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary); font-size:10px;">DSP Mid Cap</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="width:50px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:44%; height:4px; background:var(--rag-green-400);"></div></div>
-              <span style="font-weight:var(--fw-semibold); color:var(--rag-green-700);">44%</span>
-            </div>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary); font-size:10px;">Nippon India Growth</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="width:50px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:38%; height:4px; background:var(--rag-green-400);"></div></div>
-              <span style="font-weight:var(--fw-semibold); color:var(--rag-green-700);">38%</span>
-            </div>
-          </div>
-        </div>
-        <div style="font-size:9px; color:var(--text-tertiary); margin-top:var(--space-3); padding-top:var(--space-2); border-top:1px solid var(--border-subtle);">
-          % of holdings in common (by weight-adjusted count). &gt;60% = high overlap — reduces diversification benefit.
-        </div>
-      </div>
-
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════
-       ROLLING RETURNS TABLE (full width)
-       ════════════════════════════════════════ -->
-  <div style="margin-top:var(--space-6);">
-    <div class="sec-label">Rolling Returns vs Benchmark &amp; Category <span style="font-weight:normal; font-style:italic; text-transform:none; letter-spacing:0;">(as of 14-Apr-2026, annualised for ≥1Y)</span></div>
-    <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:auto;">
-      <table class="rtable">
+  <!-- ════════════════════════════════════
+       SECTION B — ALPHA QUALITY & MANAGER'S SKILL
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">B</div>
+    <div class="shd__q">Is alpha skill-based or market beta? Where does it come from?</div>
+    <div class="shd__sub">Rolling alpha · Brinson attribution · Manager track record</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5);align-items:start">
+
+    <!-- Rolling 12M alpha chart -->
+    <div class="cw">
+      <div class="ct"><span>12-Month Rolling Alpha vs Nifty MC150 TRI</span><span class="ap ap--pos">avg +6.8pp</span></div>
+      <div class="csub">Positive = fund outperforming. Consistently above zero line = skill, not luck.</div>
+      <svg viewBox="0 0 420 130" style="width:100%;display:block">
+        <!-- grid -->
+        <line x1="32" y1="20" x2="420" y2="20" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="32" y1="55" x2="420" y2="55" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="32" y1="90" x2="420" y2="90" stroke="#E8EAF0" stroke-width=".5"/>
+        <!-- zero line (prominent) -->
+        <line x1="32" y1="73" x2="420" y2="73" stroke="#CBD0DC" stroke-width="1.2" stroke-dasharray="4 2"/>
+        <text x="0" y="20" fill="#8A909C" font-size="8">+20pp</text>
+        <text x="0" y="55" fill="#8A909C" font-size="8">+10pp</text>
+        <text x="0" y="73" fill="#CBD0DC" font-size="8">0</text>
+        <text x="0" y="90" fill="#8A909C" font-size="8">−5pp</text>
+        <!-- negative area (red, only one dip — 2022 drawdown) -->
+        <polygon points="168,73 192,84 216,88 240,80 168,73" fill="var(--rag-red-100)" opacity=".7"/>
+        <!-- positive area (green) -->
+        <polygon points="32,73 56,62 80,55 120,45 144,50 168,73 240,80 264,62 300,45 330,35 360,30 390,32 420,28 420,73 32,73" fill="var(--rag-green-100)" opacity=".6"/>
+        <!-- rolling alpha line -->
+        <polyline points="32,73 56,62 80,55 120,45 144,50 168,73 192,84 216,88 240,80 264,62 300,45 330,35 360,30 390,32 420,28" fill="none" stroke="var(--rag-green-600,#2E7D32)" stroke-width="2"/>
+        <!-- annotation: dip -->
+        <text x="190" y="100" fill="var(--rag-red-700)" font-size="7.5">2022 correction</text>
+        <!-- annotation: avg line -->
+        <line x1="32" y1="42" x2="420" y2="42" stroke="var(--rag-green-500)" stroke-width=".8" stroke-dasharray="2 2" opacity=".6"/>
+        <text x="322" y="39" fill="var(--rag-green-700)" font-size="7.5">avg +6.8pp</text>
+        <!-- x axis -->
+        <text x="32" y="118" fill="#8A909C" font-size="7.5">Apr'21</text>
+        <text x="130" y="118" fill="#8A909C" font-size="7.5">Apr'22</text>
+        <text x="228" y="118" fill="#8A909C" font-size="7.5">Apr'23</text>
+        <text x="326" y="118" fill="#8A909C" font-size="7.5">Apr'24</text>
+        <text x="393" y="118" fill="#8A909C" font-size="7.5">Now</text>
+      </svg>
+      <div style="display:flex;gap:var(--space-5);font-size:10px;margin-top:var(--space-3)">
+        <div><span style="color:var(--text-tertiary)">Positive alpha months</span> <strong style="color:var(--rag-green-700)">41/60 (68%)</strong></div>
+        <div><span style="color:var(--text-tertiary)">Longest positive streak</span> <strong>22 months</strong></div>
+        <div><span style="color:var(--text-tertiary)">Worst alpha</span> <strong style="color:var(--rag-red-700)">−4.2pp (Jun'22)</strong></div>
+      </div>
+    </div>
+
+    <!-- Brinson attribution waterfall -->
+    <div class="cw">
+      <div class="ct"><span>Manager's Alpha Attribution · 3Y Brinson</span><span class="ap ap--pos">+9.2pp total</span></div>
+      <div class="csub">Allocation effect = sector bet quality. Selection effect = stock-picking quality. Interaction = synergy.</div>
+      <svg viewBox="0 0 380 140" style="width:100%;display:block">
+        <!-- waterfall bars -->
+        <!-- Starting baseline at y=110 (0), each bar: allocation first -->
+        <!-- Bar 1: Allocation effect +3.4pp → green bar from y=110 upward 37px -->
+        <rect x="40" y="73" width="60" height="37" fill="var(--rag-green-400)" rx="2"/>
+        <text x="70" y="71" fill="var(--rag-green-700)" font-size="9" font-weight="700" text-anchor="middle">+3.4pp</text>
+        <text x="70" y="122" fill="#8A909C" font-size="8" text-anchor="middle">Allocation</text>
+        <text x="70" y="131" fill="#8A909C" font-size="7.5" text-anchor="middle">effect</text>
+        <!-- connector -->
+        <line x1="100" y1="73" x2="130" y2="73" stroke="#CBD0DC" stroke-width=".8" stroke-dasharray="2 2"/>
+        <!-- Bar 2: Selection effect +5.1pp → green bar from y=73 upward 56px -->
+        <rect x="130" y="17" width="60" height="56" fill="var(--rag-green-500)" rx="2"/>
+        <text x="160" y="14" fill="var(--rag-green-700)" font-size="9" font-weight="700" text-anchor="middle">+5.1pp</text>
+        <text x="160" y="122" fill="#8A909C" font-size="8" text-anchor="middle">Selection</text>
+        <text x="160" y="131" fill="#8A909C" font-size="7.5" text-anchor="middle">effect</text>
+        <!-- connector -->
+        <line x1="190" y1="17" x2="220" y2="17" stroke="#CBD0DC" stroke-width=".8" stroke-dasharray="2 2"/>
+        <!-- Bar 3: Interaction +0.7pp → small green -->
+        <rect x="220" y="9" width="60" height="8" fill="var(--rag-green-300)" rx="2"/>
+        <text x="250" y="7" fill="var(--rag-green-700)" font-size="9" font-weight="700" text-anchor="middle">+0.7pp</text>
+        <text x="250" y="122" fill="#8A909C" font-size="8" text-anchor="middle">Interaction</text>
+        <text x="250" y="131" fill="#8A909C" font-size="7.5" text-anchor="middle">effect</text>
+        <!-- connector to total -->
+        <line x1="280" y1="9" x2="310" y2="9" stroke="#CBD0DC" stroke-width=".8" stroke-dasharray="2 2"/>
+        <!-- Total bar -->
+        <rect x="310" y="9" width="60" height="101" fill="var(--accent-700)" rx="2" opacity=".85"/>
+        <text x="340" y="6" fill="var(--accent-700)" font-size="9" font-weight="700" text-anchor="middle">+9.2pp</text>
+        <text x="340" y="122" fill="#8A909C" font-size="8" text-anchor="middle">Total Alpha</text>
+        <!-- baseline -->
+        <line x1="32" y1="110" x2="378" y2="110" stroke="#CBD0DC" stroke-width="1"/>
+        <text x="0" y="113" fill="#8A909C" font-size="8">0</text>
+      </svg>
+      <!-- Sector contribution table -->
+      <div style="margin-top:var(--space-3);border-top:1px solid var(--border-subtle);padding-top:var(--space-3)">
+        <div style="font-size:10px;color:var(--text-tertiary);font-weight:var(--fw-semibold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">Top contributing sectors (selection effect)</div>
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px;font-size:11px">
+          <span style="color:var(--text-secondary)">Healthcare</span><span class="rpos">+1.8pp</span><span style="color:var(--text-tertiary);font-size:9px">Overweight+right</span>
+          <span style="color:var(--text-secondary)">IT — Persistent, Coforge</span><span class="rpos">+1.4pp</span><span style="color:var(--text-tertiary);font-size:9px">Stock selection</span>
+          <span style="color:var(--text-secondary)">Industrials</span><span class="rpos">+1.1pp</span><span style="color:var(--text-tertiary);font-size:9px">Overweight+right</span>
+          <span style="color:var(--text-secondary)">Auto (underweight)</span><span class="rneg">−0.6pp</span><span style="color:var(--text-tertiary);font-size:9px">Miss</span>
+          <span style="color:var(--text-secondary)">Chemicals (underweight)</span><span class="rneg">−0.4pp</span><span style="color:var(--text-tertiary);font-size:9px">Miss</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager track record strip -->
+  <div style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-5);align-items:center">
+    <div style="display:flex;align-items:center;gap:var(--space-4)">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--accent-100);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);font-weight:700;color:var(--accent-700)">CS</div>
+      <div>
+        <div style="font-weight:var(--fw-semibold);color:var(--text-primary)">Chirag Setalvad <span style="font-size:10px;color:var(--text-tertiary);font-weight:400">— Managing since Feb-2014</span></div>
+        <div style="font-size:var(--fs-xs);color:var(--text-tertiary);margin-top:2px">11Y 2M tenure on this fund · 22Y industry · ₹79,000 Cr total AUM managed</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:var(--space-6);font-size:11px">
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--rag-green-700)">+24.7%</div><div style="color:var(--text-tertiary)">CAGR since inception</div></div>
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--rag-green-700)">+5.3pp</div><div style="color:var(--text-tertiary)">avg annual alpha (SI)</div></div>
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700">1.28</div><div style="color:var(--text-tertiary)">Sharpe (3Y)</div></div>
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--rag-green-700)">68%</div><div style="color:var(--text-tertiary)">months with +α</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:10px">
+      <span style="color:var(--text-tertiary)">Other funds managed:</span>
+      <span style="color:var(--text-secondary)">HDFC Retirement Savings (₹4.2K Cr)</span>
+      <span style="color:var(--text-secondary)">HDFC Children's Gift (₹2.9K Cr)</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SECTION C — RISK-REWARD PROFILE
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">C</div>
+    <div class="shd__q">Am I being compensated for the risk I'm taking?</div>
+    <div class="shd__sub">Risk-reward scatter · Drawdown history · Capture ratio</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 280px;gap:var(--space-5);align-items:start">
+
+    <!-- Risk-reward scatter — Pattern C -->
+    <div class="cw">
+      <div class="ct"><span>Risk-Return Map · Mid Cap Peers (3Y)</span></div>
+      <div class="csub">X = Annualised std dev (lower=safer). Y = 3Y CAGR. Grey ◆ = benchmark (Pattern C reference).</div>
+      <svg viewBox="0 0 300 200" style="width:100%;display:block">
+        <!-- axes -->
+        <line x1="30" y1="10" x2="30" y2="170" stroke="#CBD0DC" stroke-width="1"/>
+        <line x1="30" y1="170" x2="295" y2="170" stroke="#CBD0DC" stroke-width="1"/>
+        <!-- grid -->
+        <line x1="30" y1="50" x2="295" y2="50" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="30" y1="90" x2="295" y2="90" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="30" y1="130" x2="295" y2="130" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="90" y1="10" x2="90" y2="170" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="150" y1="10" x2="150" y2="170" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="210" y1="10" x2="210" y2="170" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="270" y1="10" x2="270" y2="170" stroke="#E8EAF0" stroke-width=".5"/>
+        <!-- y-axis labels: 15% at y=170, 20% at 130, 25% at 90, 30% at 50, 35% at 10 -->
+        <text x="0" y="172" fill="#8A909C" font-size="7.5">15%</text>
+        <text x="0" y="132" fill="#8A909C" font-size="7.5">20%</text>
+        <text x="0" y="92" fill="#8A909C" font-size="7.5">25%</text>
+        <text x="0" y="52" fill="#8A909C" font-size="7.5">30%</text>
+        <text x="0" y="12" fill="#8A909C" font-size="7.5">35%</text>
+        <!-- x-axis: 15% at x=30, 20% at 90, 25% at 150, 28% at 210 -->
+        <text x="25" y="182" fill="#8A909C" font-size="7.5">15%</text>
+        <text x="85" y="182" fill="#8A909C" font-size="7.5">20%</text>
+        <text x="145" y="182" fill="#8A909C" font-size="7.5">25%</text>
+        <text x="205" y="182" fill="#8A909C" font-size="7.5">28%</text>
+        <text x="150" y="195" fill="#8A909C" font-size="8" text-anchor="middle">← Std Dev (lower risk) ·· (higher risk) →</text>
+        <!-- Benchmark diamond Pattern C: std 18.4%→x≈90, return 19.1%→y≈126 -->
+        <polygon points="88,116 94,122 88,128 82,122" fill="#8A909C"/>
+        <text x="88" y="111" fill="#8A909C" font-size="7.5" text-anchor="middle">Nifty MC150</text>
+        <!-- Peer funds: (stddev→x, return→y) -->
+        <!-- Nippon: sd20.3→x=102, ret31.2→y=55 -->
+        <circle cx="102" cy="55" r="5" fill="var(--rag-green-400)" opacity=".8"/>
+        <text x="107" y="53" fill="#555" font-size="7">NI Growth</text>
+        <!-- Kotak: sd18.1→x=84, ret29.4→y=65 -->
+        <circle cx="84" cy="65" r="5" fill="var(--rag-green-400)" opacity=".8"/>
+        <text x="70" y="62" fill="#555" font-size="7">Kotak</text>
+        <!-- Mirae: sd17.8→x=81, ret27.1→y=79 -->
+        <circle cx="81" cy="79" r="4" fill="var(--rag-green-300)" opacity=".8"/>
+        <text x="67" y="78" fill="#555" font-size="7">Mirae</text>
+        <!-- Axis: sd16.8→x=72, ret23.1→y=103 -->
+        <circle cx="72" cy="103" r="4" fill="var(--rag-amber-400)" opacity=".8"/>
+        <text x="57" y="101" fill="#555" font-size="7">Axis</text>
+        <!-- Edelweiss: sd18.9→x=92, ret25.4→y=91 -->
+        <circle cx="92" cy="91" r="4" fill="var(--rag-amber-300)" opacity=".8"/>
+        <text x="96" y="89" fill="#555" font-size="7">Edelweiss</text>
+        <!-- DSP: sd19.4→x=97, ret24.8→y=95 -->
+        <circle cx="97" cy="95" r="4" fill="var(--rag-amber-400)" opacity=".8"/>
+        <text x="101" y="94" fill="#555" font-size="7">DSP</text>
+        <!-- Franklin: sd23.1→x=135, ret26.8→y=82 -->
+        <circle cx="135" cy="82" r="4" fill="var(--rag-amber-300)" opacity=".8"/>
+        <text x="139" y="81" fill="#555" font-size="7">Franklin</text>
+        <!-- Sundaram: sd22.8→x=132, ret21.3→y=115 -->
+        <circle cx="132" cy="115" r="4" fill="var(--rag-red-300)" opacity=".8"/>
+        <text x="136" y="114" fill="#555" font-size="7">Sundaram</text>
+        <!-- Invesco: sd21.2→x=117, ret22.4→y=107 -->
+        <circle cx="117" cy="107" r="4" fill="var(--rag-red-300)" opacity=".8"/>
+        <!-- THIS FUND: sd17.2→x=76, ret28.3→y=71 — bigger petrol dot -->
+        <circle cx="76" cy="71" r="8" fill="var(--accent-700)"/>
+        <text x="84" y="64" fill="var(--accent-700)" font-size="8" font-weight="700">HDFC</text>
+        <!-- Quadrant labels -->
+        <text x="35" y="25" fill="var(--rag-green-700)" font-size="7" opacity=".6">High Return</text>
+        <text x="35" y="33" fill="var(--rag-green-700)" font-size="7" opacity=".6">Low Risk ★</text>
+        <text x="220" y="165" fill="var(--rag-red-700)" font-size="7" opacity=".6">Avoid Zone</text>
+      </svg>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">HDFC sits in top-left — highest-quality position (high return, below-avg risk). ◆ = Nifty MC150 benchmark reference.</div>
+    </div>
+
+    <!-- Drawdown underwater chart -->
+    <div class="cw">
+      <div class="ct"><span>Drawdown History (Underwater Chart)</span></div>
+      <div class="csub">How far NAV fell from its peak at each point. Fund recovers faster than benchmark.</div>
+      <svg viewBox="0 0 300 145" style="width:100%;display:block">
+        <!-- grid lines (inverted, 0 at top) -->
+        <line x1="30" y1="20" x2="295" y2="20" stroke="#CBD0DC" stroke-width=".8" stroke-dasharray="4 2"/>
+        <line x1="30" y1="52" x2="295" y2="52" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="30" y1="84" x2="295" y2="84" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="30" y1="116" x2="295" y2="116" stroke="#E8EAF0" stroke-width=".5"/>
+        <text x="0" y="22" fill="#8A909C" font-size="8">0%</text>
+        <text x="0" y="54" fill="#8A909C" font-size="8">−8%</text>
+        <text x="0" y="86" fill="#8A909C" font-size="8">−16%</text>
+        <text x="0" y="118" fill="#8A909C" font-size="8">−24%</text>
+        <!-- benchmark drawdown area (grey) -->
+        <polygon points="30,20 50,20 70,35 90,65 110,110 130,95 150,70 170,45 190,30 220,20 250,28 270,20 295,20 295,20 270,20 250,20 220,20 190,20 170,20 150,20 130,20 110,20 90,20 70,20 50,20 30,20" fill="#E8EAF0" opacity=".5"/>
+        <polyline points="30,20 50,20 70,35 90,65 110,110 130,95 150,70 170,45 190,30 220,20 250,28 270,20 295,20" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <!-- fund drawdown area (teal) -->
+        <polygon points="30,20 50,20 70,28 90,55 110,90 130,75 150,55 170,35 190,24 220,20 250,22 270,20 295,20 295,20 270,20 250,20 220,20 190,20 170,20 150,20 130,20 110,20 90,20 70,20 50,20 30,20" fill="var(--accent-100)" opacity=".6"/>
+        <polyline points="30,20 50,20 70,28 90,55 110,90 130,75 150,55 170,35 190,24 220,20 250,22 270,20 295,20" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+        <!-- annotation: max drawdown -->
+        <line x1="110" y1="90" x2="110" y2="20" stroke="var(--rag-red-400)" stroke-width=".8" stroke-dasharray="2 2"/>
+        <text x="112" y="95" fill="var(--rag-red-700)" font-size="7.5">Fund</text>
+        <text x="112" y="103" fill="var(--rag-red-700)" font-size="7.5" font-weight="700">−18.4%</text>
+        <text x="112" y="118" fill="#8A909C" font-size="7.5">Bmark</text>
+        <text x="112" y="126" fill="#8A909C" font-size="7.5">−22.1%</text>
+        <!-- x labels -->
+        <text x="30" y="138" fill="#8A909C" font-size="7.5">Jan'22</text>
+        <text x="90" y="138" fill="#8A909C" font-size="7.5">Jun'22</text>
+        <text x="155" y="138" fill="#8A909C" font-size="7.5">Jan'23</text>
+        <text x="220" y="138" fill="#8A909C" font-size="7.5">Jan'24</text>
+        <text x="268" y="138" fill="#8A909C" font-size="7.5">Now</text>
+      </svg>
+      <div class="leg" style="margin-top:var(--space-2)">
+        <div class="leg__i"><div class="leg__l leg__l--solid"></div><span>HDFC MF max DD −18.4%</span></div>
+        <div class="leg__i"><div class="leg__l leg__l--dash"></div><span>Nifty MC150 −22.1%</span></div>
+      </div>
+    </div>
+
+    <!-- Capture ratio + risk grid -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+      <!-- Capture ratio visual -->
+      <div class="cw">
+        <div class="ct"><span>Capture Ratio (3Y)</span></div>
+        <div class="csub">Ideal: upside &gt;100%, downside &lt;100%</div>
+        <!-- Upside -->
+        <div style="margin-bottom:var(--space-3)">
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px">
+            <span style="color:var(--text-tertiary)">Upside Capture</span>
+            <span style="font-weight:700;color:var(--rag-green-700)">114% <span style="font-weight:400;color:var(--text-tertiary)">cat: 103%</span></span>
+          </div>
+          <div style="position:relative;height:10px;background:var(--bg-inset);border-radius:5px">
+            <!-- 100% marker -->
+            <div style="position:absolute;left:calc(100% * (100 - 80) / 60);top:-3px;width:1px;height:16px;background:var(--border-strong)"></div>
+            <!-- fund bar -->
+            <div style="width:calc(100% * (114 - 80) / 60);height:10px;background:var(--rag-green-500);border-radius:5px"></div>
+            <!-- cat avg line -->
+            <div style="position:absolute;top:0;left:calc(100% * (103 - 80) / 60);width:2px;height:10px;background:var(--rag-green-300)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin-top:2px"><span>80%</span><span>100% (bmark)</span><span>140%</span></div>
+        </div>
+        <!-- Downside -->
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px">
+            <span class="tip" style="color:var(--text-tertiary)">Downside Capture<i class="ii">i</i><span class="tb">Downside capture: when benchmark falls, how much does the fund fall? 88% = fund falls only 88% as much. Lower is better.</span></span>
+            <span style="font-weight:700;color:var(--rag-green-700)">88% <span style="font-weight:400;color:var(--text-tertiary)">cat: 97%</span></span>
+          </div>
+          <div style="position:relative;height:10px;background:var(--bg-inset);border-radius:5px">
+            <div style="position:absolute;left:calc(100% * (100 - 70) / 60);top:-3px;width:1px;height:16px;background:var(--border-strong)"></div>
+            <div style="width:calc(100% * (88 - 70) / 60);height:10px;background:var(--rag-green-500);border-radius:5px"></div>
+            <div style="position:absolute;top:0;left:calc(100% * (97 - 70) / 60);width:2px;height:10px;background:var(--rag-amber-300)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin-top:2px"><span>70%</span><span>100% (bmark)</span><span>130%</span></div>
+        </div>
+        <div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--rag-green-100);border-radius:var(--radius-sm);font-size:10px;color:var(--rag-green-700)">
+          Captures <strong>114%</strong> of gains but only <strong>88%</strong> of losses — asymmetric payoff, strong active management signal.
+        </div>
+      </div>
+      <!-- Risk metric grid -->
+      <div class="mgrid mgrid--2">
+        <div class="mbox mbox--g"><div class="ml"><span class="tip">Sharpe<i class="ii">i</i><span class="tb">(Return − Rf) ÷ StdDev. Rf = 6.5% T-bill.</span></span></div><div class="mv">1.28</div><div class="md md--pos">cat: 0.94</div></div>
+        <div class="mbox mbox--g"><div class="ml"><span class="tip">Sortino<i class="ii">i</i><span class="tb">(Return − Rf) ÷ Downside Deviation. Penalises only negative volatility.</span></span></div><div class="mv">1.84</div><div class="md md--pos">cat: 1.31</div></div>
+        <div class="mbox mbox--a"><div class="ml"><span class="tip">Max DD<i class="ii">i</i><span class="tb">Largest peak-to-trough NAV decline in the period. Less negative = better.</span></span></div><div class="mv">−18.4%</div><div class="md md--pos">cat: −21.7%</div></div>
+        <div class="mbox mbox--g"><div class="ml"><span class="tip">Calmar<i class="ii">i</i><span class="tb">Ann. Return ÷ |Max Drawdown|. Higher = better return per unit of max pain.</span></span></div><div class="mv">1.54</div><div class="md md--pos">cat: 1.09</div></div>
+        <div class="mbox"><div class="ml"><span class="tip">Info Ratio<i class="ii">i</i><span class="tb">Alpha ÷ Tracking Error. &gt;0.5 = good; &gt;1.0 = excellent.</span></span></div><div class="mv">0.82</div><div class="md md--pos">excellent</div></div>
+        <div class="mbox"><div class="ml">Beta</div><div class="mv">0.93</div><div class="md md--neu">vs MC150</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SECTION D — PORTFOLIO COMPOSITION & SECTOR TECHNICALS
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">D</div>
+    <div class="shd__q">Are the fund's sector bets aligned with current market momentum?</div>
+    <div class="shd__sub">Sector signal grid · Active tilts vs benchmark · Market cap shape · Style box</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:var(--space-5);align-items:start">
+
+    <!-- Sector signal grid -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
+      <table class="ssgrid">
         <thead>
-          <tr>
-            <th style="text-align:left;">Period</th>
-            <th style="background:var(--accent-100);">
-              <span class="tip">This Fund<i class="info-i">i</i><span class="tipbody">HDFC Mid-Cap Opportunities Fund — Direct Growth plan NAV returns. All returns annualised for periods ≥1Y (CAGR). Absolute for &lt;1Y.</span></span>
-            </th>
-            <th>
-              <span class="tip">Nifty MC150 TRI<i class="info-i">i</i><span class="tipbody">Nifty Midcap 150 Total Return Index — includes reinvested dividends. Statutory benchmark per SEBI mandate for this fund category.</span></span>
-            </th>
-            <th>
-              <span class="tip">Alpha<i class="info-i">i</i><span class="tipbody">Alpha = Fund Return − Benchmark Return for the same period. Positive = fund beat the benchmark by this margin (in percentage points).</span></span>
-            </th>
-            <th>
-              <span class="tip">Cat. Avg.<i class="info-i">i</i><span class="tipbody">Simple average return of all SEBI mid-cap category funds (direct plan) for this period. Source: AMFI.</span></span>
-            </th>
-            <th>
-              <span class="tip">Cat. Rank<i class="info-i">i</i><span class="tipbody">This fund's rank among all SEBI mid-cap funds for the period. Rank 1 = highest return. N = total count of funds with full period history.</span></span>
-            </th>
-            <th>
-              <span class="tip">Top Decile<i class="info-i">i</i><span class="tipbody">Return threshold to be in the top 10% (90th percentile) of mid-cap funds for this period. If fund return ≥ this, it is top-decile.</span></span>
-            </th>
-            <th>Nifty 50 TRI</th>
-            <th>Gold (XBOM)</th>
+          <tr style="background:var(--bg-inset)">
+            <th style="text-align:left">Sector</th>
+            <th><span class="tip">Fund Wt.<i class="ii">i</i><span class="tb">Percentage of fund portfolio allocated to this sector (Mar-2026).</span></span></th>
+            <th><span class="tip">Active Tilt<i class="ii">i</i><span class="tb">Fund weight minus Nifty MC150 TRI sector weight. Positive = overweight vs benchmark.</span></span></th>
+            <th><span class="tip">Sector RS<i class="ii">i</i><span class="tb">Atlas Relative Strength score for the sector as a whole vs Nifty 500. Scale 0–100.</span></span></th>
+            <th><span class="tip">1M Mom.<i class="ii">i</i><span class="tb">1-month price return of the sector index (e.g. Nifty Healthcare Index).</span></span></th>
+            <th><span class="tip">3M Mom.<i class="ii">i</i><span class="tb">3-month price return of the sector index. Key medium-term momentum signal.</span></span></th>
+            <th><span class="tip">Signal<i class="ii">i</i><span class="tb">Atlas composite sector signal based on RS score + momentum + volume trend.</span></span></th>
+            <th><span class="tip">Conviction<i class="ii">i</i><span class="tb">Cross of active tilt direction with sector signal. Overweight + Bullish = High conviction. Overweight + Bearish = risk flag.</span></span></th>
           </tr>
         </thead>
         <tbody>
-          <tr class="r-sep"><td colspan="9">— Short-term (absolute) —</td></tr>
           <tr>
-            <td>1 Month</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+3.8%</td>
-            <td class="r-pos">+2.9%</td>
-            <td class="r-pos">+0.9pp</td>
-            <td>+3.1%</td>
-            <td>41st / 342</td>
-            <td>+5.2%</td>
-            <td>+2.1%</td>
-            <td class="r-pos">+4.1%</td>
+            <td><strong>IT Services</strong></td>
+            <td>18.4%</td>
+            <td class="rpos">+2.1pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:74%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:22px">74</span></div></td>
+            <td class="rpos">+4.2%</td>
+            <td class="rpos">+11.8%</td>
+            <td><span class="sig sig--bull">▲ Bullish</span></td>
+            <td><span class="conv conv--hi">High ✓</span></td>
           </tr>
           <tr>
-            <td>3 Months</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+11.4%</td>
-            <td class="r-pos">+9.1%</td>
-            <td class="r-pos">+2.3pp</td>
-            <td>+9.8%</td>
-            <td>28th / 338</td>
-            <td>+14.1%</td>
-            <td>+8.4%</td>
-            <td class="r-pos">+9.2%</td>
+            <td><strong>Financials / NBFC</strong></td>
+            <td>14.6%</td>
+            <td class="rneg">−1.2pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:58%;background:var(--rag-amber-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700);min-width:22px">58</span></div></td>
+            <td class="rwarn">+1.8%</td>
+            <td class="rwarn">+5.4%</td>
+            <td><span class="sig sig--neu">— Neutral</span></td>
+            <td><span class="conv conv--ok">Neutral</span></td>
           </tr>
           <tr>
-            <td>6 Months</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+19.3%</td>
-            <td class="r-pos">+15.8%</td>
-            <td class="r-pos">+3.5pp</td>
-            <td>+16.4%</td>
-            <td>18th / 334</td>
-            <td>+22.3%</td>
-            <td>+13.1%</td>
-            <td class="r-pos">+11.8%</td>
-          </tr>
-          <tr class="r-sep"><td colspan="9">— Medium-term (CAGR) —</td></tr>
-          <tr>
-            <td>1 Year</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+34.8%</td>
-            <td class="r-pos">+28.9%</td>
-            <td class="r-pos">+5.9pp</td>
-            <td>+30.2%</td>
-            <td>38th / 318</td>
-            <td>+41.2%</td>
-            <td>+23.4%</td>
-            <td class="r-pos">+18.3%</td>
+            <td><strong>Healthcare</strong></td>
+            <td>14.2%</td>
+            <td class="rpos">+3.4pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:80%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:22px">80</span></div></td>
+            <td class="rpos">+5.1%</td>
+            <td class="rpos">+13.4%</td>
+            <td><span class="sig sig--bull">▲ Bullish</span></td>
+            <td><span class="conv conv--hi">High ✓</span></td>
           </tr>
           <tr>
-            <td>2 Year</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+31.2%</td>
-            <td class="r-pos">+27.4%</td>
-            <td class="r-pos">+3.8pp</td>
-            <td>+28.1%</td>
-            <td>24th / 298</td>
-            <td>+36.8%</td>
-            <td>+18.9%</td>
-            <td class="r-warn">+8.1%</td>
-          </tr>
-          <tr class="r-highlight">
-            <td>3 Year ★</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-bold);" class="r-pos">+28.3%</td>
-            <td class="r-pos">+19.1%</td>
-            <td style="font-weight:var(--fw-bold);" class="r-pos">+9.2pp</td>
-            <td>+21.4%</td>
-            <td>12th / 284</td>
-            <td>+31.4%</td>
-            <td>+14.8%</td>
-            <td>+9.4%</td>
-          </tr>
-          <tr class="r-sep"><td colspan="9">— Long-term (CAGR) —</td></tr>
-          <tr>
-            <td>5 Year</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+22.1%</td>
-            <td class="r-pos">+18.4%</td>
-            <td class="r-pos">+3.7pp</td>
-            <td>+18.9%</td>
-            <td>8th / 248</td>
-            <td>+27.1%</td>
-            <td>+14.2%</td>
-            <td>+12.8%</td>
+            <td><strong>Industrials / Capex</strong></td>
+            <td>10.8%</td>
+            <td class="rpos">+1.0pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:69%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:22px">69</span></div></td>
+            <td class="rpos">+3.8%</td>
+            <td class="rpos">+9.1%</td>
+            <td><span class="sig sig--bull">▲ Bullish</span></td>
+            <td><span class="conv conv--hi">High ✓</span></td>
           </tr>
           <tr>
-            <td>7 Year</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+20.4%</td>
-            <td class="r-pos">+16.8%</td>
-            <td class="r-pos">+3.6pp</td>
-            <td>+17.1%</td>
-            <td>6th / 201</td>
-            <td>+24.3%</td>
-            <td>+12.1%</td>
-            <td>+10.2%</td>
+            <td><strong>Consumer Discretionary</strong></td>
+            <td>8.3%</td>
+            <td style="color:var(--text-tertiary)">—</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:54%;background:var(--rag-amber-300)"></div></div><span style="font-size:10px;color:var(--rag-amber-700);min-width:22px">54</span></div></td>
+            <td class="rwarn">+1.1%</td>
+            <td class="rwarn">+3.2%</td>
+            <td><span class="sig sig--neu">— Neutral</span></td>
+            <td><span class="conv conv--ok">Neutral</span></td>
           </tr>
           <tr>
-            <td>10 Year</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+18.8%</td>
-            <td class="r-pos">+15.2%</td>
-            <td class="r-pos">+3.6pp</td>
-            <td>+15.9%</td>
-            <td>5th / 148</td>
-            <td>+21.8%</td>
-            <td>+12.8%</td>
-            <td>+9.1%</td>
+            <td><strong>Chemicals</strong></td>
+            <td>7.3%</td>
+            <td class="rneg">−0.6pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:41%;background:var(--rag-red-400)"></div></div><span style="font-size:10px;color:var(--rag-red-700);min-width:22px">41</span></div></td>
+            <td class="rneg">−2.4%</td>
+            <td class="rneg">−6.8%</td>
+            <td><span class="sig sig--bear">▼ Bearish</span></td>
+            <td><span class="conv conv--ok">Neutral (underweight)</span></td>
           </tr>
           <tr>
-            <td>Since Inception</td>
-            <td style="background:var(--accent-100); font-weight:var(--fw-semibold);" class="r-pos">+24.7%</td>
-            <td class="r-pos">+19.4%</td>
-            <td class="r-pos">+5.3pp</td>
-            <td class="r-na">N/A</td>
-            <td class="r-na">N/A</td>
-            <td class="r-na">N/A</td>
-            <td>+14.1%</td>
-            <td>+11.3%</td>
+            <td><strong>Auto / Auto Ancillary</strong></td>
+            <td>5.9%</td>
+            <td class="rneg">−1.8pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:38%;background:var(--rag-red-400)"></div></div><span style="font-size:10px;color:var(--rag-red-700);min-width:22px">38</span></div></td>
+            <td class="rneg">−1.2%</td>
+            <td class="rneg">−4.1%</td>
+            <td><span class="sig sig--bear">▼ Bearish</span></td>
+            <td><span class="conv conv--hi" style="background:#E8F5E9;color:#1B5E20">Avoid ✓ (underweight)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Real Estate</strong></td>
+            <td>4.1%</td>
+            <td class="rpos">+0.4pp</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:62%;background:var(--rag-green-400)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:22px">62</span></div></td>
+            <td class="rpos">+2.9%</td>
+            <td class="rpos">+7.3%</td>
+            <td><span class="sig sig--bull">▲ Bullish</span></td>
+            <td><span class="conv conv--hi">High ✓</span></td>
+          </tr>
+          <tr style="background:var(--bg-inset)">
+            <td style="color:var(--text-tertiary);font-size:10px;font-style:italic">Others (8 sectors)</td>
+            <td style="color:var(--text-tertiary)">16.4%</td>
+            <td colspan="6" style="text-align:left;font-size:10px;color:var(--text-tertiary)">Mixed signals · no dominant bet</td>
           </tr>
         </tbody>
       </table>
+      <!-- Summary signal bar -->
+      <div style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--border-default);display:flex;align-items:center;gap:var(--space-5);font-size:11px">
+        <span style="color:var(--text-tertiary)">Portfolio signal coverage:</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;width:120px">
+            <div style="width:56%;background:var(--rag-green-500)" title="Bullish: 56%"></div>
+            <div style="width:21%;background:var(--rag-amber-400)" title="Neutral: 21%"></div>
+            <div style="width:13%;background:var(--rag-red-400)" title="Bearish: 13%"></div>
+            <div style="width:10%;background:var(--bg-inset)"></div>
+          </div>
+          <span class="rpos font-weight-600">56% Bullish</span>
+          <span class="rwarn">21% Neutral</span>
+          <span class="rneg">13% Bearish</span>
+        </div>
+        <span style="color:var(--text-tertiary);margin-left:auto">↑ Healthy positioning — 4/5 major bets aligned with bullish sectors</span>
+      </div>
     </div>
-    <div style="font-size:10px; color:var(--text-tertiary); margin-top:var(--space-2);">★ = primary evaluation horizon. Data as of 14-Apr-2026. Past performance ≠ future results. TRI = Total Return Index (dividends reinvested). Benchmark: Nifty Midcap 150 TRI.</div>
+
+    <!-- Right: Market cap shape + Style box -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+
+      <!-- Market cap allocation with trend -->
+      <div class="cw">
+        <div class="ct"><span>Market Cap Shape</span></div>
+        <div class="csub">SEBI: ≥65% mid cap required</div>
+        <div style="display:flex;border-radius:var(--radius-sm);overflow:hidden;height:14px;margin-bottom:var(--space-3)">
+          <div style="width:12%;background:#134F5C" title="Large 12%"></div>
+          <div style="width:68%;background:#1A7A8A" title="Mid 68%"></div>
+          <div style="width:17%;background:#2EA8BC" title="Small 17%"></div>
+          <div style="width:3%;background:var(--bg-inset)" title="Cash 3%"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);font-size:10px">
+          <div><div style="color:var(--text-tertiary)">Large Cap</div><div style="font-weight:700;font-variant-numeric:tabular-nums">12.0% <span style="color:var(--rag-amber-600,#E65100);font-size:9px">↑+2.8pp</span></div></div>
+          <div><div style="color:var(--text-tertiary)">Mid Cap</div><div style="font-weight:700;font-variant-numeric:tabular-nums">68.3% <span style="color:var(--text-tertiary);font-size:9px">stable</span></div></div>
+          <div><div style="color:var(--text-tertiary)">Small Cap</div><div style="font-weight:700;font-variant-numeric:tabular-nums">17.3% <span style="color:var(--text-tertiary);font-size:9px">within limit</span></div></div>
+          <div><div style="color:var(--text-tertiary)">Cash</div><div style="font-weight:700;font-variant-numeric:tabular-nums">2.4% <span style="color:var(--rag-green-700);font-size:9px">bullish</span></div></div>
+        </div>
+        <div style="margin-top:var(--space-3);font-size:9px;color:var(--rag-amber-700)">⚠ Large cap creep: +2.8pp in 12M. Monitor if mid-cap mandate drifts.</div>
+      </div>
+
+      <!-- Portfolio style box -->
+      <div class="cw">
+        <div class="ct"><span>Portfolio Style Box</span></div>
+        <div class="csub">Quality vs Valuation positioning</div>
+        <svg viewBox="0 0 200 160" style="width:100%;display:block">
+          <!-- Axes -->
+          <line x1="10" y1="80" x2="190" y2="80" stroke="#CBD0DC" stroke-width=".8"/>
+          <line x1="100" y1="10" x2="100" y2="150" stroke="#CBD0DC" stroke-width=".8"/>
+          <!-- Quadrant fills -->
+          <rect x="10" y="10" width="90" height="70" fill="#E8F5E9" opacity=".3" rx="2"/>
+          <rect x="100" y="10" width="90" height="70" fill="#E3F2FD" opacity=".3" rx="2"/>
+          <rect x="10" y="80" width="90" height="70" fill="#FFF8E1" opacity=".3" rx="2"/>
+          <rect x="100" y="80" width="90" height="70" fill="#FCE4EC" opacity=".3" rx="2"/>
+          <!-- Labels -->
+          <text x="55" y="25" fill="var(--rag-green-700)" font-size="7.5" text-anchor="middle" font-weight="600">Quality Value</text>
+          <text x="55" y="33" fill="var(--rag-green-700)" font-size="6.5" text-anchor="middle">(Best zone)</text>
+          <text x="145" y="25" fill="#1565C0" font-size="7.5" text-anchor="middle" font-weight="600">Quality Growth</text>
+          <text x="145" y="33" fill="#1565C0" font-size="6.5" text-anchor="middle">(Priced for quality)</text>
+          <text x="55" y="128" fill="#E65100" font-size="7.5" text-anchor="middle" font-weight="600">Value Trap</text>
+          <text x="55" y="136" fill="#E65100" font-size="6.5" text-anchor="middle">(Cheap + low ROE)</text>
+          <text x="145" y="128" fill="var(--rag-red-700)" font-size="7.5" text-anchor="middle" font-weight="600">Speculative</text>
+          <text x="145" y="136" fill="var(--rag-red-700)" font-size="6.5" text-anchor="middle">(Avoid)</text>
+          <!-- axis labels -->
+          <text x="100" y="158" fill="#8A909C" font-size="7" text-anchor="middle">← Value (Low P/E) · Growth (High P/E) →</text>
+          <text x="5" y="80" fill="#8A909C" font-size="7" text-anchor="middle" transform="rotate(-90,5,80)">Quality↑</text>
+          <!-- Benchmark dot (grey diamond) -->
+          <polygon points="100,77 104,80 100,83 96,80" fill="#8A909C"/>
+          <text x="104" y="75" fill="#8A909C" font-size="6.5">Bmark</text>
+          <!-- Peer dots -->
+          <circle cx="148" cy="42" r="4" fill="var(--rag-green-300)" opacity=".8"/>
+          <text x="152" y="41" fill="#555" font-size="6">Kotak</text>
+          <circle cx="158" cy="55" r="3" fill="var(--rag-amber-300)" opacity=".8"/>
+          <text x="162" y="54" fill="#555" font-size="6">Nippon</text>
+          <circle cx="88" cy="48" r="3" fill="var(--rag-green-300)" opacity=".8"/>
+          <text x="74" y="47" fill="#555" font-size="6">Axis</text>
+          <!-- THIS FUND: Quality Growth zone (high ROE 21%, P/E 28x vs market) -->
+          <circle cx="138" cy="35" r="8" fill="var(--accent-700)"/>
+          <text x="138" y="20" fill="var(--accent-700)" font-size="7.5" text-anchor="middle" font-weight="700">HDFC</text>
+        </svg>
+        <div style="font-size:9px;color:var(--text-tertiary);margin-top:4px">Wtd. P/E 28.4× (premium), Wtd. ROE 21.3% (high quality) → Quality Growth positioning. Pays up for quality.</div>
+      </div>
+
+      <!-- Portfolio concentration -->
+      <div class="cw">
+        <div class="ct"><span>Concentration Risk</span></div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2);font-size:11px">
+          <div class="suit-row"><span style="color:var(--text-secondary)">Top 5 holdings</span><strong>22.8%</strong></div>
+          <div class="suit-row"><span style="color:var(--text-secondary)">Top 10 holdings</span><strong>38.1%</strong></div>
+          <div class="suit-row"><span style="color:var(--text-secondary)">Top sector (IT)</span><strong style="color:var(--rag-amber-700)">18.4%</strong></div>
+          <div class="suit-row"><span style="color:var(--text-secondary)">Total holdings</span><strong>64</strong></div>
+          <div class="suit-row"><span class="tip" style="color:var(--text-secondary)">Active share<i class="ii">i</i><span class="tb">% of portfolio that differs from benchmark. &gt;60% = high active share. This fund at 68% means the manager is making strong independent bets.</span></span><strong style="color:var(--rag-green-700)">68%</strong></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- ════════════════════════════════════════
-       PEER COMPARISON (full width)
-       ════════════════════════════════════════ -->
-  <div style="margin-top:var(--space-6); margin-bottom:var(--space-10);">
-    <div class="sec-label">Mid-Cap Category Peer Comparison <span style="font-weight:normal; font-style:italic; text-transform:none; letter-spacing:0;">(top funds by 5Y CAGR, direct growth)</span></div>
-    <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:auto;">
-      <table class="ftable">
+  <!-- ════════════════════════════════════
+       SECTION E — HOLDINGS INTELLIGENCE
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">E</div>
+    <div class="shd__q">Are the individual stock bets working — technically and fundamentally?</div>
+    <div class="shd__sub">Top 10 holdings · RS + momentum + fundamentals quality · New entries / exits</div>
+  </div>
+
+  <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:auto;margin-bottom:var(--space-4)">
+    <table class="htable">
+      <thead>
+        <tr style="background:var(--bg-inset)">
+          <th style="text-align:left">#</th>
+          <th style="text-align:left">Holding</th>
+          <th>Sector</th>
+          <th><span class="tip">Wt.%<i class="ii">i</i><span class="tb">Portfolio weight = market value ÷ total NAV × 100. SEBI max 10% per stock.</span></span></th>
+          <th>Δ vs Last</th>
+          <th><span class="tip">Stock RS<i class="ii">i</i><span class="tb">Relative Strength of this stock within its sector universe (0–100).</span></span></th>
+          <th><span class="tip">1M Ret.<i class="ii">i</i><span class="tb">1-month absolute return of the stock.</span></span></th>
+          <th><span class="tip">3M Ret.<i class="ii">i</i><span class="tb">3-month absolute return of the stock.</span></span></th>
+          <th><span class="tip">P/E<i class="ii">i</i><span class="tb">Trailing 12-month Price-to-Earnings ratio. Relative to sector median.</span></span></th>
+          <th><span class="tip">ROE<i class="ii">i</i><span class="tb">Return on Equity (trailing 12M). Measures capital efficiency.</span></span></th>
+          <th><span class="tip">EPS Trend<i class="ii">i</i><span class="tb">3-quarter earnings growth trend: ▲ accelerating, → stable, ▼ decelerating.</span></span></th>
+          <th><span class="tip">Qual. Score<i class="ii">i</i><span class="tb">Atlas quality composite: Earnings consistency (3Y) + ROE stability + D/E ratio + revenue predictability. Scale 0–10.</span></span></th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">1</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Cholamandalam Inv.</div><div style="font-size:9px;color:var(--text-tertiary)">CHOLAFIN · NSE</div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">NBFC</td>
+          <td>5.8%</td>
+          <td class="rpos" style="font-size:10px">+0.3pp</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:82%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:20px">82</span></div></td>
+          <td class="rpos">+4.8%</td>
+          <td class="rpos">+14.2%</td>
+          <td>32×</td>
+          <td class="rpos">24.1%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-green-700)">▲</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:82%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">8.2</span></div></td>
+          <td><span class="sig sig--bull">▲ Strong Buy</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">2</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Persistent Systems</div><div style="font-size:9px;color:var(--text-tertiary)">PERSISTENT · NSE</div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">IT</td>
+          <td>5.1%</td>
+          <td class="rneg" style="font-size:10px">−0.2pp</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:74%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:20px">74</span></div></td>
+          <td class="rpos">+3.1%</td>
+          <td class="rpos">+9.8%</td>
+          <td>48×</td>
+          <td class="rpos">26.8%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-green-700)">▲</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:78%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">7.8</span></div></td>
+          <td><span class="sig sig--bull">▲ Buy</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">3</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Cummins India</div><div style="font-size:9px;color:var(--text-tertiary)">CUMMINSIND · NSE</div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">Industrial</td>
+          <td>4.6%</td>
+          <td style="color:var(--text-tertiary);font-size:10px">—</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:78%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:20px">78</span></div></td>
+          <td class="rpos">+3.9%</td>
+          <td class="rpos">+11.4%</td>
+          <td>44×</td>
+          <td class="rpos">28.4%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-green-700)">▲</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:85%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">8.5</span></div></td>
+          <td><span class="sig sig--bull">▲ Strong Buy</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">4</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Max Healthcare</div><div style="font-size:9px;color:var(--text-tertiary)">MAXHEALTH · NSE</div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">Healthcare</td>
+          <td>4.2%</td>
+          <td class="rpos" style="font-size:10px">+0.1pp</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:71%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:20px">71</span></div></td>
+          <td class="rpos">+5.2%</td>
+          <td class="rpos">+8.1%</td>
+          <td>62×</td>
+          <td class="rpos">18.2%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-green-700)">▲</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:72%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">7.2</span></div></td>
+          <td><span class="sig sig--bull">▲ Buy</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">5</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Mphasis</div><div style="font-size:9px;color:var(--text-tertiary)">MPHASIS · NSE</div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">IT</td>
+          <td>3.8%</td>
+          <td class="rneg" style="font-size:10px">−0.4pp</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:59%;background:var(--rag-amber-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700);min-width:20px">59</span></div></td>
+          <td class="rwarn">+1.1%</td>
+          <td class="rwarn">+3.2%</td>
+          <td>39×</td>
+          <td class="rwarn">19.4%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-amber-700)">→</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:65%;background:var(--rag-amber-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700)">6.5</span></div></td>
+          <td><span class="sig sig--neu">— Hold</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">6</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Coforge</div><div style="font-size:9px;color:var(--text-tertiary)">COFORGE · NSE · <span style="color:var(--rag-green-700)">▲ New entry</span></div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">IT</td>
+          <td>2.8%</td>
+          <td class="rpos" style="font-size:10px">+2.8pp ★</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:69%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700);min-width:20px">69</span></div></td>
+          <td class="rpos">+6.4%</td>
+          <td class="rpos">+17.3%</td>
+          <td>41×</td>
+          <td class="rpos">23.1%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-green-700)">▲</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:74%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">7.4</span></div></td>
+          <td><span class="sig sig--bull">▲ Buy</span></td>
+        </tr>
+        <tr>
+          <td style="text-align:left;color:var(--text-tertiary);font-size:10px">7</td>
+          <td style="text-align:left"><div style="font-weight:700;font-size:11px">Emami</div><div style="font-size:9px;color:var(--text-tertiary)">EMAMILTD · NSE · <span style="color:var(--rag-red-700)">↓ Reducing</span></div></td>
+          <td style="font-size:10px;color:var(--text-secondary)">FMCG</td>
+          <td>2.2%</td>
+          <td class="rneg" style="font-size:10px">−1.1pp</td>
+          <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:42%;background:var(--rag-red-400)"></div></div><span style="font-size:10px;color:var(--rag-red-700);min-width:20px">42</span></div></td>
+          <td class="rneg">−1.8%</td>
+          <td class="rneg">−3.8%</td>
+          <td>36×</td>
+          <td class="rwarn">14.2%</td>
+          <td style="text-align:center;font-size:12px;color:var(--rag-red-700)">▼</td>
+          <td><div class="rsbar"><div class="rstrack" style="width:50px"><div class="rsfill" style="width:48%;background:var(--rag-amber-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700)">4.8</span></div></td>
+          <td><span class="sig sig--bear">▼ Reduce</span></td>
+        </tr>
+        <tr style="background:var(--bg-inset)">
+          <td colspan="2" style="text-align:left;font-size:10px;color:var(--text-tertiary);font-style:italic">Top 7 shown · 57 more holdings</td>
+          <td colspan="3" style="font-size:10px;color:var(--text-tertiary)">Top 10 = 38.1% of portfolio</td>
+          <td colspan="4" style="font-size:10px;color:var(--rag-green-700)">5/7 top holdings: Bullish signal</td>
+          <td colspan="4"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Holdings change summary -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-2)">
+    <div style="background:var(--rag-green-100);border:1px solid var(--rag-green-300);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)">
+      <div style="font-size:10px;font-weight:700;color:var(--rag-green-700);margin-bottom:var(--space-2)">▲ New entries / Increased (Mar-2026)</div>
+      <div style="font-size:11px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Coforge (new)</span><span class="rpos font-weight-600">+2.8%</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Cholamandalam (+0.3pp)</span><span class="rpos">Added</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Max Healthcare (+0.1pp)</span><span class="rpos">Added</span></div>
+      </div>
+    </div>
+    <div style="background:var(--rag-red-100);border:1px solid var(--rag-red-300);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)">
+      <div style="font-size:10px;font-weight:700;color:var(--rag-red-700);margin-bottom:var(--space-2)">▼ Exited / Reduced (Mar-2026)</div>
+      <div style="font-size:11px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Emami (−1.1pp)</span><span class="rneg">Reducing</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Mphasis (−0.4pp)</span><span class="rneg">Trimmed</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">SRF Ltd (exited)</span><span class="rneg">Full exit</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SECTION F — FUNDAMENTAL SNAPSHOT
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">F</div>
+    <div class="shd__q">What is the portfolio's fundamental quality — and is it improving?</div>
+    <div class="shd__sub">Portfolio P/E trend · ROE quality · EPS growth momentum · vs benchmark and category</div>
+  </div>
+
+  <!-- 3 trend charts -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin-bottom:var(--space-4)">
+
+    <!-- Portfolio P/E trend vs benchmark P/E -->
+    <div class="cw">
+      <div class="ct"><span>Portfolio P/E vs Benchmark</span><span class="ap ap--neu">28.4× vs 24.1×</span></div>
+      <div class="csub">Fund pays premium for quality. Watch for PE compression risk.</div>
+      <svg viewBox="0 0 260 110" style="width:100%;display:block">
+        <line x1="20" y1="15" x2="255" y2="15" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="40" x2="255" y2="40" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="65" x2="255" y2="65" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="90" x2="255" y2="90" stroke="#CBD0DC" stroke-width=".6"/>
+        <text x="0" y="16" fill="#8A909C" font-size="7.5">35×</text>
+        <text x="0" y="41" fill="#8A909C" font-size="7.5">30×</text>
+        <text x="0" y="66" fill="#8A909C" font-size="7.5">25×</text>
+        <text x="0" y="91" fill="#8A909C" font-size="7.5">20×</text>
+        <!-- Fund P/E (petrol) — range ~26-30× over 4Q -->
+        <polyline points="20,55 60,52 100,48 140,53 180,57 220,51 255,48" fill="none" stroke="var(--accent-700)" stroke-width="1.8"/>
+        <!-- Benchmark P/E (dashed grey) — range ~21-25× -->
+        <polyline points="20,71 60,69 100,65 140,68 180,72 220,67 255,65" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <!-- Category avg (dotted amber) -->
+        <polyline points="20,62 60,60 100,57 140,61 180,65 220,59 255,58" fill="none" stroke="#B8860B" stroke-width="1" stroke-dasharray="1 3"/>
+        <!-- Labels -->
+        <text x="256" y="46" fill="var(--accent-700)" font-size="7" font-weight="600">28.4×</text>
+        <text x="256" y="63" fill="#8A909C" font-size="7">24.1×</text>
+        <text x="256" y="56" fill="#B8860B" font-size="7">27.1×</text>
+        <!-- x labels -->
+        <text x="20" y="102" fill="#8A909C" font-size="7">Q1'25</text>
+        <text x="100" y="102" fill="#8A909C" font-size="7">Q3'25</text>
+        <text x="200" y="102" fill="#8A909C" font-size="7">Q1'26</text>
+      </svg>
+      <div class="leg" style="margin-top:6px">
+        <div class="leg__i"><div class="leg__l leg__l--solid"></div><span>Fund P/E</span></div>
+        <div class="leg__i"><div class="leg__l leg__l--dash"></div><span>Bmark P/E</span></div>
+      </div>
+    </div>
+
+    <!-- Weighted ROE trend -->
+    <div class="cw">
+      <div class="ct"><span>Portfolio ROE Quality</span><span class="ap ap--pos">21.3%</span></div>
+      <div class="csub">Weighted avg ROE of holdings. Rising = improving quality of business mix.</div>
+      <svg viewBox="0 0 260 110" style="width:100%;display:block">
+        <line x1="20" y1="15" x2="255" y2="15" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="40" x2="255" y2="40" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="65" x2="255" y2="65" stroke="#E8EAF0" stroke-width=".5"/>
+        <line x1="20" y1="90" x2="255" y2="90" stroke="#CBD0DC" stroke-width=".6"/>
+        <text x="0" y="16" fill="#8A909C" font-size="7.5">25%</text>
+        <text x="0" y="41" fill="#8A909C" font-size="7.5">20%</text>
+        <text x="0" y="66" fill="#8A909C" font-size="7.5">15%</text>
+        <text x="0" y="91" fill="#8A909C" font-size="7.5">10%</text>
+        <!-- Fund ROE rising trend -->
+        <polygon points="20,72 60,68 100,60 140,55 180,50 220,47 255,45 255,90 20,90" fill="var(--rag-green-100)" opacity=".5"/>
+        <polyline points="20,72 60,68 100,60 140,55 180,50 220,47 255,45" fill="none" stroke="var(--rag-green-600,#2E7D32)" stroke-width="2"/>
+        <!-- Benchmark ROE flat -->
+        <polyline points="20,68 60,70 100,68 140,67 180,68 220,66 255,65" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="256" y="43" fill="var(--rag-green-700)" font-size="7" font-weight="600">21.3%</text>
+        <text x="256" y="63" fill="#8A909C" font-size="7">17.8%</text>
+        <text x="20" y="102" fill="#8A909C" font-size="7">Q1'25</text>
+        <text x="200" y="102" fill="#8A909C" font-size="7">Q1'26</text>
+      </svg>
+      <div style="font-size:9px;color:var(--rag-green-700);margin-top:6px">▲ Portfolio ROE rising 6Q in a row — manager upgrading portfolio quality.</div>
+    </div>
+
+    <!-- Weighted EPS growth bars -->
+    <div class="cw">
+      <div class="ct"><span>EPS Growth (Top 10 Holdings Wtd.)</span></div>
+      <div class="csub">Weighted avg quarterly EPS growth YoY. Green = acceleration.</div>
+      <svg viewBox="0 0 260 110" style="width:100%;display:block">
+        <!-- baseline -->
+        <line x1="20" y1="85" x2="255" y2="85" stroke="#CBD0DC" stroke-width=".8"/>
+        <text x="0" y="20" fill="#8A909C" font-size="7.5">+30%</text>
+        <text x="0" y="52" fill="#8A909C" font-size="7.5">+15%</text>
+        <text x="0" y="87" fill="#8A909C" font-size="7.5">0%</text>
+        <!-- Bars: Q4FY24 to Q3FY26 -->
+        <rect x="28" y="62" width="22" height="23" fill="var(--rag-green-300)" rx="2"/>
+        <text x="39" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q4FY24</text>
+        <rect x="63" y="55" width="22" height="30" fill="var(--rag-green-400)" rx="2"/>
+        <text x="74" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q1FY25</text>
+        <rect x="98" y="50" width="22" height="35" fill="var(--rag-green-500)" rx="2"/>
+        <text x="109" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q2FY25</text>
+        <rect x="133" y="44" width="22" height="41" fill="var(--rag-green-500)" rx="2"/>
+        <text x="144" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q3FY25</text>
+        <rect x="168" y="41" width="22" height="44" fill="var(--rag-green-600,#2E7D32)" rx="2"/>
+        <text x="179" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q4FY25</text>
+        <rect x="203" y="36" width="22" height="49" fill="var(--accent-700)" rx="2"/>
+        <text x="214" y="99" fill="#8A909C" font-size="7" text-anchor="middle">Q3FY26</text>
+        <!-- values on top -->
+        <text x="39" y="59" fill="var(--rag-green-700)" font-size="7" text-anchor="middle">+14%</text>
+        <text x="74" y="52" fill="var(--rag-green-700)" font-size="7" text-anchor="middle">+17%</text>
+        <text x="109" y="47" fill="var(--rag-green-700)" font-size="7" text-anchor="middle">+19%</text>
+        <text x="144" y="41" fill="var(--rag-green-700)" font-size="7" text-anchor="middle">+22%</text>
+        <text x="179" y="38" fill="var(--rag-green-700)" font-size="7" text-anchor="middle">+24%</text>
+        <text x="214" y="33" fill="var(--accent-700)" font-size="7" text-anchor="middle" font-weight="700">+27%</text>
+      </svg>
+      <div style="font-size:9px;color:var(--rag-green-700);margin-top:6px">▲ EPS growth accelerating 6Q in a row — earnings quality improving.</div>
+    </div>
+  </div>
+
+  <!-- Fundamental metric grid -->
+  <div style="margin-bottom:var(--space-2)">
+    <div class="mgrid mgrid--4">
+      <div class="mbox"><div class="ml"><span class="tip">Wtd. P/E<i class="ii">i</i><span class="tb">Weighted average P/E of all equity holdings. Premium to benchmark = manager pays for quality.</span></span></div><div class="mv">28.4×</div><div class="md md--neu">bmark 24.1× · cat 31.2×</div></div>
+      <div class="mbox"><div class="ml"><span class="tip">Wtd. P/B<i class="ii">i</i><span class="tb">Weighted average Price-to-Book. High P/B = market expects high ROE sustainability.</span></span></div><div class="mv">4.8×</div><div class="md md--neu">bmark 3.9× · cat 5.3×</div></div>
+      <div class="mbox mbox--g"><div class="ml"><span class="tip">Wtd. ROE<i class="ii">i</i><span class="tb">Portfolio-weighted Return on Equity. Higher than benchmark = better capital efficiency.</span></span></div><div class="mv">21.3%</div><div class="md md--pos">bmark 16.2% · cat 17.8%</div></div>
+      <div class="mbox mbox--g"><div class="ml"><span class="tip">Wtd. ROCE<i class="ii">i</i><span class="tb">Return on Capital Employed — measures operational efficiency including debt capital.</span></span></div><div class="mv">18.4%</div><div class="md md--pos">bmark 14.1%</div></div>
+      <div class="mbox mbox--g"><div class="ml"><span class="tip">3Y Fwd EPS Growth<i class="ii">i</i><span class="tb">Analyst consensus 3-year forward EPS CAGR for portfolio holdings, weighted by portfolio weight.</span></span></div><div class="mv">+23.4%</div><div class="md md--pos">cat avg +18.2%</div></div>
+      <div class="mbox"><div class="ml"><span class="tip">PEG Ratio<i class="ii">i</i><span class="tb">P/E ÷ EPS Growth rate. PEG &lt; 1 = potentially undervalued relative to growth. PEG 1–2 = fair. &gt;2 = expensive.</span></span></div><div class="mv">1.21</div><div class="md md--neu">fair value range</div></div>
+      <div class="mbox mbox--g"><div class="ml"><span class="tip">Wtd. D/E<i class="ii">i</i><span class="tb">Debt-to-Equity ratio weighted by portfolio holdings. Lower = financially healthier businesses.</span></span></div><div class="mv">0.22×</div><div class="md md--pos">low leverage</div></div>
+      <div class="mbox"><div class="ml">Turnover (Ann.)</div><div class="mv">34%</div><div class="md md--pos">low churn · patient</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SECTION G — SUITABILITY & VERDICT
+       ════════════════════════════════════ -->
+  <div class="shd">
+    <div class="shd__badge">G</div>
+    <div class="shd__q">Should I hold, add, or exit? Who is this fund for?</div>
+    <div class="shd__sub">Suitability matrix · SIP analysis · Category peer comparison · Atlas verdict</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:var(--space-5);align-items:start">
+
+    <!-- Suitability + SIP -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+      <div class="cw">
+        <div class="ct"><span>Investor Suitability Matrix</span></div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Risk Profile</span><span class="sig sig--bull" style="font-size:10px">Moderate-Aggressive / Aggressive</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Min. Horizon</span><span style="font-size:11px;font-weight:700;color:var(--rag-amber-700)">5 years (7Y+ ideal)</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Market condition</span><span style="font-size:11px;font-weight:700;color:var(--rag-green-700)">Bullish mid-cap cycle ✓</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">AUM concern</span><span style="font-size:11px;font-weight:700;color:var(--rag-amber-700)">₹71K Cr — agility risk in small caps</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Goal fit</span><span style="font-size:11px;font-weight:700">Wealth creation (not income)</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Tax treatment</span><span style="font-size:11px;font-weight:700">Equity fund · LTCG &gt;1Y at 10%</span></div>
+          <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">SIP vs Lumpsum</span><span class="sig sig--bull" style="font-size:10px">Both suitable (SIP preferred near highs)</span></div>
+        </div>
+      </div>
+
+      <!-- SIP outcomes -->
+      <div class="cw">
+        <div class="ct"><span>SIP Outcomes · Historical (actual XIRR)</span></div>
+        <div class="csub">₹10,000/month invested. Not a future guarantee.</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);margin-top:var(--space-2)">
+          <div style="display:grid;grid-template-columns:36px 1fr 100px;align-items:center;gap:var(--space-3);font-size:11px">
+            <span style="font-weight:700;color:var(--text-tertiary)">3Y</span>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin-bottom:3px"><span>Invested: ₹3.60 L</span><span>Value: ₹4.89 L</span></div>
+              <div style="height:6px;background:var(--bg-inset);border-radius:3px;overflow:hidden"><div style="width:calc(4.89/7*100%);height:6px;background:var(--rag-green-400)"></div></div>
+            </div>
+            <div style="text-align:right"><div style="font-weight:700;color:var(--rag-green-700)">₹4.89 L</div><div style="font-size:9px;color:var(--text-tertiary)">XIRR 24.3%</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:36px 1fr 100px;align-items:center;gap:var(--space-3);font-size:11px">
+            <span style="font-weight:700;color:var(--text-tertiary)">5Y</span>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin-bottom:3px"><span>Invested: ₹6.00 L</span><span>Value: ₹10.24 L</span></div>
+              <div style="height:6px;background:var(--bg-inset);border-radius:3px;overflow:hidden"><div style="width:calc(10.24/15*100%);height:6px;background:var(--rag-green-500)"></div></div>
+            </div>
+            <div style="text-align:right"><div style="font-weight:700;color:var(--rag-green-700)">₹10.24 L</div><div style="font-size:9px;color:var(--text-tertiary)">XIRR 21.8%</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:36px 1fr 100px;align-items:center;gap:var(--space-3);font-size:11px">
+            <span style="font-weight:700;color:var(--text-tertiary)">10Y</span>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin-bottom:3px"><span>Invested: ₹12.00 L</span><span>Value: ₹31.72 L</span></div>
+              <div style="height:6px;background:var(--bg-inset);border-radius:3px;overflow:hidden"><div style="width:100%;height:6px;background:var(--accent-700)"></div></div>
+            </div>
+            <div style="text-align:right"><div style="font-weight:700;color:var(--accent-700)">₹31.72 L</div><div style="font-size:9px;color:var(--text-tertiary)">XIRR 19.4%</div></div>
+          </div>
+        </div>
+        <div style="margin-top:var(--space-3);font-size:9px;color:var(--text-tertiary)">XIRR = actual return including timing of each SIP installment. Source: AMFI / ATLAS compute.</div>
+      </div>
+    </div>
+
+    <!-- Peer comparison table -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
+      <table class="ptable">
         <thead>
-          <tr>
-            <th style="text-align:left; min-width:200px;">Fund</th>
-            <th>AUM (Cr)</th>
-            <th>Exp. Ratio</th>
-            <th>
-              <span class="tip">1Y Ret.<i class="info-i">i</i><span class="tipbody">1-year absolute return. Not annualised.</span></span>
-            </th>
-            <th>
-              <span class="tip">3Y CAGR<i class="info-i">i</i><span class="tipbody">3-year Compound Annual Growth Rate = (End NAV / Start NAV)^(1/3) − 1. Measures compounding power over medium term.</span></span>
-            </th>
-            <th>
-              <span class="tip">5Y CAGR<i class="info-i">i</i><span class="tipbody">5-year Compound Annual Growth Rate. Key horizon for mid-cap evaluation.</span></span>
-            </th>
-            <th>
-              <span class="tip">Sharpe<i class="info-i">i</i><span class="tipbody">Risk-adjusted return: (Return − Risk-free rate) ÷ Std Dev. 3Y rolling basis.</span></span>
-            </th>
-            <th>
-              <span class="tip">Max DD<i class="info-i">i</i><span class="tipbody">Maximum Drawdown = worst peak-to-trough decline in the 3Y period. Less negative = better capital protection.</span></span>
-            </th>
-            <th>
-              <span class="tip">RS Score<i class="info-i">i</i><span class="tipbody">Atlas composite Relative Strength score 0–100. Weighted blend of momentum, risk-adjusted returns, drawdown quality, and category rank.</span></span>
-            </th>
-            <th>Signal</th>
+          <tr style="background:var(--bg-inset)">
+            <th style="text-align:left">Fund (Mid Cap)</th>
+            <th><span class="tip">3Y α<i class="ii">i</i><span class="tb">3Y alpha vs Nifty MC150 TRI.</span></span></th>
+            <th><span class="tip">Sharpe<i class="ii">i</i><span class="tb">3Y Sharpe ratio. Higher = better risk-adjusted returns.</span></span></th>
+            <th><span class="tip">Max DD<i class="ii">i</i><span class="tb">Worst peak-to-trough drawdown in 3Y period.</span></span></th>
+            <th>RS</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="f-highlight">
-            <td>
-              <div style="font-weight:var(--fw-bold);">HDFC Mid-Cap Opps ★</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">Chirag Setalvad · 11Y tenure</div>
-            </td>
-            <td>71,842</td>
-            <td>0.54%</td>
-            <td class="r-pos">+34.8%</td>
-            <td class="r-pos">+28.3%</td>
-            <td class="r-pos">+22.1%</td>
-            <td>1.28</td>
-            <td class="r-warn">−18.4%</td>
-            <td>
-              <div class="rs-bar">
-                <div class="rs-track"><div class="rs-fill" style="width:76%; background:var(--rag-green-500);"></div></div>
-                <span style="font-size:10px; color:var(--rag-green-700); min-width:24px;">76</span>
-              </div>
-            </td>
-            <td><span class="badge badge--green">Strong</span></td>
+          <tr class="phi">
+            <td><div style="font-weight:700">HDFC Mid-Cap ★</div><div style="font-size:9px;color:var(--text-tertiary)">This fund</div></td>
+            <td class="rpos" style="font-weight:700">+9.2pp</td>
+            <td style="font-weight:700">1.28</td>
+            <td class="rwarn" style="font-weight:700">−18.4%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:76%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">76</span></div></td>
           </tr>
           <tr>
-            <td>
-              <div style="font-weight:var(--fw-medium);">Kotak Emerging Equity</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">Harsha Upadhyaya · 12Y tenure</div>
-            </td>
-            <td>52,418</td>
-            <td>0.47%</td>
-            <td class="r-pos">+36.1%</td>
-            <td class="r-pos">+29.4%</td>
-            <td class="r-pos">+21.4%</td>
-            <td>1.31</td>
-            <td class="r-neg">−20.2%</td>
-            <td>
-              <div class="rs-bar">
-                <div class="rs-track"><div class="rs-fill" style="width:79%; background:var(--rag-green-500);"></div></div>
-                <span style="font-size:10px; color:var(--rag-green-700); min-width:24px;">79</span>
-              </div>
-            </td>
-            <td><span class="badge badge--green">Strong</span></td>
+            <td><div style="font-weight:600">Kotak Emerging</div></td>
+            <td class="rpos">+10.3pp</td><td>1.31</td><td class="rneg">−20.2%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:79%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">79</span></div></td>
           </tr>
           <tr>
-            <td>
-              <div style="font-weight:var(--fw-medium);">Axis Mid Cap</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">Shreyash Devalkar · 8Y tenure</div>
-            </td>
-            <td>28,914</td>
-            <td>0.52%</td>
-            <td class="r-warn">+29.4%</td>
-            <td class="r-warn">+23.1%</td>
-            <td class="r-pos">+20.8%</td>
-            <td>1.14</td>
-            <td class="r-pos">−16.8%</td>
-            <td>
-              <div class="rs-bar">
-                <div class="rs-track"><div class="rs-fill" style="width:64%; background:var(--rag-green-400);"></div></div>
-                <span style="font-size:10px; color:var(--rag-green-700); min-width:24px;">64</span>
-              </div>
-            </td>
-            <td><span class="badge badge--neutral">Neutral</span></td>
+            <td><div style="font-weight:600">Nippon India Growth</div></td>
+            <td class="rpos">+12.1pp</td><td>1.22</td><td class="rneg">−24.8%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:72%;background:var(--rag-green-500)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">72</span></div></td>
           </tr>
           <tr>
-            <td>
-              <div style="font-weight:var(--fw-medium);">DSP Mid Cap</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">Atul Bhole · 6Y tenure</div>
-            </td>
-            <td>21,847</td>
-            <td>0.61%</td>
-            <td class="r-warn">+31.2%</td>
-            <td class="r-pos">+24.8%</td>
-            <td class="r-warn">+18.9%</td>
-            <td>1.09</td>
-            <td class="r-warn">−22.1%</td>
-            <td>
-              <div class="rs-bar">
-                <div class="rs-track"><div class="rs-fill" style="width:57%; background:var(--rag-amber-400);"></div></div>
-                <span style="font-size:10px; color:var(--rag-amber-700); min-width:24px;">57</span>
-              </div>
-            </td>
-            <td><span class="badge badge--amber">Watch</span></td>
+            <td><div style="font-weight:600">Mirae Emerging</div></td>
+            <td class="rpos">+7.8pp</td><td>1.19</td><td class="rwarn">−17.1%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:68%;background:var(--rag-green-400)"></div></div><span style="font-size:10px;color:var(--rag-green-700)">68</span></div></td>
           </tr>
           <tr>
-            <td>
-              <div style="font-weight:var(--fw-medium);">Nippon India Growth</div>
-              <div style="font-size:9px; color:var(--text-tertiary);">Rupesh Patel · 9Y tenure</div>
-            </td>
-            <td>31,204</td>
-            <td>0.68%</td>
-            <td class="r-pos">+38.4%</td>
-            <td class="r-pos">+31.2%</td>
-            <td class="r-pos">+23.4%</td>
-            <td>1.22</td>
-            <td class="r-neg">−24.8%</td>
-            <td>
-              <div class="rs-bar">
-                <div class="rs-track"><div class="rs-fill" style="width:72%; background:var(--rag-green-500);"></div></div>
-                <span style="font-size:10px; color:var(--rag-green-700); min-width:24px;">72</span>
-              </div>
-            </td>
-            <td><span class="badge badge--green">Strong</span></td>
+            <td><div style="font-weight:600">Axis Mid Cap</div></td>
+            <td class="rwarn">+4.1pp</td><td>1.14</td><td class="rpos">−16.8%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:64%;background:var(--rag-green-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700)">64</span></div></td>
           </tr>
-          <tr style="background:var(--bg-inset);">
-            <td style="color:var(--text-tertiary); font-style:italic; font-size:10px;">Category Average (342 funds)</td>
-            <td style="color:var(--text-tertiary);">8,941</td>
-            <td style="color:var(--text-tertiary);">0.78%</td>
-            <td class="r-warn">+30.2%</td>
-            <td class="r-warn">+21.4%</td>
-            <td class="r-warn">+18.9%</td>
-            <td style="color:var(--text-tertiary);">0.94</td>
-            <td class="r-neg">−21.7%</td>
-            <td><span style="color:var(--text-tertiary); font-size:10px;">—</span></td>
-            <td></td>
+          <tr>
+            <td><div style="font-weight:600">DSP Mid Cap</div></td>
+            <td class="rwarn">+5.7pp</td><td>1.09</td><td class="rneg">−22.1%</td>
+            <td><div class="rsbar"><div class="rstrack"><div class="rsfill" style="width:57%;background:var(--rag-amber-400)"></div></div><span style="font-size:10px;color:var(--rag-amber-700)">57</span></div></td>
           </tr>
-          <tr style="background:var(--bg-inset); border-top:1px dashed var(--border-default);">
-            <td style="color:var(--text-tertiary); font-style:italic; font-size:10px;">Nifty MC 150 TRI (benchmark)</td>
-            <td>—</td>
-            <td>—</td>
-            <td class="r-pos">+28.9%</td>
-            <td class="r-pos">+19.1%</td>
-            <td class="r-pos">+18.4%</td>
-            <td>—</td>
-            <td>—</td>
-            <td><span style="color:var(--text-tertiary); font-size:10px;">—</span></td>
-            <td></td>
+          <tr class="psep"><td colspan="5">— Reference lines —</td></tr>
+          <tr class="psep">
+            <td>Category avg (342 funds)</td>
+            <td class="rwarn">+2.3pp</td><td style="color:var(--text-tertiary)">0.94</td><td class="rneg">−21.7%</td><td>—</td>
+          </tr>
+          <tr class="psep">
+            <td>Nifty MC150 TRI (bmark)</td>
+            <td style="color:var(--text-tertiary)">0pp</td><td style="color:var(--text-tertiary)">—</td><td style="color:var(--text-tertiary)">—</td><td>—</td>
           </tr>
         </tbody>
       </table>
+      <div style="padding:var(--space-3) var(--space-4);font-size:10px;color:var(--text-tertiary);border-top:1px solid var(--border-subtle)">Data as of 14-Apr-2026. 3Y alpha vs Nifty MC150 TRI. Sharpe on 3Y rolling basis.</div>
     </div>
-    <div style="font-size:10px; color:var(--text-tertiary); margin-top:var(--space-2);">★ = selected fund. Data as of 14-Apr-2026. Returns are CAGR for 3Y/5Y. Max DD = 3Y period. RS Score = Atlas composite score.</div>
-  </div>
+
+    <!-- Atlas final verdict -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+      <div class="reading" style="border:2px solid var(--rag-green-300)">
+        <div class="reading__verdict reading__verdict--green" style="font-size:var(--fs-md)">
+          HOLD / ADD ON DIPS. Top-quartile quality with consistent skill-based alpha. AUM size is the primary risk — monitor small-cap agility.
+        </div>
+        <div class="reading__tabs">
+          <div class="reading__tab reading__tab--active">Summary</div>
+          <div class="reading__tab">Risks</div>
+          <div class="reading__tab">Triggers</div>
+        </div>
+        <div class="reading__body">
+          <div style="font-size:var(--fs-sm);color:var(--text-secondary);line-height:1.7">
+            <strong>Bull case:</strong> IT + Healthcare positioned right. Manager has 11Y tenure with consistent alpha. Upside capture 114% with downside 88% — rare asymmetry.<br>
+            <strong>Bear case:</strong> AUM at ₹71K Cr limits small-cap exits. IT at 18.4% = concentration risk if IT reverses. Large-cap creep may dilute mid-cap mandate.<br>
+            <strong>Triggers to revisit:</strong> IT RS falls below 50, AUM &gt;₹85K Cr, manager change, 6M rolling alpha turns negative.
+          </div>
+        </div>
+        <div class="reading__actions">
+          <div class="reading__action">Add to Model Portfolio</div>
+          <div class="reading__action">Set Alert: RS &lt; 55</div>
+          <div class="reading__action">SIP Calculator</div>
+        </div>
+      </div>
+
+      <!-- Fund tags full list with legend -->
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4)">
+        <div style="font-size:10px;color:var(--text-tertiary);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-3)">Atlas Fund Tags</div>
+        <div class="tags">
+          <span class="tag tag--buy">★ Quality Compounder</span>
+          <span class="tag tag--buy">Consistent Alpha</span>
+          <span class="tag tag--info">High Active Share</span>
+          <span class="tag tag--info">Growth-tilted</span>
+          <span class="tag tag--info">Healthcare Overweight</span>
+          <span class="tag tag--info">IT Overweight</span>
+          <span class="tag tag--hold">Large AUM Watch</span>
+          <span class="tag tag--hold">5Y+ Horizon</span>
+          <span class="tag tag--neutral">Low Turnover</span>
+          <span class="tag tag--neutral">Aggressive Profile</span>
+          <span class="tag tag--risk">IT Concentration Risk</span>
+        </div>
+        <div style="margin-top:var(--space-3);display:flex;gap:var(--space-3);font-size:9px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#A5D6A7;display:inline-block"></span>Positive signal</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-300);display:inline-block"></span>Informational</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#FFE082;display:inline-block"></span>Monitor</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#FFCC80;display:inline-block"></span>Risk flag</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /section G grid -->
 
 </main>
 </div>
 </body>
 </html>
+
