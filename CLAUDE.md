@@ -110,6 +110,8 @@ rejected by review.
 - `orchestrator/state.db` (SQLite with WAL mode, already present) — read + update existing `chunks` table with three new columns via alembic migration. No new tables. No touching atlas_* or de_* tables (constitution §Technology). (main)
 - Python 3.11 (existing `backend/` venv at `/home/ubuntu/atlas/venv`). + FastAPI async, Pydantic v2, SQLAlchemy 2.0 async, `asyncpg`, structlog — all already pinned in `backend/requirements.txt`. `median` uses PostgreSQL `percentile_cont(0.5) within group`; `stddev` uses `stddev_samp`. No new dependencies. (main)
 - PostgreSQL (JIP `de_*` tables, read-only via `backend/clients/jip_data_service.py`). This chunk writes nothing — no `atlas_*` table changes, no Alembic migration. (main)
+- Python 3.11 (existing `backend/venv`), TypeScript 5 (Next.js 16, React 19, existing `frontend/`) (005-v3-simulation-engine)
+- Existing Postgres RDS with `vector` extension (HNSW index m=16, ef_construction=64). New V5-owned tables live in `atlas_*` namespace. No cross-writes to `de_*`. (005-v3-simulation-engine)
 
 ## Recent Changes
 - main: Added Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep)

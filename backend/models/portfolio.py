@@ -438,3 +438,57 @@ class SchemeMappingOverrideResponse(SchemeMappingOverrideCreate):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# --- Optimization models (V4-5) ---
+
+
+class OptimizationModel(str, Enum):
+    mean_variance = "mean_variance"
+    hrp = "hrp"
+
+
+class RiskProfile(str, Enum):
+    conservative = "conservative"
+    moderate = "moderate"
+    aggressive = "aggressive"
+
+
+class SEBIConstraint(BaseModel):
+    constraint_id: str
+    constraint_type: str
+    description: str
+    value: Decimal
+    is_binding: bool = False
+    is_violated: bool = False
+
+
+class OptimizedWeight(BaseModel):
+    mstar_id: str
+    scheme_name: str
+    current_weight: Decimal
+    optimized_weight: Decimal
+    weight_change: Decimal
+    provenance: AnalysisProvenance
+
+
+class OptimizationResult(BaseModel):
+    model: OptimizationModel
+    weights: list[OptimizedWeight]
+    expected_return: Optional[Decimal] = None
+    expected_risk: Optional[Decimal] = None
+    sharpe_ratio: Optional[Decimal] = None
+    constraints_applied: list[SEBIConstraint] = Field(default_factory=list)
+    solver_status: str = "optimal"
+    computation_time_ms: Optional[int] = None
+
+
+class PortfolioOptimizationResponse(BaseModel):
+    portfolio_id: UUID
+    portfolio_name: Optional[str] = None
+    data_as_of: date
+    computed_at: datetime
+    models: list[OptimizationResult] = Field(default_factory=list)
+    candidate_count: int
+    excluded_funds: list[dict[str, Any]] = Field(default_factory=list)
+    provenance: dict[str, AnalysisProvenance] = Field(default_factory=dict)

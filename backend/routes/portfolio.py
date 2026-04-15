@@ -36,11 +36,13 @@ from backend.models.portfolio import (
     PortfolioFullAnalysisResponse,
     PortfolioImportResult,
     PortfolioListResponse,
+    PortfolioOptimizationResponse,
     PortfolioResponse,
 )
 from backend.services.portfolio.analysis import PortfolioAnalysisService
 from backend.services.portfolio.attribution import BrinsonAttributionService
 from backend.services.portfolio.cams_import import CamsImportError, CamsParseResult, parse_cas_pdf
+from backend.services.portfolio.optimization import PortfolioOptimizationService
 from backend.services.portfolio.repo import PortfolioRepo
 from backend.services.portfolio.scheme_mapper import MappedHolding, SchemeMapper
 
@@ -283,19 +285,70 @@ async def get_portfolio_attribution(
     return attribution
 
 
-@router.get("/{portfolio_id}/optimize", status_code=501)
+@router.get("/{portfolio_id}/optimize", response_model=PortfolioOptimizationResponse)
 async def get_portfolio_optimize(
     portfolio_id: uuid.UUID,
+    data_as_of: Optional[date] = Query(
+        default=None,
+        description="Date for analysis (ISO 8601). Defaults to today.",
+    ),
+    risk_profile: Optional[str] = Query(
+        default="moderate",
+        description="Risk profile: conservative|moderate|aggressive",
+    ),
+    models: Optional[str] = Query(
+        default="mean_variance,hrp",
+        description="Comma-separated model names: mean_variance, hrp",
+    ),
+    max_weight: Optional[Decimal] = Query(
+        default=Decimal("0.10"),
+        description="Max weight per fund (SEBI PMS default: 0.10)",
+    ),
+    max_positions: Optional[int] = Query(
+        default=None,
+        description="Max number of positions (cardinality constraint)",
+    ),
     session: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
-    """Return portfolio optimization suggestions.
+) -> PortfolioOptimizationResponse:
+    """Return portfolio optimization using Riskfolio-Lib (mean-variance + HRP).
 
-    V4-5 implementation pending.
+    Fetches NAV history for each mapped holding (1Y lookback), builds a daily
+    returns matrix, and runs the requested optimization models under SEBI constraints.
+
+    Mean-variance (Classic/MV/Sharpe): maximizes Sharpe ratio subject to per-fund
+    weight cap (SEBI PMS: 10%) and optional cardinality constraint.
+
+    HRP (Hierarchical Risk Parity): hierarchical clustering-based allocation,
+    no constraint on max weight — naturally diversifies.
+
+    Funds with fewer than 20 NAV data points in the lookback window are excluded
+    and listed in excluded_funds. If no candidates remain, returns 422.
+
+    Determinism: same data_as_of + same holdings + same JIP NAV data → identical weights.
     """
-    raise HTTPException(
-        status_code=501,
-        detail="Portfolio optimization not yet implemented — coming in V4-5",
-    )
+    model_list = [m.strip() for m in (models or "mean_variance,hrp").split(",") if m.strip()]
+    if not model_list:
+        raise HTTPException(status_code=422, detail="No valid optimization models specified")
+
+    effective_max_weight = max_weight if max_weight is not None else Decimal("0.10")
+
+    repo = PortfolioRepo(session)
+    jip = JIPMFService(session)
+    service = PortfolioOptimizationService(repo=repo, jip=jip)
+
+    try:
+        response = await service.optimize_portfolio(
+            portfolio_id=portfolio_id,
+            data_as_of=data_as_of,
+            risk_profile=risk_profile or "moderate",
+            models=model_list,
+            max_weight=effective_max_weight,
+            max_positions=max_positions,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return response
 
 
 # ---------------------------------------------------------------------------

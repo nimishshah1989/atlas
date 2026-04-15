@@ -112,11 +112,25 @@ def test_get_portfolio_attribution_no_longer_501(client: TestClient) -> None:
     )
 
 
-def test_get_portfolio_optimize_returns_501(client: TestClient) -> None:
-    """GET /api/v1/portfolio/{id}/optimize must return 501 Not Implemented."""
+def test_get_portfolio_optimize_no_longer_501(client: TestClient) -> None:
+    """GET /api/v1/portfolio/{id}/optimize must NOT return 501 (wired in V4-5).
+
+    Returns 404 for unknown portfolio — proves route is live (not stubbed).
+    """
     portfolio_id = str(uuid.uuid4())
-    resp = client.get(f"/api/v1/portfolio/{portfolio_id}/optimize")
-    assert resp.status_code == 501, f"Expected 501, got {resp.status_code}: {resp.text}"
+    with patch("backend.routes.portfolio.PortfolioOptimizationService") as MockSvc:
+        mock_svc = MagicMock()
+        mock_svc.optimize_portfolio = AsyncMock(
+            side_effect=ValueError(f"Portfolio {portfolio_id} not found")
+        )
+        MockSvc.return_value = mock_svc
+
+        resp = client.get(f"/api/v1/portfolio/{portfolio_id}/optimize")
+
+    assert resp.status_code != 501, (
+        f"Route must no longer return 501 stub, got: {resp.status_code}: {resp.text}"
+    )
+    assert resp.status_code == 404, f"Expected 404 for unknown portfolio, got {resp.status_code}"
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +264,7 @@ def test_no_500_errors(client: TestClient, method: str, path: str) -> None:
         patch("backend.routes.portfolio.PortfolioRepo") as MockRepo,
         patch("backend.routes.portfolio.PortfolioAnalysisService") as MockAnalysis,
         patch("backend.routes.portfolio.BrinsonAttributionService") as MockAttrib,
+        patch("backend.routes.portfolio.PortfolioOptimizationService") as MockOptimize,
     ):
         mock_repo = MagicMock()
         mock_repo.list_portfolios = AsyncMock(return_value=[])
@@ -265,6 +280,10 @@ def test_no_500_errors(client: TestClient, method: str, path: str) -> None:
             side_effect=ValueError("Portfolio not found")
         )
         MockAttrib.return_value = mock_attrib_svc
+
+        mock_opt_svc = MagicMock()
+        mock_opt_svc.optimize_portfolio = AsyncMock(side_effect=ValueError("Portfolio not found"))
+        MockOptimize.return_value = mock_opt_svc
 
         resp = client.request(method, path)
 

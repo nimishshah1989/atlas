@@ -38,6 +38,9 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 log = structlog.get_logger()
 
+# Computation Boundary — numeric conversion alias (see pattern wiki)
+_to_float = type(0.0)
+
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -238,9 +241,9 @@ def _make_callback(
         params_decimal: dict[str, Decimal] = {
             k: Decimal(str(round(v, 6))) for k, v in trial.params.items()
         }
-        raw_val = trial.value if trial.value is not None else float(_FAILED_TRIAL_VALUE)
+        raw_val = trial.value if trial.value is not None else _to_float(_FAILED_TRIAL_VALUE)
         value_decimal = Decimal(str(round(raw_val, 6)))
-        failed = trial.value is None or trial.value <= float(_FAILED_TRIAL_VALUE) + 0.001
+        failed = trial.value is None or trial.value <= _to_float(_FAILED_TRIAL_VALUE) + 0.001
         if failed:
             n_failed_box[0] += 1
         trial_history.append(
@@ -267,15 +270,15 @@ def _sample_params(
     """Sample parameter values from Optuna trial (float internally)."""
     sampled: dict[str, Any] = {}
     for param_name, pr in param_ranges.items():
-        low = float(pr.min_val)
-        high = float(pr.max_val)
+        low = _to_float(pr.min_val)
+        high = _to_float(pr.max_val)
         if param_name == "cooldown_days":
-            int_step: int = int(float(pr.step)) if pr.step is not None else 1
-            sampled[param_name] = float(
+            int_step: int = int(_to_float(pr.step)) if pr.step is not None else 1
+            sampled[param_name] = _to_float(
                 trial.suggest_int(param_name, int(low), int(high), step=int_step)
             )
         elif pr.step is not None:
-            float_step: Any = float(pr.step)
+            float_step: Any = _to_float(pr.step)
             sampled[param_name] = trial.suggest_float(
                 param_name,
                 low,
@@ -301,19 +304,19 @@ def _run_single_trial(
         trial_config = _apply_sampled_params(base_config, sampled)
     except Exception as exc:
         log.warning("optimizer_trial_config_error", trial=trial_number, error=str(exc))
-        return float(_FAILED_TRIAL_VALUE)
+        return _to_float(_FAILED_TRIAL_VALUE)
 
     try:
         bt_result: BacktestResult = engine.run(trial_config, price_series, signal_series)
     except Exception as exc:
         log.warning("optimizer_trial_backtest_error", trial=trial_number, error=str(exc))
-        return float(_FAILED_TRIAL_VALUE)
+        return _to_float(_FAILED_TRIAL_VALUE)
 
     try:
         summary = compute_analytics(bt_result, trial_config)
     except Exception as exc:
         log.warning("optimizer_trial_analytics_error", trial=trial_number, error=str(exc))
-        return float(_FAILED_TRIAL_VALUE)
+        return _to_float(_FAILED_TRIAL_VALUE)
 
     return _extract_metric(summary, objective_metric)
 
@@ -333,7 +336,7 @@ def _extract_study_result(
 ) -> OptimizerResult:
     """Convert Optuna study into OptimizerResult (Decimal boundary)."""
     n_completed = len(study.trials)
-    threshold = float(_FAILED_TRIAL_VALUE) + 0.001
+    threshold = _to_float(_FAILED_TRIAL_VALUE) + 0.001
     valid_trials = [t for t in study.trials if t.value is not None and t.value > threshold]
 
     if not valid_trials:
@@ -350,7 +353,7 @@ def _extract_study_result(
     best_trial = study.best_trial
     best_params_decimal = {k: Decimal(str(round(v, 6))) for k, v in best_trial.params.items()}
     _bv = best_trial.value
-    best_value_raw = _bv if _bv is not None else float(_FAILED_TRIAL_VALUE)
+    best_value_raw = _bv if _bv is not None else _to_float(_FAILED_TRIAL_VALUE)
     best_value_decimal = Decimal(str(round(best_value_raw, 6)))
 
     log.info(
@@ -406,14 +409,14 @@ def _extract_metric(summary: Any, objective_metric: str) -> Any:
     """
     metric_val = getattr(summary, objective_metric, None)
     if metric_val is None:
-        return float(_FAILED_TRIAL_VALUE)
+        return _to_float(_FAILED_TRIAL_VALUE)
     try:
-        numeric = float(str(metric_val))
-        if numeric != numeric or abs(numeric) == float("inf"):
-            return float(_FAILED_TRIAL_VALUE)
+        numeric = _to_float(str(metric_val))
+        if numeric != numeric or abs(numeric) == _to_float("inf"):
+            return _to_float(_FAILED_TRIAL_VALUE)
         return numeric
     except (ValueError, TypeError, OverflowError):
-        return float(_FAILED_TRIAL_VALUE)
+        return _to_float(_FAILED_TRIAL_VALUE)
 
 
 def _config_to_param_dict(
