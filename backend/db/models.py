@@ -390,6 +390,41 @@ class AtlasAgentMemory(Base):
     )
 
 
+class AtlasAlert(Base):
+    """System alerts — budget exceeded, data anomalies, signal triggers.
+
+    id is BIGSERIAL (not UUID) — high-write append table per spec DDL.
+    """
+
+    __tablename__ = "atlas_alerts"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    source: Mapped[str] = mapped_column(String(20), nullable=False)
+    symbol: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    instrument_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
+    alert_type: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB, nullable=True, server_default="{}"
+    )
+    rs_at_alert: Mapped[Decimal | None] = mapped_column(Numeric(20, 4), nullable=True)
+    quadrant_at_alert: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
 class AtlasCostLedger(Base):
     """LLM API call cost tracking — every LLM call in ATLAS is recorded here.
 
