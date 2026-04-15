@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_serializer
@@ -395,59 +395,8 @@ class DecisionListResponse(BaseModel):
 # keep working.
 
 
-# --- Intelligence ---
-
-
-class FindingCreate(BaseModel):
-    """Request body for storing a finding."""
-
-    agent_id: str
-    agent_type: str
-    entity: str
-    entity_type: str = "equity"
-    finding_type: str
-    title: str
-    content: str
-    confidence: Decimal = Decimal("0.5")
-    evidence: Optional[dict[str, Any]] = None
-    tags: Optional[list[str]] = None
-    data_as_of: datetime
-    expires_hours: int = 168
-
-
-class FindingSummary(BaseModel):
-    """Response model for a single intelligence finding."""
-
-    id: UUID
-    agent_id: str
-    agent_type: str
-    entity: Optional[str] = None
-    entity_type: Optional[str] = None
-    finding_type: str
-    title: str
-    content: str
-    confidence: Optional[Decimal] = None
-    evidence: Optional[dict[str, Any]] = None
-    tags: Optional[list[str]] = None
-    data_as_of: datetime
-    expires_at: Optional[datetime] = None
-    is_validated: bool = False
-    created_at: datetime
-    updated_at: datetime
-
-
-class IntelligenceSearchResponse(BaseModel):
-    """Response for vector similarity search."""
-
-    findings: list[FindingSummary]
-    meta: ResponseMeta
-
-
-class IntelligenceListResponse(BaseModel):
-    """List response for findings."""
-
-    findings: list[FindingSummary]
-    meta: ResponseMeta
+# --- Intelligence models live in backend.models.intelligence ---
+# Callers should import directly from backend.models.intelligence.
 
 
 # --- Status ---

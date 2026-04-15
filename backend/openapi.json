@@ -894,7 +894,7 @@
           "intelligence"
         ],
         "summary": "Get Finding",
-        "description": "Get a single intelligence finding by ID.",
+        "description": "Get a single intelligence finding by ID.\n\nReturns \u00a720.4 standard envelope: ``{data: {...}, _meta: {...}}``.\n404 if the finding does not exist or is soft-deleted.",
         "operationId": "get_finding_api_v1_intelligence_findings__finding_id__get",
         "parameters": [
           {
@@ -914,7 +914,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FindingSummary"
+                  "$ref": "#/components/schemas/FindingSummaryEnvelope"
                 }
               }
             }
@@ -4116,6 +4116,23 @@
         "title": "FindingSummary",
         "description": "Response model for a single intelligence finding."
       },
+      "FindingSummaryEnvelope": {
+        "properties": {
+          "finding": {
+            "$ref": "#/components/schemas/FindingSummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding",
+          "meta"
+        ],
+        "title": "FindingSummaryEnvelope",
+        "description": "Single-finding response envelope (\u00a720.4).\n\nWraps a ``FindingSummary`` in the standard ``{data, _meta}`` shape\nrequired by the API standard checker."
+      },
       "FlowRow": {
         "properties": {
           "month_date": {
@@ -5456,7 +5473,7 @@
           "meta"
         ],
         "title": "IntelligenceListResponse",
-        "description": "List response for findings."
+        "description": "List response for findings.\n\nSerializes both ``data`` (\u00a720.4 standard envelope key) and\n``findings`` (V1 compat key).  ``_meta`` mirrors ``meta``."
       },
       "IntelligenceSearchResponse": {
         "properties": {
@@ -5477,7 +5494,7 @@
           "meta"
         ],
         "title": "IntelligenceSearchResponse",
-        "description": "Response for vector similarity search."
+        "description": "Response for vector similarity search.\n\nSerializes both ``data`` (\u00a720.4 standard envelope key \u2014 what\n``check-api-standard.py`` probes) and ``findings`` (V1 compat key)\npointing at the same list.  ``_meta`` mirrors ``meta`` so\n``expect_json_path: '_meta'`` passes the standard gate."
       },
       "MFLifecycleEvent": {
         "properties": {

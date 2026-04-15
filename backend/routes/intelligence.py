@@ -10,13 +10,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.session import get_db
-from backend.models.schemas import (
+from backend.models.intelligence import (
     FindingCreate,
     FindingSummary,
+    FindingSummaryEnvelope,
     IntelligenceListResponse,
     IntelligenceSearchResponse,
-    ResponseMeta,
 )
+from backend.models.schemas import ResponseMeta
 from backend.services.intelligence import (
     get_finding_by_id,
     get_relevant_intelligence,
@@ -153,12 +154,16 @@ async def list_intelligence_findings(
     )
 
 
-@router.get("/findings/{finding_id}", response_model=FindingSummary)
+@router.get("/findings/{finding_id}", response_model=FindingSummaryEnvelope)
 async def get_finding(
     finding_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> FindingSummary:
-    """Get a single intelligence finding by ID."""
+) -> FindingSummaryEnvelope:
+    """Get a single intelligence finding by ID.
+
+    Returns §20.4 standard envelope: ``{data: {...}, _meta: {...}}``.
+    404 if the finding does not exist or is soft-deleted.
+    """
     t0 = time.monotonic()
 
     row = await get_finding_by_id(db=db, finding_id=finding_id)
@@ -167,4 +172,7 @@ async def get_finding(
 
     elapsed = int((time.monotonic() - t0) * 1000)
     log.info("finding_fetched", finding_id=str(finding_id), query_ms=elapsed)
-    return _to_summary(row)
+    return FindingSummaryEnvelope(
+        finding=_to_summary(row),
+        meta=ResponseMeta(record_count=1, query_ms=elapsed),
+    )

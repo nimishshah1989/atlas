@@ -1,0 +1,169 @@
+openapi: "3.1.0"
+info:
+  title: ATLAS Intelligence API — V5 read-only routes
+  version: "5.0.0"
+  description: >
+    Subset of the ATLAS OpenAPI contract covering the three read-only
+    intelligence routes introduced in chunk V5-5. All responses conform
+    to the §20.4 standard envelope: {data, _meta}.
+
+paths:
+  /api/v1/intelligence/findings:
+    get:
+      operationId: list_intelligence_findings
+      summary: List intelligence findings with optional filters
+      tags: [intelligence]
+      parameters:
+        - name: entity
+          in: query
+          schema: { type: string }
+          required: false
+        - name: entity_type
+          in: query
+          schema: { type: string }
+          required: false
+        - name: finding_type
+          in: query
+          schema: { type: string }
+          required: false
+        - name: agent_id
+          in: query
+          schema: { type: string }
+          required: false
+        - name: min_confidence
+          in: query
+          schema: { type: number }
+          required: false
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+          required: false
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+          required: false
+      responses:
+        "200":
+          description: Paginated list of intelligence findings
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta, findings, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/FindingSummary" }
+                  findings:
+                    type: array
+                    items: { $ref: "#/components/schemas/FindingSummary" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/intelligence/search:
+    get:
+      operationId: search_intelligence
+      summary: Vector similarity search over intelligence findings
+      tags: [intelligence]
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+          required: true
+          description: Natural language search query
+        - name: entity
+          in: query
+          schema: { type: string }
+          required: false
+        - name: entity_type
+          in: query
+          schema: { type: string }
+          required: false
+        - name: finding_type
+          in: query
+          schema: { type: string }
+          required: false
+        - name: min_confidence
+          in: query
+          schema: { type: number, default: 0.5 }
+          required: false
+        - name: max_age_hours
+          in: query
+          schema: { type: integer, default: 168 }
+          required: false
+        - name: top_k
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+          required: false
+      responses:
+        "200":
+          description: Ranked intelligence findings by vector similarity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta, findings, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/FindingSummary" }
+                  findings:
+                    type: array
+                    items: { $ref: "#/components/schemas/FindingSummary" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/intelligence/findings/{finding_id}:
+    get:
+      operationId: get_finding
+      summary: Get a single intelligence finding by ID
+      tags: [intelligence]
+      parameters:
+        - name: finding_id
+          in: path
+          schema: { type: string, format: uuid }
+          required: true
+      responses:
+        "200":
+          description: Single finding wrapped in standard envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data: { $ref: "#/components/schemas/FindingSummary" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+        "404":
+          description: Finding not found
+
+components:
+  schemas:
+    ResponseMeta:
+      type: object
+      properties:
+        record_count: { type: integer }
+        query_ms: { type: integer }
+        data_as_of: { type: string, format: date, nullable: true }
+        stale: { type: boolean }
+
+    FindingSummary:
+      type: object
+      required: [id, agent_id, agent_type, finding_type, title, content, data_as_of, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        agent_id: { type: string }
+        agent_type: { type: string }
+        entity: { type: string, nullable: true }
+        entity_type: { type: string, nullable: true }
+        finding_type: { type: string }
+        title: { type: string }
+        content: { type: string }
+        confidence: { type: number, nullable: true }
+        evidence: { type: object, nullable: true }
+        tags: { type: array, items: { type: string }, nullable: true }
+        data_as_of: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time, nullable: true }
+        is_validated: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }

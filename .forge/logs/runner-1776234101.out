@@ -31,3 +31,19 @@ INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Co
 2026-04-15 06:36:40 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V5-4
 INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
 2026-04-15 06:45:54 [info     ] verifier_all_passed            chunk_id=V5-4
+2026-04-15 06:46:44 [info     ] post_chunk_sync_ok             chunk_id=V5-4
+2026-04-15 06:46:44 [info     ] loop_advance_ok                chunk_id=V5-4 chunks_completed=2
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-10 dep_id=V5-5 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-10a dep_id=V5-10 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-11 dep_id=V5-9 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-12 dep_id=V5-11 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-13 dep_id=V5-12 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-14 dep_id=V5-9 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-15 dep_id=V5-5 dep_status=PENDING
+2026-04-15 06:46:44 [debug    ] picker_dep_not_done            chunk_id=V5-16 dep_id=V5-10 dep_status=PENDING
+2026-04-15 06:46:44 [info     ] picker_selected                chunk_id=V5-5 depends_on=['V5-4']
+2026-04-15 06:46:44 [info     ] stage_pick_ok                  chunk_id=V5-5
+2026-04-15 06:46:44 [info     ] chunk_marked_in_progress       chunk_id=V5-5 pid=854656 started_at=2026-04-15T12:16:44+05:30
+2026-04-15 06:46:45 [info     ] lint_cache_invalidated         count=3 dirs=['.ruff_cache', 'scripts/forge_runner/.ruff_cache', '.mypy_cache']
+2026-04-15 06:46:45 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V5-5
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

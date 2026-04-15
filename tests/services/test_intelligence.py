@@ -149,7 +149,7 @@ async def test_store_finding_confidence_negative_raises() -> None:
 
 def test_zero_float_in_financial_fields() -> None:
     """Confidence field must be Decimal, never float."""
-    from backend.models.schemas import FindingSummary
+    from backend.models.intelligence import FindingSummary
 
     summary = FindingSummary(
         id=uuid.uuid4(),
@@ -174,7 +174,7 @@ def test_zero_float_in_financial_fields() -> None:
 
 def test_finding_create_confidence_is_decimal() -> None:
     """FindingCreate confidence must be Decimal."""
-    from backend.models.schemas import FindingCreate
+    from backend.models.intelligence import FindingCreate
 
     body = FindingCreate(
         agent_id="agent",

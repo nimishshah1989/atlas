@@ -100,6 +100,46 @@ criteria:
       module_glob: "backend/services/uql*"
       importer: "backend/routes/stocks.py"
 
+  - id: intel-01-list-envelope
+    title: "GET /intelligence/findings returns standard envelope with _meta"
+    description: >
+      §20.4 — list endpoints must return {data: [...], _meta: {...}} so the
+      standard checker can introspect pagination and provenance metadata.
+    severity: high
+    source_spec_section: "§20.4"
+    probe:
+      type: http_get
+      url: "/api/v1/intelligence/findings"
+      expect_status: 200
+      expect_json_path: "_meta"
+
+  - id: intel-02-list-data-array
+    title: "GET /intelligence/findings returns data array"
+    description: >
+      §20.4 — the data key must be present and be an array (may be empty).
+      check-api-standard.py _first_record() looks for data/records/rows/items.
+    severity: high
+    source_spec_section: "§20.4"
+    probe:
+      type: http_get
+      url: "/api/v1/intelligence/findings"
+      expect_status: 200
+      expect_json_path: "data"
+
+  - id: intel-03-search-static
+    title: "GET /intelligence/search module exposes standard envelope shape"
+    description: >
+      §20.4 — static check that intelligence route imports IntelligenceSearchResponse
+      and FindingSummaryEnvelope (envelope models) from backend.models.schemas.
+      Live probe skipped because the search endpoint requires the embedding
+      service (Ollama / OpenAI) to be available.
+    severity: high
+    source_spec_section: "§20.4"
+    probe:
+      type: static_import
+      module_glob: "backend/models/schemas*"
+      importer: "backend/routes/intelligence.py"
+
   - id: api-01-error-standard
     title: "Errors carry code + message + suggestion"
     description: >

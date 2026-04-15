@@ -282,7 +282,8 @@ async def test_get_finding_by_id_returns_200(app: Any) -> None:
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["id"] == str(finding_id)
+    # Response is §20.4 envelope: {data: {...}, _meta: {...}}
+    assert body["data"]["id"] == str(finding_id)
 
 
 @pytest.mark.asyncio
