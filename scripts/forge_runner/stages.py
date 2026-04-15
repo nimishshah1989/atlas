@@ -321,6 +321,54 @@ class LocalImplementStage:
 # ---------------------------------------------------------------------------
 
 
+def _invoke_post_chunk_sync(chunk_id: str, ctx: RunContext) -> None:
+    """Fire scripts/post-chunk.sh for the just-shipped chunk.
+
+    Non-fatal: the script spawns a background headless claude for wiki /
+    memory sync and exits fast, but if the script is missing or errors we
+    log a warning and keep running rather than failing the verify stage.
+    The post-chunk sync invariant stays a soft gate at the runner seam —
+    the hard gate is the four checks that just passed.
+    """
+    import subprocess
+
+    repo_root = Path(ctx.repo) if ctx.repo else Path.cwd()
+    script_path = repo_root / "scripts" / "post-chunk.sh"
+    if not script_path.exists():
+        logger.warning(
+            "post_chunk_sync_missing",
+            chunk_id=chunk_id,
+            script=str(script_path),
+        )
+        return
+
+    try:
+        proc = subprocess.run(
+            ["bash", str(script_path), chunk_id],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        logger.warning("post_chunk_sync_timeout", chunk_id=chunk_id)
+        return
+    except Exception as exc:  # noqa: BLE001 — non-fatal hook
+        logger.warning("post_chunk_sync_error", chunk_id=chunk_id, error=str(exc))
+        return
+
+    if proc.returncode != 0:
+        logger.warning(
+            "post_chunk_sync_nonzero",
+            chunk_id=chunk_id,
+            returncode=proc.returncode,
+            stderr_tail=proc.stderr[-400:] if proc.stderr else "",
+        )
+    else:
+        logger.info("post_chunk_sync_ok", chunk_id=chunk_id)
+
+
 class LocalVerifyStage:
     """Runs the four post-session checks and returns OK, FAILED, or NEEDS_SYNC."""
 
@@ -344,6 +392,13 @@ class LocalVerifyStage:
         result = run_four_checks(chunk.id, ctx)
 
         if result.passed:
+            # Post-chunk sync invariant (CLAUDE.md): after a successful ship,
+            # run scripts/post-chunk.sh to close the git/EC2/wiki/MEMORY.md
+            # fan-out (residual commit, service restart, smoke probe, headless
+            # /forge-compile + auto-memory update). The runner previously
+            # skipped this step — see V3-9..V4-7 wiki drift for the receipt.
+            _invoke_post_chunk_sync(chunk.id, ctx)
+
             return StageResult(
                 stage_name=self.name,
                 status="ok",

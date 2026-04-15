@@ -226,3 +226,105 @@ class TestStageResultSerializable:
         parsed = json.loads(raw)
         assert parsed["stage_name"] == "advance"
         assert isinstance(parsed["started_at"], str)  # datetime converted to ISO string
+
+
+# ---------------------------------------------------------------------------
+# LocalVerifyStage → post-chunk sync hook (regression for V3-9..V4-7 gap)
+# ---------------------------------------------------------------------------
+
+
+class TestVerifyInvokesPostChunkSync:
+    """When LocalVerifyStage's four checks pass, it MUST invoke
+    scripts/post-chunk.sh <chunk_id>. Before this regression, forge_runner
+    silently skipped post-chunk.sh — L2-RUNNER never ported step 4 — and
+    V3-9..V4-7 shipped with stale wiki/MEMORY.md. See the sync invariant
+    in CLAUDE.md and the stages.py hook.
+    """
+
+    def test_post_chunk_sync_invoked_on_verify_ok(
+        self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import asyncio
+        import subprocess
+        from types import SimpleNamespace
+
+        from scripts.forge_runner import stages as stages_mod
+
+        # Fake repo root with a stub post-chunk.sh so the existence check passes.
+        repo = tmp_path
+        (repo / "scripts").mkdir()
+        script = repo / "scripts" / "post-chunk.sh"
+        script.write_text("#!/bin/bash\necho fake-sync\n")
+        script.chmod(0o755)
+
+        # Capture subprocess.run calls.
+        calls: list[list[str]] = []
+
+        def fake_run(cmd: list[str], **kwargs: Any) -> Any:
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        # The helper imports subprocess locally inside the function body,
+        # so patching the module-level attribute is enough.
+        del stages_mod  # silence unused-import lint
+        monkeypatch.setattr(subprocess, "run", fake_run)
+
+        # Stub run_four_checks to return a passing result.
+        fake_result = SimpleNamespace(passed=True, needs_sync=False, failed_check=None, detail=None)
+        monkeypatch.setattr(
+            "scripts.forge_runner.verifier.run_four_checks",
+            lambda chunk_id, ctx: fake_result,
+        )
+
+        # Minimal ctx with .repo and .current_chunk.
+        ctx = SimpleNamespace(
+            repo=repo,
+            current_chunk=SimpleNamespace(id="V4-9"),
+            log_dir=tmp_path / "logs",
+            runner_pid=12345,
+        )
+
+        stage = LocalVerifyStage()
+        loop = asyncio.new_event_loop()
+        try:
+            result = loop.run_until_complete(stage.run(ctx))  # type: ignore[arg-type]
+        finally:
+            loop.close()
+
+        assert result.status == "ok"
+        assert any("post-chunk.sh" in " ".join(c) for c in calls), (
+            f"expected post-chunk.sh to be invoked on verify OK, got calls={calls}"
+        )
+        assert any("V4-9" in " ".join(c) for c in calls), (
+            f"expected chunk_id V4-9 passed to post-chunk.sh, got calls={calls}"
+        )
+
+    def test_post_chunk_sync_missing_script_is_non_fatal(
+        self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """If scripts/post-chunk.sh is absent, verify must still return ok."""
+        import asyncio
+        from types import SimpleNamespace
+
+        # No post-chunk.sh written into tmp_path.
+        fake_result = SimpleNamespace(passed=True, needs_sync=False, failed_check=None, detail=None)
+        monkeypatch.setattr(
+            "scripts.forge_runner.verifier.run_four_checks",
+            lambda chunk_id, ctx: fake_result,
+        )
+
+        ctx = SimpleNamespace(
+            repo=tmp_path,
+            current_chunk=SimpleNamespace(id="V4-9"),
+            log_dir=tmp_path / "logs",
+            runner_pid=12345,
+        )
+
+        stage = LocalVerifyStage()
+        loop = asyncio.new_event_loop()
+        try:
+            result = loop.run_until_complete(stage.run(ctx))  # type: ignore[arg-type]
+        finally:
+            loop.close()
+
+        assert result.status == "ok"  # missing script logs a warning but doesn't fail verify
