@@ -4,3 +4,18 @@
 2026-04-15 03:33:51 [info     ] chunk_marked_in_progress       chunk_id=V5-1 pid=784404 started_at=2026-04-15T09:03:51+05:30
 2026-04-15 03:33:51 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V5-1
 INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude
+2026-04-15 03:51:46 [info     ] verifier_all_passed            chunk_id=V5-1
+2026-04-15 03:51:46 [info     ] loop_advance_ok                chunk_id=V5-1 chunks_completed=1
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-10 dep_id=V5-5 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-10a dep_id=V5-10 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-11 dep_id=V5-9 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-12 dep_id=V5-11 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-13 dep_id=V5-12 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-14 dep_id=V5-9 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-15 dep_id=V5-5 dep_status=PENDING
+2026-04-15 03:51:46 [debug    ] picker_dep_not_done            chunk_id=V5-16 dep_id=V5-10 dep_status=PENDING
+2026-04-15 03:51:46 [info     ] picker_selected                chunk_id=V5-2 depends_on=['V5-1']
+2026-04-15 03:51:46 [info     ] stage_pick_ok                  chunk_id=V5-2
+2026-04-15 03:51:46 [info     ] chunk_marked_in_progress       chunk_id=V5-2 pid=784404 started_at=2026-04-15T09:21:46+05:30
+2026-04-15 03:51:46 [info     ] baseline_snapshot_ok           baseline_path=/home/ubuntu/atlas/.forge/baseline/current.json chunk_id=V5-2
+INFO:claude_agent_sdk._internal.transport.subprocess_cli:Using bundled Claude Code CLI: /home/ubuntu/atlas/venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude

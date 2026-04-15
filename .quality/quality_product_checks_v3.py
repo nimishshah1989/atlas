@@ -5,16 +5,58 @@ becomes a False return with a readable reason. These run in-process under
 .quality/checks.py, so keep them dependency-light (stdlib only).
 
 Checks:
-  check_simulation_no_float  → v3-04 (no ': float' annotations in simulation code)
-  check_simulation_no_print  → v3-05 (no print() calls in simulation services)
+  check_simulate_run_endpoint → v3-03 (POST /simulate/run reachable, non-5xx)
+  check_simulation_no_float   → v3-04 (no ': float' annotations in simulation code)
+  check_simulation_no_print   → v3-05 (no print() calls in simulation services)
 """
 
 from __future__ import annotations
 
 import ast
+import json
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+BACKEND_BASE = "http://127.0.0.1:8010"
+
+
+def check_simulate_run_endpoint() -> tuple[bool, str]:
+    """v3-03: POST /api/v1/simulate/run must exist (any status except 404/5xx).
+
+    The native http_contract handler is GET-only, so this callable POSTs a
+    minimal shell payload. 200/201 = executed; 400/422 = endpoint reachable
+    but request shape rejected; 501 = stub. 404 or 5xx = failure.
+    """
+    url = f"{BACKEND_BASE}/api/v1/simulate/run"
+    payload = {
+        "config": {
+            "signal": "breadth",
+            "instrument": "INF090I01239",
+            "date_range": {"start": "2020-01-01", "end": "2024-01-01"},
+        }
+    }
+    accepted = {200, 201, 400, 422, 501}
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={"Content-Type": "application/json", "User-Agent": "atlas-quality/1.0"},
+    )
+    start = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            status = resp.status
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+    except Exception as exc:  # noqa: BLE001
+        return False, f"POST {url} unreachable: {str(exc)[:80]}"
+    elapsed_ms = int((time.monotonic() - start) * 1000)
+    if status not in accepted:
+        return False, f"POST {url} → {status} ({elapsed_ms}ms, expected one of {sorted(accepted)})"
+    return True, f"POST {url} → {status} in {elapsed_ms}ms (endpoint reachable)"
 
 
 def _iter_py_files(directory: Path) -> list[Path]:

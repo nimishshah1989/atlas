@@ -237,7 +237,7 @@ class StockDeepDive(BaseModel):
     # Full technicals
     sma_50: Optional[Decimal] = None
     sma_200: Optional[Decimal] = None
-    ema_21: Optional[Decimal] = None
+    ema_20: Optional[Decimal] = None
     rsi_14: Optional[Decimal] = None
     adx_14: Optional[Decimal] = None
     macd_line: Optional[Decimal] = None

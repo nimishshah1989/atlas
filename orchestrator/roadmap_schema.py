@@ -17,8 +17,9 @@ from pydantic import BaseModel, field_validator, model_validator
 # ID format patterns
 # ---------------------------------------------------------------------------
 VERSION_ID_RE = re.compile(r"^V\d+$")
-CHUNK_ID_RE = re.compile(r"^C\d+$")
+CHUNK_ID_RE = re.compile(r"^[A-Z][A-Za-z0-9-]*$")
 STEP_ID_RE = re.compile(r"^C(\d+)\.(\d+)$")
+CHUNK_ID_LEGACY_RE = re.compile(r"^C\d+$")
 
 VALID_CHECK_TYPES = frozenset({"file_exists", "command", "http_ok", "db_query", "smoke_list"})
 
@@ -135,16 +136,27 @@ class Chunk(BaseModel):
     @classmethod
     def chunk_id_format(cls, v: str) -> str:
         if not CHUNK_ID_RE.match(v):
-            raise ValueError(f"Chunk id must match C<n> (e.g. C1), got {v!r}")
+            raise ValueError(
+                f"Chunk id must be uppercase alnum/dash (e.g. C1, S2, L1-MIN, "
+                f"V1-1, V2-UQL-AGG-30), got {v!r}"
+            )
         return v
 
     @model_validator(mode="after")
     def validate_step_prefixes(self) -> "Chunk":
-        """Every step id prefix must match the chunk id."""
+        """Every legacy-C-style step id prefix must match a legacy-C-style chunk id.
+
+        Non-legacy chunks (V1-1, S2, L2-RUNNER, V2-UQL-AGG-30, V5-10a) carry
+        no inline steps today — the dashboard reads their status straight
+        from `orchestrator/state.db`. If someone later adds steps under one
+        of those chunks, declare them with chunk-scoped ids (no prefix
+        coupling is enforced for those here).
+        """
+        if not CHUNK_ID_LEGACY_RE.match(self.id):
+            return self
         for step in self.steps:
             m = STEP_ID_RE.match(step.id)
             if m:
-                # step id is C<a>.<b>; chunk id is C<n>
                 chunk_num = self.id[1:]  # strip 'C'
                 if m.group(1) != chunk_num:
                     raise ValueError(
@@ -219,9 +231,11 @@ class RoadmapFile(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_version_ids_v1_to_v10(self) -> "RoadmapFile":
-        valid = {f"V{n}" for n in range(1, 11)}
+    def validate_version_ids_v0_to_v10(self) -> "RoadmapFile":
+        # V0 is the infra/retrofit bucket (C1–C11, S-blocks, L-blocks) that
+        # pre-date the V1 product slice. V1–V10 are the product slices.
+        valid = {f"V{n}" for n in range(0, 11)}
         for v in self.versions:
             if v.id not in valid:
-                raise ValueError(f"Version id {v.id!r} is out of range V1–V10")
+                raise ValueError(f"Version id {v.id!r} is out of range V0–V10")
         return self

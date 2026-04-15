@@ -53,13 +53,17 @@ RS_28D_CTE = """
 TECH_CTE_FULL = """
     latest_tech AS (
         SELECT instrument_id,
-            close_adj, sma_50, sma_200, ema_21,
+            close_adj, sma_50, sma_200, ema_20,
             rsi_14, adx_14, macd_line, macd_signal, macd_histogram,
             above_200dma, above_50dma,
             beta_nifty, sharpe_1y, sortino_1y, max_drawdown_1y, calmar_ratio,
-            volatility_20d, relative_volume, mfi_14, obv,
-            delivery_vs_avg, bollinger_upper, bollinger_lower,
-            disparity_20, stochastic_k, stochastic_d, roc_5
+            volatility_20d, NULL::numeric AS relative_volume, mfi_14, obv,
+            NULL::numeric AS delivery_vs_avg, bollinger_upper, bollinger_lower,
+            CASE WHEN sma_20 > 0
+                 THEN ((close_adj - sma_20) / sma_20 * 100)
+                 ELSE NULL
+            END AS disparity_20,
+            stochastic_k, stochastic_d, roc_5
         FROM de_equity_technical_daily
         WHERE date = (SELECT tech_date FROM latest_dates)
     )

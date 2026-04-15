@@ -58,8 +58,11 @@ _mf_rs_momentum_lock = asyncio.Lock()
 # index), record the failure timestamp so subsequent requests return empty
 # immediately instead of burning 15s on every page load. Auto-retries
 # after the TTL expires — when JIP ships ix_de_rs_scores_entity_type_id_date
-# the next attempt will succeed and quadrants light back up.
-_MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS = 60
+# the next attempt will succeed and quadrants light back up. TTL is 1 hour
+# because the underlying cause (missing JIP index) is not something that
+# self-heals within a minute, and retrying every 60s meant every ~10th
+# user request still burned 15s waiting for the same known-bad query.
+_MF_RS_MOMENTUM_NEGATIVE_TTL_SECONDS = 3600
 _mf_rs_momentum_last_failure: dict[str, float] = {}
 
 

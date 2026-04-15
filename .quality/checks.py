@@ -1421,6 +1421,37 @@ def print_summary(report: dict[str, Any]) -> None:
     print("═" * 64 + "\n")
 
 
+def _wait_for_backend_ready(base_url: str = "http://127.0.0.1:8010", timeout_s: int = 90) -> None:
+    """Poll /api/v1/system/ready until prewarm completes or timeout.
+
+    Silently returns if the backend isn't reachable at all (local dev, no
+    server running — callers that need a live API will fail their own
+    probes with a clearer message than a generic timeout here).
+    """
+    import time
+    import urllib.error
+    import urllib.request
+
+    url = f"{base_url}/ready"
+    deadline = time.monotonic() + timeout_s
+    probed_once = False
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as resp:
+                if resp.status == 200:
+                    if probed_once:
+                        print(f" [gate] backend ready at {url}")
+                    return
+        except urllib.error.HTTPError as exc:
+            if exc.code != 503:
+                return  # unexpected status — let downstream checks report it
+            probed_once = True
+        except Exception:
+            return  # backend not reachable — let downstream checks report it
+        time.sleep(2)
+    print(f" [gate] WARN: {url} still not ready after {timeout_s}s — proceeding anyway")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="ATLAS quality gate — 7 dimensions, per-dim 80% floor, no composite"
@@ -1442,6 +1473,13 @@ def main() -> int:
         ">2pts or any non-gating dim regresses >5pts vs baseline, even if still above floor",
     )
     args = ap.parse_args()
+
+    # Wait for the backend to finish cache prewarm before running live-API
+    # checks. /api/v1/system/ready returns 503 while prewarm is pending,
+    # 200 once equity+MF aggregate caches are populated. Without this
+    # barrier, checks that depend on /mf/universe race the background
+    # _prewarm_caches() task and fail on cold JIP queries.
+    _wait_for_backend_ready()
 
     report = registry_run_all(args.dim)
     if args.save or not args.json:

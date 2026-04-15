@@ -37,7 +37,7 @@ PLAN_YAML = _REPO_ROOT / "orchestrator" / "plan.yaml"
 ROADMAP_YAML = _REPO_ROOT / "orchestrator" / "roadmap.yaml"
 
 PLAN_CHUNK_ID_RE = re.compile(r"^\s*-\s*id:\s*(\S+)")
-VALID_VERSIONS = {f"V{n}" for n in range(1, 11)}
+VALID_VERSIONS = {f"V{n}" for n in range(0, 11)}
 
 
 def load_plan_chunk_ids(plan_path: Path) -> set[str]:
@@ -101,7 +101,7 @@ def main() -> int:
         if not VERSION_ID_RE.match(v.id):
             errors.append(f"Rule 4 — Version id {v.id!r} does not match V<n>")
         if v.id not in VALID_VERSIONS:
-            errors.append(f"Rule 4 — Version id {v.id!r} is outside V1–V10")
+            errors.append(f"Rule 4 — Version id {v.id!r} is outside V0–V10")
         seen_versions.add(v.id)
 
     # --- Build chunk → version mapping ---

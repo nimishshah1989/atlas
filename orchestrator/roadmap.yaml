@@ -1,138 +1,60 @@
-# Canonical V1-V10 roadmap. Edit this file to add chunks; the dashboard
+# Canonical V0–V10 roadmap. Edit this file to add chunks; the dashboard
 # picks them up automatically. Lint enforces consistency with plan.yaml.
 #
 # Rules:
-#   - version ids: V1–V10
-#   - chunk ids:   C<n>  (must also exist in plan.yaml unless future: true)
-#   - step ids:    C<n>.<m>
+#   - version ids: V0 (infra) and V1–V10 (product slices)
+#   - chunk ids:   must also exist in orchestrator/state.db
+#   - chunks declared without a `title:` inherit it from plan.yaml when
+#     listed there (plan_ref convention). Otherwise an inline `title:` is
+#     required.
 #   - check types: file_exists | command | http_ok | db_query | smoke_list
-#   - command must be a list, never a shell string
 
 versions:
+  - id: V0
+    title: "Infra & retrofits"
+    goal: >
+      Quality gate, orchestrator, runners, and S-block retrofits that
+      pre-date the V1 product slice. Done; here so they stop showing up
+      under the orphan SX lane on the dashboard.
+    chunks:
+      - id: C1
+      - id: C2
+      - id: C3
+      - id: C4
+      - id: C5
+      - id: C6
+      - id: C7
+      - id: C8
+      - id: C9
+      - id: C10
+      - id: C11
+      - id: S1
+        title: "Scoring engine rewrite — 7 dims, no composite, per-dim 80% floor"
+      - id: S2
+        title: "standards.md rewrite — audit 53, add backend+product rubrics"
+      - id: S3
+        title: "v1-criteria.yaml — wire §24.3 into product dim"
+      - id: S4
+        title: "CLAUDE.md surgery — strip to 80 lines, operational rules only"
+      - id: L1-MIN
+        title: "Minimal forge runner loop"
+      - id: L2-RUNNER
+
   - id: V1
     title: "Market → Sector → Stock → Decision"
     goal: >
       FM navigates Market → Sector → Stock flow end-to-end;
       decisions tracked from creation to outcome.
     chunks:
-      - id: C1
-        plan_ref: true
-        steps:
-          - id: C1.1
-            text: ".quality/standards.md exists"
-            check:
-              type: file_exists
-              path: .quality/standards.md
-          - id: C1.2
-            text: ".quality/checks.py exists"
-            check:
-              type: file_exists
-              path: .quality/checks.py
-
-      - id: C2
-        plan_ref: true
-        steps:
-          - id: C2.1
-            text: "orchestrator/plan.yaml exists"
-            check:
-              type: file_exists
-              path: orchestrator/plan.yaml
-          - id: C2.2
-            text: "orchestrator/state_machine.py exists"
-            check:
-              type: file_exists
-              path: orchestrator/state_machine.py
-
-      - id: C3
-        plan_ref: true
-        steps:
-          - id: C3.1
-            text: "orchestrator/runner.py exists"
-            check:
-              type: file_exists
-              path: orchestrator/runner.py
-          - id: C3.2
-            text: "orchestrator/prompts.py exists"
-            check:
-              type: file_exists
-              path: orchestrator/prompts.py
-
-      - id: C4
-        plan_ref: true
-        steps:
-          - id: C4.1
-            text: "orchestrator/cli.py exists"
-            check:
-              type: file_exists
-              path: orchestrator/cli.py
-          - id: C4.2
-            text: "orchestrator/logging_config.py exists"
-            check:
-              type: file_exists
-              path: orchestrator/logging_config.py
-
-      - id: C5
-        plan_ref: true
-        steps:
-          - id: C5.1
-            text: "backend/.env.example exists"
-            check:
-              type: file_exists
-              path: backend/.env.example
-
-      - id: C6
-        plan_ref: true
-        steps:
-          - id: C6.1
-            text: "backend/services/ directory split from monolith"
-            check:
-              type: file_exists
-              path: backend/services
-
-      - id: C7
-        plan_ref: true
-        steps:
-          - id: C7.1
-            text: "Dockerfile exists"
-            check:
-              type: file_exists
-              path: Dockerfile
-
-      - id: C8
-        plan_ref: true
-        steps:
-          - id: C8.1
-            text: "frontend/ directory exists"
-            check:
-              type: file_exists
-              path: frontend
-
-      - id: C9
-        plan_ref: true
-        steps:
-          - id: C9.1
-            text: "tests/ directory exists with integration tests"
-            check:
-              type: file_exists
-              path: tests/integration
-
-      - id: C10
-        plan_ref: true
-        steps:
-          - id: C10.1
-            text: "README.md exists"
-            check:
-              type: file_exists
-              path: README.md
-
-      - id: C11
-        plan_ref: true
-        steps:
-          - id: C11.1
-            text: ".quality/report.json exists (API quality gate passed)"
-            check:
-              type: file_exists
-              path: .quality/report.json
+      - id: V1-1
+      - id: V1-2
+      - id: V1-3
+      - id: V1-4
+      - id: V1-5
+      - id: V1-6
+      - id: V1-7
+      - id: V1-8
+      - id: V1-9
 
   - id: V2
     title: "MF slice"
@@ -146,135 +68,136 @@ versions:
         - "Drill into 'Large Cap Growth', verify holdings list loads."
         - "Click into HDFC Top 100, verify deep-dive tabs populate."
     chunks:
-      # V2-smoke: optional smoke_list step for slice-health chip.
-      # future: true because V2 chunks are not yet in plan.yaml.
-      - id: C20
-        future: true
-        steps:
-          - id: C20.1
-            text: "Smoke all MF endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+      - id: V2-1
+      - id: V2-2
+      - id: V2-3
+      - id: V2-4
+      - id: V2-5
+      - id: V2-6
+      - id: V2-7
+      - id: V2-8
+      - id: V2-9
+      - id: V2-10
+      - id: V2-UQL-AGG-1
+      - id: V2-UQL-AGG-2
+      - id: V2-UQL-AGG-3
+      - id: V2-UQL-AGG-4
+      - id: V2-UQL-AGG-5
+      - id: V2-UQL-AGG-6
+      - id: V2-UQL-AGG-7
+      - id: V2-UQL-AGG-8
+      - id: V2-UQL-AGG-9
+      - id: V2-UQL-AGG-10
+      - id: V2-UQL-AGG-11
+      - id: V2-UQL-AGG-12
+      - id: V2-UQL-AGG-13
+      - id: V2-UQL-AGG-14
+      - id: V2-UQL-AGG-15
+      - id: V2-UQL-AGG-16
+      - id: V2-UQL-AGG-17
+      - id: V2-UQL-AGG-18
+      - id: V2-UQL-AGG-19
+      - id: V2-UQL-AGG-20
+      - id: V2-UQL-AGG-21
+      - id: V2-UQL-AGG-22
+      - id: V2-UQL-AGG-23
+      - id: V2-UQL-AGG-24
+      - id: V2-UQL-AGG-25
+      - id: V2-UQL-AGG-26
+      - id: V2-UQL-AGG-27
+      - id: V2-UQL-AGG-28
+      - id: V2-UQL-AGG-29
+      - id: V2-UQL-AGG-30
 
   - id: V3
     title: "Simulation slice"
     goal: >
-      Simulation slice (VectorBT + tax + QuantStats).
-      VectorBT + Indian FIFO tax + QuantStats tear sheets.
+      Simulation slice (VectorBT + Indian FIFO tax + QuantStats tear sheets +
+      auto-loop scheduler).
     chunks:
-      - id: C30
-        future: true
-        steps:
-          - id: C30.1
-            text: "Smoke all simulation endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+      - id: V3-1
+        title: "Simulation foundations — atlas_simulations table, ORM, contracts, route stubs"
+      - id: V3-2
+        title: "Indian FIFO tax engine (pre/post 23-Jul-2024, 4% cess, annual exemption)"
+      - id: V3-3
+        title: "Signal adapters — 7 sources (BREADTH/McCLELLAN/RS/PE/REGIME/SECTOR_RS/SUMMATION)"
+      - id: V3-4
+        title: "Backtest engine + analytics + SimulationService.run"
+      - id: V3-5
+        title: "Simulation listing + detail + save + soft-delete + auto-loop re-run"
+      - id: V3-6
+        title: "Portfolio optimizer integration (Riskfolio)"
+      - id: V3-7
+        title: "In-process auto-loop scheduler + drift alert + re-optimization handoff"
+      - id: V3-8
+        title: "Pro shell /pro/simulate Simulation Lab page"
+      - id: V3-9
+        title: "V3 polish — product dim wires v2+v3 criteria, validate-v3 script"
 
   - id: V4
     title: "Portfolio slice"
     goal: >
-      Portfolio slice (casparser + Riskfolio-Lib + attribution).
+      Portfolio slice (casparser CAMS import + Riskfolio-Lib MV/HRP +
+      Brinson attribution + tax harvesting).
     chunks:
-      - id: C40
-        future: true
-        steps:
-          - id: C40.1
-            text: "Smoke all portfolio endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+      - id: V4-1
+      - id: V4-2
+      - id: V4-3
+      - id: V4-4
+      - id: V4-5
+      - id: V4-6
+      - id: V4-7
 
   - id: V5
     title: "Intelligence slice"
     goal: >
-      Intelligence slice (briefings, debate, Darwinian evolution).
+      Intelligence slice (briefings, debate, Darwinian evolution,
+      LangGraph orchestration, persona agents).
     chunks:
-      - id: C50
-        future: true
-        steps:
-          - id: C50.1
-            text: "Smoke all intelligence endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+      - id: V5-1
+      - id: V5-2
+      - id: V5-3
+      - id: V5-4
+      - id: V5-5
+      - id: V5-6
+      - id: V5-7
+      - id: V5-8
+      - id: V5-9
+      - id: V5-10
+      - id: V5-10a
+      - id: V5-11
+      - id: V5-12
+      - id: V5-13
+      - id: V5-14
+      - id: V5-15
+      - id: V5-16
 
   - id: V6
     title: "TradingView slice"
     goal: >
       TradingView slice (MCP bridge, charts, bidirectional sync).
-    chunks:
-      - id: C60
-        future: true
-        steps:
-          - id: C60.1
-            text: "Smoke all TradingView endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+    chunks: []
 
   - id: V7
     title: "ETF + Global slice"
     goal: >
       ETF + Global slice. ETF and global instrument coverage.
-    chunks:
-      - id: C70
-        future: true
-        steps:
-          - id: C70.1
-            text: "Smoke all ETF/Global endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+    chunks: []
 
   - id: V8
     title: "Advisor shell"
     goal: >
       Advisor shell. Advisor experience surface.
-    chunks:
-      - id: C80
-        future: true
-        steps:
-          - id: C80.1
-            text: "Smoke all advisor endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+    chunks: []
 
   - id: V9
     title: "Retail shell"
     goal: >
       Retail shell. Retail MF investor surface.
-    chunks:
-      - id: C90
-        future: true
-        steps:
-          - id: C90.1
-            text: "Smoke all retail endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+    chunks: []
 
   - id: V10
     title: "Qlib + Advanced"
     goal: >
       Qlib + Advanced (Alpha158, ML models, parameter optimization).
-    chunks:
-      - id: C100
-        future: true
-        steps:
-          - id: C100.1
-            text: "Smoke all Qlib/Advanced endpoints"
-            slow: true
-            check:
-              type: smoke_list
-              file: scripts/smoke-endpoints.txt
+    chunks: []

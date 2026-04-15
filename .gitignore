@@ -24,7 +24,10 @@ orchestrator/logs/
 # Local Claude Code session state (per-session cache, not source)
 .claude/
 
-# spec-kit / specify CLI scaffolding — not part of ATLAS source
-.specify/
-specs/
+# spec-kit / specify CLI scaffolding — not part of ATLAS source.
+# Root-anchored (leading /) so this does NOT accidentally match
+# docs/specs/*-criteria.yaml, which ARE source-of-truth and must be
+# committed (they drive .quality/checks.py product dim).
+/.specify/
+/specs/
 

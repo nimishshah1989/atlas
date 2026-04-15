@@ -2412,56 +2412,6 @@
         }
       }
     },
-    "/api/v1/health": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Health",
-        "description": "Liveness probe \u2014 process is up and serving requests.",
-        "operationId": "health_api_v1_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Health Api V1 Health Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/ready": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Ready",
-        "description": "Readiness probe \u2014 dependencies (DB) reachable.",
-        "operationId": "ready_api_v1_ready_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Ready Api V1 Ready Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/status": {
       "get": {
         "tags": [
@@ -2616,6 +2566,56 @@
         }
       }
     },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "description": "Liveness probe \u2014 process is up and serving requests.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Ready",
+        "description": "Readiness probe \u2014 DB reachable AND cache prewarm complete.\n\nReturns 503 until `_prewarm_caches()` has populated the equity/MF\naggregate caches. Callers (quality gate, systemd, k8s) should block\non this endpoint so the first live-API probe doesn't race a cold JIP\nquery that would blow past its latency budget.",
+        "operationId": "ready_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ready Api V1 Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2648,7 +2648,7 @@
           "system"
         ],
         "summary": "Ready",
-        "description": "Readiness probe \u2014 dependencies (DB) reachable.",
+        "description": "Readiness probe \u2014 DB reachable AND cache prewarm complete.\n\nReturns 503 until `_prewarm_caches()` has populated the equity/MF\naggregate caches. Callers (quality gate, systemd, k8s) should block\non this endpoint so the first live-API probe doesn't race a cold JIP\nquery that would blow past its latency budget.",
         "operationId": "ready_ready_get",
         "responses": {
           "200": {
@@ -8743,7 +8743,7 @@
             ],
             "title": "Sma 200"
           },
-          "ema_21": {
+          "ema_20": {
             "anyOf": [
               {
                 "type": "string",
@@ -8753,7 +8753,7 @@
                 "type": "null"
               }
             ],
-            "title": "Ema 21"
+            "title": "Ema 20"
           },
           "rsi_14": {
             "anyOf": [

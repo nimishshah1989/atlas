@@ -12,7 +12,9 @@ from typing import Any
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     ARRAY,
+    BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Index,
@@ -297,4 +299,92 @@ class AtlasPortfolioSnapshot(Base):
             unique=True,
             postgresql_where="is_deleted = false",
         ),
+    )
+
+
+# --- ATLAS Agent Tables (V5) ---
+
+
+class AtlasAgentScore(Base):
+    """Tracks agent prediction accuracy over time.
+
+    id is BIGSERIAL (not UUID) — high-write append table per spec DDL.
+    """
+
+    __tablename__ = "atlas_agent_scores"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    agent_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    prediction_date: Mapped[date] = mapped_column(Date, nullable=False)
+    entity: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prediction: Mapped[str] = mapped_column(Text, nullable=False)
+    evaluation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    actual_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    accuracy_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class AtlasAgentWeight(Base):
+    """Darwinian agent weights — controls agent influence in synthesis.
+
+    CHECK constraint enforces weight in [0.3, 2.5] per spec §V5.
+    agent_id is the natural primary key (VARCHAR(100)).
+    """
+
+    __tablename__ = "atlas_agent_weights"
+
+    agent_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    weight: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False, server_default="1.0")
+    rolling_accuracy: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    mutation_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    last_mutation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (
+        CheckConstraint("weight >= 0.3 AND weight <= 2.5", name="ck_agent_weight_range"),
+    )
+
+
+class AtlasAgentMemory(Base):
+    """Per-agent corrections and learnings persisted across runs.
+
+    id is BIGSERIAL (not UUID) — append-only learning log per spec DDL.
+    """
+
+    __tablename__ = "atlas_agent_memory"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    agent_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    memory_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )

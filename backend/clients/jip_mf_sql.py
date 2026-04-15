@@ -393,10 +393,13 @@ RS_MOMENTUM_DECIMAL_FIELDS = (
 )
 
 LIFECYCLE_SQL = """
-    SELECT mstar_id, event_type, effective_date, detail
+    SELECT mstar_id,
+           event_type,
+           event_date AS effective_date,
+           notes AS detail
     FROM de_mf_lifecycle
     WHERE mstar_id = :mstar_id
-    ORDER BY effective_date DESC
+    ORDER BY event_date DESC
 """
 
 FRESHNESS_TABLE_PROBES: tuple[tuple[str, str, str], ...] = (

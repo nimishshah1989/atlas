@@ -14,13 +14,21 @@ import {
 import HeartbeatStrip from "./HeartbeatStrip";
 import RoadmapTree from "./RoadmapTree";
 import QualityScores from "./QualityScores";
-import V1CompletionStrip from "./V1CompletionStrip";
+import VersionCompletionStrip from "./VersionCompletionStrip";
 import ContextFiles, { type ContextFile } from "./ContextFiles";
 import LogTail from "./LogTail";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+const VERSION_STRIPS = [
+  { prefix: "v1", label: "V1 Completion", subtitle: "§24.3 — Market → Sector → Stock → Decision" },
+  { prefix: "v2", label: "V2 Completion", subtitle: "MF slice — category → fund → holdings drill-down" },
+  { prefix: "v3", label: "V3 Completion", subtitle: "Simulation slice — VectorBT + FIFO tax + auto-loop" },
+  { prefix: "v4", label: "V4 Completion", subtitle: "Portfolio slice — CAMS + Riskfolio + attribution" },
+  { prefix: "v5", label: "V5 Completion", subtitle: "Intelligence slice — briefings + debate + Darwinian" },
+] as const;
 
 type DashState = {
   heartbeat: HeartbeatResponse | null;
@@ -146,8 +154,10 @@ export default function ForgeDashboard({
           <RoadmapTree roadmap={state.roadmap} />
         </section>
 
-        {/* V1 completion — driven by product dim / v1-criteria.yaml */}
-        <V1CompletionStrip quality={state.quality} />
+        {/* Per-version completion strips — driven by product dim / v{N}-criteria.yaml */}
+        {VERSION_STRIPS.map((s) => (
+          <VersionCompletionStrip key={s.prefix} quality={state.quality} {...s} />
+        ))}
 
         {/* Quality scores */}
         <section className="bg-white border border-gray-200 rounded-lg p-4">

@@ -266,6 +266,13 @@ chunks:
       - Verify all pointers resolve; grep-verify no scope strings remain
       - All 5 gating dims still ≥ 80 post-rewrite
 
+  # --- L1-MIN — minimal forge runner loop (retroactive registration) ---
+
+  - id: L1-MIN
+    title: "Minimal forge runner loop — first working end-to-end spawn"
+    status: DONE
+
+
   # --- L2-RUNNER — forge-runner on Claude Agent SDK (replaces ralph) ---
 
   - id: L2-RUNNER
@@ -862,6 +869,57 @@ chunks:
       - "Memory files reflect V2-UQL-AGG DONE"
       - "/forge-compile exits 0"
       - "Wiki index shows at least one new article for the UQL engine pattern"
+
+
+  # --- V3 Simulation Slice (retroactive registration) ---------------
+  # V3-1..V3-9 shipped from specs/005-v3-simulation-engine/ directly
+  # without being registered here. These entries exist so the forge
+  # dashboard + roadmap lint agree with orchestrator/state.db. Status
+  # is tracked in state.db, not this field.
+
+  - id: V3-1
+    title: "Simulation foundations — atlas_simulations table, ORM, contracts, route stubs"
+    status: DONE
+
+  - id: V3-2
+    title: "Indian FIFO tax engine (pre/post 23-Jul-2024, 4% cess, annual exemption)"
+    status: DONE
+    depends_on: [V3-1]
+
+  - id: V3-3
+    title: "Signal adapters — 7 sources (BREADTH/McCLELLAN/RS/PE/REGIME/SECTOR_RS/SUMMATION)"
+    status: DONE
+    depends_on: [V3-1]
+
+  - id: V3-4
+    title: "Backtest engine + analytics + SimulationService.run"
+    status: DONE
+    depends_on: [V3-2, V3-3]
+
+  - id: V3-5
+    title: "Simulation listing + detail + save + soft-delete + auto-loop re-run"
+    status: DONE
+    depends_on: [V3-4]
+
+  - id: V3-6
+    title: "Portfolio optimizer integration (Riskfolio)"
+    status: DONE
+    depends_on: [V3-4]
+
+  - id: V3-7
+    title: "In-process auto-loop scheduler + drift alert + re-optimization handoff"
+    status: DONE
+    depends_on: [V3-5, V3-6]
+
+  - id: V3-8
+    title: "Pro shell /pro/simulate Simulation Lab page"
+    status: DONE
+    depends_on: [V3-5]
+
+  - id: V3-9
+    title: "V3 polish — product dim wires v2+v3 criteria, validate-v3 script"
+    status: DONE
+    depends_on: [V3-7, V3-8]
 
 
   # --- V4 -------------------------------------------------

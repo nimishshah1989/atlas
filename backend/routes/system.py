@@ -10,16 +10,13 @@ from pathlib import Path
 from typing import Any, Optional, cast
 
 import structlog
-from fastapi import APIRouter, Depends, Query, Response
-from fastapi import status as http_status
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
-from backend.db.session import async_session_factory, get_db
+from backend.db.session import get_db
 from backend.models.schemas import DataFreshness, StatusResponse
-from backend.version import GIT_SHA, VERSION
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1", tags=["system"])
@@ -150,38 +147,11 @@ class SystemLogsTailResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.get("/health")
-async def health() -> dict[str, str]:
-    """Liveness probe — process is up and serving requests."""
-    return {"status": "ok", "version": VERSION, "git_sha": GIT_SHA}
-
-
-@router.get("/ready")
-async def ready(response: Response) -> dict[str, Any]:
-    """Readiness probe — dependencies (DB) reachable."""
-    checks: dict[str, dict[str, Any]] = {}
-    all_ok = True
-
-    t0 = time.monotonic()
-    try:
-        async with async_session_factory() as session:
-            await session.execute(text("SELECT 1"))
-        checks["database"] = {
-            "status": "ok",
-            "latency_ms": int((time.monotonic() - t0) * 1000),
-        }
-    except Exception as exc:
-        all_ok = False
-        checks["database"] = {"status": "fail", "error": str(exc)[:200]}
-
-    if not all_ok:
-        response.status_code = http_status.HTTP_503_SERVICE_UNAVAILABLE
-    return {
-        "status": "ready" if all_ok else "not_ready",
-        "version": VERSION,
-        "git_sha": GIT_SHA,
-        "checks": checks,
-    }
+# /health and /ready live in backend/routes/system_probes.py — extracted
+# so this module stays under the 500-line modularity budget. Import the
+# handlers here so backend/main.py can still alias them at the bare /health
+# and /ready paths for load-balancer probes that don't know about /api/v1.
+from backend.routes.system_probes import health, ready  # noqa: F401, E402
 
 
 @router.get("/status", response_model=StatusResponse)

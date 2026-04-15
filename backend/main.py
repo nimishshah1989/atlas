@@ -25,9 +25,10 @@ from backend.routes import (
     simulate,
     stocks,
     system,
+    system_probes,
 )
-from backend.routes.system import health as _health_impl
-from backend.routes.system import ready as _ready_impl
+from backend.routes.system_probes import health as _health_impl
+from backend.routes.system_probes import ready as _ready_impl
 from backend.version import GIT_SHA, VERSION
 
 structlog.configure(
@@ -88,6 +89,7 @@ app.include_router(mf.router)
 app.include_router(simulate.router)
 app.include_router(portfolio.router)
 app.include_router(system.router)
+app.include_router(system_probes.probes_router)
 
 
 @app.get("/", include_in_schema=False)
@@ -123,6 +125,13 @@ async def api_v1_docs() -> HTMLResponse:
 
 @app.on_event("startup")
 async def startup() -> None:
+    import asyncio as _asyncio
+
+    # Prewarm completion tracking. /ready returns 503 until this is set,
+    # so callers (quality gate, systemd, k8s) can block until the first
+    # request won't hit a cold JIP aggregate query.
+    app.state.prewarm_done = _asyncio.Event()
+
     try:
         spec_path = Path(__file__).resolve().parent / "openapi.json"
         spec_path.write_text(json.dumps(app.openapi(), indent=2))
@@ -152,8 +161,6 @@ async def startup() -> None:
     # background task so the first user request hits a populated cache
     # instead of a cold 200-second JIP query that would 504 via nginx.
     # Errors are logged but never block startup.
-    import asyncio as _asyncio
-
     _asyncio.create_task(_prewarm_caches())
 
 
@@ -207,7 +214,119 @@ async def _prewarm_caches() -> None:
     await _warm("mf_universe", "get_mf_universe", active_only=True)
     await _warm("mf_categories", "get_mf_categories")
 
+    # Warm one representative stock deep-dive and one MF deep-dive so the
+    # first real /stocks/{symbol} and /mf/{mstar_id} hit hot PG shared
+    # buffers for the big JOIN path. Subsequent calls to OTHER symbols/funds
+    # also benefit — the expensive tables (de_equity_technical_daily,
+    # de_mf_derived_daily, etc.) are paged in once and shared across
+    # queries. Without this, the first end-user request sees a 5–7s cold
+    # query that blows past the 500ms deep-dive latency budget.
+    await _warm_stock_detail()
+    await _warm_mf_deep_dive()
+
+    # Seed the rs_momentum_batch negative cache. JIP lacks a covering
+    # index on de_rs_scores(entity_type, entity_id, date), so the query
+    # reliably hits statement_timeout. The client has a negative-cache
+    # path that returns {} instantly on subsequent calls — but only once
+    # it has seen one failure. Without this warmup, the FIRST user hitting
+    # /mf/universe burns 15s on that timeout before getting an answer.
+    # Calling it here swallows the 15s hit at deploy time instead.
+    await _warm_rs_momentum_negative_cache()
+
     log.info("cache_prewarm_done")
+    # Signal readiness — /ready flips to 200 only now.
+    try:
+        app.state.prewarm_done.set()
+    except Exception as exc:
+        log.warning("prewarm_done_signal_failed", error=str(exc))
+
+
+async def _warm_stock_detail() -> None:
+    """Warm PG buffers for the equity deep-dive JOIN path.
+
+    Uses a nifty_50 symbol (RELIANCE) that is guaranteed to exist. Errors
+    are swallowed — this is a cold-path warmup, not a correctness check.
+    """
+    from sqlalchemy import text as _text
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from backend.clients.jip_data_service import JIPDataService
+    from backend.db.session import async_session_factory
+
+    try:
+        async with async_session_factory() as session:
+            await session.execute(_text("SET statement_timeout = '60000'"))
+            svc = JIPDataService(session)
+            await svc.get_stock_detail("RELIANCE")
+            log.info("cache_prewarm_stock_detail_ok")
+    except (SQLAlchemyError, AttributeError) as exc:
+        log.warning("cache_prewarm_stock_detail_failed", error=str(exc)[:200])
+
+
+async def _warm_rs_momentum_negative_cache() -> None:
+    """Trigger the rs_momentum_batch client so its negative cache populates.
+
+    The call is expected to raise (JIP-side statement_timeout), which the
+    client catches and records in `_mf_rs_momentum_last_failure`. That
+    stamp makes subsequent calls return {} instantly for 60s — long
+    enough for any reasonable burst of /mf/universe traffic right after
+    deploy. If JIP later ships the missing index, this warmup will
+    succeed and the positive cache populates instead — either way, the
+    first user request no longer blocks on a 15s timeout.
+    """
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from backend.clients.jip_data_service import JIPDataService
+    from backend.db.session import async_session_factory
+
+    try:
+        async with async_session_factory() as session:
+            svc = JIPDataService(session)
+            try:
+                await svc._mf.get_mf_rs_momentum_batch()
+                log.info("cache_prewarm_rs_momentum_ok")
+            except (SQLAlchemyError, RuntimeError) as inner:
+                log.info(
+                    "cache_prewarm_rs_momentum_negative_cached",
+                    reason=str(inner)[:200],
+                )
+            try:
+                await session.rollback()
+            except SQLAlchemyError:
+                pass
+    except SQLAlchemyError as exc:
+        log.warning("cache_prewarm_rs_momentum_session_failed", error=str(exc)[:200])
+
+
+async def _warm_mf_deep_dive() -> None:
+    """Warm PG buffers for the MF deep-dive JOIN path.
+
+    Picks the first mstar_id from the already-cached universe result so
+    we don't hard-code a specific fund that might be delisted. No-op if
+    the universe cache is empty (universe prewarm failed upstream).
+    """
+    from sqlalchemy import text as _text
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from backend.clients.jip_data_service import JIPDataService
+    from backend.db.session import async_session_factory
+
+    try:
+        async with async_session_factory() as session:
+            await session.execute(_text("SET statement_timeout = '60000'"))
+            svc = JIPDataService(session)
+            universe = await svc.get_mf_universe(active_only=True)
+            if not universe:
+                log.info("cache_prewarm_mf_deep_dive_skip", reason="empty_universe")
+                return
+            mstar_id = universe[0].get("mstar_id")
+            if not mstar_id:
+                log.info("cache_prewarm_mf_deep_dive_skip", reason="no_mstar_id")
+                return
+            await svc.get_fund_detail(mstar_id)
+            log.info("cache_prewarm_mf_deep_dive_ok", mstar_id=mstar_id)
+    except (SQLAlchemyError, AttributeError) as exc:
+        log.warning("cache_prewarm_mf_deep_dive_failed", error=str(exc)[:200])
 
 
 @app.on_event("shutdown")

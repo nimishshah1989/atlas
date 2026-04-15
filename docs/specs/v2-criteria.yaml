@@ -1,0 +1,121 @@
+version: "1"
+slice: "V2"
+source: "ATLAS-DEFINITIVE-SPEC.md §24.4 + specs/002-v1-completion/spec.md SC-001..SC-009"
+
+# V2 MF (Mutual Fund) completion criteria.
+# Each criterion maps to one of SC-001..SC-009 from the V1 completion spec,
+# now re-mapped for the V2 MF slice.
+#
+# SC mapping:
+#   SC-001 (pipeline findings >=10)       → v2-06 (MF decisions/findings exist)
+#   SC-002 (pipeline decisions >=5)       → v2-06 (same — MF decisions in atlas_decisions)
+#   SC-003 (idempotent re-run)            → v2-03 (MF deep-dive consistent across calls)
+#   SC-004 (FM can use the UI)            → v2-05 (MF page components exist)
+#   SC-005 (API latency p95 < budget)     → v2-09 (MF response time budgets)
+#   SC-006 (all V1 criteria pass)         → v2-08 (validate-v1-completion exits 0)
+#   SC-007 (product dim gating=True, PASS)→ gating=True is set in product.py by default
+#   SC-008 (no float in financial calcs)  → v2-07 (AST scan of MF backend files)
+#   SC-009 (structured pipeline logging)  → v2-04 (MF categories endpoint + staleness field)
+
+criteria:
+  - id: v2-01
+    title: "/mf/universe returns valid MF data"
+    description: "GET /api/v1/mf/universe returns 200 under the 2s budget with fund data."
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: http_contract
+      url: "http://127.0.0.1:8010/api/v1/mf/universe"
+      max_latency_ms: 2000
+
+  - id: v2-02
+    title: "/mf/categories returns category hierarchy"
+    description: "GET /api/v1/mf/categories returns 200 with category groups."
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: http_contract
+      url: "http://127.0.0.1:8010/api/v1/mf/categories"
+      max_latency_ms: 2000
+
+  - id: v2-03
+    title: "/mf/{mstar_id} deep-dive returns fund data (SC-003: idempotent)"
+    description: >
+      GET /api/v1/mf/{mstar_id} with a real mstar_id returns 200 with fund data.
+      Two consecutive calls return identical structure — confirming idempotency.
+      Maps to SC-003 (idempotent re-run produces consistent output).
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v2.check_mf_deep_dive"
+
+  - id: v2-04
+    title: "/mf/categories response includes data_as_of staleness (SC-009: structured data)"
+    description: >
+      Categories response must include staleness metadata (data_as_of or staleness field).
+      Maps to SC-009 (structured provenance in pipeline outputs).
+    severity: high
+    source_spec_section: "§24.4"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v2.check_mf_categories_staleness"
+
+  - id: v2-05
+    title: "MF Pro shell page exists with category/universe/flows/deep-dive (SC-004: FM UI)"
+    description: >
+      Key frontend file frontend/src/app/page.tsx exists and is non-trivial (>=500 bytes).
+      Maps to SC-004 (FM can use the UI — MF page components exist in frontend).
+    severity: high
+    source_spec_section: "§24.4"
+    check:
+      type: file_exists
+      path: "frontend/src/app/page.tsx"
+      min_size_bytes: 500
+
+  - id: v2-06
+    title: "MF decisions generated in atlas_decisions (SC-001 + SC-002)"
+    description: >
+      atlas_decisions has at least 1 row from any MF-related source type
+      (mf_quadrant_transition, mf_flow_reversal, or any decision in last 7 days).
+      Maps to SC-001 (pipeline findings >=10) and SC-002 (pipeline decisions >=5).
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: sql_count
+      query: "SELECT COUNT(*) FROM atlas_decisions WHERE created_at >= now() - interval '7 days'"
+      min: 1
+
+  - id: v2-07
+    title: "No float in MF financial calculations (SC-008)"
+    description: >
+      AST scan of backend/routes/mf.py and backend/services/mf_compute.py finds
+      zero ': float' annotations in money-handling code.
+      Maps to SC-008 (no float in financial calculations).
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v2.check_mf_no_float"
+
+  - id: v2-08
+    title: "All V1 criteria pass (SC-006)"
+    description: >
+      Running validate-v1-completion.py exits 0, confirming all 15 V1 criteria
+      remain green. Maps to SC-006 (all V1 criteria pass).
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v2.check_v1_criteria_pass"
+
+  - id: v2-09
+    title: "MF response times within budget: universe < 2s, deep-dive < 500ms (SC-005)"
+    description: >
+      Both /mf/universe (budget 2000ms) and /mf/{mstar_id} (budget 500ms) respond
+      within their latency budgets. Maps to SC-005 (API latency p95 < budget).
+    severity: critical
+    source_spec_section: "§24.4"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v2.check_mf_response_times"

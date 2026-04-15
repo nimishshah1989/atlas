@@ -1,0 +1,66 @@
+version: "1"
+slice: "V4"
+source: "ATLAS-DEFINITIVE-SPEC.md §11 (Portfolio endpoints)"
+
+# V4 Portfolio Management completion criteria.
+# V4-1 lays the schema and API foundation.
+# V4-2+ will add CAMS import, mapping, and analysis criteria.
+#
+# These criteria reference §11 (API Layer) which is in MANDATORY_SECTIONS.
+
+criteria:
+  - id: v4-01
+    title: "atlas_portfolios table exists with required columns"
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_portfolios'
+        AND column_name IN ('id', 'name', 'portfolio_type', 'owner_type',
+          'user_id', 'analysis_cache', 'is_deleted', 'deleted_at',
+          'created_at', 'updated_at')
+      min: 10
+
+  - id: v4-02
+    title: "atlas_portfolio_holdings table exists with required columns"
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_portfolio_holdings'
+        AND column_name IN ('id', 'portfolio_id', 'scheme_name', 'units',
+          'nav', 'current_value', 'cost_value', 'mapping_status',
+          'mstar_id', 'mapping_confidence', 'is_deleted', 'created_at')
+      min: 10
+
+  - id: v4-03
+    title: "POST /api/v1/portfolio/create endpoint exists"
+    description: >
+      The portfolio create endpoint must be registered. The probe POSTs a
+      minimal shell payload — 200/201 (created), 400/422 (validation rejected,
+      route reachable), or 501 (stub) all count as success. 404/5xx fail.
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v4.check_portfolio_create_endpoint"
+
+  - id: v4-04
+    title: "No float in portfolio models (Decimal-only)"
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v4.check_portfolio_no_float"
+
+  - id: v4-05
+    title: "No print() in portfolio code (structlog only)"
+    severity: high
+    source_spec_section: "§11"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v4.check_portfolio_no_print"

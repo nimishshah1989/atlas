@@ -48,16 +48,15 @@ def _get_real_mstar_id() -> str | None:
 
     Falls back to None if the backend is unavailable. Never hardcodes an ID.
     """
-    status, data, _ = _get_json(f"{BACKEND_BASE}/api/v1/mf/universe", timeout=10.0)
+    # /mf/universe is a 5MB payload — give it room on cold cache.
+    status, data, _ = _get_json(f"{BACKEND_BASE}/api/v1/mf/universe", timeout=45.0)
     if status != 200 or not data:
         return None
-    # Universe response groups funds under broad_category_groups → category_groups → funds
-    groups = data.get("broad_category_groups", [])
-    for broad in groups:
-        for cat in broad.get("category_groups", []):
-            funds = cat.get("funds", [])
-            if funds:
-                mstar_id = funds[0].get("mstar_id")
+    # Universe response: broad_categories[].categories[].funds[].mstar_id
+    for broad in data.get("broad_categories", []) or []:
+        for cat in broad.get("categories", []) or []:
+            for fund in cat.get("funds", []) or []:
+                mstar_id = fund.get("mstar_id")
                 if mstar_id:
                     return str(mstar_id)
     return None
@@ -80,11 +79,14 @@ def check_mf_deep_dive() -> tuple[bool, str]:
     if status2 != 200 or not data2:
         return False, f"/mf/{mstar_id} → {status2} (second call)"
 
-    # Both calls must return same mstar_id in the fund object
-    fund1 = data1.get("fund", {}) or {}
-    fund2 = data2.get("fund", {}) or {}
-    id1 = fund1.get("mstar_id", "")
-    id2 = fund2.get("mstar_id", "")
+    # Both calls must return the same mstar_id in the identity block.
+    # (The deep-dive response is composed as { identity, daily, pillars,
+    # sector_exposure, top_holdings, weighted_technicals, ... } per the
+    # V2 single-fetch design — there is no top-level `fund` key.)
+    ident1 = data1.get("identity", {}) or {}
+    ident2 = data2.get("identity", {}) or {}
+    id1 = ident1.get("mstar_id", "")
+    id2 = ident2.get("mstar_id", "")
     if id1 != id2 or id1 != mstar_id:
         return False, f"idempotency mismatch: call1={id1!r}, call2={id2!r}, expected={mstar_id!r}"
 
@@ -176,8 +178,12 @@ def check_v1_criteria_pass() -> tuple[bool, str]:
 
 
 def check_mf_response_times() -> tuple[bool, str]:
-    """SC-005: /mf/universe must respond in < 2000ms, /mf/{mstar_id} in < 500ms."""
-    # Check universe latency
+    """SC-005: /mf/universe < 2000ms, /mf/{mstar_id} < 500ms.
+
+    Measures cold-hit latency — what a user waits right after deploy.
+    No warmup: the backend owns its own cache/warmup strategy, not the
+    quality gate.
+    """
     universe_url = f"{BACKEND_BASE}/api/v1/mf/universe"
     status_u, _, ms_u = _get_json(universe_url, timeout=10.0)
     if status_u != 200:
@@ -185,7 +191,6 @@ def check_mf_response_times() -> tuple[bool, str]:
     if ms_u > 2000:
         return False, f"/mf/universe → {ms_u}ms > 2000ms budget"
 
-    # Get a real mstar_id for deep-dive check
     mstar_id = _get_real_mstar_id()
     if not mstar_id:
         return False, f"/mf/universe OK ({ms_u}ms) but could not get mstar_id for deep-dive check"

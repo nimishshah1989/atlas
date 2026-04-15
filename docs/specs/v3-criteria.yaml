@@ -1,0 +1,84 @@
+version: "1"
+slice: "V3"
+source: "ATLAS-DEFINITIVE-SPEC.md §8 (The Simulation Engine)"
+
+# V3 Simulation Engine completion criteria.
+# V3-1 lays the foundation; V3-2+ will add engine-running criteria.
+#
+# These criteria reference §8 (Simulation Engine) and §11 (API Layer).
+# §8 is not in MANDATORY_SECTIONS for check-spec-coverage.py —
+# the MANDATORY gate covers §11, §17, §18, §20, §24.
+# The §11 references here satisfy coverage for any simulation-related
+# API contracts that touch the API layer.
+
+criteria:
+  - id: v3-01
+    title: "atlas_simulations table exists with required columns"
+    description: >
+      The atlas_simulations table must exist with all spec §8 columns plus
+      updated_at and is_deleted (project convention).
+    severity: critical
+    source_spec_section: "§8"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_simulations'
+        AND column_name IN (
+          'id', 'name', 'config', 'result_summary', 'daily_values',
+          'transactions', 'tax_summary', 'tear_sheet_html',
+          'is_auto_loop', 'auto_loop_cron', 'last_auto_run', 'user_id',
+          'is_deleted', 'deleted_at', 'created_at', 'updated_at'
+        )
+      min: 16
+
+  - id: v3-02
+    title: "Partial index on atlas_simulations for auto-loop queries exists"
+    description: >
+      The partial index ix_atlas_simulations_auto_loop on (user_id, is_auto_loop)
+      WHERE is_auto_loop = TRUE AND is_deleted = FALSE must exist for fast scheduling.
+    severity: high
+    source_spec_section: "§8"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM pg_indexes
+        WHERE tablename = 'atlas_simulations'
+        AND indexname = 'ix_atlas_sim_autoloop_active'
+      min: 1
+
+  - id: v3-03
+    title: "POST /api/v1/simulate/run endpoint exists and returns non-5xx"
+    description: >
+      The simulation run endpoint must be registered. The probe POSTs a minimal
+      shell payload — anything except 404/5xx counts as "endpoint exists".
+      Acceptable: 200/201 (executed), 400/422 (validation rejected the shell
+      payload, route reachable), 501 (stub). 404/5xx are failures.
+      Maps to spec §11 (API Layer — every endpoint).
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v3.check_simulate_run_endpoint"
+
+  - id: v3-04
+    title: "No float in simulation financial models (Decimal-only)"
+    description: >
+      AST scan of backend/models/simulation.py and backend/services/simulation/
+      finds zero ': float' annotations. All financial values must be Decimal.
+    severity: critical
+    source_spec_section: "§8"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v3.check_simulation_no_float"
+
+  - id: v3-05
+    title: "No print() in backend/services/simulation/ (structlog only)"
+    description: >
+      AST scan of backend/services/simulation/ finds zero print() calls.
+      All logging must go through structlog per project conventions.
+    severity: high
+    source_spec_section: "§8"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v3.check_simulation_no_print"

@@ -134,7 +134,7 @@ class JIPEquityService:
             SELECT
                 i.id, i.current_symbol AS symbol, i.company_name, i.sector, i.industry,
                 i.nifty_50, i.nifty_200, i.nifty_500, i.isin, i.listing_date,
-                t.close_adj AS close, t.sma_50, t.sma_200, t.ema_21,
+                t.close_adj AS close, t.sma_50, t.sma_200, t.ema_20,
                 t.rsi_14, t.adx_14, t.macd_line, t.macd_signal, t.macd_histogram,
                 t.above_200dma, t.above_50dma,
                 t.beta_nifty, t.sharpe_1y, t.sortino_1y, t.max_drawdown_1y, t.calmar_ratio,
@@ -196,8 +196,12 @@ class JIPEquityService:
             {RS_28D_CTE},
             latest_tech AS (
                 SELECT instrument_id, close_adj, rsi_14, adx_14, above_200dma, above_50dma,
-                       ema_21, macd_histogram, roc_5, beta_nifty, sharpe_1y, sortino_1y,
-                       volatility_20d, max_drawdown_1y, calmar_ratio, disparity_20
+                       ema_20, macd_histogram, roc_5, beta_nifty, sharpe_1y, sortino_1y,
+                       volatility_20d, max_drawdown_1y, calmar_ratio,
+                       CASE WHEN sma_20 > 0
+                            THEN ((close_adj - sma_20) / sma_20 * 100)
+                            ELSE NULL
+                       END AS disparity_20
                 FROM de_equity_technical_daily
                 WHERE date = (SELECT tech_date FROM latest_dates)
             ),
@@ -213,7 +217,7 @@ class JIPEquityService:
                     * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_200dma,
                 COUNT(*) FILTER (WHERE t.above_50dma = true)
                     * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_50dma,
-                COUNT(*) FILTER (WHERE t.close_adj > t.ema_21)
+                COUNT(*) FILTER (WHERE t.close_adj > t.ema_20)
                     * 100.0 / NULLIF(COUNT(*), 0) AS pct_above_ema21,
                 AVG(t.rsi_14) AS avg_rsi_14,
                 COUNT(*) FILTER (WHERE t.rsi_14 > 70)

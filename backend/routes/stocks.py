@@ -298,7 +298,7 @@ async def get_stock_deep_dive(
         close=_dec(stock_detail.get("close")),
         sma_50=_dec(stock_detail.get("sma_50")),
         sma_200=_dec(stock_detail.get("sma_200")),
-        ema_21=_dec(stock_detail.get("ema_21")),
+        ema_20=_dec(stock_detail.get("ema_20")),
         rsi_14=_dec(stock_detail.get("rsi_14")),
         adx_14=_dec(stock_detail.get("adx_14")),
         macd_line=_dec(stock_detail.get("macd_line")),

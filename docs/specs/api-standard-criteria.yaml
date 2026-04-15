@@ -1,0 +1,120 @@
+version: "1"
+slice: "API-STANDARD"
+source: "ATLAS-DEFINITIVE-SPEC.md §17 (UQL) + §18 (Include system) + §20 (API principles)"
+
+# Cross-cutting API design standard. Applies to every chunk that touches a
+# FastAPI route under backend/routes/. Orthogonal to v1-criteria.yaml (which
+# gates V1 product completion) — this file is the standing contract for how
+# ATLAS APIs must be built, now and forever. Runs via
+# `python scripts/check-api-standard.py`. Gates any API-touching chunk via
+# forge-ship.sh (see CLAUDE.md "API design standard").
+#
+# None of these pass today. V2-UQL-AGG is the chunk that flips them green.
+# Once green, this file promotes into the product dim as gating alongside
+# v1-criteria.yaml.
+
+criteria:
+  - id: uql-01-aggregations
+    title: "POST /query supports group_by + aggregations"
+    description: >
+      §17.5 — query must accept group_by + aggregations with functions avg,
+      sum, count, pct_true, pct_above, pct_below, median, stddev. Response
+      rows must carry the aliased aggregate columns.
+    severity: critical
+    source_spec_section: "§17.5"
+    probe:
+      type: http_post
+      url: "/api/v1/query"
+      payload:
+        entity_type: "equity"
+        group_by: ["sector"]
+        aggregations:
+          - { field: "rs_composite", function: "avg", alias: "avg_rs" }
+          - { field: "above_200dma", function: "pct_true", alias: "pct_above_200dma" }
+        limit: 1
+      expect_status: 200
+      expect_keys_in_first_record: ["avg_rs", "pct_above_200dma"]
+
+  - id: uql-02-timeseries
+    title: "POST /query supports mode=timeseries with time_range"
+    description: >
+      §17.6 — time-series mode must accept time_range.from/to + granularity
+      and return date-indexed rows for the requested fields.
+    severity: critical
+    source_spec_section: "§17.6"
+    probe:
+      type: http_post
+      url: "/api/v1/query"
+      payload:
+        entity_type: "equity"
+        mode: "timeseries"
+        filters:
+          - { field: "symbol", op: "=", value: "RELIANCE" }
+        fields: ["date", "close", "rs_composite"]
+        time_range: { from: "2026-01-01", to: "2026-04-10" }
+        granularity: "daily"
+      expect_status: 200
+      expect_keys_in_first_record: ["date", "close"]
+
+  - id: uql-03-templates
+    title: "POST /query/template dispatches named templates"
+    description: >
+      §17.7 — a separate template endpoint must accept {template, params}
+      and execute predefined UQL queries (top_rs_gainers, sector_rotation,
+      breadth_dashboard, etc). Adding a template must require no route code.
+    severity: critical
+    source_spec_section: "§17.7"
+    probe:
+      type: http_post
+      url: "/api/v1/query/template"
+      payload:
+        template: "top_rs_gainers"
+        params: { limit: 5 }
+      expect_status: 200
+      expect_json_path: "records"
+
+  - id: uql-04-include-system
+    title: "GET /stocks/{symbol}?include=rs,conviction composes response"
+    description: >
+      §18 — the include= parameter must attach requested modules and the
+      response must declare `_meta.includes_loaded` with the resolved list.
+    severity: critical
+    source_spec_section: "§18.1"
+    probe:
+      type: http_get
+      url: "/api/v1/stocks/RELIANCE?include=rs,conviction"
+      expect_status: 200
+      expect_json_path: "_meta.includes_loaded"
+
+  - id: uql-05-fixed-endpoints-are-sugar
+    title: "Fixed endpoints route through the UQL service"
+    description: >
+      §17.10 — GET /stocks/universe, /stocks/sectors, /stocks/movers etc.
+      must be thin wrappers that construct a UQL query and call the shared
+      execution engine. Static check: a `backend/services/uql` module must
+      exist and be imported by `backend/routes/stocks.py`.
+    severity: critical
+    source_spec_section: "§17.10"
+    probe:
+      type: static_import
+      module_glob: "backend/services/uql*"
+      importer: "backend/routes/stocks.py"
+
+  - id: api-01-error-standard
+    title: "Errors carry code + message + suggestion"
+    description: >
+      §20.5 — malformed queries must return a structured error with
+      {code, message, suggestion} so FMs and agents get self-explaining
+      failures, not a bare 422.
+    severity: high
+    source_spec_section: "§20.5"
+    probe:
+      type: http_post
+      url: "/api/v1/query"
+      payload:
+        entity_type: "equity"
+        filters:
+          - { field: "rs_percentile", op: ">", value: 5 }
+        limit: 1
+      expect_status: 400
+      expect_json_path: "error.suggestion"
