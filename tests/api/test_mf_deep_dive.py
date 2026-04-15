@@ -206,7 +206,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row()
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -217,7 +220,10 @@ class TestDeepDiveRoute:
         """get_fund_detail returns None → HTTP 404."""
         mock_svc = _patch_svc_deep_dive(None)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/NONEXISTENT")
@@ -229,7 +235,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row(mstar_id="F999")
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F999"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F999")
@@ -276,7 +285,10 @@ class TestDeepDiveRoute:
             rs_batch = _make_momentum_batch(f"F{i:03d}", rs_momentum_28d=Decimal("3.0"))
             mock_svc = _patch_svc_deep_dive(detail, rs_batch=rs_batch)
 
-            with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+            with (
+                patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+                patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+            ):
                 with patch("backend.routes.mf.get_db"):
                     client = TestClient(app)
                     resp = client.get(f"/api/v1/mf/F{i:03d}")
@@ -295,7 +307,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row()
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -325,7 +340,10 @@ class TestDeepDiveRoute:
         rs_batch = _make_momentum_batch("F001", rs_momentum_28d=Decimal("5.0"))
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=rs_batch)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -337,7 +355,10 @@ class TestDeepDiveRoute:
         rs_batch_weakening = _make_momentum_batch("F001", rs_momentum_28d=Decimal("-3.0"))
         mock_svc2 = _patch_svc_deep_dive(detail, rs_batch=rs_batch_weakening)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc2):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc2),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc2),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp2 = client.get("/api/v1/mf/F001")
@@ -354,7 +375,10 @@ class TestDeepDiveRoute:
         freshness_fresh = _make_freshness(nav_as_of=datetime.date.today())
         mock_svc = _patch_svc_deep_dive(detail, freshness=freshness_fresh, rs_batch=rs_batch)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -366,7 +390,10 @@ class TestDeepDiveRoute:
         freshness_expired = _make_freshness(nav_as_of=stale_date)
         mock_svc2 = _patch_svc_deep_dive(detail, freshness=freshness_expired, rs_batch=rs_batch)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc2):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc2),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc2),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp2 = client.get("/api/v1/mf/F001")
@@ -378,7 +405,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row(is_active=False)
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -391,7 +421,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row(is_active=True)
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -407,7 +440,10 @@ class TestDeepDiveRoute:
             detail, lifecycle=lifecycle, rs_batch=_make_momentum_batch("F001")
         )
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -424,7 +460,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row()
         mock_svc = _patch_svc_deep_dive(detail, lifecycle=[], rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -436,7 +475,10 @@ class TestDeepDiveRoute:
         detail = _make_detail_row()
         mock_svc = _patch_svc_deep_dive(detail, rs_batch=_make_momentum_batch("F001"))
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001")
@@ -467,7 +509,10 @@ class TestHoldingsRoute:
         holding_rows = _make_holding_rows(5)
         mock_svc = _patch_svc_holdings(holding_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -479,7 +524,10 @@ class TestHoldingsRoute:
         holding_rows = _make_holding_rows(10, total_weight=Decimal("100.0"))
         mock_svc = _patch_svc_holdings(holding_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -498,7 +546,10 @@ class TestHoldingsRoute:
         holding_rows = _make_holding_rows(5, total_weight=Decimal("90.0"))
         mock_svc = _patch_svc_holdings(holding_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -511,7 +562,10 @@ class TestHoldingsRoute:
         """No holdings → empty list, HTTP 200."""
         mock_svc = _patch_svc_holdings([])
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -526,7 +580,10 @@ class TestHoldingsRoute:
         holding_rows = _make_holding_rows(3)
         mock_svc = _patch_svc_holdings(holding_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -545,7 +602,10 @@ class TestHoldingsRoute:
         holding_rows = _make_holding_rows(5, total_weight=Decimal("105.0"))
         mock_svc = _patch_svc_holdings(holding_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/holdings")
@@ -566,7 +626,10 @@ class TestSectorsRoute:
         sector_rows = _make_sector_rows(5)
         mock_svc = _patch_svc_sectors(sector_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/sectors")
@@ -578,7 +641,10 @@ class TestSectorsRoute:
         sector_rows = _make_sector_rows(3)
         mock_svc = _patch_svc_sectors(sector_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/sectors")
@@ -598,7 +664,10 @@ class TestSectorsRoute:
         sector_rows = _make_sector_rows(4)
         mock_svc = _patch_svc_sectors(sector_rows)
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/sectors")
@@ -617,7 +686,10 @@ class TestSectorsRoute:
         """Empty sectors → HTTP 200 with empty list."""
         mock_svc = _patch_svc_sectors([])
 
-        with patch("backend.routes.mf.JIPDataService", return_value=mock_svc):
+        with (
+            patch("backend.routes.mf.JIPDataService", return_value=mock_svc),
+            patch("backend.routes.mf_helpers.JIPDataService", return_value=mock_svc),
+        ):
             with patch("backend.routes.mf.get_db"):
                 client = TestClient(app)
                 resp = client.get("/api/v1/mf/F001/sectors")
@@ -625,3 +697,80 @@ class TestSectorsRoute:
         assert resp.status_code == 200
         body = resp.json()
         assert body["sectors"] == []
+
+
+class TestDeepDiveParallelization:
+    """v2-09 cold-path fix: the four independent deep-dive queries run in
+    parallel on separate sessions.
+
+    Regression guard for the 5s cold latency. Before the fix, the handler
+    awaited `get_fund_detail` → `get_fund_lifecycle` → `get_mf_data_freshness`
+    → `rs_momentum_or_empty` sequentially on one session. A single asyncpg
+    connection cannot multiplex concurrent queries, so a shared session
+    serialized them. The fix calls each fetch inside its own session via
+    `asyncio.gather`, so cold-path wall time is max(fetches) not sum(fetches).
+    """
+
+    def test_handler_dispatches_four_fetches_concurrently(self) -> None:
+        """Injecting 200ms into each fetch: total must be ~200ms (gather),
+        not ~800ms (sequential). Allow 300ms margin for TestClient overhead."""
+        import asyncio as _asyncio
+        import time
+
+        call_log: list[tuple[str, float]] = []
+        start_ref = [0.0]
+
+        async def _sleepy_detail(mstar_id: str):
+            call_log.append(("detail_enter", time.monotonic() - start_ref[0]))
+            await _asyncio.sleep(0.2)
+            call_log.append(("detail_exit", time.monotonic() - start_ref[0]))
+            return _make_detail_row(mstar_id=mstar_id)
+
+        async def _sleepy_lifecycle(mstar_id: str):
+            call_log.append(("lifecycle_enter", time.monotonic() - start_ref[0]))
+            await _asyncio.sleep(0.2)
+            call_log.append(("lifecycle_exit", time.monotonic() - start_ref[0]))
+            return []
+
+        async def _sleepy_freshness():
+            call_log.append(("freshness_enter", time.monotonic() - start_ref[0]))
+            await _asyncio.sleep(0.2)
+            call_log.append(("freshness_exit", time.monotonic() - start_ref[0]))
+            return _make_freshness()
+
+        async def _sleepy_rs():
+            call_log.append(("rs_enter", time.monotonic() - start_ref[0]))
+            await _asyncio.sleep(0.2)
+            call_log.append(("rs_exit", time.monotonic() - start_ref[0]))
+            return {}
+
+        with (
+            patch("backend.routes.mf.fetch_deep_dive_detail", _sleepy_detail),
+            patch("backend.routes.mf.fetch_deep_dive_lifecycle", _sleepy_lifecycle),
+            patch("backend.routes.mf.fetch_deep_dive_freshness", _sleepy_freshness),
+            patch("backend.routes.mf.fetch_deep_dive_rs_batch", _sleepy_rs),
+        ):
+            client = TestClient(app)
+            start_ref[0] = time.monotonic()
+            resp = client.get("/api/v1/mf/F001")
+            wall_ms = (time.monotonic() - start_ref[0]) * 1000
+
+        assert resp.status_code == 200, resp.text
+        # Four entered, four exited
+        enters = [name for name, _ in call_log if name.endswith("_enter")]
+        assert len(enters) == 4, f"Expected 4 fetches, got {len(enters)}: {call_log}"
+
+        # All four must have ENTERED before any exit — proof of concurrency.
+        # In sequential execution, detail_exit would happen before
+        # lifecycle_enter.
+        enter_times = {name: t for name, t in call_log if name.endswith("_enter")}
+        exit_times = {name: t for name, t in call_log if name.endswith("_exit")}
+        last_enter = max(enter_times.values())
+        first_exit = min(exit_times.values())
+        assert last_enter < first_exit, (
+            f"Sequential dispatch detected — last enter at {last_enter:.3f}s "
+            f"was after first exit at {first_exit:.3f}s. Log: {call_log}"
+        )
+
+        # Wall time ceiling: with 4 × 200ms concurrent, must be < 500ms.
+        assert wall_ms < 500, f"Parallel wall time {wall_ms:.0f}ms exceeds 500ms budget"

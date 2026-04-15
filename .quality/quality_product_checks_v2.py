@@ -27,20 +27,40 @@ ROOT = Path(__file__).resolve().parent.parent
 BACKEND_BASE = "http://127.0.0.1:8010"
 
 
-def _get_json(url: str, timeout: float = 5.0) -> tuple[int, dict[str, Any] | None, int]:
+def _get_json(
+    url: str,
+    timeout: float = 5.0,
+    *,
+    _retries: int = 1,
+) -> tuple[int, dict[str, Any] | None, int]:
+    """GET url; return (status, body, ms). Status 0 means the request raised.
+
+    Retries once on status==0 (transient connection hiccup) so that a single
+    flake between back-to-back probe calls (as seen in v2-03 idempotency
+    checks) doesn't flip the gate red. The retry opens a fresh connection.
+    """
     req = urllib.request.Request(url, headers={"User-Agent": "atlas-quality/1.0"})
+    last_err: str = ""
+    attempts = _retries + 1
     start = time.monotonic()
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            status = resp.status
-            body = resp.read()
-    except Exception:  # noqa: BLE001
-        return 0, None, int((time.monotonic() - start) * 1000)
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                status = resp.status
+                body = resp.read()
+            elapsed_ms = int((time.monotonic() - start) * 1000)
+            try:
+                return status, json.loads(body), elapsed_ms
+            except Exception:  # noqa: BLE001
+                return status, None, elapsed_ms
+        except Exception as exc:  # noqa: BLE001
+            last_err = f"{type(exc).__name__}: {str(exc)[:80]}"
+            if attempt + 1 < attempts:
+                time.sleep(0.1)  # brief backoff — lets any server-side state drain
+                continue
+    # All attempts raised
     elapsed_ms = int((time.monotonic() - start) * 1000)
-    try:
-        return status, json.loads(body), elapsed_ms
-    except Exception:  # noqa: BLE001
-        return status, None, elapsed_ms
+    return 0, {"__error__": last_err}, elapsed_ms
 
 
 def _get_real_mstar_id() -> str | None:
@@ -71,13 +91,17 @@ def check_mf_deep_dive() -> tuple[bool, str]:
 
     url = f"{BACKEND_BASE}/api/v1/mf/{mstar_id}"
     status1, data1, ms1 = _get_json(url, timeout=10.0)
-    if status1 != 200 or not data1:
-        return False, f"/mf/{mstar_id} → {status1} (first call)"
+    if status1 != 200 or not data1 or data1.get("__error__"):
+        err = (data1 or {}).get("__error__", "")
+        return False, f"/mf/{mstar_id} → {status1} (first call{': ' + err if err else ''})"
 
-    # Second call — idempotency check
+    # Second call — idempotency check. Small pause to let any server-side
+    # session / connection state drain between calls, then a fresh GET.
+    time.sleep(0.1)
     status2, data2, ms2 = _get_json(url, timeout=10.0)
-    if status2 != 200 or not data2:
-        return False, f"/mf/{mstar_id} → {status2} (second call)"
+    if status2 != 200 or not data2 or data2.get("__error__"):
+        err = (data2 or {}).get("__error__", "")
+        return False, f"/mf/{mstar_id} → {status2} (second call{': ' + err if err else ''})"
 
     # Both calls must return the same mstar_id in the identity block.
     # (The deep-dive response is composed as { identity, daily, pillars,

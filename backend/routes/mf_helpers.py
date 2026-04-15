@@ -51,6 +51,46 @@ LEGACY_ENDPOINT_IDS: tuple[str, ...] = (
 )
 
 
+async def fetch_deep_dive_detail(mstar_id: str) -> Optional[dict[str, Any]]:
+    """Isolated-session fetch of fund detail for the deep-dive handler.
+
+    Each deep-dive query lives on its own AsyncSession so asyncio.gather can
+    run them concurrently — asyncpg can't multiplex on one connection.
+    """
+    from backend.db.session import async_session_factory
+
+    async with async_session_factory() as session:
+        svc = JIPDataService(session)
+        return await svc.get_fund_detail(mstar_id)
+
+
+async def fetch_deep_dive_lifecycle(mstar_id: str) -> list[dict[str, Any]]:
+    """Isolated-session fetch of fund lifecycle events."""
+    from backend.db.session import async_session_factory
+
+    async with async_session_factory() as session:
+        svc = JIPDataService(session)
+        return await svc.get_fund_lifecycle(mstar_id)
+
+
+async def fetch_deep_dive_freshness() -> dict[str, Any]:
+    """Isolated-session fetch of MF data freshness metadata."""
+    from backend.db.session import async_session_factory
+
+    async with async_session_factory() as session:
+        svc = JIPDataService(session)
+        return await svc.get_mf_data_freshness()
+
+
+async def fetch_deep_dive_rs_batch() -> dict[str, dict[str, Any]]:
+    """Isolated-session fetch of RS momentum batch with graceful fallback."""
+    from backend.db.session import async_session_factory
+
+    async with async_session_factory() as session:
+        svc = JIPDataService(session)
+        return await rs_momentum_or_empty(svc, session)
+
+
 async def rs_momentum_or_empty(svc: JIPDataService, db: AsyncSession) -> dict[str, dict[str, Any]]:
     """Fetch rs_momentum batch; fall back to {} on DB errors."""
     try:

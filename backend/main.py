@@ -213,6 +213,10 @@ async def _prewarm_caches() -> None:
     await _warm("equity", "get_equity_universe", benchmark="NIFTY 500")
     await _warm("mf_universe", "get_mf_universe", active_only=True)
     await _warm("mf_categories", "get_mf_categories")
+    # get_mf_data_freshness() runs on the universe + deep-dive hot path but
+    # was previously unwarmed — cold-first-request caught a 300–800ms JIP
+    # freshness query that tipped deep-dive over its 500ms budget (v2-09).
+    await _warm("mf_freshness", "get_mf_data_freshness")
 
     # Warm one representative stock deep-dive and one MF deep-dive so the
     # first real /stocks/{symbol} and /mf/{mstar_id} hit hot PG shared

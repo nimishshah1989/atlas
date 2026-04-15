@@ -1,5 +1,6 @@
 """ATLAS V2 MF (mutual fund) API — router with wired universe/categories/flows."""
 
+import asyncio
 import datetime
 from decimal import Decimal
 from typing import Any, Optional
@@ -39,6 +40,10 @@ from backend.routes.mf_helpers import (
     build_weighted_technicals,
     compute_staleness,
     data_as_of_from_freshness,
+    fetch_deep_dive_detail,
+    fetch_deep_dive_freshness,
+    fetch_deep_dive_lifecycle,
+    fetch_deep_dive_rs_batch,
     gather_universe_data,
     group_funds_by_broad_category,
     map_holding_row,
@@ -431,24 +436,23 @@ async def get_fund_nav_history(
 
 
 @router.get("/{mstar_id}", response_model=FundDeepDiveResponse)
-async def get_fund_deep_dive(
-    mstar_id: str,
-    db: AsyncSession = Depends(get_db),
-) -> FundDeepDiveResponse:
-    """Full deep-dive for a single mutual fund.
+async def get_fund_deep_dive(mstar_id: str) -> FundDeepDiveResponse:
+    """Full deep-dive for one MF.
 
-    Wires JIP fund_detail, lifecycle events, freshness, and RS momentum batch
-    into a FundDeepDiveResponse. manager_alpha is passed through from JIP's
-    MF derived daily table (derived_rs_composite - nav_rs_composite).
+    Runs the four independent queries in parallel on separate sessions —
+    asyncpg can't multiplex one connection, so sequential awaits on a
+    shared session produced ~5s cold; parallel cuts it to max(slowest).
+    v2-09 budget: 500ms.
     """
-    svc = JIPDataService(db)
-    detail = await svc.get_fund_detail(mstar_id)
+    detail, lifecycle_events, freshness, rs_batch = await asyncio.gather(
+        fetch_deep_dive_detail(mstar_id),
+        fetch_deep_dive_lifecycle(mstar_id),
+        fetch_deep_dive_freshness(),
+        fetch_deep_dive_rs_batch(),
+    )
+
     if detail is None:
         raise HTTPException(status_code=404, detail="Fund not found")
-
-    lifecycle_events = await svc.get_fund_lifecycle(mstar_id)
-    freshness = await svc.get_mf_data_freshness()
-    rs_batch = await rs_momentum_or_empty(svc, db)
 
     momentum_data = rs_batch.get(mstar_id, {})
     rs_momentum_28d = safe_decimal(momentum_data.get("rs_momentum_28d")) if momentum_data else None

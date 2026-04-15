@@ -1464,7 +1464,7 @@
           "mf"
         ],
         "summary": "Get Fund Deep Dive",
-        "description": "Full deep-dive for a single mutual fund.\n\nWires JIP fund_detail, lifecycle events, freshness, and RS momentum batch\ninto a FundDeepDiveResponse. manager_alpha is passed through from JIP's\nMF derived daily table (derived_rs_composite - nav_rs_composite).",
+        "description": "Full deep-dive for one MF.\n\nRuns the four independent queries in parallel on separate sessions \u2014\nasyncpg can't multiplex one connection, so sequential awaits on a\nshared session produced ~5s cold; parallel cuts it to max(slowest).\nv2-09 budget: 500ms.",
         "operationId": "get_fund_deep_dive_api_v1_mf__mstar_id__get",
         "parameters": [
           {
