@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · HDFC Bank · Stock Detail</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── Tooltip (CSS-only, for formula hints) ── */
+    .tip { position:relative; display:inline-flex; align-items:center; gap:3px; cursor:help; }
+    .tip .tipbody { visibility:hidden; opacity:0; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); width:240px; background:var(--accent-900); color:#fff; font-size:10px; padding:8px 10px; border-radius:var(--radius-sm); line-height:1.5; z-index:200; pointer-events:none; transition:opacity 80ms; }
+    .tip .tipbody::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--accent-900); }
+    .tip:hover .tipbody { visibility:visible; opacity:1; }
+    .info-i { display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--bg-inset); border:1px solid var(--border-strong); font-size:8px; line-height:12px; text-align:center; color:var(--text-tertiary); font-weight:700; flex-shrink:0; font-style:normal; }
+
+    /* ── Dense metric grid ── */
+    .mgrid { display:grid; gap:1px; background:var(--border-subtle); border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow:hidden; }
+    .mgrid--2 { grid-template-columns:repeat(2,1fr); }
+    .mgrid--3 { grid-template-columns:repeat(3,1fr); }
+    .mgrid--4 { grid-template-columns:repeat(4,1fr); }
+    .mbox { background:var(--bg-surface); padding:10px 12px; }
+    .mbox__l { font-size:10px; color:var(--text-tertiary); font-weight:var(--fw-medium); margin-bottom:3px; display:flex; align-items:center; gap:3px; }
+    .mbox__v { font-size:var(--fs-md); font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; color:var(--text-primary); line-height:1.2; }
+    .mbox__d { font-size:10px; font-variant-numeric:tabular-nums; margin-top:2px; }
+    .mbox__d--pos { color:var(--rag-green-700); }
+    .mbox__d--neg { color:var(--rag-red-700); }
+    .mbox__d--neu { color:var(--text-tertiary); }
+    .mbox--g { background:var(--rag-green-100); }
+    .mbox--a { background:var(--rag-amber-100); }
+    .mbox--r { background:var(--rag-red-100); }
+
+    /* ── Section label ── */
+    .sec-label { font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-2); display:flex; align-items:center; gap:var(--space-3); }
+    .sec-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+
+    /* ── News / events ── */
+    .news-item { display:flex; gap:var(--space-3); padding:var(--space-3) 0; border-bottom:1px solid var(--border-subtle); }
+    .news-item:last-child { border-bottom:none; }
+    .news-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+    .news-body { flex:1; }
+    .news-head { font-size:var(--fs-sm); font-weight:var(--fw-medium); color:var(--text-primary); line-height:1.3; margin-bottom:2px; }
+    .news-meta { font-size:10px; color:var(--text-tertiary); }
+
+    .event-item { display:flex; align-items:flex-start; gap:var(--space-3); padding:var(--space-2) 0; border-bottom:1px solid var(--border-subtle); }
+    .event-item:last-child { border-bottom:none; }
+    .event-date { font-size:10px; font-variant-numeric:tabular-nums; color:var(--text-tertiary); min-width:60px; font-weight:var(--fw-medium); }
+    .event-label { font-size:var(--fs-sm); color:var(--text-primary); flex:1; }
+    .event-badge { font-size:9px; padding:1px 6px; border-radius:var(--radius-full); font-weight:var(--fw-semibold); }
+    .event-badge--upcoming { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .event-badge--recent   { background:var(--bg-inset); color:var(--text-tertiary); }
+    .event-badge--div      { background:var(--rag-green-100); color:var(--rag-green-700); }
+
+    /* ── Quarterly table ── */
+    .qtable { width:100%; border-collapse:collapse; font-size:11px; }
+    .qtable th { padding:6px 10px; text-align:right; font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; position:sticky; top:0; background:var(--bg-surface); }
+    .qtable th:first-child { text-align:left; position:sticky; left:0; z-index:2; background:var(--bg-surface); }
+    .qtable td { padding:7px 10px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+    .qtable td:first-child { text-align:left; font-weight:var(--fw-medium); color:var(--text-secondary); font-size:10px; position:sticky; left:0; background:var(--bg-surface); border-right:1px solid var(--border-default); }
+    .qtable tr:hover td { background:var(--bg-hover); }
+    .qtable .q-pos { color:var(--rag-green-700); }
+    .qtable .q-neg { color:var(--rag-red-700); }
+    .qtable .q-warn { color:var(--rag-amber-700); }
+    .qtable .q-head { background:var(--bg-inset); font-size:10px; color:var(--text-tertiary); font-weight:var(--fw-semibold); }
+    .qtable .q-head td { color:var(--text-tertiary); font-weight:var(--fw-semibold); }
+
+    /* ── RS line chart container ── */
+    .chart-wrap { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); }
+    .chart-title { font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--text-primary); margin-bottom:var(--space-3); display:flex; align-items:center; justify-content:space-between; }
+
+    /* Detail tabs */
+    .dtabs { display:flex; border-bottom:2px solid var(--border-default); margin-bottom:var(--space-5); }
+    .dtab { padding:10px var(--space-5); font-size:var(--fs-sm); font-weight:var(--fw-medium); color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .dtab--active { color:var(--accent-700); border-bottom-color:var(--accent-700); }
+
+    /* Analyst bar */
+    .analyst-bar { display:flex; border-radius:var(--radius-sm); overflow:hidden; height:8px; margin-bottom:var(--space-2); }
+
+    /* Peer table */
+    .ptable { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
+    .ptable th { padding:6px 10px; text-align:right; font-size:10px; font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; }
+    .ptable th:first-child { text-align:left; }
+    .ptable td { padding:8px 10px; border-bottom:1px solid var(--border-subtle); text-align:right; font-variant-numeric:tabular-nums; }
+    .ptable td:first-child { text-align:left; font-weight:var(--fw-medium); }
+    .ptable tr.highlighted td { background:var(--accent-100); }
+
+    .crumb { display:flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:var(--text-tertiary); padding:var(--space-4) 0 var(--space-2); }
+    .crumb a { color:var(--text-accent); cursor:pointer; }
+    .crumb__sep { color:var(--border-strong); }
+    .page { padding:0 var(--space-6) var(--space-10); max-width:var(--maxw-page); margin:0 auto; }
+  </style>
+</head>
+<body>
+<div class="app">
+<!-- Topbar -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>Pulse</a>
+    <a class="topnav__link topnav__link--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorer</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Builder</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/></svg>Simulate</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10l6-8 6 8v10"/></svg>Signals</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Watch</a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search…" /></div>
+  <div class="topbar__meta"><span class="eyebrow">JSL Wealth</span><div class="topbar__avatar">N</div></div>
+</header>
+
+<main class="page">
+  <div class="crumb">
+    <a>Global</a><span class="crumb__sep">›</span><a>India</a><span class="crumb__sep">›</span><a>Financials</a><span class="crumb__sep">›</span><a>Stocks</a><span class="crumb__sep">›</span>
+    <strong style="color:var(--text-primary);">HDFC Bank</strong>
+  </div>
+
+  <!-- ── Hero strip ── -->
+  <div style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-4) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
+    <div>
+      <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2);">
+        <h1 style="font-family:var(--font-serif); font-size:var(--fs-xl); font-weight:600; color:var(--text-primary);">HDFC Bank Limited</h1>
+        <code style="font-size:11px; padding:2px 6px; background:var(--bg-inset); border-radius:2px; color:var(--text-secondary); font-family:var(--font-mono);">HDFCBANK</code>
+        <span class="badge badge--accent">NSE · BSE</span>
+        <span style="font-size:10px; padding:2px 8px; background:var(--accent-100); border:1px solid var(--accent-300); border-radius:var(--radius-sm); color:var(--accent-700); font-weight:600;">◆ In portfolio</span>
+      </div>
+      <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:var(--space-3);">Private Sector Bank · Large Cap · ISIN INE040A01034 · Listed 1995 · Nifty 50 · Nifty Bank · Nifty Financial Services · Nifty 100</div>
+      <div style="display:flex; align-items:baseline; gap:var(--space-4);">
+        <div style="font-size:40px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.02em; color:var(--text-primary); line-height:1;">₹1,847.30</div>
+        <span class="delta delta--pos" style="font-size:var(--fs-md);">+₹15.40 (+0.84%)</span>
+        <span style="font-size:var(--fs-xs); color:var(--text-tertiary);">as of 14 Apr 2026 15:30 IST</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:var(--space-3); align-items:flex-start; padding-top:var(--space-2);">
+      <button class="btn btn--primary">+ Add to Portfolio</button>
+      <button class="btn btn--secondary">+ Watchlist</button>
+      <button class="btn btn--ghost">Backtest</button>
+    </div>
+  </div>
+
+  <!-- Key stats bar (full width, 10 stats) -->
+  <div style="display:grid; grid-template-columns:repeat(10,1fr); gap:1px; background:var(--border-subtle); border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow:hidden; margin-bottom:var(--space-5);">
+    <div class="mbox"><div class="mbox__l">Day Range</div><div class="mbox__v" style="font-size:11px;">₹1,831–₹1,862</div></div>
+    <div class="mbox"><div class="mbox__l">52W Range</div><div class="mbox__v" style="font-size:11px;">₹1,610–₹1,986</div></div>
+    <div class="mbox"><div class="mbox__l">Market Cap</div><div class="mbox__v">₹14.1L Cr</div></div>
+    <div class="mbox"><div class="mbox__l">Float</div><div class="mbox__v">₹11.8L Cr</div></div>
+    <div class="mbox"><div class="mbox__l">Avg Vol (20D)</div><div class="mbox__v">1.82 Cr</div></div>
+    <div class="mbox"><div class="mbox__l">P/E (TTM)</div><div class="mbox__v">19.4×</div><div class="mbox__d mbox__d--neu">Sector: 16.2×</div></div>
+    <div class="mbox"><div class="mbox__l">P/B</div><div class="mbox__v">2.8×</div><div class="mbox__d mbox__d--neu">Sector: 2.1×</div></div>
+    <div class="mbox"><div class="mbox__l">Div Yield</div><div class="mbox__v">1.24%</div></div>
+    <div class="mbox"><div class="mbox__l">Promoter Hold.</div><div class="mbox__v">—</div><div class="mbox__d mbox__d--neu">FII: 52.1%</div></div>
+    <div class="mbox mbox--a"><div class="mbox__l">Signal</div><div class="mbox__v" style="color:var(--rag-amber-700);">Hold</div><div class="mbox__d mbox__d--neu">RS 68 · #7/187</div></div>
+  </div>
+
+  <!-- ── Detail tabs ── -->
+  <div class="dtabs">
+    <div class="dtab dtab--active">Overview</div>
+    <div class="dtab">Technicals</div>
+    <div class="dtab">Fundamentals</div>
+    <div class="dtab">Events &amp; Actions</div>
+    <div class="dtab">Compare</div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       OVERVIEW TAB — 3 column layout
+       ════════════════════════════════════════ -->
+  <div style="display:grid; grid-template-columns:1fr 1fr 280px; gap:var(--space-5);">
+
+    <!-- ── Col 1: Chart + Verdict + News ── -->
+    <div>
+      <!-- Price chart vs benchmarks (compact) -->
+      <div class="sec-label">Price vs Benchmark</div>
+      <div class="chart-wrap" style="margin-bottom:var(--space-4);">
+        <div class="chart-title">
+          <span>HDFC Bank · Nifty 50 · Nifty Bank · 1Y rebased</span>
+          <div style="display:flex; gap:var(--space-1);">
+            <span style="font-size:10px; padding:2px 6px; background:var(--accent-700); color:#fff; border-radius:2px; cursor:pointer;">1Y</span>
+            <span style="font-size:10px; padding:2px 6px; background:var(--bg-inset); color:var(--text-secondary); border-radius:2px; cursor:pointer;">3M</span>
+            <span style="font-size:10px; padding:2px 6px; background:var(--bg-inset); color:var(--text-secondary); border-radius:2px; cursor:pointer;">3Y</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 500 160" style="width:100%; height:155px;">
+          <g stroke="#EEF0F3" stroke-width="1">
+            <line x1="32" y1="10" x2="490" y2="10"/>
+            <line x1="32" y1="50" x2="490" y2="50"/>
+            <line x1="32" y1="90" x2="490" y2="90"/>
+            <line x1="32" y1="130" x2="490" y2="130"/>
+          </g>
+          <g font-size="8" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="28" y="14">125</text><text x="28" y="54">115</text>
+            <text x="28" y="94">100</text><text x="28" y="134">90</text>
+          </g>
+          <line x1="32" y1="90" x2="490" y2="90" stroke="#E3E6EB"/>
+          <!-- Nifty Bank — dashed darker -->
+          <path d="M32,90 L90,84 L150,78 L210,73 L270,80 L330,68 L390,58 L440,50 L490,47" fill="none" stroke="#B4B9C2" stroke-width="1.2" stroke-dasharray="5 3"/>
+          <!-- Nifty 50 — dashed light -->
+          <path d="M32,90 L90,87 L150,83 L210,80 L270,83 L330,77 L390,72 L440,68 L490,65" fill="none" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="3 2"/>
+          <!-- HDFC Bank — solid petrol -->
+          <path d="M32,90 L90,85 L150,80 L210,76 L270,80 L330,72 L390,66 L440,62 L490,60" fill="none" stroke="#134F5C" stroke-width="2"/>
+          <path d="M32,90 L90,85 L150,80 L210,76 L270,80 L330,72 L390,66 L440,62 L490,60 L490,130 L32,130 Z" fill="#134F5C" fill-opacity="0.06"/>
+          <!-- Alpha callout -->
+          <line x1="490" y1="47" x2="490" y2="60" stroke="#9A6410" stroke-width="1" stroke-dasharray="2 2"/>
+          <text x="495" y="54" font-size="7" font-family="Inter" fill="#9A6410">−3.0pp vs Bank</text>
+          <text x="495" y="73" font-size="7" font-family="Inter" fill="#0B7A4E">+4.1pp vs N50</text>
+          <g font-size="8" font-family="Inter" fill="#8A909C" text-anchor="middle">
+            <text x="32" y="148">Apr '25</text><text x="200" y="148">Oct</text><text x="490" y="148">Apr '26</text>
+          </g>
+        </svg>
+        <div style="display:flex; gap:var(--space-4); font-size:10px; color:var(--text-secondary); margin-top:var(--space-2);">
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:14px; height:2px; background:#134F5C; display:inline-block;"></span> HDFC Bank +12.3%</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#B4B9C2" stroke-width="1.2" stroke-dasharray="5 3"/></svg> Nifty Bank +15.3%</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="3 2"/></svg> Nifty 50 +8.2%</span>
+        </div>
+      </div>
+
+      <!-- Atlas verdict -->
+      <div class="sec-label">Atlas Insight</div>
+      <div class="atlas-insight" style="margin-bottom:var(--space-4);">
+        <div class="atlas-insight__eyebrow">Atlas · HDFC Bank assessment</div>
+        <div class="atlas-insight__body" style="font-size:var(--fs-sm);">
+          HDFC Bank is in a <em>structural consolidation</em> post the HDFC merger. NIM compression (4.3% → 3.4%) is the primary drag — the bank absorbed a high-cost housing loan book. Management guided NIM recovery to 3.8% by Q2 FY27 as repricing kicks in. GNPA inching up (1.24% → 1.42%) warrants monitoring but is manageable. The bank is outperforming Nifty 50 by <em>+4.1pp</em> but lagging Nifty Bank by <em>−3.0pp</em> — peers like ICICI and SBI have benefited more from the rate cycle. RS score improving since Jan 2026 (41 → 68). Key monitorable: Q1 FY27 NIM and deposit growth.
+        </div>
+        <div class="atlas-insight__footer">
+          <div class="atlas-insight__why"><a href="#">Why am I seeing this? →</a></div>
+          <div class="atlas-insight__actions">
+            <button class="btn btn--ghost btn--sm">Run comparison</button>
+            <button class="btn btn--secondary btn--sm">Full report →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="sec-label">News</div>
+      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
+        <div class="news-item">
+          <div class="news-dot" style="background:var(--rag-green-500);"></div>
+          <div class="news-body">
+            <div class="news-head">HDFC Bank Q3 FY26: PAT up 2.2% QoQ to ₹16,736 Cr, NIM stable at 3.4%</div>
+            <div class="news-meta">Reuters · 12 Apr 2026 · <span style="color:var(--rag-green-700);">Positive</span></div>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="news-dot" style="background:var(--rag-amber-500);"></div>
+          <div class="news-body">
+            <div class="news-head">RBI keeps repo rate unchanged at 6.5%; HDFC Bank deposit rates under pressure</div>
+            <div class="news-meta">Economic Times · 9 Apr 2026 · <span style="color:var(--rag-amber-700);">Watch</span></div>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="news-dot" style="background:var(--rag-amber-500);"></div>
+          <div class="news-body">
+            <div class="news-head">HDFC Bank's GNPA rises 18 bps QoQ to 1.42% — analyst views mixed on asset quality cycle</div>
+            <div class="news-meta">Mint · 8 Apr 2026 · <span style="color:var(--rag-amber-700);">Watch</span></div>
+          </div>
+        </div>
+        <div class="news-item" style="border-bottom:none;">
+          <div class="news-dot" style="background:var(--rag-green-500);"></div>
+          <div class="news-body">
+            <div class="news-head">FII buying resumes in HDFC Bank after 3 months of net selling — FPI holding at 52.1%</div>
+            <div class="news-meta">CNBC-TV18 · 5 Apr 2026 · <span style="color:var(--rag-green-700);">Positive</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Col 2: Risk + Technical + Fundamental snapshots ── -->
+    <div>
+      <!-- Risk metrics -->
+      <div class="sec-label">Risk Metrics
+        <span class="tip"><i class="info-i">i</i><span class="tipbody">Risk metrics computed on daily returns. Sharpe/Sortino use 6.5% risk-free rate. VaR is 95% confidence, 1-day horizon. All vs Nifty 500 unless noted.</span></span>
+      </div>
+      <div class="mgrid mgrid--3" style="margin-bottom:var(--space-4);">
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Sharpe (1Y) <span class="tip"><i class="info-i">i</i><span class="tipbody">Sharpe = (Return − Rf) / σ. Rf = 6.5% p.a. Higher is better. &gt;1.0 = good.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">0.82</div>
+          <div class="mbox__d mbox__d--neu">Sector avg: 0.71</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Sortino (1Y) <span class="tip"><i class="info-i">i</i><span class="tipbody">Sortino = (Return − Rf) / σ_downside. Only penalises downside volatility. Better than Sharpe for asymmetric return profiles.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">1.14</div>
+          <div class="mbox__d mbox__d--neu">Sector avg: 0.98</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">Max Drawdown <span class="tip"><i class="info-i">i</i><span class="tipbody">Max Drawdown = (Trough − Peak) / Peak, over selected period. Measures worst peak-to-trough decline. Lower (less negative) is better.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">−18.4%</div>
+          <div class="mbox__d mbox__d--neu">Nifty 50: −14.2%</div>
+        </div>
+        <div class="mbox">
+          <div class="mbox__l">Beta (1Y) <span class="tip"><i class="info-i">i</i><span class="tipbody">Beta measures co-movement with Nifty 50. Beta = 1 → moves with market. &gt;1 = amplified. &lt;1 = defensive.</span></span></div>
+          <div class="mbox__v">0.91</div>
+          <div class="mbox__d mbox__d--neu">Slightly defensive</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Alpha (1Y) <span class="tip"><i class="info-i">i</i><span class="tipbody">Jensen's Alpha = Actual Return − [Rf + Beta × (Market Return − Rf)]. Positive = skill above market-implied return.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+4.1pp</div>
+          <div class="mbox__d mbox__d--neu">vs Nifty 50</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">VaR 95% (1D) <span class="tip"><i class="info-i">i</i><span class="tipbody">Value at Risk: worst expected daily loss at 95% confidence. A VaR of −2.1% means &lt;5% chance of losing &gt;2.1% in a day.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">−2.1%</div>
+          <div class="mbox__d mbox__d--neu">Nifty 50: −1.8%</div>
+        </div>
+        <div class="mbox">
+          <div class="mbox__l">Calmar Ratio <span class="tip"><i class="info-i">i</i><span class="tipbody">Calmar = Annualised Return / |Max Drawdown|. Measures return per unit of drawdown risk. Higher is better.</span></span></div>
+          <div class="mbox__v">0.67</div>
+          <div class="mbox__d mbox__d--neu">Sector avg: 0.81</div>
+        </div>
+        <div class="mbox">
+          <div class="mbox__l">Std Dev (Ann.) <span class="tip"><i class="info-i">i</i><span class="tipbody">Annualised standard deviation of daily returns × √252. Measures total volatility regardless of direction.</span></span></div>
+          <div class="mbox__v">18.4%</div>
+          <div class="mbox__d mbox__d--neu">Nifty 50: 14.1%</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Info Ratio <span class="tip"><i class="info-i">i</i><span class="tipbody">Information Ratio = Alpha / Tracking Error. Measures consistency of outperformance. &gt;0.5 = skilled, &gt;1.0 = exceptional.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">0.62</div>
+          <div class="mbox__d mbox__d--neu">Tracking error: 6.6%</div>
+        </div>
+      </div>
+
+      <!-- Technical snapshot -->
+      <div class="sec-label">Technical Snapshot
+        <span class="tip"><i class="info-i">i</i><span class="tipbody">All technicals computed on NSE closing prices. EOD data as of 14 Apr 2026. Signals are rule-based, not AI.</span></span>
+      </div>
+      <div class="mgrid mgrid--4" style="margin-bottom:var(--space-4);">
+        <div class="mbox mbox--g">
+          <div class="mbox__l">RSI (14) <span class="tip"><i class="info-i">i</i><span class="tipbody">Relative Strength Index = 100 − 100/(1 + RS). RS = Avg gain / Avg loss over 14 periods. &gt;70 = overbought, &lt;30 = oversold.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">58.4</div>
+          <div class="mbox__d mbox__d--neu">Neutral bullish</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">MACD <span class="tip"><i class="info-i">i</i><span class="tipbody">MACD = EMA(12) − EMA(26). Signal line = EMA(9) of MACD. Bullish when MACD &gt; Signal. Histogram = MACD − Signal.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+ve</div>
+          <div class="mbox__d mbox__d--pos">Cross 8D ago</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">vs 200DMA <span class="tip"><i class="info-i">i</i><span class="tipbody">200-day moving average. Price above = long-term bullish trend. % gap = (Price − 200DMA) / 200DMA × 100.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+6.2%</div>
+          <div class="mbox__d mbox__d--pos">200DMA: ₹1,739</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">vs 50DMA <span class="tip"><i class="info-i">i</i><span class="tipbody">50-day moving average. Shorter-term trend. Price above = medium-term bullish. Golden cross (50D &gt; 200D) = structural bull.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+3.1%</div>
+          <div class="mbox__d mbox__d--pos">50DMA: ₹1,791</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">ADX (14) <span class="tip"><i class="info-i">i</i><span class="tipbody">Average Directional Index. Measures trend strength regardless of direction. &gt;25 = strong trend, &lt;20 = sideways/choppy.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">24.1</div>
+          <div class="mbox__d mbox__d--neu">Weak trend</div>
+        </div>
+        <div class="mbox">
+          <div class="mbox__l">ATR (14) <span class="tip"><i class="info-i">i</i><span class="tipbody">Average True Range. Average daily high-low range over 14 days. Measures volatility/liquidity. Higher = wider daily swings.</span></span></div>
+          <div class="mbox__v">₹38.2</div>
+          <div class="mbox__d mbox__d--neu">2.07% of price</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">BB Position <span class="tip"><i class="info-i">i</i><span class="tipbody">Bollinger Band %B = (Price − Lower Band) / (Upper − Lower). 0 = at lower band, 1 = at upper band. &gt;0.8 = overbought zone.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">0.64</div>
+          <div class="mbox__d mbox__d--neu">Mid-upper band</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Vol vs Avg <span class="tip"><i class="info-i">i</i><span class="tipbody">Today's volume vs 20-day average volume. &gt;1.5× = unusually high participation. Low-volume moves are less reliable.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">1.1×</div>
+          <div class="mbox__d mbox__d--pos">Vol: 1.92 Cr</div>
+        </div>
+      </div>
+
+      <!-- Fundamental snapshot -->
+      <div class="sec-label">Fundamental Snapshot
+        <span class="tip"><i class="info-i">i</i><span class="tipbody">Banking fundamentals. NIM, GNPA, CASA from quarterly filings. ROE/ROA are trailing 4-quarter averages. Loan growth is YoY.</span></span>
+      </div>
+      <div class="mgrid mgrid--3" style="margin-bottom:var(--space-4);">
+        <div class="mbox mbox--a">
+          <div class="mbox__l">NIM <span class="tip"><i class="info-i">i</i><span class="tipbody">Net Interest Margin = Net Interest Income / Average Earning Assets. Core profitability of a bank. &gt;4% = excellent for Indian banks.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">3.4%</div>
+          <div class="mbox__d mbox__d--neg">↓ from 4.3% pre-merger</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">GNPA <span class="tip"><i class="info-i">i</i><span class="tipbody">Gross Non-Performing Assets as % of total advances. Rising GNPA = deteriorating asset quality. &lt;1% = excellent.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">1.42%</div>
+          <div class="mbox__d mbox__d--neg">↑ +18bps QoQ</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">NNPA <span class="tip"><i class="info-i">i</i><span class="tipbody">Net NPA = Gross NPA − Provisions. Net of provisioning. Better measure of true credit risk. &lt;0.5% = well-provisioned.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">0.44%</div>
+          <div class="mbox__d mbox__d--neu">Provision cover: 69%</div>
+        </div>
+        <div class="mbox mbox--a">
+          <div class="mbox__l">CASA Ratio <span class="tip"><i class="info-i">i</i><span class="tipbody">Current Account Savings Account % of total deposits. Higher CASA = cheaper funding cost. &gt;45% is industry-leading for India.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-amber-700);">37.1%</div>
+          <div class="mbox__d mbox__d--neg">↓ from 47% (pre-merger)</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">ROE (TTM) <span class="tip"><i class="info-i">i</i><span class="tipbody">Return on Equity = Net Profit / Avg Shareholders' Equity. Measures profitability on shareholder capital. &gt;15% = good for Indian banks.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">16.6%</div>
+          <div class="mbox__d mbox__d--neu">Sector avg: 14.8%</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">ROA (TTM) <span class="tip"><i class="info-i">i</i><span class="tipbody">Return on Assets = Net Profit / Avg Total Assets. &gt;1.5% is considered strong for Indian banks. Normalises for leverage.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">1.7%</div>
+          <div class="mbox__d mbox__d--neu">Sector avg: 1.4%</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">Loan Growth <span class="tip"><i class="info-i">i</i><span class="tipbody">YoY growth in total advances. Organic loan growth measures business momentum, excludes merger effects.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+14.2%</div>
+          <div class="mbox__d mbox__d--neu">YoY (organic)</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">NII Growth <span class="tip"><i class="info-i">i</i><span class="tipbody">Net Interest Income = Interest Income − Interest Expense. Core revenue of a bank. YoY growth rate.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">+7.8%</div>
+          <div class="mbox__d mbox__d--neu">YoY</div>
+        </div>
+        <div class="mbox mbox--g">
+          <div class="mbox__l">CAR (Tier 1) <span class="tip"><i class="info-i">i</i><span class="tipbody">Capital Adequacy Ratio - Tier 1 only. Measures core equity capital vs risk-weighted assets. RBI minimum = 8.875%. &gt;15% = very well-capitalised.</span></span></div>
+          <div class="mbox__v" style="color:var(--rag-green-700);">16.8%</div>
+          <div class="mbox__d mbox__d--pos">RBI min: 8.9%</div>
+        </div>
+      </div>
+
+      <!-- Analyst consensus -->
+      <div class="sec-label">Analyst Consensus</div>
+      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:var(--space-3);">
+          <div>
+            <div style="font-size:10px; color:var(--text-tertiary); margin-bottom:2px;">Average Target</div>
+            <div style="font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--rag-green-700);">₹2,140</div>
+            <div style="font-size:10px; color:var(--rag-green-700);">+15.9% upside</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px; color:var(--text-tertiary); margin-bottom:2px;">38 analysts</div>
+            <div style="font-size:var(--fs-sm); font-weight:600; color:var(--rag-green-700);">Strong Buy</div>
+            <div style="font-size:10px; color:var(--text-tertiary);">Updated Apr 2026</div>
+          </div>
+        </div>
+        <div class="analyst-bar">
+          <div style="flex:22; background:var(--rag-green-500);"></div>
+          <div style="flex:10; background:var(--rag-green-300);"></div>
+          <div style="flex:4; background:var(--rag-amber-300);"></div>
+          <div style="flex:2; background:var(--rag-red-300);"></div>
+        </div>
+        <div style="display:flex; gap:var(--space-5); font-size:10px; color:var(--text-secondary);">
+          <span><span style="color:var(--rag-green-700); font-weight:600;">22</span> Strong Buy</span>
+          <span><span style="color:var(--rag-green-500); font-weight:600;">10</span> Buy</span>
+          <span><span style="color:var(--rag-amber-700); font-weight:600;">4</span> Hold</span>
+          <span><span style="color:var(--rag-red-700); font-weight:600;">2</span> Sell</span>
+          <span style="margin-left:auto;">High: ₹2,480 · Low: ₹1,850</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Col 3: RS panel + Corporate Actions ── -->
+    <div>
+      <!-- RS score panel -->
+      <div class="sec-label">RS Score
+        <span class="tip"><i class="info-i">i</i><span class="tipbody">RS Score = percentile rank of this stock's risk-adjusted return vs all Nifty 500 constituents over 63 trading days. 100 = strongest, 0 = weakest.</span></span>
+      </div>
+      <div style="background:var(--bg-surface-alt); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); margin-bottom:var(--space-4);">
+        <div style="font-size:52px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; color:var(--rag-amber-700); line-height:1; margin-bottom:4px;">68</div>
+        <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">RS Score · vs Nifty 500</div>
+        <div style="height:6px; background:var(--bg-inset); border-radius:3px; overflow:hidden; margin-bottom:var(--space-3);">
+          <div style="width:68%; height:100%; background:var(--rag-amber-500); border-radius:3px;"></div>
+        </div>
+        <div style="font-size:var(--fs-xs); color:var(--text-secondary); line-height:1.5; margin-bottom:var(--space-3);">
+          <span class="sig-dot sig-dot--a" style="margin-right:4px; display:inline-block;"></span>
+          <strong>Hold.</strong> Above median, improving trend. RS was 41 in Jan 2026 — has recovered strongly as FII buying resumed.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-2); font-size:10px; border-top:1px solid var(--border-subtle); padding-top:var(--space-3);">
+          <div><span style="color:var(--text-tertiary); display:block;">vs Nifty Bank</span><strong style="color:var(--rag-red-700);">41 ↓</strong></div>
+          <div><span style="color:var(--text-tertiary); display:block;">Sector Rank</span><strong style="color:var(--rag-amber-700);">#7 / 187</strong></div>
+          <div><span style="color:var(--text-tertiary); display:block;">1M RS trend</span><strong style="color:var(--rag-green-700);">↑ +12pts</strong></div>
+          <div><span style="color:var(--text-tertiary); display:block;">3M RS trend</span><strong style="color:var(--rag-green-700);">↑ +27pts</strong></div>
+          <div><span style="color:var(--text-tertiary); display:block;">RS Percentile</span><strong>68th</strong></div>
+          <div><span style="color:var(--text-tertiary); display:block;">Nifty 500 avg</span><strong>50</strong></div>
+        </div>
+      </div>
+
+      <!-- Corporate actions & events -->
+      <div class="sec-label">Corporate Events</div>
+      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); margin-bottom:var(--space-4);">
+        <div class="event-item">
+          <div class="event-date">22 Apr '26</div>
+          <div class="event-label">Q4 FY26 Results<br><span style="font-size:10px; color:var(--text-tertiary);">PAT est. ₹17,100–17,400 Cr</span></div>
+          <span class="event-badge event-badge--upcoming">Upcoming</span>
+        </div>
+        <div class="event-item">
+          <div class="event-date">12 Apr '26</div>
+          <div class="event-label">Q3 FY26 Results announced<br><span style="font-size:10px; color:var(--text-tertiary);">PAT ₹16,736 Cr · NIM 3.4%</span></div>
+          <span class="event-badge event-badge--recent">Done</span>
+        </div>
+        <div class="event-item">
+          <div class="event-date">18 Mar '26</div>
+          <div class="event-label">Dividend ₹19.50/share (FY25 final)<br><span style="font-size:10px; color:var(--text-tertiary);">Ex-date · Yield 1.1%</span></div>
+          <span class="event-badge event-badge--div">Dividend</span>
+        </div>
+        <div class="event-item">
+          <div class="event-date">8 Jan '26</div>
+          <div class="event-label">Bulk deal: FII buys 2.1 Cr shares<br><span style="font-size:10px; color:var(--text-tertiary);">GIC Singapore · ₹3,874 Cr</span></div>
+          <span class="event-badge event-badge--recent">FII</span>
+        </div>
+        <div class="event-item" style="border-bottom:none;">
+          <div class="event-date">Oct '25</div>
+          <div class="event-label">Q2 FY26 Results · AGM<br><span style="font-size:10px; color:var(--text-tertiary);">Stock split 1:1 completed Sep '25</span></div>
+          <span class="event-badge event-badge--recent">Done</span>
+        </div>
+      </div>
+
+      <!-- Credit / rating -->
+      <div class="sec-label">Credit &amp; Ratings</div>
+      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);">
+          <div class="mbox" style="border-radius:var(--radius-sm);">
+            <div class="mbox__l">CRISIL</div>
+            <div class="mbox__v" style="color:var(--rag-green-700);">AAA</div>
+            <div class="mbox__d mbox__d--neu">Stable outlook</div>
+          </div>
+          <div class="mbox" style="border-radius:var(--radius-sm);">
+            <div class="mbox__l">ICRA</div>
+            <div class="mbox__v" style="color:var(--rag-green-700);">AAA</div>
+            <div class="mbox__d mbox__d--neu">Stable outlook</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       FUNDAMENTALS TAB — Quarterly table
+       (shown as next section for mockup)
+       ════════════════════════════════════════ -->
+  <div style="margin-top:var(--space-10); border-top:2px solid var(--border-default); padding-top:var(--space-6);">
+    <div style="display:flex; align-items:center; gap:var(--space-4); margin-bottom:var(--space-5);">
+      <h2 style="font-family:var(--font-serif); font-size:var(--fs-xl); color:var(--text-primary);">Fundamentals</h2>
+      <span style="font-size:var(--fs-xs); color:var(--text-tertiary);">Tab — Quarterly financials · 12 quarters · INR Crore unless noted · Sorted newest first</span>
+    </div>
+
+    <!-- P/E and NIM trend chart row -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-4); margin-bottom:var(--space-5);">
+      <!-- P/E trend -->
+      <div class="chart-wrap">
+        <div class="chart-title" style="font-size:11px;">P/E Ratio — 12 Quarters
+          <span class="tip"><i class="info-i">i</i><span class="tipbody">Price-to-Earnings = Market Cap / Trailing 12M Net Profit. Shows how much the market pays per rupee of earnings. Compare to historical average and peers.</span></span>
+        </div>
+        <svg viewBox="0 0 280 100" style="width:100%; height:95px;">
+          <line x1="20" y1="10" x2="270" y2="10" stroke="#EEF0F3"/><line x1="20" y1="35" x2="270" y2="35" stroke="#EEF0F3"/><line x1="20" y1="60" x2="270" y2="60" stroke="#EEF0F3"/><line x1="20" y1="85" x2="270" y2="85" stroke="#EEF0F3"/>
+          <g font-size="8" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="16" y="14">30×</text><text x="16" y="39">25×</text><text x="16" y="64">20×</text><text x="16" y="89">15×</text>
+          </g>
+          <!-- Historical average line -->
+          <line x1="20" y1="52" x2="270" y2="52" stroke="#CDD2DA" stroke-dasharray="3 2" stroke-width="1"/>
+          <text x="235" y="49" font-size="7" font-family="Inter" fill="#8A909C">avg 21.4×</text>
+          <!-- P/E line (higher = more expensive) -->
+          <polyline points="20,32 40,28 60,30 80,28 100,34 120,25 140,22 160,20 180,28 200,38 220,42 240,48 260,52" fill="none" stroke="#134F5C" stroke-width="1.5"/>
+          <!-- Current dot -->
+          <circle cx="260" cy="52" r="3" fill="#134F5C"/>
+          <text x="230" y="62" font-size="8" font-family="Inter" fill="#134F5C">19.4×</text>
+        </svg>
+      </div>
+      <!-- NIM trend -->
+      <div class="chart-wrap">
+        <div class="chart-title" style="font-size:11px;">NIM % — 12 Quarters
+          <span class="tip"><i class="info-i">i</i><span class="tipbody">Net Interest Margin compression post HDFC merger is the key story. Recovery expected as housing loan book reprices to market rates by FY27.</span></span>
+        </div>
+        <svg viewBox="0 0 280 100" style="width:100%; height:95px;">
+          <line x1="20" y1="10" x2="270" y2="10" stroke="#EEF0F3"/><line x1="20" y1="35" x2="270" y2="35" stroke="#EEF0F3"/><line x1="20" y1="60" x2="270" y2="60" stroke="#EEF0F3"/><line x1="20" y1="85" x2="270" y2="85" stroke="#EEF0F3"/>
+          <g font-size="8" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="16" y="14">4.5%</text><text x="16" y="39">4.0%</text><text x="16" y="64">3.5%</text><text x="16" y="89">3.0%</text>
+          </g>
+          <!-- NIM compression post merger -->
+          <polyline points="20,30 40,30 60,28 80,28 100,28 120,60 140,64 160,64 180,64 200,62 220,60 240,60 260,64" fill="none" stroke="#B63030" stroke-width="1.5"/>
+          <circle cx="260" cy="64" r="3" fill="#B63030"/>
+          <!-- Merger vertical marker -->
+          <line x1="120" y1="10" x2="120" y2="85" stroke="#9A6410" stroke-dasharray="3 2" stroke-width="1"/>
+          <text x="122" y="22" font-size="7" font-family="Inter" fill="#9A6410">Merger</text>
+          <text x="228" y="74" font-size="8" font-family="Inter" fill="#B63030">3.4%</text>
+        </svg>
+      </div>
+      <!-- GNPA trend -->
+      <div class="chart-wrap">
+        <div class="chart-title" style="font-size:11px;">GNPA % — 12 Quarters
+          <span class="tip"><i class="info-i">i</i><span class="tipbody">Post-merger GNPA absorbed a higher-NPA legacy book. Recovery loans are progressing. Watch for further uptick vs. provisioning coverage ratio.</span></span>
+        </div>
+        <svg viewBox="0 0 280 100" style="width:100%; height:95px;">
+          <line x1="20" y1="10" x2="270" y2="10" stroke="#EEF0F3"/><line x1="20" y1="35" x2="270" y2="35" stroke="#EEF0F3"/><line x1="20" y1="60" x2="270" y2="60" stroke="#EEF0F3"/><line x1="20" y1="85" x2="270" y2="85" stroke="#EEF0F3"/>
+          <g font-size="8" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="16" y="14">2.0%</text><text x="16" y="39">1.5%</text><text x="16" y="64">1.0%</text><text x="16" y="89">0.5%</text>
+          </g>
+          <!-- GNPA line — lower is better, so invert -->
+          <polyline points="20,56 40,56 60,56 80,60 100,60 120,50 140,52 160,54 180,54 200,52 220,48 240,45 260,43" fill="none" stroke="#D9871A" stroke-width="1.5"/>
+          <circle cx="260" cy="43" r="3" fill="#D9871A"/>
+          <text x="228" y="38" font-size="8" font-family="Inter" fill="#D9871A">1.42%</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Quarterly table — key P&L and balance sheet metrics -->
+    <div class="card card--lg" style="margin-bottom:var(--space-4);">
+      <div class="card__header">
+        <div class="card__title">Quarterly financials — 12 quarters · ₹ Crore</div>
+        <div class="card__actions">
+          <div class="period-tabs">
+            <div class="period-tab period-tab--active">12Q</div>
+            <div class="period-tab">16Q</div>
+            <div class="period-tab">Annual</div>
+          </div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="qtable">
+          <thead>
+            <tr>
+              <th style="min-width:140px;">Metric
+                <span class="tip"><i class="info-i">i</i><span class="tipbody">Rows: P&L metrics (NII, PAT, EPS) then banking-specific ratios. Arrows show QoQ direction.</span></span>
+              </th>
+              <th style="background:var(--accent-100); color:var(--accent-700);">Q3 FY26</th>
+              <th>Q2 FY26</th><th>Q1 FY26</th>
+              <th style="background:var(--bg-inset); color:var(--text-tertiary); font-style:italic;">Q4 FY25</th>
+              <th>Q3 FY25</th><th>Q2 FY25</th><th>Q1 FY25</th>
+              <th style="background:var(--bg-inset); color:var(--text-tertiary); font-style:italic;">Q4 FY24</th>
+              <th>Q3 FY24</th><th>Q2 FY24</th><th>Q1 FY24</th>
+              <th style="background:var(--bg-inset); color:var(--text-tertiary); font-style:italic;">Q4 FY23</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="q-head"><td colspan="13">— Income Statement —</td></tr>
+            <tr>
+              <td>NII (₹ Cr)</td>
+              <td style="background:var(--accent-100);"><strong>30,648</strong></td>
+              <td>30,113</td><td>29,514</td>
+              <td style="background:var(--bg-surface-alt);">29,077</td>
+              <td>28,471</td><td>27,385 <span style="color:var(--rag-amber-700);">↑</span></td><td>23,599</td>
+              <td style="background:var(--bg-surface-alt);">23,351</td>
+              <td>22,988</td><td>21,021</td><td>19,481</td>
+              <td style="background:var(--bg-surface-alt);">18,872</td>
+            </tr>
+            <tr>
+              <td>Other Income</td>
+              <td style="background:var(--accent-100);">11,470</td>
+              <td>10,984</td><td>10,312</td>
+              <td style="background:var(--bg-surface-alt);">10,889</td>
+              <td>10,217</td><td>9,860</td><td>9,134</td>
+              <td style="background:var(--bg-surface-alt);">8,908</td>
+              <td>8,641</td><td>8,119</td><td>7,872</td>
+              <td style="background:var(--bg-surface-alt);">7,543</td>
+            </tr>
+            <tr>
+              <td>Operating Profit</td>
+              <td style="background:var(--accent-100);">22,134</td>
+              <td>21,598</td><td>20,843</td>
+              <td style="background:var(--bg-surface-alt);">21,312</td>
+              <td>20,745</td><td>19,984</td><td>18,231</td>
+              <td style="background:var(--bg-surface-alt);">18,102</td>
+              <td>17,687</td><td>16,213</td><td>14,898</td>
+              <td style="background:var(--bg-surface-alt);">14,512</td>
+            </tr>
+            <tr>
+              <td>Provisions</td>
+              <td style="background:var(--accent-100);"><span class="q-warn">3,241</span></td>
+              <td>2,901</td><td>2,870</td>
+              <td style="background:var(--bg-surface-alt);">2,686</td>
+              <td>2,591</td><td>2,904</td><td>2,614</td>
+              <td style="background:var(--bg-surface-alt);">2,689</td>
+              <td>2,806</td><td>3,187</td><td>2,860</td>
+              <td style="background:var(--bg-surface-alt);">2,687</td>
+            </tr>
+            <tr>
+              <td>PAT (₹ Cr)</td>
+              <td style="background:var(--accent-100);"><strong class="q-pos">16,736</strong></td>
+              <td class="q-pos">16,821</td><td class="q-pos">16,175</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">16,512</span></td>
+              <td class="q-pos">16,373</td><td class="q-pos">15,976</td><td class="q-pos">11,952</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">12,047</span></td>
+              <td class="q-pos">12,259</td><td class="q-pos">11,125</td><td class="q-pos">9,196</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">10,055</span></td>
+            </tr>
+            <tr>
+              <td>EPS (₹)</td>
+              <td style="background:var(--accent-100);">21.9</td>
+              <td>22.1</td><td>21.2</td>
+              <td style="background:var(--bg-surface-alt);">21.7</td>
+              <td>21.5</td><td>20.9</td><td>15.7</td>
+              <td style="background:var(--bg-surface-alt);">15.8</td>
+              <td>16.1</td><td>14.6</td><td>12.1</td>
+              <td style="background:var(--bg-surface-alt);">13.2</td>
+            </tr>
+            <tr class="q-head"><td colspan="13">— Banking Ratios —</td></tr>
+            <tr>
+              <td>NIM %
+                <span class="tip"><i class="info-i">i</i><span class="tipbody">Net Interest Margin. Compression post Jul 2023 merger is visible — HDFC absorbed a low-yield housing loan book. Recovery expected by FY27.</span></span>
+              </td>
+              <td style="background:var(--accent-100);"><span class="q-warn">3.4%</span></td>
+              <td class="q-warn">3.5%</td><td class="q-warn">3.4%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-warn">3.4%</span></td>
+              <td class="q-warn">3.4%</td><td class="q-neg">3.6%</td><td class="q-neg">4.3%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">4.3%</span></td>
+              <td class="q-pos">4.3%</td><td class="q-pos">4.3%</td><td class="q-pos">4.3%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">4.1%</span></td>
+            </tr>
+            <tr>
+              <td>GNPA %
+                <span class="tip"><i class="info-i">i</i><span class="tipbody">Gross Non-Performing Assets. Lower is better. Watch for further uptick — current trend is mildly negative.</span></span>
+              </td>
+              <td style="background:var(--accent-100);"><span class="q-warn">1.42%</span></td>
+              <td class="q-warn">1.36%</td><td class="q-warn">1.33%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-warn">1.24%</span></td>
+              <td class="q-pos">1.26%</td><td class="q-pos">1.34%</td><td class="q-pos">1.17%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">1.12%</span></td>
+              <td class="q-pos">1.23%</td><td class="q-pos">1.23%</td><td class="q-pos">1.28%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">1.17%</span></td>
+            </tr>
+            <tr>
+              <td>CASA %</td>
+              <td style="background:var(--accent-100);"><span class="q-warn">37.1%</span></td>
+              <td class="q-warn">37.6%</td><td class="q-warn">37.2%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-warn">38.2%</span></td>
+              <td class="q-warn">38.0%</td><td class="q-warn">38.0%</td><td class="q-pos">44.2%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">43.7%</span></td>
+              <td class="q-pos">44.0%</td><td class="q-pos">44.6%</td><td class="q-pos">46.0%</td>
+              <td style="background:var(--bg-surface-alt);"><span class="q-pos">47.1%</span></td>
+            </tr>
+            <tr>
+              <td>ROE %</td>
+              <td style="background:var(--accent-100);">16.6%</td>
+              <td>16.8%</td><td>16.5%</td>
+              <td style="background:var(--bg-surface-alt);">18.8%</td>
+              <td>19.5%</td><td>19.7%</td><td>16.5%</td>
+              <td style="background:var(--bg-surface-alt);">17.0%</td>
+              <td>17.6%</td><td>17.1%</td><td>15.2%</td>
+              <td style="background:var(--bg-surface-alt);">16.8%</td>
+            </tr>
+            <tr>
+              <td>ROA %</td>
+              <td style="background:var(--accent-100);">1.7%</td>
+              <td>1.7%</td><td>1.6%</td>
+              <td style="background:var(--bg-surface-alt);">1.9%</td>
+              <td>1.9%</td><td>2.0%</td><td>1.8%</td>
+              <td style="background:var(--bg-surface-alt);">1.9%</td>
+              <td>2.0%</td><td>1.9%</td><td>1.8%</td>
+              <td style="background:var(--bg-surface-alt);">1.9%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Peer comparison -->
+    <div class="sec-label" style="margin-top:var(--space-5);">Peer Comparison — Private Banks</div>
+    <div class="card card--lg">
+      <div style="overflow-x:auto;">
+        <table class="ptable">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Bank</th>
+              <th>CMP</th><th>Mkt Cap</th><th>P/E (TTM)</th><th>P/B</th>
+              <th>NIM %
+                <span class="tip"><i class="info-i">i</i><span class="tipbody">Latest quarterly NIM. Higher = more profitable core lending. ICICI and Axis benefit from retail loan mix shift.</span></span>
+              </th>
+              <th>GNPA %</th><th>CASA %</th><th>ROE %</th><th>Loan Growth</th>
+              <th>RS Score
+                <span class="tip"><i class="info-i">i</i><span class="tipbody">RS Score = 3M relative strength percentile rank vs all 500 Nifty stocks. Higher = stronger momentum relative to market.</span></span>
+              </th>
+              <th>Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlighted">
+              <td><strong>HDFC Bank ◆</strong></td>
+              <td>₹1,847</td><td>₹14.1L Cr</td>
+              <td class="q-warn">19.4×</td><td>2.8×</td>
+              <td class="q-warn">3.4%</td><td class="q-warn">1.42%</td><td class="q-warn">37.1%</td>
+              <td>16.6%</td><td class="q-pos">+14.2%</td>
+              <td><div style="display:inline-flex; align-items:center; gap:4px;"><div style="width:30px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:68%; height:100%; background:var(--rag-amber-500);"></div></div> 68</div></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <tr>
+              <td>ICICI Bank</td>
+              <td>₹1,312</td><td>₹8.2L Cr</td>
+              <td>17.8×</td><td>2.9×</td>
+              <td class="q-pos">4.1%</td><td class="q-pos">1.96%</td><td class="q-warn">41.2%</td>
+              <td>18.8%</td><td class="q-pos">+18.1%</td>
+              <td><div style="display:inline-flex; align-items:center; gap:4px;"><div style="width:30px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:74%; height:100%; background:var(--rag-green-500);"></div></div> 74</div></td>
+              <td><span class="sig-dot sig-dot--g"></span></td>
+            </tr>
+            <tr>
+              <td>Axis Bank</td>
+              <td>₹1,124</td><td>₹4.1L Cr</td>
+              <td>13.4×</td><td>1.9×</td>
+              <td class="q-pos">3.9%</td><td class="q-warn">1.54%</td><td class="q-warn">42.8%</td>
+              <td>17.2%</td><td>+11.4%</td>
+              <td><div style="display:inline-flex; align-items:center; gap:4px;"><div style="width:30px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:55%; height:100%; background:var(--rag-amber-500);"></div></div> 55</div></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <tr>
+              <td>Kotak Bank</td>
+              <td>₹1,841</td><td>₹3.8L Cr</td>
+              <td>18.2×</td><td>2.4×</td>
+              <td class="q-pos">4.6%</td><td class="q-pos">1.49%</td><td class="q-pos">47.2%</td>
+              <td>15.1%</td><td>+9.8%</td>
+              <td><div style="display:inline-flex; align-items:center; gap:4px;"><div style="width:30px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:48%; height:100%; background:var(--rag-amber-500);"></div></div> 48</div></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <tr>
+              <td>IndusInd Bank</td>
+              <td>₹788</td><td>₹0.6L Cr</td>
+              <td class="q-pos">7.8×</td><td>0.9×</td>
+              <td class="q-pos">3.8%</td><td class="q-neg">2.94%</td><td class="q-warn">38.1%</td>
+              <td>9.2%</td><td class="q-neg">+3.1%</td>
+              <td><div style="display:inline-flex; align-items:center; gap:4px;"><div style="width:30px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden;"><div style="width:24%; height:100%; background:var(--rag-red-500);"></div></div> 24</div></td>
+              <td><span class="sig-dot sig-dot--r"></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="verdict-strip">
+        <span class="verdict-strip__mark">A</span>
+        <div>HDFC Bank trades at a <em>premium P/E (19.4×) but compressed NIM (3.4%)</em> — the market is pricing in NIM recovery. ICICI is the cleaner compounder right now: better NIM, better RS, similar P/E. Watch IndusInd — deep value but asset quality risk is real.</div>
+        <span class="verdict-strip__more">Compare pair →</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+</body>
+</html>
