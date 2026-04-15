@@ -2150,7 +2150,7 @@
           "portfolio"
         ],
         "summary": "Get Portfolio Analysis",
-        "description": "Return portfolio analysis snapshot (sector weights, quadrant distribution, RS).\n\nV4-3 implementation pending.",
+        "description": "Return full portfolio analysis: per-holding JIP enrichment + portfolio-level aggregates.\n\nPer-holding metrics (from JIP): NAV + returns, RS composite + momentum + quadrant,\nderived metrics (Sharpe, Sortino, Alpha, Beta), weighted technicals (RSI, breadth, MACD),\nsector exposure.\n\nPortfolio-level aggregates: weighted RS (value-weighted), sector concentration,\nquadrant distribution, weighted average Sharpe/Sortino/Beta, pairwise fund overlap.\n\nGraceful degradation: if JIP data is unavailable for a holding, it appears\nin the `unavailable` list and the analysis continues with remaining holdings.",
         "operationId": "get_portfolio_analysis_api_v1_portfolio__portfolio_id__analysis_get",
         "parameters": [
           {
@@ -2162,19 +2162,34 @@
               "format": "uuid",
               "title": "Portfolio Id"
             }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date for analysis (ISO 8601). Defaults to today.",
+              "title": "Data As Of"
+            },
+            "description": "Date for analysis (ISO 8601). Defaults to today."
           }
         ],
         "responses": {
-          "501": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Get Portfolio Analysis Api V1 Portfolio  Portfolio Id  Analysis Get"
+                  "$ref": "#/components/schemas/PortfolioFullAnalysisResponse"
                 }
               }
             }
@@ -2198,7 +2213,7 @@
           "portfolio"
         ],
         "summary": "Get Portfolio Attribution",
-        "description": "Return sector attribution for a portfolio.\n\nV4-4 implementation pending.",
+        "description": "Return Brinson-Fachler attribution analysis for a portfolio.\n\nComputes allocation, selection, and interaction effects per MF category.\n\nBrinson-Fachler model:\n  allocation_effect   = (w_p - w_b) * (R_b_sector - R_b_total)\n  selection_effect    = w_b * (R_p_sector - R_b_sector)\n  interaction_effect  = (w_p - w_b) * (R_p_sector - R_b_sector)\n\nWhere:\n  w_p = portfolio weight in category (value / total_value)\n  w_b = benchmark weight (active_fund_count / total_active_funds, equal-weight)\n  R_b_sector = category avg 1Y return from NAV history (via JIP MF service)\n  R_p_sector = value-weighted avg manager_alpha for portfolio holdings in category\n\nReturns returns_available=False when NAV history is insufficient for benchmark\nreturns. Category weights are always computed.\n\nResponse includes formula, tolerance, and data_as_of for full traceability.",
         "operationId": "get_portfolio_attribution_api_v1_portfolio__portfolio_id__attribution_get",
         "parameters": [
           {
@@ -2210,19 +2225,34 @@
               "format": "uuid",
               "title": "Portfolio Id"
             }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date for attribution (ISO 8601). Defaults to today.",
+              "title": "Data As Of"
+            },
+            "description": "Date for attribution (ISO 8601). Defaults to today."
           }
         ],
         "responses": {
-          "501": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Get Portfolio Attribution Api V1 Portfolio  Portfolio Id  Attribution Get"
+                  "$ref": "#/components/schemas/PortfolioAttributionResponse"
                 }
               }
             }
@@ -2246,7 +2276,7 @@
           "portfolio"
         ],
         "summary": "Get Portfolio Optimize",
-        "description": "Return portfolio optimization suggestions.\n\nV4-5 implementation pending.",
+        "description": "Return portfolio optimization using Riskfolio-Lib (mean-variance + HRP).\n\nFetches NAV history for each mapped holding (1Y lookback), builds a daily\nreturns matrix, and runs the requested optimization models under SEBI constraints.\n\nMean-variance (Classic/MV/Sharpe): maximizes Sharpe ratio subject to per-fund\nweight cap (SEBI PMS: 10%) and optional cardinality constraint.\n\nHRP (Hierarchical Risk Parity): hierarchical clustering-based allocation,\nno constraint on max weight \u2014 naturally diversifies.\n\nFunds with fewer than 20 NAV data points in the lookback window are excluded\nand listed in excluded_funds. If no candidates remain, returns 422.\n\nDeterminism: same data_as_of + same holdings + same JIP NAV data \u2192 identical weights.",
         "operationId": "get_portfolio_optimize_api_v1_portfolio__portfolio_id__optimize_get",
         "parameters": [
           {
@@ -2258,19 +2288,113 @@
               "format": "uuid",
               "title": "Portfolio Id"
             }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date for analysis (ISO 8601). Defaults to today.",
+              "title": "Data As Of"
+            },
+            "description": "Date for analysis (ISO 8601). Defaults to today."
+          },
+          {
+            "name": "risk_profile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Risk profile: conservative|moderate|aggressive",
+              "default": "moderate",
+              "title": "Risk Profile"
+            },
+            "description": "Risk profile: conservative|moderate|aggressive"
+          },
+          {
+            "name": "models",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated model names: mean_variance, hrp",
+              "default": "mean_variance,hrp",
+              "title": "Models"
+            },
+            "description": "Comma-separated model names: mean_variance, hrp"
+          },
+          {
+            "name": "max_weight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max weight per fund (SEBI PMS default: 0.10)",
+              "default": "0.10",
+              "title": "Max Weight"
+            },
+            "description": "Max weight per fund (SEBI PMS default: 0.10)"
+          },
+          {
+            "name": "max_positions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Max number of positions (cardinality constraint)",
+              "title": "Max Positions"
+            },
+            "description": "Max number of positions (cardinality constraint)"
           }
         ],
         "responses": {
-          "501": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Get Portfolio Optimize Api V1 Portfolio  Portfolio Id  Optimize Get"
+                  "$ref": "#/components/schemas/PortfolioOptimizationResponse"
                 }
               }
             }
@@ -2545,6 +2669,27 @@
   },
   "components": {
     "schemas": {
+      "AnalysisProvenance": {
+        "properties": {
+          "source_table": {
+            "type": "string",
+            "title": "Source Table",
+            "description": "JIP de_* table or atlas table this metric comes from"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula",
+            "description": "Human-readable formula or derivation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_table",
+          "formula"
+        ],
+        "title": "AnalysisProvenance",
+        "description": "Source table + formula for a computed metric (traceability requirement)."
+      },
       "AutoLoopResponse": {
         "properties": {
           "results": {
@@ -2801,6 +2946,208 @@
           "total_stocks"
         ],
         "title": "BreadthSnapshot"
+      },
+      "BrinsonAttributionSummary": {
+        "properties": {
+          "total_allocation_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Allocation Effect",
+            "description": "Sum of allocation effects across all categories"
+          },
+          "total_selection_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Selection Effect",
+            "description": "Sum of selection effects across all categories"
+          },
+          "total_interaction_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Interaction Effect",
+            "description": "Sum of interaction effects across all categories"
+          },
+          "total_active_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Active Return",
+            "description": "Total active return = sum of all effects (allocation + selection + interaction)"
+          },
+          "benchmark_total_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Total Return",
+            "description": "Benchmark total return (weighted avg of category returns)"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula",
+            "description": "Brinson-Fachler model description",
+            "default": "Brinson-Fachler: allocation=(w_p-w_b)*(R_b_sector-R_b_total); selection=w_b*(R_p_sector-R_b_sector); interaction=(w_p-w_b)*(R_p_sector-R_b_sector)"
+          },
+          "tolerance": {
+            "type": "string",
+            "title": "Tolerance",
+            "description": "Precision and rounding used in calculations",
+            "default": "Decimal arithmetic with 6dp intermediate, rounded to 4dp for display"
+          }
+        },
+        "type": "object",
+        "title": "BrinsonAttributionSummary",
+        "description": "Portfolio-level Brinson attribution summary."
+      },
+      "BrinsonCategoryEffect": {
+        "properties": {
+          "category_name": {
+            "type": "string",
+            "title": "Category Name",
+            "description": "MF category (e.g. 'Large Cap', 'Flexi Cap')"
+          },
+          "portfolio_weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Portfolio Weight",
+            "description": "Portfolio weight in category (0-1)"
+          },
+          "benchmark_weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Benchmark Weight",
+            "description": "Benchmark weight in category (0-1)"
+          },
+          "portfolio_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Return",
+            "description": "Value-weighted avg manager_alpha for portfolio holdings in category"
+          },
+          "benchmark_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Return",
+            "description": "Category average 1Y return from NAV history"
+          },
+          "allocation_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocation Effect",
+            "description": "(w_p - w_b) * (R_b_sector - R_b_total)"
+          },
+          "selection_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Effect",
+            "description": "w_b * (R_p_sector - R_b_sector) \u2014 uses manager_alpha as proxy"
+          },
+          "interaction_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction Effect",
+            "description": "(w_p - w_b) * (R_p_sector - R_b_sector)"
+          },
+          "total_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Effect",
+            "description": "allocation + selection + interaction for this category"
+          },
+          "holding_count": {
+            "type": "integer",
+            "title": "Holding Count",
+            "description": "Number of portfolio holdings in category",
+            "default": 0
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/AnalysisProvenance",
+            "description": "Source tables and formulas for this category's effects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_name",
+          "portfolio_weight",
+          "benchmark_weight",
+          "provenance"
+        ],
+        "title": "BrinsonCategoryEffect",
+        "description": "Brinson-Fachler attribution effects for a single MF category."
       },
       "BroadCategoryGroup": {
         "properties": {
@@ -4518,6 +4865,283 @@
         ],
         "title": "Holding"
       },
+      "HoldingAnalysis": {
+        "properties": {
+          "holding_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Holding Id"
+          },
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "scheme_name": {
+            "type": "string",
+            "title": "Scheme Name"
+          },
+          "units": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Units"
+          },
+          "nav": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nav",
+            "description": "Latest NAV from JIP"
+          },
+          "current_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Value",
+            "description": "Current value = units \u00d7 NAV"
+          },
+          "weight_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Pct",
+            "description": "Holding weight in portfolio (0-100)"
+          },
+          "return_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 1M"
+          },
+          "return_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 3M"
+          },
+          "return_6m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 6M"
+          },
+          "return_1y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 1Y"
+          },
+          "return_3y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 3Y"
+          },
+          "return_5y": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return 5Y"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum_28d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum 28D"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quadrant"
+          },
+          "sharpe_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe Ratio"
+          },
+          "sortino_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sortino Ratio"
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha"
+          },
+          "beta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta"
+          },
+          "weighted_rsi": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Rsi"
+          },
+          "weighted_breadth_pct_above_200dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Breadth Pct Above 200Dma"
+          },
+          "weighted_macd_bullish_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Macd Bullish Pct"
+          },
+          "top_sectors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Top Sectors"
+          },
+          "provenance": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnalysisProvenance"
+            },
+            "type": "object",
+            "title": "Provenance",
+            "description": "Metric name \u2192 source_table + formula for traceability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "holding_id",
+          "mstar_id",
+          "scheme_name",
+          "units"
+        ],
+        "title": "HoldingAnalysis",
+        "description": "Per-holding analysis combining JIP data with holding weight in portfolio."
+      },
       "HoldingBase": {
         "properties": {
           "scheme_name": {
@@ -5091,6 +5715,93 @@
         ],
         "title": "NAVPoint"
       },
+      "OptimizationModel": {
+        "type": "string",
+        "enum": [
+          "mean_variance",
+          "hrp"
+        ],
+        "title": "OptimizationModel"
+      },
+      "OptimizationResult": {
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/OptimizationModel"
+          },
+          "weights": {
+            "items": {
+              "$ref": "#/components/schemas/OptimizedWeight"
+            },
+            "type": "array",
+            "title": "Weights"
+          },
+          "expected_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Return"
+          },
+          "expected_risk": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Risk"
+          },
+          "sharpe_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe Ratio"
+          },
+          "constraints_applied": {
+            "items": {
+              "$ref": "#/components/schemas/SEBIConstraint"
+            },
+            "type": "array",
+            "title": "Constraints Applied"
+          },
+          "solver_status": {
+            "type": "string",
+            "title": "Solver Status",
+            "default": "optimal"
+          },
+          "computation_time_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computation Time Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "weights"
+        ],
+        "title": "OptimizationResult"
+      },
       "OptimizeRequest": {
         "properties": {
           "config": {
@@ -5176,6 +5887,46 @@
         ],
         "title": "OptimizeResponse",
         "description": "POST /api/v1/simulate/optimize response."
+      },
+      "OptimizedWeight": {
+        "properties": {
+          "mstar_id": {
+            "type": "string",
+            "title": "Mstar Id"
+          },
+          "scheme_name": {
+            "type": "string",
+            "title": "Scheme Name"
+          },
+          "current_weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Weight"
+          },
+          "optimized_weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Optimized Weight"
+          },
+          "weight_change": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Change"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/AnalysisProvenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mstar_id",
+          "scheme_name",
+          "current_weight",
+          "optimized_weight",
+          "weight_change",
+          "provenance"
+        ],
+        "title": "OptimizedWeight"
       },
       "OverlapHolding": {
         "properties": {
@@ -5679,6 +6430,79 @@
         "type": "object",
         "title": "PillarTechnical"
       },
+      "PortfolioAttributionResponse": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of",
+            "description": "Date for which attribution is computed"
+          },
+          "computed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Computed At",
+            "description": "UTC timestamp when this response was computed"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/BrinsonCategoryEffect"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Per-category Brinson effects"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BrinsonAttributionSummary"
+          },
+          "returns_available": {
+            "type": "boolean",
+            "title": "Returns Available",
+            "description": "False when category NAV returns could not be computed (insufficient history)",
+            "default": true
+          },
+          "benchmark_description": {
+            "type": "string",
+            "title": "Benchmark Description",
+            "description": "How the benchmark weights were derived",
+            "default": "Equal-weighted by active fund count per category"
+          },
+          "unavailable_holdings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Unavailable Holdings",
+            "description": "Holdings that could not be enriched with JIP data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "data_as_of",
+          "computed_at",
+          "summary"
+        ],
+        "title": "PortfolioAttributionResponse",
+        "description": "Response for GET /{portfolio_id}/attribution.\n\nReturns Brinson-Fachler allocation, selection, and interaction effects per MF category."
+      },
       "PortfolioCreateRequest": {
         "properties": {
           "name": {
@@ -5729,6 +6553,72 @@
         ],
         "title": "PortfolioCreateRequest",
         "description": "POST /api/v1/portfolio/create request body."
+      },
+      "PortfolioFullAnalysisResponse": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of",
+            "description": "Date for which analysis is computed"
+          },
+          "computed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Computed At",
+            "description": "UTC timestamp when this response was computed"
+          },
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/HoldingAnalysis"
+            },
+            "type": "array",
+            "title": "Holdings"
+          },
+          "portfolio": {
+            "$ref": "#/components/schemas/PortfolioLevelAnalysis"
+          },
+          "unavailable": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Unavailable",
+            "description": "Holdings that could not be enriched with JIP data, with reason"
+          },
+          "rs_data_available": {
+            "type": "boolean",
+            "title": "Rs Data Available",
+            "description": "False when batch RS fetch failed; RS metrics will be None",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "data_as_of",
+          "computed_at",
+          "portfolio"
+        ],
+        "title": "PortfolioFullAnalysisResponse",
+        "description": "Rich analysis response for GET /{portfolio_id}/analysis.\n\nCombines per-holding JIP data with portfolio-level aggregations.\nGracefully degrades: unavailable list records which holdings had JIP fetch failures."
       },
       "PortfolioImportResult": {
         "properties": {
@@ -5794,6 +6684,134 @@
         "title": "PortfolioImportResult",
         "description": "Response for POST /api/v1/portfolio/import-cams."
       },
+      "PortfolioLevelAnalysis": {
+        "properties": {
+          "total_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Value",
+            "description": "Sum of all holding current_values"
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cost",
+            "description": "Sum of cost_value across holdings from atlas"
+          },
+          "holdings_count": {
+            "type": "integer",
+            "title": "Holdings Count"
+          },
+          "mapped_count": {
+            "type": "integer",
+            "title": "Mapped Count",
+            "description": "Holdings with a valid mstar_id mapping"
+          },
+          "unmapped_count": {
+            "type": "integer",
+            "title": "Unmapped Count",
+            "description": "Holdings without mstar_id (pending/unresolved)"
+          },
+          "weighted_rs": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Rs",
+            "description": "Value-weighted average RS composite across mapped holdings"
+          },
+          "sector_weights": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "Sector Weights"
+          },
+          "quadrant_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Quadrant Distribution",
+            "description": "Count of holdings per quadrant (LEADING/LAGGING/IMPROVING/WEAKENING/UNKNOWN)"
+          },
+          "weighted_sharpe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Sharpe"
+          },
+          "weighted_sortino": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Sortino"
+          },
+          "weighted_beta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Beta"
+          },
+          "overlap_pairs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Overlap Pairs",
+            "description": "Pairwise overlap between fund pairs (top 5 by overlap_pct)"
+          },
+          "provenance": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnalysisProvenance"
+            },
+            "type": "object",
+            "title": "Provenance",
+            "description": "Metric name \u2192 source_table + formula for traceability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_value",
+          "holdings_count",
+          "mapped_count",
+          "unmapped_count"
+        ],
+        "title": "PortfolioLevelAnalysis",
+        "description": "Aggregated portfolio-level metrics computed from per-holding JIP data."
+      },
       "PortfolioListResponse": {
         "properties": {
           "portfolios": {
@@ -5821,6 +6839,70 @@
         ],
         "title": "PortfolioListResponse",
         "description": "GET /api/v1/portfolio/ response."
+      },
+      "PortfolioOptimizationResponse": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "computed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Computed At"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/OptimizationResult"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "candidate_count": {
+            "type": "integer",
+            "title": "Candidate Count"
+          },
+          "excluded_funds": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Excluded Funds"
+          },
+          "provenance": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnalysisProvenance"
+            },
+            "type": "object",
+            "title": "Provenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "data_as_of",
+          "computed_at",
+          "candidate_count"
+        ],
+        "title": "PortfolioOptimizationResponse"
       },
       "PortfolioResponse": {
         "properties": {
@@ -6335,6 +7417,45 @@
           "pct"
         ],
         "title": "RollupResponse"
+      },
+      "SEBIConstraint": {
+        "properties": {
+          "constraint_id": {
+            "type": "string",
+            "title": "Constraint Id"
+          },
+          "constraint_type": {
+            "type": "string",
+            "title": "Constraint Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value"
+          },
+          "is_binding": {
+            "type": "boolean",
+            "title": "Is Binding",
+            "default": false
+          },
+          "is_violated": {
+            "type": "boolean",
+            "title": "Is Violated",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "constraint_id",
+          "constraint_type",
+          "description",
+          "value"
+        ],
+        "title": "SEBIConstraint"
       },
       "SchedulerStatusResponse": {
         "properties": {
