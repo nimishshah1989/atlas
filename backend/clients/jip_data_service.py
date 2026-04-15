@@ -13,6 +13,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from backend.clients.jip_equity_service import JIPEquityService
+from backend.clients.jip_goldilocks_service import JIPGoldilocksService
 from backend.clients.jip_market_service import JIPMarketService
 from backend.clients.jip_mf_service import JIPMFService
 from backend.clients.jip_query_service import JIPQueryService
@@ -67,6 +68,7 @@ class JIPDataService:
         session_factory: async_sessionmaker[AsyncSession] | None = None,
     ):
         self._equity = JIPEquityService(session)
+        self._goldilocks = JIPGoldilocksService(session)
         self._market = JIPMarketService(session)
         self._mf = JIPMFService(session)
         self._query = JIPQueryService(session)
@@ -169,6 +171,19 @@ class JIPDataService:
 
     async def get_latest_rs_date(self) -> Optional[str]:
         return await self._market.get_latest_rs_date()
+
+    async def get_goldilocks_stock_ideas(
+        self,
+        date_from: Optional[str] = None,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        return await self._goldilocks.get_goldilocks_stock_ideas(date_from=date_from, limit=limit)
+
+    async def get_goldilocks_market_view(self) -> Optional[dict[str, Any]]:
+        return await self._goldilocks.get_goldilocks_market_view()
+
+    async def get_goldilocks_sector_view(self) -> list[dict[str, Any]]:
+        return await self._goldilocks.get_goldilocks_sector_view()
 
     async def execute_sql_plan(self, plan: SQLPlan) -> tuple[list[dict[str, Any]], int]:
         """Execute a compiled :class:`SQLPlan` under a 2-second timeout.
