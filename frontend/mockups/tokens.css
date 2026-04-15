@@ -19,13 +19,13 @@
   --bg-surface-alt:   #FBFBFC;  /* zebra stripes, subtle variants */
   --bg-inset:         #F2F4F7;  /* inset wells, code, quiet backgrounds */
   --bg-hover:         #F4F6F8;  /* row + button hover */
-  --bg-selected:      #EBEFF9;  /* selected row tint (navy-washed) */
+  --bg-selected:      #E6EFF1;  /* selected row tint (petrol-washed) */
 
   /* ─── Borders (no shadows anywhere — these do the lifting) ──────────── */
   --border-subtle:    #EEF0F3;  /* barely-there, internal card divisions */
   --border-default:   #E3E6EB;  /* default card + table borders */
   --border-strong:    #CDD2DA;  /* emphasized edges, active inputs */
-  --border-focus:     #1B3A8A;  /* focus ring, matches accent */
+  --border-focus:     #134F5C;  /* focus ring, matches accent */
 
   /* ─── Text ──────────────────────────────────────────────────────────── */
   --text-primary:     #1A1F2C;  /* body, headlines — charcoal with a hint of blue */
@@ -33,17 +33,17 @@
   --text-tertiary:    #8A909C;  /* captions, meta, timestamps */
   --text-disabled:    #B4B9C2;
   --text-inverse:     #FFFFFF;
-  --text-accent:      #1B3A8A;  /* links, accent text */
+  --text-accent:      #134F5C;  /* links, accent text */
 
-  /* ─── Accent: royal navy (institutional, deeper than "SaaS blue")
-   * Reference: think Addepar / private bank / research house, not startup.
-   * Brand dot, buttons, focus ring, sidebar active state. One hue, five tiers.
+  /* ─── Accent: petrol teal (institutional, distinctive, not generic blue)
+   * Reference: #134F5C — a dark cyan-teal, old-map / research-house feel.
+   * Brand dot, buttons, focus ring, active states, chart primary. One hue, five tiers.
    */
-  --accent-900:       #0B1F4D;  /* darkest — headings emphasis, dark surfaces */
-  --accent-700:       #1B3A8A;  /* primary — THE brand color (buttons, brand dot) */
-  --accent-500:       #3457C1;  /* hover / interactive */
-  --accent-300:       #B0BEE5;  /* borders, chart fills */
-  --accent-100:       #EBEFF9;  /* selection tints, badge backgrounds */
+  --accent-900:       #07252D;  /* darkest — headings emphasis, dark surfaces */
+  --accent-700:       #134F5C;  /* primary — THE brand color (buttons, brand dot) */
+  --accent-500:       #2A7A8B;  /* hover / interactive / mid-emphasis */
+  --accent-300:       #9CC3CC;  /* borders, chart fills */
+  --accent-100:       #E6EFF1;  /* selection tints, badge backgrounds */
 
   /* ─── R / A / G — first-class signaling system ──────────────────────────
    * These are NOT decoration. Every row, card, metric, and insight gets
@@ -78,11 +78,11 @@
   --warn-700: var(--rag-amber-700);
   --warn-500: var(--rag-amber-500);
   --warn-100: var(--rag-amber-100);
-  --info-700:         #1B3A8A;
-  --info-100:         #EBEFF9;
+  --info-700:         #134F5C;
+  --info-100:         #E6EFF1;
 
   /* ─── Chart palette (6 categorical, chosen for white bg, no neon) ──── */
-  --chart-1: #1B3A8A;   /* accent navy / primary series */
+  --chart-1: #134F5C;   /* accent petrol / primary series */
   --chart-2: #0B7A4E;   /* deep green */
   --chart-3: #9A6410;   /* ochre / amber */
   --chart-4: #5B3A8A;   /* muted violet */
@@ -153,8 +153,64 @@
   --dur-slow:   220ms;  /* reserved for modals only */
 
   /* ─── Layout ────────────────────────────────────────────────────────── */
-  --maxw-page: 1440px;
+  --maxw-page: 1600px;
   --maxw-prose: 680px;
-  --sidebar-w: 240px;
-  --rail-w:    320px;  /* right rail for "Atlas noticed" */
+  --maxw-prose-card: 720px;
+  --rail-w:    320px;
+}
+
+/* ─── Theme variants — experimentation for surface treatment ─────────────
+ * Toggle via body[data-theme="X"]. These override only the neutral
+ * background/border scales; the petrol accent and RAG semantic tokens
+ * stay identical across themes so every theme uses the same signal vocabulary.
+ */
+
+/* Ivory — warm ivory page, white cards, warm hairline borders.
+ * Reference: private bank, research house, paper-on-desk feel. */
+body[data-theme="ivory"] {
+  --bg-app:          #FAF7F2;
+  --bg-surface:      #FFFFFF;
+  --bg-surface-alt:  #FBFAF6;
+  --bg-inset:        #F2EFE7;
+  --bg-hover:        #F5F2EA;
+  --bg-selected:     #EDEDE4;
+  --border-subtle:   #EFEAE0;
+  --border-default:  #E6E0D3;
+  --border-strong:   #D4CCBB;
+}
+
+/* Paper — near-white page, cards blend into the page surface, separated
+ * only by hairline rules. Editorial / research-note feel. Maximum quiet. */
+body[data-theme="paper"] {
+  --bg-app:          #FCFAF6;
+  --bg-surface:      #FCFAF6;   /* same as page — containment dissolves */
+  --bg-surface-alt:  #F5F2EA;
+  --bg-inset:        #EFEAE0;
+  --bg-hover:        #F5F2EA;
+  --bg-selected:     #EAEAE0;
+  --border-subtle:   #EAE4D5;
+  --border-default:  #D9D2BF;
+  --border-strong:   #C4BBA2;
+}
+body[data-theme="paper"] .card {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+body[data-theme="paper"] .card__header { background: transparent; }
+body[data-theme="paper"] .card + .card { border-top: none; }
+body[data-theme="paper"] .table-wrap { border-left: none; border-right: none; border-radius: 0; }
+
+/* Warm inverted — pure white page with subtly-tinted warm cards.
+ * Cards become "islands" on a white sea. Reference: FT.com, Pitch. */
+body[data-theme="warm-white"] {
+  --bg-app:          #FFFFFF;
+  --bg-surface:      #FAF8F3;
+  --bg-surface-alt:  #F5F2EA;
+  --bg-inset:        #EFEAE0;
+  --bg-hover:        #F2EFE7;
+  --bg-selected:     #EDEDE4;
+  --border-subtle:   #F0ECE3;
+  --border-default:  #E6E0D3;
+  --border-strong:   #D4CCBB;
 }

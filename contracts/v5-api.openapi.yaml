@@ -1,10 +1,10 @@
 openapi: "3.1.0"
 info:
-  title: ATLAS Intelligence API — V5 read-only routes
-  version: "5.0.0"
+  title: ATLAS Intelligence + Global API — V5 read-only routes
+  version: "5.1.0"
   description: >
-    Subset of the ATLAS OpenAPI contract covering the three read-only
-    intelligence routes introduced in chunk V5-5. All responses conform
+    Subset of the ATLAS OpenAPI contract covering the read-only intelligence
+    routes (V5-5) and global intelligence routes (V5-9). All responses conform
     to the §20.4 standard envelope: {data, _meta}.
 
 paths:
@@ -137,6 +137,150 @@ paths:
         "404":
           description: Finding not found
 
+  # --- Global Intelligence routes (V5-9) ---
+
+  /api/v1/global/briefing:
+    get:
+      operationId: get_global_briefing
+      summary: Latest LLM-generated market briefing
+      tags: [global]
+      responses:
+        "200":
+          description: Latest briefing or null if none exists
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: "#/components/schemas/BriefingDetail"
+                      - type: "null"
+                  briefing:
+                    oneOf:
+                      - $ref: "#/components/schemas/BriefingDetail"
+                      - type: "null"
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/global/ratios:
+    get:
+      operationId: get_macro_ratios
+      summary: Key macro ratios with sparklines
+      tags: [global]
+      parameters:
+        - name: tickers
+          in: query
+          schema: { type: string }
+          required: false
+          description: Comma-separated ticker list (defaults to DGS10, VIXCLS, INDIAVIX, etc.)
+        - name: sparkline_n
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+          required: false
+      responses:
+        "200":
+          description: Macro ratio series with sparklines
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/MacroRatioItem" }
+                  ratios:
+                    type: array
+                    items: { $ref: "#/components/schemas/MacroRatioItem" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/global/rs-heatmap:
+    get:
+      operationId: get_global_rs_heatmap
+      summary: Global instruments RS scores and latest price
+      tags: [global]
+      responses:
+        "200":
+          description: RS heatmap for global instruments ordered by rs_composite DESC
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/GlobalRSEntry" }
+                  heatmap:
+                    type: array
+                    items: { $ref: "#/components/schemas/GlobalRSEntry" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/global/regime:
+    get:
+      operationId: get_global_regime
+      summary: Current market regime and breadth summary
+      tags: [global]
+      responses:
+        "200":
+          description: Combined regime and breadth snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      regime:
+                        oneOf:
+                          - $ref: "#/components/schemas/RegimeSummary"
+                          - type: "null"
+                      breadth:
+                        oneOf:
+                          - $ref: "#/components/schemas/BreadthSummary"
+                          - type: "null"
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+  /api/v1/global/patterns:
+    get:
+      operationId: get_global_patterns
+      summary: Inter-market patterns from intelligence engine
+      tags: [global]
+      parameters:
+        - name: finding_type
+          in: query
+          schema: { type: string }
+          required: false
+          description: Filter by finding type (defaults to all inter-market types)
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+          required: false
+      responses:
+        "200":
+          description: Recent inter-market pattern findings
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, _meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PatternFinding" }
+                  patterns:
+                    type: array
+                    items: { $ref: "#/components/schemas/PatternFinding" }
+                  _meta: { $ref: "#/components/schemas/ResponseMeta" }
+                  meta: { $ref: "#/components/schemas/ResponseMeta" }
+
 components:
   schemas:
     ResponseMeta:
@@ -167,3 +311,100 @@ components:
         is_validated: { type: boolean }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+
+    # --- Global Intelligence schemas (V5-9) ---
+
+    BriefingDetail:
+      type: object
+      required: [id, date, scope, headline, narrative, generated_at]
+      properties:
+        id: { type: integer }
+        date: { type: string, format: date }
+        scope: { type: string }
+        scope_key: { type: string, nullable: true }
+        headline: { type: string }
+        narrative: { type: string }
+        key_signals: { nullable: true }
+        theses: { nullable: true }
+        patterns: { nullable: true }
+        india_implication: { type: string, nullable: true }
+        risk_scenario: { type: string, nullable: true }
+        conviction: { type: string, nullable: true }
+        model_used: { type: string, nullable: true }
+        staleness_flags: { type: object, nullable: true }
+        generated_at: { type: string, format: date-time }
+
+    MacroSparkItem:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        value: { type: number, nullable: true }
+
+    MacroRatioItem:
+      type: object
+      required: [ticker]
+      properties:
+        ticker: { type: string }
+        name: { type: string, nullable: true }
+        unit: { type: string, nullable: true }
+        latest_value: { type: number, nullable: true }
+        latest_date: { type: string, format: date, nullable: true }
+        sparkline:
+          type: array
+          items: { $ref: "#/components/schemas/MacroSparkItem" }
+
+    GlobalRSEntry:
+      type: object
+      required: [entity_id]
+      properties:
+        entity_id: { type: string }
+        name: { type: string, nullable: true }
+        instrument_type: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        rs_composite: { type: number, nullable: true }
+        rs_1m: { type: number, nullable: true }
+        rs_3m: { type: number, nullable: true }
+        rs_date: { type: string, format: date, nullable: true }
+        close: { type: number, nullable: true }
+        price_date: { type: string, format: date, nullable: true }
+
+    RegimeSummary:
+      type: object
+      properties:
+        date: { type: string, format: date, nullable: true }
+        regime: { type: string, nullable: true }
+        confidence: { type: number, nullable: true }
+        breadth_score: { type: number, nullable: true }
+        momentum_score: { type: number, nullable: true }
+        volume_score: { type: number, nullable: true }
+        global_score: { type: number, nullable: true }
+        fii_score: { type: number, nullable: true }
+
+    BreadthSummary:
+      type: object
+      properties:
+        date: { type: string, format: date, nullable: true }
+        advance: { type: integer, nullable: true }
+        decline: { type: integer, nullable: true }
+        unchanged: { type: integer, nullable: true }
+        total_stocks: { type: integer, nullable: true }
+        ad_ratio: { type: number, nullable: true }
+        pct_above_200dma: { type: number, nullable: true }
+        pct_above_50dma: { type: number, nullable: true }
+        new_52w_highs: { type: integer, nullable: true }
+        new_52w_lows: { type: integer, nullable: true }
+
+    PatternFinding:
+      type: object
+      required: [id, finding_type, title, content, data_as_of, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        finding_type: { type: string }
+        title: { type: string }
+        content: { type: string }
+        entity: { type: string, nullable: true }
+        entity_type: { type: string, nullable: true }
+        confidence: { type: number, nullable: true }
+        tags: { type: array, items: { type: string }, nullable: true }
+        data_as_of: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }

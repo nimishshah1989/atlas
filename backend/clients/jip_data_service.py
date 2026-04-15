@@ -172,6 +172,16 @@ class JIPDataService:
     async def get_latest_rs_date(self) -> Optional[str]:
         return await self._market.get_latest_rs_date()
 
+    async def get_macro_ratios(
+        self,
+        tickers: Optional[list[str]] = None,
+        sparkline_n: int = 10,
+    ) -> list[dict[str, Any]]:
+        return await self._market.get_macro_ratios(tickers=tickers, sparkline_n=sparkline_n)
+
+    async def get_global_rs_heatmap(self) -> list[dict[str, Any]]:
+        return await self._market.get_global_rs_heatmap()
+
     async def get_goldilocks_stock_ideas(
         self,
         date_from: Optional[str] = None,
