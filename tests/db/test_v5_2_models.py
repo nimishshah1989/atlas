@@ -421,7 +421,7 @@ class TestV52AlembicMigration:
         )
 
     def test_v5_2_revision_is_head(self) -> None:
-        """V5-2 revision f5a6b7c8d9e0 must be the single head."""
+        """Latest alembic revision must be the single head."""
         from alembic.config import Config  # type: ignore[import-untyped]
         from alembic.script import ScriptDirectory  # type: ignore[import-untyped]
 
@@ -429,4 +429,4 @@ class TestV52AlembicMigration:
         script = ScriptDirectory.from_config(cfg)
         heads = script.get_heads()
         assert len(heads) == 1, f"Expected 1 alembic head, got: {heads}"
-        assert heads[0] == "f5a6b7c8d9e0", f"Expected head f5a6b7c8d9e0, got: {heads[0]}"
+        assert heads[0] == "a8b9c0d1e2f3", f"Expected head a8b9c0d1e2f3, got: {heads[0]}"

@@ -388,3 +388,33 @@ class AtlasAgentMemory(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+class AtlasCostLedger(Base):
+    """LLM API call cost tracking — every LLM call in ATLAS is recorded here.
+
+    id is BIGSERIAL (not UUID) — high-write append table.
+    """
+
+    __tablename__ = "atlas_cost_ledger"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    agent_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    prompt_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    completion_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(20, 4), nullable=False)
+    request_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

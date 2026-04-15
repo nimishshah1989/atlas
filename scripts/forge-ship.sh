@@ -33,7 +33,7 @@ CHUNK="${CHUNK%%:*}"             # keep only text before the first colon
 CHUNK="${CHUNK%% *}"             # and only the first whitespace token
 
 # Validate: chunk id must look like an id (V2-10, V1-9, S2, C8, V2-UQL-AGG-30)
-if ! [[ "$CHUNK" =~ ^[A-Z][A-Z0-9.-]*$ ]]; then
+if ! [[ "$CHUNK" =~ ^[A-Z][A-Za-z0-9.-]*$ ]]; then
   echo "[forge-ship] FAIL: chunk id '$CHUNK' (from '$CHUNK_RAW') does not look like an id." >&2
   echo "             Expected something like V2-10, S2, C8, V2-UQL-AGG-30." >&2
   exit 2
