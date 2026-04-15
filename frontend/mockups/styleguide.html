@@ -121,6 +121,196 @@
           </div>
         </div>
 
+        <!-- ═══ 0. THE MOST IMPORTANT PRIMITIVE: explainability ═══ -->
+        <section class="section">
+          <div class="section__heading">
+            <h2 style="color:var(--accent-700);">The reading — every visual's fourth wall</h2>
+            <div class="note">
+              Non-negotiable, system-wide. No chart, table, or metric ships without it.
+              This is what makes ATLAS feel like an analyst, not a dashboard.
+            </div>
+          </div>
+          <p style="color:var(--text-secondary); font-size:var(--fs-md); max-width:720px; margin-bottom:var(--space-5);">
+            Every visual carries four zones: <strong style="color:var(--text-primary);">(1)</strong> the visual itself,
+            <strong style="color:var(--text-primary);">(2) a verdict</strong> in serif — one sentence saying what the
+            visual means — <em>always visible</em>, <strong style="color:var(--text-primary);">(3) explain tabs</strong>
+            (<em>How to read · Formula · Source</em>) that expand inline on click, and
+            <strong style="color:var(--text-primary);">(4) an action strip</strong> — what to do about it —
+            <em>always visible</em>. Zones 2 and 4 are never hidden behind icons. The user should never have to
+            ask "what am I looking at?" or "what do I do with this?"
+          </p>
+
+          <!-- Live example showing the primitive applied to a fund NAV chart -->
+          <div class="card">
+            <div class="card__header">
+              <div>
+                <div class="card__title">NAV · HDFC Mid Cap Opportunities</div>
+                <div class="card__subtitle">Rebased to 100 · 1 Apr 2025 → 15 Apr 2026</div>
+              </div>
+              <div class="tabs" style="border:none; padding:0;">
+                <div class="tab">1M</div>
+                <div class="tab">3M</div>
+                <div class="tab">6M</div>
+                <div class="tab tab--active">1Y</div>
+                <div class="tab">3Y</div>
+                <div class="tab">Max</div>
+              </div>
+            </div>
+            <div class="chart">
+              <svg viewBox="0 0 760 240" preserveAspectRatio="none">
+                <text class="chart__axis" x="0" y="24">130</text>
+                <text class="chart__axis" x="0" y="76">120</text>
+                <text class="chart__axis" x="0" y="128">110</text>
+                <text class="chart__axis" x="0" y="180">100</text>
+                <line class="chart__grid" x1="32" y1="180" x2="760" y2="180"/>
+                <path class="chart__line" stroke="#8A909C" stroke-dasharray="3 3" d="M32,180 L90,176 L150,168 L210,164 L270,156 L330,160 L390,148 L450,140 L510,136 L570,128 L630,126 L690,118 L750,116"/>
+                <path class="chart__line" stroke="#0E5A43" stroke-width="2" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50"/>
+                <path class="chart__area" fill="#0E5A43" d="M32,180 L90,172 L150,158 L210,150 L270,136 L330,144 L390,120 L450,106 L510,92 L570,80 L630,76 L690,58 L750,50 L750,180 Z"/>
+                <text class="chart__axis" x="32" y="230">Apr &#39;25</text>
+                <text class="chart__axis" x="210" y="230">Jul</text>
+                <text class="chart__axis" x="390" y="230">Oct</text>
+                <text class="chart__axis" x="570" y="230">Jan &#39;26</text>
+                <text class="chart__axis" x="720" y="230">Apr</text>
+              </svg>
+              <div class="kit-row" style="margin-top:var(--space-3); font-size: var(--fs-xs); color: var(--text-secondary);">
+                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#0E5A43;"></span> HDFC Mid Cap Opps · +28.4%</span>
+                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px; height:2px; background:#8A909C;"></span> Nifty Midcap 150 TRI · +19.1%</span>
+              </div>
+            </div>
+
+            <!-- THE READING — every visual has this -->
+            <div class="reading">
+
+              <!-- 1. Verdict: always visible, serif, one sentence -->
+              <div class="reading__verdict">
+                <span class="reading__verdict-icon">A</span>
+                <div class="reading__verdict-text">
+                  The fund generated <em>+9.3 pp of alpha</em> over the last 12 months versus the Nifty Midcap 150 TRI,
+                  with the outperformance concentrated in the Oct–Feb window. Style-adjusted, roughly two-thirds
+                  came from stock selection, one-third from sector tilt into industrials.
+                </div>
+              </div>
+
+              <!-- 2. Explain tabs (How to read active by default so the user sees it) -->
+              <div class="reading__tabs">
+                <button class="reading__tab reading__tab--active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  How to read
+                </button>
+                <button class="reading__tab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  Formula
+                </button>
+                <button class="reading__tab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Source
+                </button>
+                <button class="reading__tab reading__tab--end">Collapse ⌃</button>
+              </div>
+
+              <!-- 3. Tab body (shown when a tab is expanded) -->
+              <div class="reading__body">
+                <p>
+                  Both lines are <strong>rebased to 100</strong> on 1 Apr 2025 — so every point shows the value
+                  of ₹100 invested on that date, not the absolute NAV. The solid green line is the fund; the dashed
+                  grey line is the benchmark (Nifty Midcap 150 Total Return Index, which includes reinvested dividends).
+                </p>
+                <p>
+                  When the fund line <strong>pulls above</strong> the benchmark, the manager is adding value —
+                  that gap is alpha. When it converges, the fund is tracking the index. A persistent gap that grows
+                  over time (like this one) is the hallmark of repeatable skill rather than luck.
+                </p>
+                <p>
+                  The steepest divergence is Oct '25 → Feb '26, which coincides with the industrials rally — to
+                  distinguish skill from luck, switch to the <strong>Formula</strong> tab to see the Brinson
+                  attribution decomposing return into allocation, selection, and interaction effects.
+                </p>
+              </div>
+
+              <!-- 4. Actions: always visible -->
+              <div class="reading__actions">
+                <span class="reading__actions-label">Do</span>
+                <button class="reading__action">Add to watchlist</button>
+                <button class="reading__action">Run factor decomposition</button>
+                <button class="reading__action">Compare to peer group</button>
+                <button class="reading__action">Open holdings</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="spec-note" style="margin-top:var(--space-4);">
+            Same card, <strong>Formula</strong> tab expanded instead of "How to read" — every visual's math is
+            reachable in one click, with the actual numbers plugged in. No hand-waving.
+          </p>
+
+          <!-- Second instance showing the Formula tab expanded -->
+          <div class="card" style="margin-top:var(--space-3);">
+            <div class="card__header">
+              <div>
+                <div class="card__title">Sharpe ratio · 3Y</div>
+                <div class="card__subtitle">Risk-adjusted return vs risk-free rate</div>
+              </div>
+              <span class="badge badge--accent">top decile</span>
+            </div>
+            <div style="padding: var(--space-6) var(--space-5);">
+              <div style="display:flex; align-items:baseline; gap:var(--space-4);">
+                <div class="num" style="font-size:56px; font-weight:500; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-0.02em;">1.34</div>
+                <div>
+                  <div class="delta delta--pos" style="font-size:var(--fs-md);">+0.22</div>
+                  <div style="font-size:var(--fs-xs); color:var(--text-tertiary);">vs category avg 1.12</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="reading">
+              <div class="reading__verdict">
+                <span class="reading__verdict-icon">A</span>
+                <div class="reading__verdict-text">
+                  For every unit of volatility the fund takes on, it delivers <em>1.34 units of excess return</em>
+                  — materially higher than the 1.12 category average. This fund is being paid well for the risk it carries.
+                </div>
+              </div>
+              <div class="reading__tabs">
+                <button class="reading__tab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  How to read
+                </button>
+                <button class="reading__tab reading__tab--active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  Formula
+                </button>
+                <button class="reading__tab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Source
+                </button>
+                <button class="reading__tab reading__tab--end">Collapse ⌃</button>
+              </div>
+              <div class="reading__body">
+                <p>The Sharpe ratio measures return per unit of volatility, net of the risk-free rate.</p>
+                <div class="reading__formula">Sharpe = ( <span class="reading__formula-highlight">R_fund</span> − <span class="reading__formula-highlight">R_rf</span> ) / <span class="reading__formula-highlight">σ_fund</span>
+
+With the actual numbers plugged in:
+
+       = ( <span class="reading__formula-highlight">18.4%</span> − <span class="reading__formula-highlight">6.8%</span> ) / <span class="reading__formula-highlight">8.66%</span>
+       = 11.6% / 8.66%
+       = <span class="reading__formula-highlight">1.34</span></div>
+                <p>
+                  <strong>R_fund</strong> is the annualised 3Y return (CAGR, actual day count).
+                  <strong>R_rf</strong> is the 3Y average yield on 91-day T-bills (6.8%).
+                  <strong>σ_fund</strong> is the annualised standard deviation of monthly returns over the same 3Y window.
+                  All three inputs are available on the "Source" tab with direct links to the JIP table rows.
+                </p>
+              </div>
+              <div class="reading__actions">
+                <span class="reading__actions-label">Do</span>
+                <button class="reading__action">See volatility breakdown</button>
+                <button class="reading__action">Compare to peers</button>
+                <button class="reading__action">Sortino instead</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ═══ 1. Color ═══ -->
         <section class="section">
           <div class="section__heading">
