@@ -14,7 +14,6 @@ from backend.clients.sql_fragments import (
     MF_COUNTS_CTE,
     RS_28D_CTE,
     RS_CTE,
-    TECH_CTE_FULL,
     TECH_CTE_SLIM,
 )
 
@@ -123,16 +122,87 @@ class JIPEquityService:
         return [dict(row) for row in rows]
 
     async def get_stock_detail(self, symbol: str) -> Optional[dict[str, Any]]:
-        """Get full stock data for deep-dive."""
-        query = text(f"""
-            WITH {LATEST_DATES_CTE},
-            {RS_CTE},
-            {RS_28D_CTE},
-            {TECH_CTE_FULL},
-            {MF_COUNTS_CTE},
-            {CAP_CTE}
+        """Get full stock data for deep-dive.
+
+        Predicate-pushed single-symbol CTE. The shared CTE fragments in
+        sql_fragments.py scan ALL instruments at the latest date (they are
+        designed for sector/market rollups that need every row); joining
+        them to a one-row `de_instrument` filter costs ~800-900ms cold and
+        ~400ms warm because Postgres materializes the full CTEs first.
+        This query instead pushes `instrument_id = (SELECT id FROM target)`
+        into every CTE so each one returns at most one row. v1-03/v1-15
+        budget is 500ms — single-symbol cold must fit under that.
+        """
+        query = text("""
+            WITH target AS (
+                SELECT id, current_symbol AS symbol, company_name, sector, industry,
+                       nifty_50, nifty_200, nifty_500, isin, listing_date
+                FROM de_instrument
+                WHERE current_symbol = :symbol AND is_active = true
+                LIMIT 1
+            ),
+            latest_dates AS (
+                SELECT
+                    (SELECT MAX(date) FROM de_rs_scores
+                     WHERE entity_type = 'equity' AND vs_benchmark = 'NIFTY 500') AS rs_date,
+                    (SELECT MAX(date) FROM de_equity_technical_daily) AS tech_date,
+                    (SELECT MAX(as_of_date) FROM de_mf_holdings) AS mf_date
+            ),
+            latest_rs AS (
+                SELECT entity_id, rs_composite, rs_1w, rs_1m, rs_3m, rs_6m, rs_12m
+                FROM de_rs_scores
+                WHERE entity_type = 'equity'
+                  AND vs_benchmark = 'NIFTY 500'
+                  AND date = (SELECT rs_date FROM latest_dates)
+                  AND entity_id = (SELECT id::text FROM target)
+            ),
+            rs_28d_date AS (
+                SELECT MAX(date) AS d FROM de_rs_scores
+                WHERE entity_type = 'equity'
+                  AND vs_benchmark = 'NIFTY 500'
+                  AND date <= (SELECT rs_date FROM latest_dates) - INTERVAL '28 days'
+            ),
+            rs_28d AS (
+                SELECT entity_id, rs_composite AS rs_composite_28d
+                FROM de_rs_scores
+                WHERE entity_type = 'equity'
+                  AND vs_benchmark = 'NIFTY 500'
+                  AND date = (SELECT d FROM rs_28d_date)
+                  AND entity_id = (SELECT id::text FROM target)
+            ),
+            latest_tech AS (
+                SELECT instrument_id,
+                    close_adj, sma_50, sma_200, ema_20,
+                    rsi_14, adx_14, macd_line, macd_signal, macd_histogram,
+                    above_200dma, above_50dma,
+                    beta_nifty, sharpe_1y, sortino_1y, max_drawdown_1y, calmar_ratio,
+                    volatility_20d, NULL::numeric AS relative_volume, mfi_14, obv,
+                    NULL::numeric AS delivery_vs_avg, bollinger_upper, bollinger_lower,
+                    CASE WHEN sma_20 > 0
+                         THEN ((close_adj - sma_20) / sma_20 * 100)
+                         ELSE NULL
+                    END AS disparity_20,
+                    stochastic_k, stochastic_d
+                FROM de_equity_technical_daily
+                WHERE date = (SELECT tech_date FROM latest_dates)
+                  AND instrument_id = (SELECT id FROM target)
+            ),
+            mf_counts AS (
+                SELECT instrument_id, COUNT(DISTINCT mstar_id) AS mf_holder_count
+                FROM de_mf_holdings
+                WHERE as_of_date = (SELECT mf_date FROM latest_dates)
+                  AND instrument_id = (SELECT id FROM target)
+                GROUP BY instrument_id
+            ),
+            latest_cap AS (
+                SELECT DISTINCT ON (instrument_id)
+                    instrument_id, cap_category
+                FROM de_market_cap_history
+                WHERE instrument_id = (SELECT id FROM target)
+                ORDER BY instrument_id, effective_from DESC
+            )
             SELECT
-                i.id, i.current_symbol AS symbol, i.company_name, i.sector, i.industry,
+                i.id, i.symbol, i.company_name, i.sector, i.industry,
                 i.nifty_50, i.nifty_200, i.nifty_500, i.isin, i.listing_date,
                 t.close_adj AS close, t.sma_50, t.sma_200, t.ema_20,
                 t.rsi_14, t.adx_14, t.macd_line, t.macd_signal, t.macd_histogram,
@@ -147,14 +217,12 @@ class JIPEquityService:
                 cap.cap_category,
                 (SELECT rs_date FROM latest_dates) AS rs_date,
                 (SELECT tech_date FROM latest_dates) AS tech_date
-            FROM de_instrument i
+            FROM target i
             LEFT JOIN latest_rs r ON r.entity_id = i.id::text
             LEFT JOIN rs_28d r28 ON r28.entity_id = i.id::text
             LEFT JOIN latest_tech t ON t.instrument_id = i.id
             LEFT JOIN mf_counts mc ON mc.instrument_id = i.id
             LEFT JOIN latest_cap cap ON cap.instrument_id = i.id
-            WHERE i.current_symbol = :symbol AND i.is_active = true
-            LIMIT 1
         """)
 
         query_result = await self.session.execute(query, {"symbol": symbol.upper()})
