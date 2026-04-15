@@ -12,11 +12,14 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import structlog.testing
 
 from backend.services.intelligence import (
     _sanitize_for_jsonb,
     store_finding,
     get_relevant_intelligence,
+    get_finding_by_id,
+    list_findings,
 )
 
 
@@ -185,6 +188,451 @@ def test_finding_create_confidence_is_decimal() -> None:
         data_as_of=_make_data_as_of(),
     )
     assert isinstance(body.confidence, Decimal)
+
+
+# ---------------------------------------------------------------------------
+# Unit: store_finding — float confidence rejected
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_store_finding_float_confidence_raises_type_error() -> None:
+    """Passing float confidence must raise TypeError before any DB access."""
+    db = _make_mock_db()
+    with pytest.raises(TypeError, match="Decimal"):
+        await store_finding(
+            db=db,
+            agent_id="test-agent",
+            agent_type="technical",
+            entity="AAPL",
+            entity_type="equity",
+            finding_type="technical",
+            title="Test",
+            content="Test content",
+            confidence=0.8,  # float, not Decimal — must be rejected
+            data_as_of=_make_data_as_of(),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Unit: store_finding — happy path (mocked DB + embed)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_store_finding_happy_path() -> None:
+    """store_finding with valid inputs returns an AtlasIntelligence-like row."""
+    fake_id = uuid.uuid4()
+    fake_row = MagicMock()
+    fake_row.id = fake_id
+    fake_row.agent_id = "test-agent"
+    fake_row.entity = "AAPL"
+    fake_row.finding_type = "technical"
+    fake_row.confidence = Decimal("0.8")
+
+    # Mock DB: upsert execute returns scalar_one() = fake_id,
+    # embedding update execute is a no-op,
+    # commit is no-op,
+    # final SELECT execute returns scalar_one() = fake_row
+    upsert_result = MagicMock()
+    upsert_result.scalar_one.return_value = fake_id
+
+    select_result = MagicMock()
+    select_result.scalar_one.return_value = fake_row
+
+    embed_result = MagicMock()
+    embed_result.scalar_one.return_value = None  # for _update_embedding no-op
+
+    db = AsyncMock()
+    # execute is called three times: upsert, embedding update, final SELECT
+    db.execute = AsyncMock(side_effect=[upsert_result, embed_result, select_result])
+    db.commit = AsyncMock()
+
+    fake_vector = [0.1] * 1536
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=fake_vector)):
+        result = await store_finding(
+            db=db,
+            agent_id="test-agent",
+            agent_type="technical",
+            entity="AAPL",
+            entity_type="equity",
+            finding_type="technical",
+            title="Test Finding",
+            content="Some content about AAPL",
+            confidence=Decimal("0.8"),
+            data_as_of=_make_data_as_of(),
+            evidence={"source": "price_action"},
+            tags=["momentum"],
+        )
+
+    assert result.id == fake_id
+    assert result.agent_id == "test-agent"
+    assert result.entity == "AAPL"
+    db.commit.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# Unit: get_relevant_intelligence — filter combinations
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_returns_empty_when_no_ids() -> None:
+    """Returns [] immediately when vector search yields no IDs."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        result = await get_relevant_intelligence(db=db, query="test query")
+
+    assert result == []
+    # Only one DB call — the vector search; no second call for SELECT
+    assert db.execute.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_entity_filter_in_params() -> None:
+    """entity filter must appear in params passed to the vector search execute."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(db=db, query="test", entity="AAPL")
+
+    # The first execute call carries the params dict
+    call_args = db.execute.call_args_list[0]
+    params = call_args[0][1]  # positional arg 1 = params dict
+    assert params.get("entity") == "AAPL"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_entity_type_filter_in_params() -> None:
+    """entity_type filter must appear in params passed to the vector search execute."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(db=db, query="test", entity_type="equity")
+
+    call_args = db.execute.call_args_list[0]
+    params = call_args[0][1]
+    assert params.get("entity_type") == "equity"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_finding_type_filter_in_params() -> None:
+    """finding_type filter must appear in params passed to the vector search execute."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(db=db, query="test", finding_type="technical")
+
+    call_args = db.execute.call_args_list[0]
+    params = call_args[0][1]
+    assert params.get("finding_type") == "technical"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_agent_id_filter_in_params() -> None:
+    """agent_id filter must appear in params passed to the vector search execute."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(db=db, query="test", agent_id="scoring-agent")
+
+    call_args = db.execute.call_args_list[0]
+    params = call_args[0][1]
+    assert params.get("agent_id") == "scoring-agent"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_all_filters_combined() -> None:
+    """All four metadata filters combined must all appear in params."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(
+            db=db,
+            query="test",
+            entity="RELIANCE",
+            entity_type="equity",
+            finding_type="fundamental",
+            agent_id="fundamental-agent",
+        )
+
+    call_args = db.execute.call_args_list[0]
+    params = call_args[0][1]
+    assert params.get("entity") == "RELIANCE"
+    assert params.get("entity_type") == "equity"
+    assert params.get("finding_type") == "fundamental"
+    assert params.get("agent_id") == "fundamental-agent"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_expired_exclusion_in_where() -> None:
+    """The WHERE clause must include expires_at > :now to exclude expired findings."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+
+    captured_sql: list[str] = []
+
+    async def capture_execute(stmt, params=None):
+        captured_sql.append(str(stmt))
+        return ids_result
+
+    db.execute = capture_execute
+
+    with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+        await get_relevant_intelligence(db=db, query="test")
+
+    assert len(captured_sql) == 1
+    sql_lower = captured_sql[0].lower()
+    assert "expires_at" in sql_lower
+
+
+# ---------------------------------------------------------------------------
+# Unit: get_relevant_intelligence — FR-023 structlog log event
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_fr023_log_event() -> None:
+    """get_relevant_intelligence must emit structlog event with agent_id, query, top_k, timestamp.
+
+    FR-023 compliance check.
+    """
+    fake_id = uuid.uuid4()
+    fake_row = MagicMock()
+    fake_row.id = fake_id
+
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = [(fake_id,)]
+
+    select_result = MagicMock()
+    scalars_result = MagicMock()
+    scalars_result.all.return_value = [fake_row]
+    select_result.scalars.return_value = scalars_result
+
+    db = AsyncMock()
+    db.execute = AsyncMock(side_effect=[ids_result, select_result])
+
+    with structlog.testing.capture_logs() as captured:
+        with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+            await get_relevant_intelligence(
+                db=db,
+                query="What is AAPL doing?",
+                agent_id="test-agent-fr023",
+                top_k=5,
+            )
+
+    search_events = [e for e in captured if e.get("event") == "intelligence_searched"]
+    assert len(search_events) == 1, f"Expected 1 'intelligence_searched' event, got: {captured}"
+
+    ev = search_events[0]
+    assert ev.get("agent_id") == "test-agent-fr023", f"Missing agent_id in log: {ev}"
+    assert ev.get("query") == "What is AAPL doing?", f"Missing query in log: {ev}"
+    assert "top_k" in ev, f"Missing top_k in log: {ev}"
+    assert "timestamp" in ev, f"Missing timestamp in log: {ev}"
+
+
+@pytest.mark.asyncio
+async def test_get_relevant_intelligence_fr023_query_truncated_to_200() -> None:
+    """Query longer than 200 chars must be truncated in the log event."""
+    db = AsyncMock()
+    ids_result = MagicMock()
+    ids_result.fetchall.return_value = []
+    db.execute = AsyncMock(return_value=ids_result)
+
+    long_query = "A" * 500
+
+    with structlog.testing.capture_logs() as captured:
+        with patch("backend.services.intelligence.embed", new=AsyncMock(return_value=[0.1] * 1536)):
+            await get_relevant_intelligence(db=db, query=long_query, agent_id="agent-x")
+
+    search_events = [e for e in captured if e.get("event") == "intelligence_searched"]
+    assert len(search_events) == 1
+    ev = search_events[0]
+    logged_query = ev.get("query", "")
+    assert len(logged_query) <= 200, f"query in log not truncated: len={len(logged_query)}"
+
+
+# ---------------------------------------------------------------------------
+# Unit: list_findings — filter combinations
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_list_findings_no_filters_returns_all_non_deleted() -> None:
+    """list_findings with no filters returns rows (mocked)."""
+    fake_row = MagicMock()
+    fake_row.id = uuid.uuid4()
+
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = [fake_row]
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db)
+    assert len(results) == 1
+    assert results[0].id == fake_row.id
+
+
+@pytest.mark.asyncio
+async def test_list_findings_entity_filter() -> None:
+    """list_findings with entity filter executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db, entity="INFY")
+    assert results == []
+    db.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_list_findings_agent_id_filter() -> None:
+    """list_findings with agent_id filter executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db, agent_id="scoring-agent")
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_list_findings_finding_type_filter() -> None:
+    """list_findings with finding_type filter executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db, finding_type="fundamental")
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_list_findings_min_confidence_filter() -> None:
+    """list_findings with min_confidence filter executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db, min_confidence=Decimal("0.7"))
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_list_findings_entity_type_filter() -> None:
+    """list_findings with entity_type filter executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(db=db, entity_type="mf_scheme")
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_list_findings_all_filters_combined() -> None:
+    """list_findings with all filters combined executes without error (mocked)."""
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = []
+    result_mock.scalars.return_value = scalars_mock
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    results = await list_findings(
+        db=db,
+        entity="HDFC",
+        entity_type="equity",
+        finding_type="technical",
+        agent_id="tech-agent",
+        min_confidence=Decimal("0.6"),
+        limit=25,
+        offset=10,
+    )
+    assert results == []
+    db.execute.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# Unit: get_finding_by_id — happy path and not-found
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_finding_by_id_happy_path() -> None:
+    """get_finding_by_id returns the row when found and not deleted."""
+    fake_id = uuid.uuid4()
+    fake_row = MagicMock()
+    fake_row.id = fake_id
+    fake_row.is_deleted = False
+
+    result_mock = MagicMock()
+    result_mock.scalar_one_or_none.return_value = fake_row
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    result = await get_finding_by_id(db=db, finding_id=fake_id)
+    assert result is not None
+    assert result.id == fake_id
+
+
+@pytest.mark.asyncio
+async def test_get_finding_by_id_not_found_returns_none() -> None:
+    """get_finding_by_id returns None when row does not exist or is deleted."""
+    result_mock = MagicMock()
+    result_mock.scalar_one_or_none.return_value = None
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result_mock)
+
+    result = await get_finding_by_id(db=db, finding_id=uuid.uuid4())
+    assert result is None
 
 
 # ---------------------------------------------------------------------------

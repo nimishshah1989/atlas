@@ -44,6 +44,8 @@ async def store_finding(
     Raises:
         ValueError: if confidence is not in [0, 1] or data_as_of is naive.
     """
+    if isinstance(confidence, float):
+        raise TypeError("confidence must be Decimal, not float")
     if data_as_of.tzinfo is None:
         raise ValueError("data_as_of must be timezone-aware")
     if not (Decimal("0") <= confidence <= Decimal("1")):
@@ -206,6 +208,17 @@ async def get_relevant_intelligence(
 
     ids = [row[0] for row in (await db.execute(search_sql, params)).fetchall()]
     if not ids:
+        log.info(
+            "intelligence_searched",
+            agent_id=agent_id,
+            query=query[:200],
+            query_len=len(query),
+            results=0,
+            top_k=0,
+            entity=entity,
+            finding_type=finding_type,
+            timestamp=now.isoformat(),
+        )
         return []
 
     stmt = select(AtlasIntelligence).where(AtlasIntelligence.id.in_(ids))
@@ -214,10 +227,14 @@ async def get_relevant_intelligence(
 
     log.info(
         "intelligence_searched",
+        agent_id=agent_id,
+        query=query[:200],
         query_len=len(query),
         results=len(ordered),
+        top_k=len(ordered),
         entity=entity,
         finding_type=finding_type,
+        timestamp=now.isoformat(),
     )
     return ordered
 
