@@ -579,6 +579,195 @@ class TestWeightAdjustment:
 
 
 # ---------------------------------------------------------------------------
+# 7b. Comprehensive Darwinian daily weight adjustment tests (V5-12 additions)
+# ---------------------------------------------------------------------------
+
+
+class TestDarwinianDailyWeightAdjustment:
+    """V5-12 acceptance criteria: quartiles, clamps, tie-break, holiday no-op, DB constraint."""
+
+    # --- Each quartile ---
+
+    def test_top_quartile_weight_multiplied_by_factor(self) -> None:
+        """Agent in top quartile gets weight * 1.05."""
+        all_acc = [Decimal("0.4"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("1.0")
+        new_weight = compute_new_weight(current, Decimal("0.9"), all_acc)
+        assert new_weight == current * Decimal("1.05")
+
+    def test_bottom_quartile_weight_multiplied_by_factor(self) -> None:
+        """Agent in bottom quartile gets weight * 0.95."""
+        all_acc = [Decimal("0.2"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("1.0")
+        new_weight = compute_new_weight(current, Decimal("0.2"), all_acc)
+        assert new_weight == current * Decimal("0.95")
+
+    def test_middle_quartile_weight_unchanged(self) -> None:
+        """Agent in middle quartile gets no weight change."""
+        all_acc = [Decimal("0.2"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("1.2")
+        # 0.5 is in middle (between p25=0.2 and p75=0.7)
+        new_weight = compute_new_weight(current, Decimal("0.5"), all_acc)
+        assert new_weight == current
+
+    def test_exactly_at_p75_is_top_quartile(self) -> None:
+        """Accuracy exactly equal to p75 qualifies as top quartile (>= comparison)."""
+        all_acc = [Decimal("0.3"), Decimal("0.5"), Decimal("0.7"), Decimal("0.8")]
+        current = Decimal("1.0")
+        # p75 = sorted_acc[min(3, 3)] = 0.8
+        # Rolling accuracy == p75 → top quartile
+        new_weight = compute_new_weight(current, Decimal("0.8"), all_acc)
+        assert new_weight > current
+
+    def test_exactly_at_p25_is_bottom_quartile(self) -> None:
+        """Accuracy exactly equal to p25 qualifies as bottom quartile (<= comparison)."""
+        all_acc = [Decimal("0.3"), Decimal("0.5"), Decimal("0.7"), Decimal("0.8")]
+        current = Decimal("1.0")
+        # p25 = sorted_acc[max(0, 0)] = 0.3
+        # Rolling accuracy == p25 → bottom quartile
+        new_weight = compute_new_weight(current, Decimal("0.3"), all_acc)
+        assert new_weight < current
+
+    # --- Floor and ceiling clamps ---
+
+    def test_ceiling_clamped_at_2_5_when_already_at_cap(self) -> None:
+        """Weight already at 2.5 ceiling stays at 2.5 even in top quartile."""
+        all_acc = [Decimal("0.4"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("2.5")
+        new_weight = compute_new_weight(current, Decimal("0.9"), all_acc)
+        assert new_weight == Decimal("2.5")
+
+    def test_floor_clamped_at_0_3_when_already_at_floor(self) -> None:
+        """Weight already at 0.3 floor stays at 0.3 even in bottom quartile."""
+        all_acc = [Decimal("0.2"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("0.3")
+        new_weight = compute_new_weight(current, Decimal("0.2"), all_acc)
+        assert new_weight == Decimal("0.3")
+
+    def test_ceiling_clamped_when_near_cap(self) -> None:
+        """Weight 2.45 * 1.05 = 2.5725 → clamps to 2.5."""
+        all_acc = [Decimal("0.4"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("2.45")
+        new_weight = compute_new_weight(current, Decimal("0.9"), all_acc)
+        assert new_weight == Decimal("2.5")
+
+    def test_floor_clamped_when_near_floor(self) -> None:
+        """Weight 0.31 * 0.95 = 0.2945 → clamps to 0.3."""
+        all_acc = [Decimal("0.2"), Decimal("0.5"), Decimal("0.7"), Decimal("0.9")]
+        current = Decimal("0.31")
+        new_weight = compute_new_weight(current, Decimal("0.2"), all_acc)
+        assert new_weight == Decimal("0.3")
+
+    def test_result_is_always_decimal(self) -> None:
+        """Return type is always Decimal regardless of quartile outcome."""
+        all_acc = [Decimal("0.4"), Decimal("0.5"), Decimal("0.6"), Decimal("0.8")]
+        # Top quartile
+        w = compute_new_weight(Decimal("1.0"), Decimal("0.8"), all_acc)
+        assert isinstance(w, Decimal)
+        # Bottom quartile
+        w = compute_new_weight(Decimal("1.0"), Decimal("0.4"), all_acc)
+        assert isinstance(w, Decimal)
+        # Middle
+        w = compute_new_weight(Decimal("1.0"), Decimal("0.55"), all_acc)
+        assert isinstance(w, Decimal)
+
+    # --- Even distribution tie-break ---
+
+    def test_all_same_accuracy_weight_unchanged(self) -> None:
+        """When all agents have same accuracy, p25 == p75 → no adjustment for anyone."""
+        same_acc = Decimal("0.75")
+        all_acc = [same_acc, same_acc, same_acc, same_acc, same_acc]
+        current = Decimal("1.2")
+        new_weight = compute_new_weight(current, same_acc, all_acc)
+        assert new_weight == current, (
+            f"Expected unchanged weight {current}, got {new_weight} — tie-break failed"
+        )
+
+    def test_single_agent_weight_unchanged(self) -> None:
+        """Single agent: n=1, p25 == p75 → no adjustment."""
+        current = Decimal("1.5")
+        acc = Decimal("0.9")
+        new_weight = compute_new_weight(current, acc, [acc])
+        assert new_weight == current
+
+    def test_two_agents_same_accuracy_unchanged(self) -> None:
+        """Two agents with identical accuracy → p25 == p75 → unchanged."""
+        same_acc = Decimal("0.6")
+        all_acc = [same_acc, same_acc]
+        current = Decimal("0.8")
+        new_weight = compute_new_weight(current, same_acc, all_acc)
+        assert new_weight == current
+
+    def test_two_agents_different_accuracy_higher_gets_boosted(self) -> None:
+        """Two agents with different accuracy: higher one gets boost."""
+        all_acc = [Decimal("0.4"), Decimal("0.8")]
+        current = Decimal("1.0")
+        # p25 = 0.4, p75 = 0.8 → different, so normal quartile logic applies
+        new_weight = compute_new_weight(current, Decimal("0.8"), all_acc)
+        assert new_weight > current
+
+    # --- Holiday no-op (weight-specific assertions) ---
+
+    @pytest.mark.asyncio
+    async def test_weekend_returns_skipped_with_no_weight_change(self) -> None:
+        """On weekend, run_scoring returns skipped and makes zero DB weight changes."""
+        db = AsyncMock()
+        result = await run_scoring(db, data_as_of=_SATURDAY)
+        assert result["status"] == "skipped"
+        assert result["reason"] == "weekend"
+        # No DB interaction at all — no weight updates possible
+        db.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_market_holiday_returns_skipped_with_no_weight_change(self) -> None:
+        """On market holiday, run_scoring returns skipped and makes zero DB weight changes."""
+        db = AsyncMock()
+
+        async def no_data(_d: date) -> bool:
+            return False
+
+        result = await run_scoring(db, data_as_of=_MONDAY, jip_has_data_fn=no_data)
+        assert result["status"] == "skipped"
+        assert result["reason"] == "market_holiday"
+        # No weight rows touched
+        db.execute.assert_not_called()
+
+    # --- DB CHECK constraint test ---
+
+    def test_atlas_agent_weight_has_check_constraint(self) -> None:
+        """AtlasAgentWeight model declares the weight range CHECK constraint."""
+        from backend.db.models import AtlasAgentWeight
+
+        constraints = AtlasAgentWeight.__table_args__
+        assert isinstance(constraints, tuple), "__table_args__ should be a tuple"
+        from sqlalchemy import CheckConstraint
+
+        check_constraints = [c for c in constraints if isinstance(c, CheckConstraint)]
+        assert len(check_constraints) >= 1, "No CheckConstraint found in __table_args__"
+
+        # Verify it is named and covers the 0.3..2.5 range
+        named = [c for c in check_constraints if c.name == "ck_agent_weight_range"]
+        assert len(named) == 1, (
+            f"Expected 'ck_agent_weight_range' constraint, found: "
+            f"{[c.name for c in check_constraints]}"
+        )
+        constraint_text = str(named[0].sqltext)
+        assert "0.3" in constraint_text or "weight" in constraint_text, (
+            f"Constraint text doesn't mention weight bound: {constraint_text}"
+        )
+        assert "2.5" in constraint_text or "weight" in constraint_text, (
+            f"Constraint text doesn't mention weight cap: {constraint_text}"
+        )
+
+    def test_weight_column_bounds_are_0_3_to_2_5(self) -> None:
+        """WEIGHT_FLOOR and WEIGHT_CAP constants match the DB constraint values."""
+        from backend.agents.darwinian_scorer import WEIGHT_CAP, WEIGHT_FLOOR
+
+        assert WEIGHT_FLOOR == Decimal("0.3"), f"WEIGHT_FLOOR mismatch: {WEIGHT_FLOOR}"
+        assert WEIGHT_CAP == Decimal("2.5"), f"WEIGHT_CAP mismatch: {WEIGHT_CAP}"
+
+
+# ---------------------------------------------------------------------------
 # 8. Full run_scoring integration-style unit test
 # ---------------------------------------------------------------------------
 

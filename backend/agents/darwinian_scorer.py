@@ -158,6 +158,11 @@ def compute_new_weight(
     p25 = sorted_acc[max(0, n // 4 - 1)]
     p75 = sorted_acc[min(n - 1, (3 * n) // 4)]
 
+    # Even distribution tie-break: when all accuracies are equal (or nearly so),
+    # no quartile-based adjustment — return weight unchanged.
+    if p25 == p75:
+        return current_weight
+
     if rolling_accuracy >= p75:
         new_weight = current_weight * WEIGHT_TOP_QUARTILE_FACTOR
     elif rolling_accuracy <= p25:
