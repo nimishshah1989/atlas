@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Explorer</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .period-tabs { display:flex; border:1px solid var(--border-default); border-radius:var(--radius-sm); overflow:hidden; }
+    .period-tab { padding:4px 10px; font-size:var(--fs-xs); font-weight:var(--fw-medium); color:var(--text-secondary); cursor:pointer; border-right:1px solid var(--border-default); background:var(--bg-surface); font-variant-numeric:tabular-nums; }
+    .period-tab:last-child { border-right:none; }
+    .period-tab--active { background:var(--accent-700); color:#fff; }
+
+    .xbar { display:flex; align-items:center; gap:var(--space-4); padding:var(--space-3) 0; border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4); flex-wrap:wrap; }
+    .xbar__label { font-size:var(--fs-xs); color:var(--text-tertiary); font-weight:var(--fw-semibold); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+
+    .mktable { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
+    .mktable th { padding:6px 10px; text-align:right; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; cursor:pointer; }
+    .mktable th:first-child { text-align:left; min-width:180px; }
+    .mktable td { padding:8px 10px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; text-align:right; vertical-align:middle; }
+    .mktable td:first-child { text-align:left; }
+    .mktable tr:hover td { background:var(--bg-hover); }
+    .mktable tr.drillable:hover td { background:var(--bg-selected); cursor:pointer; }
+    .mktable tr.drillable td:first-child::after { content:" →"; color:var(--accent-300); font-size:10px; }
+
+    .alpha--pos { color:var(--rag-green-700); font-weight:var(--fw-medium); }
+    .alpha--neg { color:var(--rag-red-700); font-weight:var(--fw-medium); }
+    .alpha--nil { color:var(--text-tertiary); }
+
+    .rs-cell { display:flex; align-items:center; gap:6px; justify-content:flex-end; }
+    .rs-wrap { width:44px; height:4px; background:var(--bg-inset); border-radius:2px; overflow:hidden; }
+    .rs-fill { height:100%; border-radius:2px; }
+    .rs-num { font-size:var(--fs-xs); font-variant-numeric:tabular-nums; font-weight:var(--fw-semibold); min-width:22px; text-align:right; }
+
+    .sig-dot { display:inline-block; width:8px; height:8px; border-radius:50%; }
+    .sig-dot--g { background:var(--rag-green-500); }
+    .sig-dot--a { background:var(--rag-amber-500); }
+    .sig-dot--r { background:var(--rag-red-500); }
+
+    .mname { display:flex; align-items:center; gap:var(--space-2); }
+    .mflag { font-size:15px; line-height:1; }
+    .mtext { display:flex; flex-direction:column; gap:1px; }
+    .mtext__primary { font-weight:var(--fw-medium); color:var(--text-primary); font-size:var(--fs-sm); }
+    .mtext__secondary { font-size:10px; color:var(--text-tertiary); }
+
+    .crumb { display:flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:var(--text-tertiary); padding:var(--space-4) 0 var(--space-2); }
+    .crumb a { color:var(--text-accent); cursor:pointer; }
+    .crumb a:hover { text-decoration:underline; }
+    .crumb__sep { color:var(--border-strong); }
+    .crumb__cur { color:var(--text-primary); font-weight:var(--fw-medium); }
+
+    .level-sep { display:flex; align-items:center; gap:var(--space-4); margin:var(--space-8) 0 var(--space-5); }
+    .level-sep__line { flex:1; height:1px; background:var(--border-default); }
+    .level-sep__tag { font-size:var(--fs-xs); color:var(--text-tertiary); white-space:nowrap; padding:3px 10px; border:1px solid var(--border-default); border-radius:var(--radius-sm); background:var(--bg-surface); }
+
+    .axis-ctl { display:flex; align-items:center; gap:var(--space-3); }
+    .axis-sel { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; font-size:var(--fs-xs); font-weight:var(--fw-medium); color:var(--text-secondary); border:1px solid var(--border-default); border-radius:var(--radius-sm); background:var(--bg-surface); cursor:pointer; white-space:nowrap; }
+
+    .itabs { display:flex; border-bottom:2px solid var(--border-default); margin-bottom:var(--space-4); }
+    .itab { padding:var(--space-3) var(--space-5); font-size:var(--fs-sm); font-weight:var(--fw-medium); color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .itab--active { color:var(--accent-700); border-bottom-color:var(--accent-700); }
+    .itab .cnt { margin-left:5px; padding:1px 5px; background:var(--bg-inset); border-radius:var(--radius-sm); font-size:10px; color:var(--text-tertiary); font-weight:var(--fw-semibold); }
+    .itab--active .cnt { background:var(--accent-100); color:var(--accent-700); }
+
+    .rtable { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
+    .rtable th { padding:6px 12px; text-align:right; font-size:var(--fs-xs); font-weight:var(--fw-semibold); color:var(--text-tertiary); border-bottom:2px solid var(--border-default); white-space:nowrap; cursor:pointer; user-select:none; }
+    .rtable th:nth-child(1) { text-align:center; width:32px; }
+    .rtable th:nth-child(2) { text-align:left; }
+    .rtable td { padding:9px 12px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; text-align:right; vertical-align:middle; }
+    .rtable td:nth-child(1) { text-align:center; }
+    .rtable td:nth-child(2) { text-align:left; }
+    .rtable tr:hover td { background:var(--bg-hover); cursor:pointer; }
+    .rtable tr.row--selected td { background:var(--accent-100); }
+
+    .iname { display:flex; flex-direction:column; gap:2px; }
+    .iname__a { font-weight:var(--fw-medium); color:var(--text-primary); }
+    .iname__b { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--text-tertiary); }
+    .ticker { display:inline-block; padding:1px 4px; border-radius:2px; font-size:10px; font-family:var(--font-mono); background:var(--bg-inset); color:var(--text-secondary); font-weight:var(--fw-semibold); }
+
+    .action-bar { position:fixed; bottom:0; left:0; right:0; background:var(--accent-900); color:#fff; padding:var(--space-3) var(--space-6); display:flex; align-items:center; gap:var(--space-4); z-index:100; border-top:2px solid var(--accent-700); }
+    .action-bar__count { font-size:var(--fs-sm); font-weight:var(--fw-semibold); }
+    .action-bar__names { font-size:var(--fs-xs); color:var(--accent-300); flex:1; }
+
+    .hero { display:grid; grid-template-columns:1fr 300px; gap:var(--space-6); padding:var(--space-5) 0 var(--space-5); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-5); }
+    .hero__price { font-size:38px; font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; color:var(--text-primary); margin-bottom:var(--space-2); }
+    .hero__change { display:flex; align-items:center; gap:var(--space-3); font-size:var(--fs-sm); font-variant-numeric:tabular-nums; margin-bottom:var(--space-4); }
+    .hero__stats { display:flex; gap:var(--space-6); flex-wrap:wrap; }
+    .hstat { display:flex; flex-direction:column; gap:2px; }
+    .hstat__l { font-size:10px; color:var(--text-tertiary); }
+    .hstat__v { font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--text-primary); font-variant-numeric:tabular-nums; }
+
+    .rs-panel { background:var(--bg-surface-alt); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); }
+    .rs-panel__num { font-size:54px; font-weight:var(--fw-bold); font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1; margin-bottom:4px; }
+    .rs-panel__lbl { font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-tertiary); font-weight:var(--fw-semibold); margin-bottom:var(--space-3); }
+    .rs-panel__bar { height:6px; background:var(--bg-inset); border-radius:3px; overflow:hidden; margin-bottom:var(--space-3); }
+    .rs-panel__bar-fill { height:100%; border-radius:3px; }
+    .rs-panel__sig { font-size:var(--fs-sm); color:var(--text-secondary); line-height:var(--lh-normal); margin-bottom:var(--space-4); }
+    .rs-panel__grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); border-top:1px solid var(--border-subtle); padding-top:var(--space-3); }
+    .rpm { display:flex; flex-direction:column; gap:2px; }
+    .rpm__l { font-size:10px; color:var(--text-tertiary); }
+    .rpm__v { font-size:var(--fs-sm); font-weight:var(--fw-semibold); font-variant-numeric:tabular-nums; }
+
+    .dtabs { display:flex; border-bottom:2px solid var(--border-default); margin-bottom:var(--space-6); }
+    .dtab { padding:var(--space-3) var(--space-5); font-size:var(--fs-sm); font-weight:var(--fw-medium); color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .dtab--active { color:var(--accent-700); border-bottom-color:var(--accent-700); }
+
+    .page__search { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-5); }
+    .search-box { display:flex; align-items:center; gap:var(--space-2); flex:1; max-width:560px; padding:var(--space-3) var(--space-4); border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--bg-surface); }
+    .search-box input { border:none; outline:none; font-size:var(--fs-base); color:var(--text-primary); background:transparent; flex:1; font-family:var(--font-sans); }
+    .search-box input::placeholder { color:var(--text-disabled); }
+    .search-pills { display:flex; gap:var(--space-2); }
+    .search-pill { padding:4px 10px; border:1px solid var(--border-default); border-radius:var(--radius-full); font-size:var(--fs-xs); color:var(--text-secondary); cursor:pointer; background:var(--bg-surface); }
+    .search-pill:hover { border-color:var(--accent-300); color:var(--accent-700); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+<!-- SVG icon defs -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="ei-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="ei-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="ei-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></symbol>
+    <symbol id="ei-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ei-chevdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="ei-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M11 18h2"/></symbol>
+  </defs>
+</svg>
+
+<!-- ═══ Topbar ═══ -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>Pulse</a>
+    <a class="topnav__link topnav__link--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorer</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Builder</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/></svg>Simulate</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10l6-8 6 8v10"/></svg>Signals</a>
+    <a class="topnav__link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Watch</a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search">
+    <svg class="topbar__search-icon" width="14" height="14"><use href="#ei-search"/></svg>
+    <input placeholder="Search funds, factors, clients…" />
+  </div>
+  <div class="topbar__meta">
+    <span class="eyebrow">JSL Wealth</span>
+    <div class="topbar__avatar">N</div>
+  </div>
+</header>
+
+<!-- ═══ Page ═══ -->
+<main style="padding:0 var(--space-6) var(--space-16); max-width:var(--maxw-page); margin:0 auto;">
+
+  <!-- Page title -->
+  <div style="padding:var(--space-5) 0 var(--space-3); border-bottom:1px solid var(--border-subtle); margin-bottom:var(--space-4);">
+    <div style="display:flex; align-items:baseline; gap:var(--space-4); margin-bottom:var(--space-3);">
+      <h1 style="font-family:var(--font-serif); font-size:var(--fs-2xl); font-weight:var(--fw-semibold); color:var(--text-primary);">Explorer</h1>
+      <span style="font-size:var(--fs-sm); color:var(--text-tertiary);">Relative strength intelligence — globe → sector → instrument</span>
+    </div>
+    <!-- Direct search bar -->
+    <div class="page__search">
+      <div class="search-box">
+        <svg width="16" height="16" style="color:var(--text-tertiary); flex-shrink:0;"><use href="#ei-search"/></svg>
+        <input placeholder="Jump to any instrument — HDFC Bank, Nifty Midcap 150, Parag Parikh…" />
+      </div>
+      <div class="search-pills">
+        <span class="search-pill">Stocks</span>
+        <span class="search-pill">Mutual Funds</span>
+        <span class="search-pill">ETFs</span>
+        <span class="search-pill">Sectors</span>
+        <span class="search-pill">Indices</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       LEVEL 1 — Global Markets
+       ══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="crumb">
+      <span class="crumb__cur">🌍 Global Markets</span>
+      <span style="font-size:10px; color:var(--text-disabled); margin-left:auto;">Click India or US row to drill into sectors →</span>
+    </div>
+
+    <!-- Controls: period + benchmark note -->
+    <div class="xbar">
+      <span class="xbar__label">Period</span>
+      <div class="period-tabs">
+        <div class="period-tab">1D</div><div class="period-tab">1W</div><div class="period-tab">1M</div>
+        <div class="period-tab period-tab--active">3M</div><div class="period-tab">6M</div>
+        <div class="period-tab">12M</div><div class="period-tab">2Y</div><div class="period-tab">3Y</div><div class="period-tab">5Y</div>
+      </div>
+      <span style="margin-left:auto; font-size:var(--fs-xs); color:var(--text-tertiary);">Showing 3M returns · all alpha columns vs respective benchmark · data as of 14 Apr 2026 EOD</span>
+    </div>
+
+    <div class="card card--lg" style="margin-bottom:0; border-radius:var(--radius-md) var(--radius-md) 0 0;">
+      <div style="overflow-x:auto;">
+        <table class="mktable">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Market / Index</th>
+              <th>Level</th>
+              <th>3M Return</th>
+              <th style="color:var(--rag-amber-700);">vs Nifty 500</th>
+              <th>vs S&amp;P 500</th>
+              <th>vs MSCI World</th>
+              <th style="color:#9A6410;">vs Gold</th>
+              <th>RS Score ↕</th>
+              <th>Momentum</th>
+              <th>Trend</th>
+              <th>Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- India — drillable -->
+            <tr class="drillable" style="background:var(--accent-100);">
+              <td><div class="mname"><span class="mflag">🇮🇳</span><div class="mtext"><span class="mtext__primary">Nifty 500</span><span class="mtext__secondary">India · All-cap</span></div></div></td>
+              <td>19,842</td>
+              <td class="alpha--pos">+14.2%</td>
+              <td class="alpha--nil">—</td>
+              <td class="alpha--pos">+6.1pp</td>
+              <td class="alpha--pos">+8.3pp</td>
+              <td class="alpha--pos">+2.4pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:72%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">72</span></div></td>
+              <td style="color:var(--rag-green-700); font-weight:600;">↑↑ Strong</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,18 L10,15 L20,11 L30,9 L40,6 L50,4 L60,2" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--g"></span></td>
+            </tr>
+            <!-- US — drillable -->
+            <tr class="drillable">
+              <td><div class="mname"><span class="mflag">🇺🇸</span><div class="mtext"><span class="mtext__primary">S&amp;P 500</span><span class="mtext__secondary">USA · Large-cap</span></div></div></td>
+              <td>5,217</td>
+              <td class="alpha--pos">+8.1%</td>
+              <td class="alpha--neg">−6.1pp</td>
+              <td class="alpha--nil">—</td>
+              <td class="alpha--pos">+2.2pp</td>
+              <td class="alpha--neg">−3.7pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:58%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">58</span></div></td>
+              <td style="color:var(--rag-green-500);">↗ Rising</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,16 L10,14 L20,13 L30,11 L40,10 L50,9 L60,7" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- Gold -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🥇</span><div class="mtext"><span class="mtext__primary">Gold (XAU/USD)</span><span class="mtext__secondary">Commodity · Spot</span></div></div></td>
+              <td>$3,234</td>
+              <td class="alpha--pos">+11.8%</td>
+              <td class="alpha--neg">−2.4pp</td>
+              <td class="alpha--pos">+3.7pp</td>
+              <td class="alpha--pos">+5.9pp</td>
+              <td class="alpha--nil">—</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:65%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">65</span></div></td>
+              <td style="color:var(--rag-green-700); font-weight:600;">↑↑ Strong</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,17 L10,14 L20,11 L30,10 L40,7 L50,5 L60,3" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--g"></span></td>
+            </tr>
+            <!-- Bovespa -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇧🇷</span><div class="mtext"><span class="mtext__primary">Bovespa</span><span class="mtext__secondary">Brazil · All-cap</span></div></div></td>
+              <td>1,34,820</td>
+              <td class="alpha--pos">+9.3%</td>
+              <td class="alpha--neg">−4.9pp</td>
+              <td class="alpha--pos">+1.2pp</td>
+              <td class="alpha--pos">+3.4pp</td>
+              <td class="alpha--neg">−2.5pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:62%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">62</span></div></td>
+              <td style="color:var(--rag-green-500);">↑ Rising</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,17 L10,15 L20,13 L30,12 L40,10 L50,9 L60,7" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- MSCI World -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🌍</span><div class="mtext"><span class="mtext__primary">MSCI World</span><span class="mtext__secondary">Developed Markets</span></div></div></td>
+              <td>3,584</td>
+              <td class="alpha--pos">+5.9%</td>
+              <td class="alpha--neg">−8.3pp</td>
+              <td class="alpha--neg">−2.2pp</td>
+              <td class="alpha--nil">—</td>
+              <td class="alpha--neg">−5.9pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:51%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">51</span></div></td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,12 L10,11 L20,11 L30,10 L40,11 L50,10 L60,10" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- DAX -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇩🇪</span><div class="mtext"><span class="mtext__primary">DAX</span><span class="mtext__secondary">Germany · Large-cap</span></div></div></td>
+              <td>21,845</td>
+              <td class="alpha--pos">+7.8%</td>
+              <td class="alpha--neg">−6.4pp</td>
+              <td class="alpha--neg">−0.3pp</td>
+              <td class="alpha--pos">+1.9pp</td>
+              <td class="alpha--neg">−4.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:55%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">55</span></div></td>
+              <td style="color:var(--rag-green-500);">↗ Rising</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,15 L10,13 L20,12 L30,11 L40,10 L50,9 L60,8" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- FTSE -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇬🇧</span><div class="mtext"><span class="mtext__primary">FTSE 100</span><span class="mtext__secondary">UK · Large-cap</span></div></div></td>
+              <td>8,312</td>
+              <td class="alpha--pos">+4.2%</td>
+              <td class="alpha--neg">−10.0pp</td>
+              <td class="alpha--neg">−3.9pp</td>
+              <td class="alpha--neg">−1.7pp</td>
+              <td class="alpha--neg">−7.6pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:44%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">44</span></div></td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,12 L10,12 L20,11 L30,12 L40,11 L50,12 L60,11" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- Hang Seng -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇭🇰</span><div class="mtext"><span class="mtext__primary">Hang Seng</span><span class="mtext__secondary">Hong Kong</span></div></div></td>
+              <td>22,140</td>
+              <td class="alpha--pos">+6.8%</td>
+              <td class="alpha--neg">−7.4pp</td>
+              <td class="alpha--neg">−1.3pp</td>
+              <td class="alpha--pos">+0.9pp</td>
+              <td class="alpha--neg">−5.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:48%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">48</span></div></td>
+              <td style="color:var(--rag-green-500);">↗ Rising</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,14 L10,13 L20,13 L30,12 L40,11 L50,11 L60,10" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- CSI 300 -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇨🇳</span><div class="mtext"><span class="mtext__primary">CSI 300</span><span class="mtext__secondary">China · Large-cap</span></div></div></td>
+              <td>3,786</td>
+              <td class="alpha--pos">+3.4%</td>
+              <td class="alpha--neg">−10.8pp</td>
+              <td class="alpha--neg">−4.7pp</td>
+              <td class="alpha--neg">−2.5pp</td>
+              <td class="alpha--neg">−8.4pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:38%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">38</span></div></td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,11 L10,12 L20,11 L30,12 L40,12 L50,13 L60,12" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- Tadawul -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇸🇦</span><div class="mtext"><span class="mtext__primary">Tadawul</span><span class="mtext__secondary">Saudi Arabia</span></div></div></td>
+              <td>11,240</td>
+              <td class="alpha--pos">+5.1%</td>
+              <td class="alpha--neg">−9.1pp</td>
+              <td class="alpha--neg">−3.0pp</td>
+              <td class="alpha--neg">−0.8pp</td>
+              <td class="alpha--neg">−6.7pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:46%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">46</span></div></td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,13 L10,12 L20,13 L30,12 L40,12 L50,11 L60,11" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <!-- KOSPI -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇰🇷</span><div class="mtext"><span class="mtext__primary">KOSPI</span><span class="mtext__secondary">South Korea</span></div></div></td>
+              <td>2,621</td>
+              <td class="alpha--neg">−0.8%</td>
+              <td class="alpha--neg">−15.0pp</td>
+              <td class="alpha--neg">−8.9pp</td>
+              <td class="alpha--neg">−6.7pp</td>
+              <td class="alpha--neg">−12.6pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:31%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">31</span></div></td>
+              <td style="color:var(--rag-red-500);">↘ Falling</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,8 L10,10 L20,11 L30,13 L40,14 L50,15 L60,17" fill="none" stroke="var(--rag-red-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--r"></span></td>
+            </tr>
+            <!-- Nikkei -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🇯🇵</span><div class="mtext"><span class="mtext__primary">Nikkei 225</span><span class="mtext__secondary">Japan · Large-cap</span></div></div></td>
+              <td>34,120</td>
+              <td class="alpha--neg">−2.1%</td>
+              <td class="alpha--neg">−16.3pp</td>
+              <td class="alpha--neg">−10.2pp</td>
+              <td class="alpha--neg">−8.0pp</td>
+              <td class="alpha--neg">−13.9pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:28%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">28</span></div></td>
+              <td style="color:var(--rag-red-700); font-weight:600;">↓↓ Weak</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,6 L10,9 L20,11 L30,14 L40,15 L50,16 L60,18" fill="none" stroke="var(--rag-red-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--r"></span></td>
+            </tr>
+            <!-- MSCI EM -->
+            <tr>
+              <td><div class="mname"><span class="mflag">🌏</span><div class="mtext"><span class="mtext__primary">MSCI EM</span><span class="mtext__secondary">Emerging Markets</span></div></div></td>
+              <td>1,124</td>
+              <td class="alpha--pos">+2.8%</td>
+              <td class="alpha--neg">−11.4pp</td>
+              <td class="alpha--neg">−5.3pp</td>
+              <td class="alpha--neg">−3.1pp</td>
+              <td class="alpha--neg">−9.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:35%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">35</span></div></td>
+              <td style="color:var(--rag-red-500);">↘ Falling</td>
+              <td><svg viewBox="0 0 60 20" width="60" height="20"><path d="M0,10 L10,11 L20,12 L30,13 L40,14 L50,15 L60,16" fill="none" stroke="var(--rag-red-500)" stroke-width="1.5"/></svg></td>
+              <td><span class="sig-dot sig-dot--r"></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:var(--space-2) var(--space-4); background:var(--bg-surface-alt); border:1px solid var(--border-default); border-top:none; border-radius:0 0 var(--radius-md) var(--radius-md); font-size:10px; color:var(--text-tertiary);">
+      RS Score = 3M relative strength vs MSCI World. Alpha columns show outperformance vs that benchmark over selected period. Rows with → are drillable. Sorted by RS Score desc.
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       LEVEL 2 — India Sectors  (state after clicking India row)
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="level-sep"><div class="level-sep__line"></div><div class="level-sep__tag">↓ After clicking India · Level 2 opens</div><div class="level-sep__line"></div></div>
+
+  <section>
+    <div class="crumb">
+      <a>🌍 Global</a><span class="crumb__sep">›</span>
+      <span class="crumb__cur">🇮🇳 India — Sector view</span>
+    </div>
+
+    <!-- Bubble chart -->
+    <div class="card card--lg" style="margin-bottom:var(--space-4);">
+      <div class="card__header">
+        <div class="card__header-group">
+          <div class="card__title">India sectors · RS vs Momentum</div>
+          <div class="card__subtitle">Bubble size = Nifty 500 weight · Color = volume direction (green = expanding, red = contracting)</div>
+        </div>
+        <div class="axis-ctl">
+          <span style="font-size:10px; color:var(--text-tertiary);">Y axis</span>
+          <div class="axis-sel">RS Score (3M) <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <span style="font-size:10px; color:var(--text-tertiary);">X axis</span>
+          <div class="axis-sel">Momentum 3M <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <span style="font-size:10px; color:var(--text-tertiary);">Size</span>
+          <div class="axis-sel">Index weight <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <div class="period-tabs" style="margin-left:var(--space-2);">
+            <div class="period-tab">1M</div><div class="period-tab period-tab--active">3M</div><div class="period-tab">6M</div><div class="period-tab">12M</div>
+          </div>
+        </div>
+      </div>
+      <div class="card__body" style="padding:var(--space-3);">
+        <svg viewBox="0 0 1100 380" style="width:100%; height:360px;">
+          <!-- Quadrant zone backgrounds -->
+          <rect x="524" y="20" width="556" height="145" fill="#E4F5EC" fill-opacity="0.35"/>
+          <rect x="80"  y="165" width="444" height="145" fill="#FBE9E9" fill-opacity="0.30"/>
+          <!-- Grid -->
+          <g stroke="#EEF0F3" stroke-width="1">
+            <line x1="80" y1="20"  x2="1080" y2="20"/>
+            <line x1="80" y1="91"  x2="1080" y2="91"/>
+            <line x1="80" y1="165" x2="1080" y2="165"/>
+            <line x1="80" y1="233" x2="1080" y2="233"/>
+            <line x1="80" y1="310" x2="1080" y2="310"/>
+            <line x1="80"  y1="20" x2="80"  y2="310"/>
+            <line x1="357" y1="20" x2="357" y2="310"/>
+            <line x1="634" y1="20" x2="634" y2="310"/>
+            <line x1="912" y1="20" x2="912" y2="310"/>
+            <line x1="1080" y1="20" x2="1080" y2="310"/>
+          </g>
+          <!-- Quadrant dividers -->
+          <line x1="524" y1="20" x2="524" y2="310" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="80" y1="165" x2="1080" y2="165" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="4 3"/>
+          <!-- Quadrant labels -->
+          <text x="530" y="34" font-size="9" font-family="Inter" fill="#0B7A4E" opacity="0.8">Strong RS · High Momentum ↑</text>
+          <text x="88"  y="34" font-size="9" font-family="Inter" fill="#565E6E" opacity="0.7">Weak RS · High Momentum</text>
+          <text x="530" y="302" font-size="9" font-family="Inter" fill="#565E6E" opacity="0.7">Strong RS · Slowing</text>
+          <text x="88"  y="302" font-size="9" font-family="Inter" fill="#B63030" opacity="0.8">Weak RS · Weak Momentum ↓</text>
+          <!-- Y axis labels -->
+          <g font-size="10" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="72" y="24">100</text><text x="72" y="95">80</text>
+            <text x="72" y="169">60</text><text x="72" y="237">40</text><text x="72" y="314">20</text>
+          </g>
+          <!-- X axis labels -->
+          <g font-size="10" font-family="Inter" fill="#8A909C" text-anchor="middle">
+            <text x="80"  y="328">−8%</text><text x="357" y="328">0%</text>
+            <text x="634" y="328">+10%</text><text x="912" y="328">+20%</text><text x="1080" y="328">+28%</text>
+          </g>
+          <!-- Axis titles -->
+          <text x="580" y="352" font-size="11" font-family="Inter" fill="#565E6E" font-weight="600" text-anchor="middle">3M Momentum (rate of change) →</text>
+          <text x="18" y="165" font-size="11" font-family="Inter" fill="#565E6E" font-weight="600" text-anchor="middle" transform="rotate(-90 18 165)">RS Score vs Nifty 500 ↑</text>
+          <!-- Nifty 500 reference anchor -->
+          <polygon points="524,155 534,165 524,175 514,165" fill="#E3E6EB" stroke="#8A909C" stroke-width="1.5"/>
+          <text x="524" y="148" font-size="8" font-family="Inter" fill="#8A909C" text-anchor="middle">Nifty 500</text>
+
+          <!-- ── Sector bubbles ─────────────────────────────────── -->
+          <!-- Financials · RS62 · Mom9.2% · Wt33% · amber (neutral vol) -->
+          <circle cx="558" cy="130" r="34" fill="#D9871A" fill-opacity="0.22" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="558" y="127" font-size="10" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Fin.</text>
+          <text x="558" y="140" font-size="9" font-family="Inter" fill="#565E6E" text-anchor="middle">62</text>
+          <!-- IT · RS71 · Mom14.1% · Wt16% · green -->
+          <circle cx="695" cy="104" r="24" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="695" y="101" font-size="10" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">IT</text>
+          <text x="695" y="114" font-size="9" font-family="Inter" fill="#0B7A4E" text-anchor="middle">71</text>
+          <!-- Healthcare · RS78 · Mom18.3% · Wt8% · green -->
+          <circle cx="811" cy="84" r="17" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="811" y="81" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Health</text>
+          <text x="811" y="93" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">78</text>
+          <!-- Industrials · RS68 · Mom11.7% · Wt10% · green -->
+          <circle cx="635" cy="113" r="19" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="635" y="110" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Inds</text>
+          <text x="635" y="122" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">68</text>
+          <!-- Real Estate · RS82 · Mom22.1% · Wt3% · green (hot) -->
+          <circle cx="916" cy="73" r="11" fill="#10A368" fill-opacity="0.28" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="916" y="70" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">RE</text>
+          <text x="916" y="81" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">82</text>
+          <!-- Auto · RS55 · Mom7.8% · Wt7% · amber -->
+          <circle cx="510" cy="155" r="16" fill="#D9871A" fill-opacity="0.20" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="510" y="152" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Auto</text>
+          <text x="510" y="164" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">55</text>
+          <!-- Infra · RS60 · Mom9.8% · Wt5% · amber -->
+          <circle cx="600" cy="148" r="13" fill="#D9871A" fill-opacity="0.20" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="600" y="146" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Infra</text>
+          <text x="600" y="157" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">60</text>
+          <!-- Consumer Disc · RS50 · Mom5.5% · Wt4% · amber -->
+          <circle cx="454" cy="165" r="12" fill="#D9871A" fill-opacity="0.18" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="454" y="162" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">ConsD</text>
+          <text x="454" y="173" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">50</text>
+          <!-- FMCG · RS45 · Mom3.1% · Wt8% · amber -->
+          <circle cx="388" cy="180" r="17" fill="#D9871A" fill-opacity="0.18" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="388" y="177" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">FMCG</text>
+          <text x="388" y="189" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">45</text>
+          <!-- Telecom · RS41 · Mom1.2% · Wt3% · amber-red -->
+          <circle cx="336" cy="191" r="10" fill="#D9871A" fill-opacity="0.18" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="336" y="189" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Tel.</text>
+          <text x="336" y="200" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">41</text>
+          <!-- Energy · RS38 · Mom−2.4% · Wt11% · red -->
+          <circle cx="236" cy="200" r="20" fill="#DB4343" fill-opacity="0.18" stroke="#B63030" stroke-width="1.5"/>
+          <text x="236" y="197" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Energy</text>
+          <text x="236" y="209" font-size="8" font-family="Inter" fill="#B63030" text-anchor="middle">38</text>
+          <!-- Metals · RS32 · Mom−5.2% · Wt4% · red -->
+          <circle cx="160" cy="217" r="12" fill="#DB4343" fill-opacity="0.18" stroke="#B63030" stroke-width="1.5"/>
+          <text x="160" y="214" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Metals</text>
+          <text x="160" y="226" font-size="8" font-family="Inter" fill="#B63030" text-anchor="middle">32</text>
+
+          <!-- Legend row -->
+          <g font-size="9" font-family="Inter">
+            <circle cx="88" cy="365" r="5" fill="#10A368" fill-opacity="0.3" stroke="#0B7A4E" stroke-width="1.2"/>
+            <text x="97" y="368" fill="#565E6E">Expanding volume</text>
+            <circle cx="200" cy="365" r="5" fill="#D9871A" fill-opacity="0.3" stroke="#9A6410" stroke-width="1.2"/>
+            <text x="209" y="368" fill="#565E6E">Neutral volume</text>
+            <circle cx="300" cy="365" r="5" fill="#DB4343" fill-opacity="0.3" stroke="#B63030" stroke-width="1.2"/>
+            <text x="309" y="368" fill="#565E6E">Contracting volume</text>
+            <text x="900" y="368" fill="#8A909C">Bubble area ∝ Nifty 500 index weight · Click bubble to drill in</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Sector rich table -->
+    <div class="card card--lg" style="margin-bottom:0; border-radius:var(--radius-md) var(--radius-md) 0 0;">
+      <div style="overflow-x:auto;">
+        <table class="rtable">
+          <thead>
+            <tr>
+              <th style="text-align:left; width:32px;">Sig</th>
+              <th style="text-align:left;">Sector</th>
+              <th>3M Return</th>
+              <th>vs Nifty 500</th>
+              <th>vs Gold</th>
+              <th class="sort-desc">RS Score</th>
+              <th>RS Rank</th>
+              <th>Momentum 3M</th>
+              <th>Breadth</th>
+              <th>Vol trend</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--g"></span></td>
+              <td><strong>Real Estate</strong></td>
+              <td class="alpha--pos">+22.1%</td><td class="alpha--pos">+7.9pp</td><td class="alpha--pos">+10.3pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:82%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">82</span></div></td>
+              <td style="color:var(--rag-green-700); font-weight:600;">#1 / 12</td>
+              <td class="alpha--pos">+22.1%</td>
+              <td><span style="color:var(--rag-green-700);">84%</span> &gt;200D</td>
+              <td style="color:var(--rag-green-700);">↑ +38%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,14 L10,11 L20,8 L30,6 L40,4 L50,3 L60,1" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--g"></span></td>
+              <td><strong>Healthcare</strong></td>
+              <td class="alpha--pos">+18.3%</td><td class="alpha--pos">+4.1pp</td><td class="alpha--pos">+6.5pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:78%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">78</span></div></td>
+              <td style="color:var(--rag-green-700); font-weight:600;">#2 / 12</td>
+              <td class="alpha--pos">+18.3%</td>
+              <td><span style="color:var(--rag-green-700);">78%</span> &gt;200D</td>
+              <td style="color:var(--rag-green-700);">↑ +24%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,14 L10,12 L20,9 L30,7 L40,5 L50,4 L60,2" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--g"></span></td>
+              <td><strong>IT</strong></td>
+              <td class="alpha--pos">+14.1%</td><td class="alpha--nil">—</td><td class="alpha--pos">+2.3pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:71%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">71</span></div></td>
+              <td style="color:var(--rag-green-700);">#3 / 12</td>
+              <td class="alpha--pos">+14.1%</td>
+              <td><span style="color:var(--rag-green-700);">71%</span> &gt;200D</td>
+              <td style="color:var(--rag-green-700);">↑ +19%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,14 L10,12 L20,10 L30,8 L40,6 L50,5 L60,3" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--g"></span></td>
+              <td><strong>Industrials</strong></td>
+              <td class="alpha--pos">+11.7%</td><td class="alpha--neg">−2.5pp</td><td class="alpha--neg">−0.1pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:68%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">68</span></div></td>
+              <td style="color:var(--rag-green-700);">#4 / 12</td>
+              <td class="alpha--pos">+11.7%</td>
+              <td><span style="color:var(--rag-green-700);">66%</span> &gt;200D</td>
+              <td style="color:var(--rag-green-700);">↑ +12%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,14 L10,12 L20,10 L30,9 L40,7 L50,6 L60,4" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer; background:var(--accent-100);">
+              <td><span class="sig-dot sig-dot--a"></span></td>
+              <td><strong>Financials</strong> <span style="font-size:10px; color:var(--accent-700); margin-left:4px;">← your largest exposure</span></td>
+              <td class="alpha--pos">+9.2%</td><td class="alpha--neg">−5.0pp</td><td class="alpha--neg">−2.6pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:62%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">62</span></div></td>
+              <td style="color:var(--rag-amber-700);">#5 / 12</td>
+              <td class="alpha--pos">+9.2%</td>
+              <td><span style="color:var(--rag-amber-700);">58%</span> &gt;200D</td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,10 L10,10 L20,9 L30,10 L40,9 L50,10 L60,9" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--a"></span></td>
+              <td><strong>Auto</strong></td>
+              <td class="alpha--pos">+7.8%</td><td class="alpha--neg">−6.4pp</td><td class="alpha--neg">−4.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:55%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">55</span></div></td>
+              <td style="color:var(--rag-amber-700);">#6 / 12</td>
+              <td class="alpha--pos">+7.8%</td>
+              <td><span style="color:var(--rag-amber-700);">51%</span> &gt;200D</td>
+              <td style="color:var(--text-tertiary);">→ Flat</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,10 L10,10 L20,9 L30,9 L40,10 L50,10 L60,9" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--r"></span></td>
+              <td><strong>Energy</strong></td>
+              <td class="alpha--neg">−2.4%</td><td class="alpha--neg">−16.6pp</td><td class="alpha--neg">−14.2pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:38%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">38</span></div></td>
+              <td style="color:var(--rag-red-700); font-weight:600;">#11 / 12</td>
+              <td class="alpha--neg">−2.4%</td>
+              <td><span style="color:var(--rag-red-700);">34%</span> &gt;200D</td>
+              <td style="color:var(--rag-red-700);">↓ −18%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,4 L10,6 L20,8 L30,10 L40,12 L50,13 L60,15" fill="none" stroke="var(--rag-red-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+            <tr style="cursor:pointer;">
+              <td><span class="sig-dot sig-dot--r"></span></td>
+              <td><strong>Metals &amp; Mining</strong></td>
+              <td class="alpha--neg">−5.2%</td><td class="alpha--neg">−19.4pp</td><td class="alpha--neg">−17.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:32%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">32</span></div></td>
+              <td style="color:var(--rag-red-700); font-weight:600;">#12 / 12</td>
+              <td class="alpha--neg">−5.2%</td>
+              <td><span style="color:var(--rag-red-700);">28%</span> &gt;200D</td>
+              <td style="color:var(--rag-red-700);">↓↓ −31%</td>
+              <td><svg viewBox="0 0 60 16" width="60" height="16"><path d="M0,3 L10,6 L20,9 L30,11 L40,13 L50,14 L60,15" fill="none" stroke="var(--rag-red-500)" stroke-width="1.5"/></svg></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:var(--space-2) var(--space-4); background:var(--bg-surface-alt); border:1px solid var(--border-default); border-top:none; border-radius:0 0 var(--radius-md) var(--radius-md); font-size:10px; color:var(--text-tertiary);">
+      Breadth = % of sector constituents above 200DMA. Volume trend vs 20D average. Showing 8 of 12 sectors. Click any row to open sector instrument view.
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       LEVEL 3 — Financials → Instruments
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="level-sep"><div class="level-sep__line"></div><div class="level-sep__tag">↓ After clicking Financials · Level 3 opens</div><div class="level-sep__line"></div></div>
+
+  <section>
+    <div class="crumb">
+      <a>🌍 Global</a><span class="crumb__sep">›</span>
+      <a>🇮🇳 India</a><span class="crumb__sep">›</span>
+      <span class="crumb__cur">Financials — 248 instruments</span>
+    </div>
+
+    <!-- Instrument type tabs -->
+    <div class="itabs">
+      <div class="itab itab--active">Stocks <span class="cnt">187</span></div>
+      <div class="itab">Mutual Funds <span class="cnt">42</span></div>
+      <div class="itab">ETFs <span class="cnt">19</span></div>
+    </div>
+
+    <!-- Bubble chart: financials stocks -->
+    <div class="card card--lg" style="margin-bottom:var(--space-4);">
+      <div class="card__header">
+        <div class="card__header-group">
+          <div class="card__title">Financials · Stocks · RS vs Momentum</div>
+          <div class="card__subtitle">Bubble size = Market cap · Color = volume direction · Petrol ring = in your portfolio</div>
+        </div>
+        <div class="axis-ctl">
+          <div class="axis-sel">RS Score <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <div class="axis-sel">3M Momentum <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <div class="axis-sel">Market Cap <svg width="10" height="10"><use href="#ei-chevdown"/></svg></div>
+          <div class="period-tabs" style="margin-left:var(--space-2);">
+            <div class="period-tab">1M</div><div class="period-tab period-tab--active">3M</div><div class="period-tab">6M</div>
+          </div>
+        </div>
+      </div>
+      <div class="card__body" style="padding:var(--space-3);">
+        <svg viewBox="0 0 1100 300" style="width:100%; height:280px;">
+          <!-- Quadrant backgrounds -->
+          <rect x="580" y="20" width="500" height="99" fill="#E4F5EC" fill-opacity="0.35"/>
+          <rect x="80"  y="119" width="500" height="161" fill="#FBE9E9" fill-opacity="0.25"/>
+          <!-- Grid -->
+          <g stroke="#EEF0F3" stroke-width="1">
+            <line x1="80" y1="20"  x2="1080" y2="20"/>
+            <line x1="80" y1="75"  x2="1080" y2="75"/>
+            <line x1="80" y1="119" x2="1080" y2="119"/>
+            <line x1="80" y1="163" x2="1080" y2="163"/>
+            <line x1="80" y1="250" x2="1080" y2="250"/>
+            <line x1="80"  y1="20" x2="80"  y2="250"/>
+            <line x1="330" y1="20" x2="330" y2="250"/>
+            <line x1="580" y1="20" x2="580" y2="250"/>
+            <line x1="830" y1="20" x2="830" y2="250"/>
+            <line x1="1080" y1="20" x2="1080" y2="250"/>
+          </g>
+          <line x1="580" y1="20" x2="580" y2="250" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="80" y1="119" x2="1080" y2="119" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="4 3"/>
+          <!-- Y axis -->
+          <g font-size="9" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="72" y="24">100</text><text x="72" y="79">80</text>
+            <text x="72" y="123">60</text><text x="72" y="167">40</text><text x="72" y="254">0</text>
+          </g>
+          <!-- X axis -->
+          <g font-size="9" font-family="Inter" fill="#8A909C" text-anchor="middle">
+            <text x="80" y="264">−6%</text><text x="330" y="264">0%</text>
+            <text x="580" y="264">+8%</text><text x="830" y="264">+16%</text><text x="1080" y="264">+22%</text>
+          </g>
+          <!-- Axis titles -->
+          <text x="580" y="280" font-size="10" font-family="Inter" fill="#565E6E" font-weight="600" text-anchor="middle">3M Momentum →</text>
+          <text x="18" y="135" font-size="10" font-family="Inter" fill="#565E6E" font-weight="600" text-anchor="middle" transform="rotate(-90 18 135)">RS Score ↑</text>
+          <!-- Sector benchmark anchor -->
+          <polygon points="580,111 588,119 580,127 572,119" fill="#E3E6EB" stroke="#8A909C" stroke-width="1.2"/>
+          <text x="580" y="106" font-size="8" font-family="Inter" fill="#8A909C" text-anchor="middle">Fin. avg</text>
+
+          <!-- Bubbles — Financials stocks -->
+          <!-- HDFC Bank · RS68 · Mom9.2% · MCap14.1LCr · amber (in portfolio) -->
+          <circle cx="622" cy="103" r="22" fill="#D9871A" fill-opacity="0.22" stroke="#9A6410" stroke-width="1.5"/>
+          <circle cx="622" cy="103" r="28" fill="none" stroke="#134F5C" stroke-width="2"/>
+          <text x="622" y="100" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">HDFC Bk</text>
+          <text x="622" y="112" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">68</text>
+          <!-- ICICI Bank · RS74 · Mom13.1% · green -->
+          <circle cx="762" cy="88" r="16" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="762" y="85" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">ICICI</text>
+          <text x="762" y="97" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">74</text>
+          <!-- SBI · RS71 · Mom12.4% · green -->
+          <circle cx="737" cy="95" r="15" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="737" y="92" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">SBI</text>
+          <text x="737" y="104" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">71</text>
+          <!-- Bajaj Finance · RS82 · Mom18.7% · green -->
+          <circle cx="962" cy="67" r="13" fill="#10A368" fill-opacity="0.28" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="962" y="64" font-size="9" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Bajaj Fin</text>
+          <text x="962" y="76" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">82</text>
+          <!-- Bajaj Finserv · RS79 · Mom16.2% · green -->
+          <circle cx="873" cy="75" r="10" fill="#10A368" fill-opacity="0.22" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="873" y="72" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Baj.FS</text>
+          <text x="873" y="84" font-size="8" font-family="Inter" fill="#0B7A4E" text-anchor="middle">79</text>
+          <!-- Axis Bank · RS55 · Mom5.8% · amber -->
+          <circle cx="501" cy="137" r="11" fill="#D9871A" fill-opacity="0.20" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="501" y="134" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Axis</text>
+          <text x="501" y="146" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">55</text>
+          <!-- Kotak · RS48 · Mom2.4% · amber -->
+          <circle cx="380" cy="155" r="11" fill="#D9871A" fill-opacity="0.18" stroke="#9A6410" stroke-width="1.5"/>
+          <text x="380" y="152" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">Kotak</text>
+          <text x="380" y="164" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">48</text>
+          <!-- HDFC Life · RS42 · Mom−1.2% · red -->
+          <circle cx="251" cy="171" r="8" fill="#DB4343" fill-opacity="0.20" stroke="#B63030" stroke-width="1.5"/>
+          <text x="251" y="168" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">HDFCL</text>
+          <text x="251" y="180" font-size="8" font-family="Inter" fill="#B63030" text-anchor="middle">42</text>
+          <!-- SBI Life · RS38 · Mom−3.4% · red -->
+          <circle cx="173" cy="181" r="8" fill="#DB4343" fill-opacity="0.20" stroke="#B63030" stroke-width="1.5"/>
+          <text x="173" y="178" font-size="8" font-weight="600" font-family="Inter" fill="#1A1F2C" text-anchor="middle">SBIL</text>
+          <text x="173" y="190" font-size="8" font-family="Inter" fill="#B63030" text-anchor="middle">38</text>
+          <!-- PFC · RS65 · Mom8.9% -->
+          <circle cx="600" cy="118" r="8" fill="#10A368" fill-opacity="0.20" stroke="#0B7A4E" stroke-width="1.5"/>
+          <text x="600" y="131" font-size="8" font-family="Inter" fill="#565E6E" text-anchor="middle">PFC</text>
+          <!-- Legend -->
+          <g font-size="8" font-family="Inter">
+            <circle cx="90" cy="290" r="5" fill="none" stroke="#134F5C" stroke-width="2"/><text x="100" y="293" fill="#565E6E">In your portfolio</text>
+            <circle cx="210" cy="290" r="4" fill="#10A368" fill-opacity="0.25" stroke="#0B7A4E" stroke-width="1.2"/><text x="219" y="293" fill="#565E6E">Strong (green vol)</text>
+            <circle cx="320" cy="290" r="4" fill="#D9871A" fill-opacity="0.22" stroke="#9A6410" stroke-width="1.2"/><text x="329" y="293" fill="#565E6E">Watch (neutral vol)</text>
+            <circle cx="430" cy="290" r="4" fill="#DB4343" fill-opacity="0.20" stroke="#B63030" stroke-width="1.2"/><text x="439" y="293" fill="#565E6E">Weak (contracting vol)</text>
+            <text x="850" y="293" fill="#8A909C">Petrol ring = in portfolio · Bubble ∝ Market Cap · 187 stocks shown</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Instrument table with multi-select -->
+    <div class="card card--lg" style="margin-bottom:0; border-radius:var(--radius-md) var(--radius-md) 0 0;">
+      <div style="overflow-x:auto;">
+        <table class="rtable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" style="accent-color:var(--accent-700);"/></th>
+              <th style="text-align:left;">Company</th>
+              <th>CMP (₹)</th>
+              <th>3M Return</th>
+              <th>vs Sector</th>
+              <th class="sort-desc">RS Score</th>
+              <th>RS Rank</th>
+              <th>Momentum 3M</th>
+              <th>Volume</th>
+              <th>52W High</th>
+              <th>Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Selected rows -->
+            <tr class="row--selected">
+              <td><input type="checkbox" checked style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">Bajaj Finance</span><div class="iname__b"><span class="ticker">BAJFINANCE</span><span>NSE · Large Cap</span></div></div></td>
+              <td>7,841</td><td class="alpha--pos">+18.7%</td><td class="alpha--pos">+9.5pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:82%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">82</span></div></td>
+              <td style="color:var(--rag-green-700); font-weight:600;">#1 / 187</td>
+              <td class="alpha--pos">↑↑ +18.7%</td>
+              <td style="color:var(--rag-green-700);">↑ 2.4× avg</td>
+              <td style="color:var(--rag-green-700);">94% of 52W</td>
+              <td><span class="sig-dot sig-dot--g"></span> <span style="font-size:10px; color:var(--rag-green-700);">Buy</span></td>
+            </tr>
+            <tr class="row--selected">
+              <td><input type="checkbox" checked style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">ICICI Bank</span><div class="iname__b"><span class="ticker">ICICIBANK</span><span>NSE · Large Cap</span></div></div></td>
+              <td>1,312</td><td class="alpha--pos">+13.1%</td><td class="alpha--pos">+3.9pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:74%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">74</span></div></td>
+              <td style="color:var(--rag-green-700);">#4 / 187</td>
+              <td class="alpha--pos">↑ +13.1%</td>
+              <td style="color:var(--rag-green-700);">↑ 1.8× avg</td>
+              <td style="color:var(--rag-green-700);">88% of 52W</td>
+              <td><span class="sig-dot sig-dot--g"></span> <span style="font-size:10px; color:var(--rag-green-700);">Buy</span></td>
+            </tr>
+            <!-- Other rows -->
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">Bajaj Finserv</span><div class="iname__b"><span class="ticker">BAJAJFINSV</span><span>NSE · Large Cap</span></div></div></td>
+              <td>1,987</td><td class="alpha--pos">+16.2%</td><td class="alpha--pos">+7.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:79%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">79</span></div></td>
+              <td style="color:var(--rag-green-700);">#2 / 187</td>
+              <td class="alpha--pos">↑ +16.2%</td>
+              <td style="color:var(--rag-green-700);">↑ 2.1× avg</td>
+              <td>91% of 52W</td>
+              <td><span class="sig-dot sig-dot--g"></span></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">SBI</span><div class="iname__b"><span class="ticker">SBIN</span><span>NSE · Large Cap</span></div></div></td>
+              <td>812</td><td class="alpha--pos">+12.4%</td><td class="alpha--pos">+3.2pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:71%; background:var(--rag-green-500);"></div></div><span class="rs-num" style="color:var(--rag-green-700);">71</span></div></td>
+              <td style="color:var(--rag-green-700);">#5 / 187</td>
+              <td class="alpha--pos">↑ +12.4%</td>
+              <td style="color:var(--rag-green-700);">↑ 1.6× avg</td>
+              <td>79% of 52W</td>
+              <td><span class="sig-dot sig-dot--g"></span></td>
+            </tr>
+            <!-- HDFC Bank — in portfolio -->
+            <tr style="background:rgba(19,79,92,0.04);">
+              <td><input type="checkbox" style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">HDFC Bank <span style="font-size:9px; color:var(--accent-700); margin-left:4px; font-weight:600;">◆ yours</span></span><div class="iname__b"><span class="ticker">HDFCBANK</span><span>NSE · Large Cap</span></div></div></td>
+              <td>1,847</td><td class="alpha--pos">+9.2%</td><td class="alpha--nil">+0.0pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:68%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">68</span></div></td>
+              <td style="color:var(--rag-amber-700);">#7 / 187</td>
+              <td class="alpha--pos">↗ +9.2%</td>
+              <td style="color:var(--text-tertiary);">→ 1.1× avg</td>
+              <td>74% of 52W</td>
+              <td><span class="sig-dot sig-dot--a"></span> <span style="font-size:10px; color:var(--rag-amber-700);">Hold</span></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">Axis Bank</span><div class="iname__b"><span class="ticker">AXISBANK</span><span>NSE · Large Cap</span></div></div></td>
+              <td>1,124</td><td class="alpha--pos">+5.8%</td><td class="alpha--neg">−3.4pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:55%; background:var(--rag-amber-500);"></div></div><span class="rs-num" style="color:var(--rag-amber-700);">55</span></div></td>
+              <td style="color:var(--rag-amber-700);">#9 / 187</td>
+              <td class="alpha--pos">↗ +5.8%</td>
+              <td style="color:var(--text-tertiary);">→ 0.9× avg</td>
+              <td>68% of 52W</td>
+              <td><span class="sig-dot sig-dot--a"></span></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--accent-700);"/></td>
+              <td><div class="iname"><span class="iname__a">HDFC Life</span><div class="iname__b"><span class="ticker">HDFCLIFE</span><span>NSE · Large Cap</span></div></div></td>
+              <td>641</td><td class="alpha--neg">−1.2%</td><td class="alpha--neg">−10.4pp</td>
+              <td><div class="rs-cell"><div class="rs-wrap"><div class="rs-fill" style="width:42%; background:var(--rag-red-500);"></div></div><span class="rs-num" style="color:var(--rag-red-700);">42</span></div></td>
+              <td style="color:var(--rag-red-700);">#14 / 187</td>
+              <td class="alpha--neg">↘ −1.2%</td>
+              <td style="color:var(--rag-red-700);">↓ 0.6× avg</td>
+              <td>62% of 52W</td>
+              <td><span class="sig-dot sig-dot--r"></span> <span style="font-size:10px; color:var(--rag-red-700);">Avoid</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:var(--space-2) var(--space-4); background:var(--bg-surface-alt); border:1px solid var(--border-default); border-top:none; border-radius:0 0 var(--radius-md) var(--radius-md); font-size:10px; color:var(--text-tertiary); margin-bottom:80px;">
+      Showing 7 of 187 stocks · Sorted by RS Score · vs Sector = alpha vs Nifty Financial Services Index · Click any row for full instrument detail
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       LEVEL 4 — Instrument Detail (HDFC Bank)
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="level-sep"><div class="level-sep__line"></div><div class="level-sep__tag">↓ After clicking HDFC Bank row · Level 4: Instrument Detail</div><div class="level-sep__line"></div></div>
+
+  <section>
+    <div class="crumb">
+      <a>🌍 Global</a><span class="crumb__sep">›</span><a>🇮🇳 India</a><span class="crumb__sep">›</span>
+      <a>Financials</a><span class="crumb__sep">›</span><a>Stocks</a><span class="crumb__sep">›</span>
+      <span class="crumb__cur">HDFC Bank</span>
+    </div>
+
+    <!-- Hero section -->
+    <div class="hero">
+      <div>
+        <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2);">
+          <h1 style="font-family:var(--font-serif); font-size:var(--fs-xl); font-weight:var(--fw-semibold); color:var(--text-primary);">HDFC Bank Limited</h1>
+          <span class="ticker" style="font-size:11px;">HDFCBANK</span>
+          <span class="badge badge--accent">NSE · BSE</span>
+          <span style="font-size:10px; padding:2px 8px; background:rgba(19,79,92,0.1); border:1px solid var(--accent-300); border-radius:var(--radius-sm); color:var(--accent-700); font-weight:600;">◆ In portfolio</span>
+        </div>
+        <div style="font-size:12px; color:var(--text-tertiary); margin-bottom:var(--space-4);">Private Sector Bank · Large Cap · Nifty 50 · Nifty Bank · Nifty Financial Services</div>
+        <div class="hero__price">₹1,847.30</div>
+        <div class="hero__change">
+          <span class="delta delta--pos">+₹15.40 (+0.84%)</span>
+          <span style="color:var(--text-tertiary);">Day range: ₹1,831 – ₹1,862</span>
+          <span style="color:var(--text-tertiary);">|</span>
+          <span style="color:var(--text-tertiary);">Vol 1.1× avg</span>
+        </div>
+        <div class="hero__stats">
+          <div class="hstat"><span class="hstat__l">Market Cap</span><span class="hstat__v">₹14.1L Cr</span></div>
+          <div class="hstat"><span class="hstat__l">52W Range</span><span class="hstat__v">₹1,610 – ₹1,986</span></div>
+          <div class="hstat"><span class="hstat__l">P/E (TTM)</span><span class="hstat__v">19.4×</span></div>
+          <div class="hstat"><span class="hstat__l">P/B</span><span class="hstat__v">2.8×</span></div>
+          <div class="hstat"><span class="hstat__l">Div Yield</span><span class="hstat__v">1.2%</span></div>
+          <div class="hstat"><span class="hstat__l">Beta (1Y)</span><span class="hstat__v">0.91</span></div>
+          <div class="hstat"><span class="hstat__l">NIM</span><span class="hstat__v">3.4%</span></div>
+          <div class="hstat"><span class="hstat__l">GNPA</span><span class="hstat__v">1.24%</span></div>
+        </div>
+      </div>
+
+      <!-- RS panel -->
+      <div class="rs-panel">
+        <div class="rs-panel__num" style="color:var(--rag-amber-700);">68</div>
+        <div class="rs-panel__lbl">RS Score · vs Nifty 500</div>
+        <div class="rs-panel__bar"><div class="rs-panel__bar-fill" style="width:68%; background:var(--rag-amber-500);"></div></div>
+        <div class="rs-panel__sig">
+          <span class="sig-dot sig-dot--a" style="margin-right:4px;"></span>
+          <strong>Hold.</strong> Outperforming broader market but lagging sector peers. RS improving after 2 weak quarters — consolidating above 200DMA.
+        </div>
+        <div class="rs-panel__grid">
+          <div class="rpm"><span class="rpm__l">RS vs Nifty Bank</span><span class="rpm__v" style="color:var(--rag-red-700);">41 ↓</span></div>
+          <div class="rpm"><span class="rpm__l">RS Rank (sector)</span><span class="rpm__v" style="color:var(--rag-amber-700);">#7 / 187</span></div>
+          <div class="rpm"><span class="rpm__l">Sharpe 1Y</span><span class="rpm__v">0.82</span></div>
+          <div class="rpm"><span class="rpm__l">Max Drawdown</span><span class="rpm__v" style="color:var(--rag-amber-700);">−18.4%</span></div>
+          <div class="rpm"><span class="rpm__l">Alpha vs Nifty 50</span><span class="rpm__v" style="color:var(--rag-green-700);">+4.1pp</span></div>
+          <div class="rpm"><span class="rpm__l">Alpha vs Nifty Bank</span><span class="rpm__v" style="color:var(--rag-red-700);">−3.0pp</span></div>
+        </div>
+        <div style="margin-top:var(--space-4); display:flex; gap:var(--space-2);">
+          <button class="btn btn--primary btn--sm" style="flex:1;">+ Add to Portfolio</button>
+          <button class="btn btn--ghost btn--sm">Watchlist</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail tabs -->
+    <div class="dtabs">
+      <div class="dtab dtab--active">Overview</div>
+      <div class="dtab">Technicals</div>
+      <div class="dtab">Fundamentals</div>
+      <div class="dtab">Events &amp; Actions</div>
+      <div class="dtab">Compare</div>
+    </div>
+
+    <!-- Overview tab content: price chart vs 2 benchmarks -->
+    <div class="card card--lg" style="margin-bottom:var(--space-4);">
+      <div class="card__header">
+        <div class="card__header-group">
+          <div class="card__title">Price · rebased to 100 · 1Y</div>
+          <div class="card__subtitle">HDFC Bank vs Nifty 50 vs Nifty Bank — same time window · Total Return</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <div class="period-tabs">
+            <div class="period-tab">1M</div><div class="period-tab">3M</div><div class="period-tab">6M</div>
+            <div class="period-tab period-tab--active">1Y</div><div class="period-tab">3Y</div><div class="period-tab">5Y</div>
+          </div>
+        </div>
+      </div>
+      <div class="card__body" style="padding:var(--space-3);">
+        <svg viewBox="0 0 1060 200" style="width:100%; height:190px;">
+          <!-- Grid -->
+          <g stroke="#EEF0F3" stroke-width="1">
+            <line x1="40" y1="10" x2="1050" y2="10"/>
+            <line x1="40" y1="55" x2="1050" y2="55"/>
+            <line x1="40" y1="100" x2="1050" y2="100"/>
+            <line x1="40" y1="145" x2="1050" y2="145"/>
+            <line x1="40" y1="180" x2="1050" y2="180"/>
+          </g>
+          <!-- Y axis labels -->
+          <g font-size="9" font-family="Inter" fill="#8A909C" text-anchor="end">
+            <text x="34" y="14">125</text><text x="34" y="59">115</text>
+            <text x="34" y="104">100</text><text x="34" y="149">90</text>
+          </g>
+          <!-- Rebased 100 line -->
+          <line x1="40" y1="100" x2="1050" y2="100" stroke="#E3E6EB" stroke-width="1"/>
+          <!-- Nifty Bank (dashed, slightly darker grey) -->
+          <path d="M40,100 L120,95 L200,90 L280,85 L360,92 L440,80 L520,88 L600,72 L680,68 L760,78 L840,62 L920,55 L1000,58 L1050,52" fill="none" stroke="#B4B9C2" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <!-- Nifty 50 (dashed, light grey) -->
+          <path d="M40,100 L120,97 L200,94 L280,91 L360,94 L440,88 L520,85 L600,80 L680,76 L760,80 L840,74 L920,70 L1000,68 L1050,65" fill="none" stroke="#CDD2DA" stroke-width="1.2" stroke-dasharray="3 2"/>
+          <!-- HDFC Bank (solid, amber/petrol — this is "your fund" identity) -->
+          <path d="M40,100 L120,96 L200,92 L280,88 L360,90 L440,84 L520,87 L600,78 L680,74 L760,80 L840,70 L920,68 L1000,66 L1050,63" fill="none" stroke="#134F5C" stroke-width="2"/>
+          <!-- Area fill -->
+          <path d="M40,100 L120,96 L200,92 L280,88 L360,90 L440,84 L520,87 L600,78 L680,74 L760,80 L840,70 L920,68 L1000,66 L1050,63 L1050,180 L40,180 Z" fill="#134F5C" fill-opacity="0.05"/>
+          <!-- X axis labels -->
+          <g font-size="9" font-family="Inter" fill="#8A909C" text-anchor="middle">
+            <text x="40" y="194">Apr '25</text><text x="230" y="194">Jul</text>
+            <text x="440" y="194">Oct</text><text x="650" y="194">Jan '26</text><text x="1050" y="194">Apr</text>
+          </g>
+          <!-- Alpha annotations -->
+          <line x1="1050" y1="52" x2="1050" y2="63" stroke="#9A6410" stroke-width="1" stroke-dasharray="2 2"/>
+          <text x="1055" y="58" font-size="8" font-family="Inter" fill="#9A6410">−3.0pp</text>
+          <text x="1055" y="67" font-size="8" font-family="Inter" fill="#565E6E">vs Bank</text>
+          <line x1="1050" y1="65" x2="1050" y2="180" stroke="#0B7A4E" stroke-width="0" />
+          <text x="1055" y="78" font-size="8" font-family="Inter" fill="#0B7A4E">+4.1pp</text>
+          <text x="1055" y="87" font-size="8" font-family="Inter" fill="#565E6E">vs Nifty</text>
+        </svg>
+        <div style="display:flex; gap:var(--space-5); font-size:10px; color:var(--text-secondary); margin-top:var(--space-2); align-items:center;">
+          <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:16px; height:2px; background:#134F5C; display:inline-block;"></span> HDFC Bank · +12.3%</span>
+          <span style="display:inline-flex; align-items:center; gap:5px;"><svg width="16" height="4" style="overflow:visible"><line x1="0" y1="2" x2="16" y2="2" stroke="#B4B9C2" stroke-width="1.2" stroke-dasharray="4 3"/></svg> Nifty Bank · +15.3%</span>
+          <span style="display:inline-flex; align-items:center; gap:5px;"><svg width="16" height="4" style="overflow:visible"><line x1="0" y1="2" x2="16" y2="2" stroke="#CDD2DA" stroke-width="1.2" stroke-dasharray="3 2"/></svg> Nifty 50 · +8.2%</span>
+          <span style="margin-left:auto; color:var(--text-tertiary);">rebased 100 = 14 Apr 2025 · total return</span>
+        </div>
+      </div>
+      <div class="verdict-strip">
+        <span class="verdict-strip__mark">A</span>
+        <div>HDFC Bank is <em>outperforming Nifty 50 by +4.1pp</em> but lagging Nifty Bank by −3.0pp — tracking the broad market rally while private bank peers (ICICI, SBI) pull ahead. RS improving since Jan 2026.</div>
+        <span class="verdict-strip__more">See attribution →</span>
+      </div>
+    </div>
+
+    <!-- Quick metrics grid below chart -->
+    <div class="card-grid" style="margin-bottom:var(--space-16);">
+      <div class="card card--sm span-3">
+        <div class="card__body" style="padding:var(--space-4);">
+          <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:var(--space-2);">200DMA</div>
+          <div style="font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--rag-green-700);">Above</div>
+          <div style="font-size:11px; color:var(--rag-green-700);">+6.2% above · bullish</div>
+        </div>
+      </div>
+      <div class="card card--sm span-3">
+        <div class="card__body" style="padding:var(--space-4);">
+          <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:var(--space-2);">RSI (14)</div>
+          <div style="font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--rag-amber-700);">58.4</div>
+          <div style="font-size:11px; color:var(--rag-amber-700);">Neutral — room to run</div>
+        </div>
+      </div>
+      <div class="card card--sm span-3">
+        <div class="card__body" style="padding:var(--space-4);">
+          <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:var(--space-2);">MACD</div>
+          <div style="font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--rag-green-700);">+ve</div>
+          <div style="font-size:11px; color:var(--rag-green-700);">Bullish crossover 8D ago</div>
+        </div>
+      </div>
+      <div class="card card--sm span-3">
+        <div class="card__body" style="padding:var(--space-4);">
+          <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:var(--space-2);">ATR (14)</div>
+          <div style="font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-primary);">₹38.2</div>
+          <div style="font-size:11px; color:var(--text-tertiary);">Daily volatility range</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Action bar (multi-select active — 2 instruments selected) ── -->
+<div class="action-bar">
+  <span class="action-bar__count">2 instruments selected</span>
+  <span class="action-bar__names">Bajaj Finance · ICICI Bank</span>
+  <button class="btn btn--primary btn--sm">+ Add to Portfolio</button>
+  <button class="btn btn--ghost btn--sm" style="color:#fff; border-color:var(--accent-500);">Compare</button>
+  <button class="btn btn--ghost btn--sm" style="color:var(--accent-300); border-color:transparent;">Clear</button>
+</div>
+
+</div><!-- /app -->
+</body>
+</html>

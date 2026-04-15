@@ -1,7 +1,4 @@
-"""ATLAS-owned database models — SQLAlchemy 2.0 mapped_column syntax.
-
-Schema matches alembic revision c118008a7781 (V1-1 parity with spec §6).
-"""
+"""ATLAS database models — SQLAlchemy 2.0 mapped_column syntax."""
 
 import enum
 import uuid
@@ -35,9 +32,6 @@ class Base(DeclarativeBase):
     pass
 
 
-# --- Enums ---
-
-
 class DecisionTypeEnum(str, enum.Enum):
     BUY = "BUY"
     SELL = "SELL"
@@ -49,9 +43,6 @@ class DecisionStatusEnum(str, enum.Enum):
     ACTIVE = "active"
     INVALIDATED = "invalidated"
     COMPLETED = "completed"
-
-
-# --- ATLAS Decisions ---
 
 
 class AtlasDecision(Base):
@@ -95,9 +86,6 @@ class AtlasDecision(Base):
     )
 
 
-# --- ATLAS Intelligence (pgvector) ---
-
-
 class AtlasIntelligence(Base):
     __tablename__ = "atlas_intelligence"
 
@@ -130,9 +118,6 @@ class AtlasIntelligence(Base):
     )
 
     __table_args__ = (Index("ix_atlas_intel_entity_type", "entity_type"),)
-
-
-# --- ATLAS Simulations (V3) ---
 
 
 class AtlasSimulation(Base):
@@ -173,9 +158,6 @@ class AtlasSimulation(Base):
     )
 
 
-# --- ATLAS Watchlists ---
-
-
 class AtlasWatchlist(Base):
     __tablename__ = "atlas_watchlists"
 
@@ -193,9 +175,6 @@ class AtlasWatchlist(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-
-
-# --- ATLAS Portfolio (V4) ---
 
 
 class AtlasPortfolio(Base):
@@ -305,14 +284,8 @@ class AtlasPortfolioSnapshot(Base):
     )
 
 
-# --- ATLAS Agent Tables (V5) ---
-
-
 class AtlasAgentScore(Base):
-    """Tracks agent prediction accuracy over time.
-
-    id is BIGSERIAL (not UUID) — high-write append table per spec DDL.
-    """
+    """Tracks agent prediction accuracy — BIGSERIAL, append-only."""
 
     __tablename__ = "atlas_agent_scores"
 
@@ -338,11 +311,7 @@ class AtlasAgentScore(Base):
 
 
 class AtlasAgentWeight(Base):
-    """Darwinian agent weights — controls agent influence in synthesis.
-
-    CHECK constraint enforces weight in [0.3, 2.5] per spec §V5.
-    agent_id is the natural primary key (VARCHAR(100)).
-    """
+    """Darwinian agent weights — CHECK enforces [0.3, 2.5]."""
 
     __tablename__ = "atlas_agent_weights"
 
@@ -369,10 +338,7 @@ class AtlasAgentWeight(Base):
 
 
 class AtlasAgentMemory(Base):
-    """Per-agent corrections and learnings persisted across runs.
-
-    id is BIGSERIAL (not UUID) — append-only learning log per spec DDL.
-    """
+    """Per-agent corrections and learnings — BIGSERIAL, append-only."""
 
     __tablename__ = "atlas_agent_memory"
 
@@ -393,11 +359,35 @@ class AtlasAgentMemory(Base):
     )
 
 
-class AtlasAlert(Base):
-    """System alerts — budget exceeded, data anomalies, signal triggers.
+class AtlasAgentMutation(Base):
+    """Darwinian mutation lifecycle: shadow → merged | reverted."""
 
-    id is BIGSERIAL (not UUID) — high-write append table per spec DDL.
-    """
+    __tablename__ = "atlas_agent_mutations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    agent_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    mutation_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shadow_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    shadow_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    original_sharpe: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    mutated_sharpe: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    outcome_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AtlasAlert(Base):
+    """System alerts — budget exceeded, anomalies, signals. BIGSERIAL."""
 
     __tablename__ = "atlas_alerts"
 
@@ -429,10 +419,7 @@ class AtlasAlert(Base):
 
 
 class AtlasCostLedger(Base):
-    """LLM API call cost tracking — every LLM call in ATLAS is recorded here.
-
-    id is BIGSERIAL (not UUID) — high-write append table.
-    """
+    """LLM API cost tracking — every call recorded. BIGSERIAL."""
 
     __tablename__ = "atlas_cost_ledger"
 
@@ -458,7 +445,6 @@ class AtlasCostLedger(Base):
     )
 
 
-# --- ATLAS Briefings (V5-8) ---
 class AtlasBriefing(Base):
     """LLM-generated morning briefings — one per trading day per scope."""
 
