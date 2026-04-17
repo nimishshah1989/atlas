@@ -8,25 +8,93 @@
 
 ---
 
+## ⛔ NON-NEGOTIABLE — READ FIRST
+
+This chunk is **REJECTED** if the DONE commit does not contain **all** of
+these files at or above the stated size floor. A bare `.forge/baseline/*`
+bump or any commit that does not materially land the deliverables below is
+a false-DONE and will be flipped back to PENDING on audit.
+
+```
+PRESENT, net-new:
+  backend/services/conviction_engine.py        ≥ 260 lines
+  backend/routes/screener.py                   ≥ 90 lines
+  tests/services/test_conviction_engine.py     ≥ 400 lines, ≥ 20 tests
+  tests/routes/test_screener_route.py          ≥ 80 lines,  ≥ 3 tests
+
+MODIFIED, additive only:
+  backend/models/schemas.py                    ≥ 60 lines added
+                                               (ConvictionLevel + ActionSignal
+                                               + UrgencyLevel + FourFactorConviction
+                                               + ScreenerRow + ScreenerResponse
+                                               + four_factor field on StockDeepDive)
+  backend/routes/stocks.py                     ≥ 10 lines added
+                                               (compute_four_factor added to
+                                               asyncio.gather, constructor kwarg)
+  backend/main.py                              ≥ 2 lines added
+                                               (import + include_router for screener)
+```
+
+**Self-check loop (run before stamping DONE):**
+
+```bash
+for f in backend/services/conviction_engine.py \
+         backend/routes/screener.py \
+         tests/services/test_conviction_engine.py \
+         tests/routes/test_screener_route.py; do
+  test -f "$f" || { echo "MISSING: $f"; exit 1; }
+  wc -l "$f"
+done
+grep -c "^class ConvictionLevel\|^class ActionSignal\|^class UrgencyLevel\|^class FourFactorConviction\|^class ScreenerRow\|^class ScreenerResponse" backend/models/schemas.py
+grep -n "compute_four_factor\|asyncio.gather" backend/routes/stocks.py
+grep -n "screener" backend/main.py
+pytest tests/services/test_conviction_engine.py tests/routes/test_screener_route.py -v
+curl -s http://localhost:8000/api/v1/screener?universe=nifty50 | jq '.rows | length'
+```
+
+If any line fails → **DO NOT** stamp DONE.
+
+---
+
 ## Goal
 
-Compute the 4-factor conviction model (Returns RS × Momentum RS × Sector RS × Volume RS), derive `ActionSignal` and `UrgencyLevel` from conviction + regime context, attach them to the existing deep-dive response, and expose a new paginated `GET /api/v1/screener` endpoint.
+Compute the 4-factor conviction model (Returns RS × Momentum RS × Sector RS
+× Volume RS), derive `ActionSignal` and `UrgencyLevel` from conviction +
+regime context, attach them to the existing deep-dive response, and expose
+a new paginated `GET /api/v1/screener` endpoint.
 
-The screener must perform percentile-rank computation entirely in SQL using a window function — never load all rows into Python and sort. The conviction engine must be a pure computation module with no HTTP dependencies.
+The screener must perform percentile-rank computation entirely in SQL using
+a window function — never load all rows into Python and sort. The
+conviction engine must be a pure computation module with no HTTP
+dependencies.
+
+---
+
+## Schema reality (verified against live RDS, 2026-04-17)
+
+- `de_equity_technical_daily` has: `roc_5, roc_21, cmf_20, mfi_14, rsi_14, above_50dma, above_200dma, macd_bullish, adx_14` — all the columns this chunk uses.
+- `de_rs_scores` row layout: `entity_type ∈ {'equity', 'sector'}`, `entity_id` is a STRING (not UUID) — for `entity_type='equity'` it holds the instrument UUID as a string; for `entity_type='sector'` it holds the sector name. `vs_benchmark` is a string like `'NIFTY 500'`.
+- `de_instrument` has: `id, current_symbol, company_name, sector, nifty_50, nifty_200, nifty_500, is_active`.
+- `de_equity_fundamentals` has: `market_cap_cr, pe_ratio`.
+
+Because `entity_id` in `de_rs_scores` is already a text column, the SQL
+must cast `i.id::text = r.entity_id` in join predicates rather than
+`entity_id::uuid = i.id`. This guards against "invalid input syntax for
+type uuid" errors when a non-UUID sector-row ends up in the join plan.
 
 ---
 
 ## Files
 
 ### New
-- `backend/services/conviction_engine.py` — `compute_four_factor()`, `compute_screener_bulk()`
+- `backend/services/conviction_engine.py` — `compute_four_factor()`, `compute_screener_bulk()`, `_compute_conviction_from_row()` pure helper
 - `backend/routes/screener.py` — `GET /api/v1/screener` route
-- `tests/services/test_conviction_engine.py` — unit tests for conviction + screener (20 minimum)
-- `tests/routes/test_screener_route.py` — route-level tests for screener endpoint
+- `tests/services/test_conviction_engine.py` — unit tests for conviction + screener (≥20)
+- `tests/routes/test_screener_route.py` — route-level tests (≥3)
 
 ### Modified
 - `backend/models/schemas.py` — add `ConvictionLevel`, `ActionSignal`, `UrgencyLevel`, `FourFactorConviction`, `ScreenerRow`, `ScreenerResponse` models; add `four_factor: Optional[FourFactorConviction] = None` field to `StockDeepDive`
-- `backend/routes/stocks.py` — call `compute_four_factor()` in `get_stock_deep_dive`, inject into `StockDeepDive`
+- `backend/routes/stocks.py` — add `compute_four_factor()` call to the existing `asyncio.gather` from C-DER-1, inject into `StockDeepDive`
 - `backend/main.py` — register `screener.router`
 
 ---
@@ -65,7 +133,7 @@ class FourFactorConviction(BaseModel):
     # Individual factor results
     factor_returns_rs: bool = False     # rs_composite > 100
     factor_momentum_rs: bool = False    # roc_21 percent_rank > 0.6
-    factor_sector_rs: bool = False      # sector rs_composite (entity_type='sector') > 100
+    factor_sector_rs: bool = False      # sector rs_composite > 100
     factor_volume_rs: bool = False      # cmf_20 > 0 AND mfi_14 > 50
     factors_aligned: int = 0            # count of True factors (0–4)
     # Supporting values (for display / audit trail)
@@ -74,7 +142,7 @@ class FourFactorConviction(BaseModel):
     sector_rs_composite: Optional[Decimal] = None
     cmf_20: Optional[Decimal] = None
     mfi_14: Optional[Decimal] = None
-    regime: Optional[str] = None                # regime string passed in
+    regime: Optional[str] = None
 
 
 class ScreenerRow(BaseModel):
@@ -100,11 +168,13 @@ class ScreenerResponse(BaseModel):
     meta: ResponseMeta
 ```
 
-### Add to `StockDeepDive` (after `piotroski` field from C-DER-1)
+### Add to `StockDeepDive` (after `piotroski`)
 
 ```python
 four_factor: Optional[FourFactorConviction] = None
 ```
+
+Additive only.
 
 ---
 
@@ -114,20 +184,20 @@ four_factor: Optional[FourFactorConviction] = None
 
 #### `async def compute_four_factor(instrument_id: UUID, sector: Optional[str], db: AsyncSession, regime: Optional[str] = None) -> Optional[FourFactorConviction]`
 
-Returns `None` when the instrument has no technical data. Uses a single SQL query.
+Returns `None` when the instrument has no technical row for the latest
+date. One SQL round-trip via CTE — do **not** issue 4 separate queries.
 
-**SQL (all in one CTE query — do NOT make 4 separate queries):**
+**SQL (single query, note the `ranked` subquery for percent_rank):**
 
 ```sql
-WITH target_tech AS (
-    SELECT
-        t.roc_21,
-        t.cmf_20,
-        t.mfi_14,
-        t.roc_5
-    FROM de_equity_technical_daily t
-    WHERE t.instrument_id = :instrument_id
-      AND t.date = (SELECT MAX(date) FROM de_equity_technical_daily)
+WITH latest_tech_date AS (
+    SELECT MAX(date) AS d FROM de_equity_technical_daily
+),
+target_tech AS (
+    SELECT roc_21, cmf_20, mfi_14, roc_5
+    FROM de_equity_technical_daily
+    WHERE instrument_id = :instrument_id
+      AND date = (SELECT d FROM latest_tech_date)
     LIMIT 1
 ),
 target_rs AS (
@@ -145,16 +215,19 @@ sector_rs AS (
     FROM de_rs_scores
     WHERE entity_type = 'sector'
       AND entity_id = :sector
-      AND date = (SELECT MAX(date) FROM de_rs_scores
-                  WHERE entity_type = 'sector')
+      AND date = (SELECT MAX(date) FROM de_rs_scores WHERE entity_type = 'sector')
     LIMIT 1
 ),
 roc_pct_rank AS (
-    SELECT
-        percent_rank() OVER (ORDER BY roc_21 ASC NULLS FIRST) AS pct_rank
-    FROM de_equity_technical_daily
-    WHERE date = (SELECT MAX(date) FROM de_equity_technical_daily)
-      AND instrument_id = :instrument_id
+    SELECT pct_rank
+    FROM (
+        SELECT
+            instrument_id,
+            percent_rank() OVER (ORDER BY roc_21 ASC NULLS FIRST) AS pct_rank
+        FROM de_equity_technical_daily
+        WHERE date = (SELECT d FROM latest_tech_date)
+    ) ranked
+    WHERE instrument_id = :instrument_id
     LIMIT 1
 )
 SELECT
@@ -171,27 +244,19 @@ LEFT JOIN sector_rs sr ON true
 LEFT JOIN roc_pct_rank rp ON true
 ```
 
-**IMPORTANT SQL caveat — nested window functions:** PostgreSQL does not allow window functions nested inside aggregate functions or other window functions. The `percent_rank()` must be computed in a subquery/CTE first, then joined. The `roc_pct_rank` CTE computes `percent_rank() OVER (ORDER BY roc_21)` across ALL stocks at the latest date, but only returns the row for `instrument_id`. This is correct — the window evaluates over all rows in the partition before the WHERE-equivalent filter returns only target row.
+**Important SQL caveat — nested window functions:** PostgreSQL does not
+allow window functions nested inside aggregate/window contexts. The
+`percent_rank()` computation lives inside a plain subquery `ranked` and
+the outer query filters to the target row — correct pattern, do not
+try to "optimize" it by merging the ranked subquery with an aggregate.
 
-**Correct CTE for roc_21 percentile rank:**
-```sql
-roc_pct_rank AS (
-    SELECT pct_rank
-    FROM (
-        SELECT
-            instrument_id,
-            percent_rank() OVER (ORDER BY roc_21 ASC NULLS FIRST) AS pct_rank
-        FROM de_equity_technical_daily
-        WHERE date = (SELECT MAX(date) FROM de_equity_technical_daily)
-    ) ranked
-    WHERE instrument_id = :instrument_id
-    LIMIT 1
-)
-```
+Bind `:instrument_id` as UUID, `:instrument_id_str` as str(uuid), `:sector`
+as str or None.
 
-**Factor evaluation (pure Python from SQL row results):**
+**Factor evaluation (pure Python):**
 
-All values converted to `Decimal(str(x))` before comparison. `None` values → factor = `False`.
+All values converted to `Decimal(str(x))` before comparison. `None` →
+factor = `False`.
 
 ```python
 factor_returns_rs = rs_composite is not None and rs_composite > Decimal("100")
@@ -199,46 +264,42 @@ factor_momentum_rs = roc_21_pct_rank is not None and roc_21_pct_rank > Decimal("
 factor_sector_rs = sector_rs_composite is not None and sector_rs_composite > Decimal("100")
 factor_volume_rs = (
     cmf_20 is not None and mfi_14 is not None
-    and cmf_20 > Decimal("0")
-    and mfi_14 > Decimal("50")
+    and cmf_20 > Decimal("0") and mfi_14 > Decimal("50")
 )
-factors_aligned = sum([factor_returns_rs, factor_momentum_rs, factor_sector_rs, factor_volume_rs])
+factors_aligned = sum([factor_returns_rs, factor_momentum_rs,
+                       factor_sector_rs, factor_volume_rs])
 ```
 
-**ConvictionLevel from `factors_aligned`:**
-- 4 → HIGH_PLUS
-- 3 → HIGH
-- 2 → MEDIUM
-- 1 → LOW
-- 0 → AVOID
+**ConvictionLevel map (pure function, shared with screener):**
+- 4 → `HIGH_PLUS`
+- 3 → `HIGH`
+- 2 → `MEDIUM`
+- 1 → `LOW`
+- 0 → `AVOID`
 
 **ActionSignal derivation:**
-
-`regime` parameter is a string (e.g. "BULL", "BEAR", "SIDEWAYS", "RECOVERY"). Compare with `.upper()` to be case-insensitive.
 
 ```python
 bull_regime = regime is not None and regime.upper() in ("BULL", "RECOVERY")
 
 if conviction in (ConvictionLevel.HIGH_PLUS, ConvictionLevel.HIGH) and bull_regime:
     action = ActionSignal.BUY
-elif conviction in (ConvictionLevel.HIGH_PLUS, ConvictionLevel.HIGH) and not bull_regime:
+elif conviction in (ConvictionLevel.HIGH_PLUS, ConvictionLevel.HIGH):
     action = ActionSignal.ACCUMULATE
 elif conviction == ConvictionLevel.MEDIUM:
     action = ActionSignal.WATCH
 elif conviction == ConvictionLevel.LOW and rs_composite is not None and rs_composite < Decimal("100"):
     action = ActionSignal.REDUCE
-else:  # AVOID or rs_composite missing
+else:
     action = ActionSignal.EXIT
 ```
 
-**UrgencyLevel derivation (proxy for V7 — no atlas_decisions tracking yet):**
+**UrgencyLevel derivation (proxy until V7 decision-tracking):**
 
 ```python
-roc_5_val = Decimal(str(roc_5)) if roc_5 is not None else None
-
 if (conviction == ConvictionLevel.HIGH_PLUS
-        and roc_5_val is not None
-        and roc_5_val > Decimal("3")):
+        and roc_5 is not None
+        and Decimal(str(roc_5)) > Decimal("3")):
     urgency = UrgencyLevel.IMMEDIATE
 elif (conviction in (ConvictionLevel.HIGH_PLUS, ConvictionLevel.HIGH)
         and roc_21 is not None
@@ -248,17 +309,29 @@ else:
     urgency = UrgencyLevel.PATIENT
 ```
 
-Note: `roc_5` is already in `de_equity_technical_daily` — include it in the SQL query above.
+Extract conviction → action → urgency into a shared helper:
+```python
+def _compute_conviction_from_factors(
+    factors_aligned: int,
+    rs_composite: Optional[Decimal],
+    roc_5: Optional[Decimal],
+    roc_21: Optional[Decimal],
+    regime: Optional[str],
+) -> tuple[ConvictionLevel, ActionSignal, UrgencyLevel]:
+    ...
+```
 
-**Sector RS when sector is None:**
+`compute_four_factor` and `compute_screener_bulk` both call this helper.
 
-When `sector` parameter is `None`, skip the sector_rs CTE (pass `NULL` for `:sector`), `sector_rs_composite` = `None`, `factor_sector_rs` = `False`. Do not return `None` for the whole function.
+**Sector is None handling:** `factor_sector_rs = False`, `sector_rs_composite
+= None`. Do **not** return None for the whole model.
 
 #### `async def compute_screener_bulk(filters: dict[str, Any], db: AsyncSession) -> list[dict[str, Any]]`
 
-Returns a list of dicts (one per screener row). All conviction/action/urgency fields are computed in Python after a single bulk SQL fetch. The SQL computes roc_21 percentile rank in-database.
+Single bulk SQL fetch, then Python-side conviction derivation per row.
 
 **Screener SQL:**
+
 ```sql
 WITH latest_tech_date AS (
     SELECT MAX(date) AS d FROM de_equity_technical_daily
@@ -276,20 +349,13 @@ sector_rs_latest AS (
 ranked_tech AS (
     SELECT
         instrument_id,
-        roc_21,
-        cmf_20,
-        mfi_14,
-        rsi_14,
-        above_50dma,
-        above_200dma,
-        macd_bullish,
-        roc_5,
+        roc_21, cmf_20, mfi_14, rsi_14, above_50dma, above_200dma, macd_bullish, roc_5,
         percent_rank() OVER (ORDER BY roc_21 ASC NULLS FIRST) AS roc_21_pct_rank
     FROM de_equity_technical_daily
     WHERE date = (SELECT d FROM latest_tech_date)
 ),
 latest_rs AS (
-    SELECT entity_id::uuid AS instrument_id, rs_composite
+    SELECT entity_id AS instrument_id_str, rs_composite
     FROM de_rs_scores
     WHERE entity_type = 'equity'
       AND vs_benchmark = 'NIFTY 500'
@@ -297,26 +363,15 @@ latest_rs AS (
 )
 SELECT
     i.current_symbol AS symbol,
-    i.company_name,
-    i.sector,
-    i.nifty_50,
-    i.nifty_500,
-    t.rsi_14,
-    t.above_50dma,
-    t.above_200dma,
-    t.macd_bullish,
-    t.cmf_20,
-    t.mfi_14,
-    t.roc_21,
-    t.roc_5,
-    t.roc_21_pct_rank,
+    i.company_name, i.sector, i.nifty_50, i.nifty_500,
+    t.rsi_14, t.above_50dma, t.above_200dma, t.macd_bullish,
+    t.cmf_20, t.mfi_14, t.roc_21, t.roc_5, t.roc_21_pct_rank,
     r.rs_composite,
     sr.sector_rs,
-    f.market_cap_cr,
-    f.pe_ratio
+    f.market_cap_cr, f.pe_ratio
 FROM de_instrument i
 LEFT JOIN ranked_tech t ON t.instrument_id = i.id
-LEFT JOIN latest_rs r ON r.instrument_id = i.id
+LEFT JOIN latest_rs r ON r.instrument_id_str = i.id::text
 LEFT JOIN sector_rs_latest sr ON sr.sector_name = i.sector
 LEFT JOIN de_equity_fundamentals f ON f.instrument_id = i.id
 WHERE i.is_active = true
@@ -326,69 +381,98 @@ ORDER BY r.rs_composite DESC NULLS LAST
 LIMIT :limit OFFSET :offset
 ```
 
-`universe_filter` is built conditionally:
-- `universe="nifty50"` → `AND i.nifty_50 = true`
-- `universe="nifty200"` → `AND i.nifty_200 = true`
-- `universe="nifty500"` → `AND i.nifty_500 = true`
-- `None` → no filter
+`universe_filter` is whitelisted — only `nifty_50`, `nifty_200`, `nifty_500`
+column names may be injected. Build like:
+```python
+universe_sql = {
+    "nifty50": "AND i.nifty_50 = true",
+    "nifty200": "AND i.nifty_200 = true",
+    "nifty500": "AND i.nifty_500 = true",
+}.get(filters.get("universe"), "")
+```
 
-`sector_filter` is built conditionally:
-- `sector` is not None → `AND i.sector = :sector` (add `:sector` param)
+`sector_filter` uses bound param: `AND i.sector = :sector` when `filters["sector"]` is not None; otherwise empty.
 
-**IMPORTANT:** Use `text()` with named parameters. Never use Python f-strings to interpolate filter values — use SQLAlchemy parameter binding for all user-supplied strings.
+**NEVER use Python f-strings to interpolate user-supplied values. Only the
+whitelisted universe-column name string is concatenated; all other values
+bind via SQLAlchemy `text(...).bindparams(...)`.**
 
-After fetching rows into Python, compute `conviction_level`, `action_signal`, `urgency` per row using the same factor logic as `compute_four_factor` (extract to a pure helper function `_compute_conviction_from_row(row: dict, regime: str) -> tuple[ConvictionLevel, ActionSignal, UrgencyLevel]`). Apply optional post-SQL filters:
-- `conviction` filter → `if filters.get("conviction") and row_conviction.value != filters["conviction"]: skip`
-- `action` filter → `if filters.get("action") and row_action.value != filters["action"]: skip`
-
-These filters are applied in Python after SQL because the conviction/action values are computed in Python (not stored in DB). The SQL limit/offset applies BEFORE Python filtering, so the `ScreenerResponse.meta.total_count` will reflect the SQL count, not the post-filter count. Document this in a code comment.
+After fetching rows, compute `(conviction, action, urgency)` per row via
+`_compute_conviction_from_factors`. Apply optional post-SQL filters for
+`conviction` and `action` in Python (these values are not in DB).
 
 ### `backend/routes/screener.py`
 
 ```python
-from fastapi import APIRouter, Depends, Query
+import time
 from typing import Optional
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.session import get_db
 from backend.services.conviction_engine import compute_screener_bulk
 from backend.clients.jip_market_service import JIPMarketService
-from backend.models.schemas import ScreenerResponse, ScreenerRow, ResponseMeta
+from backend.models.schemas import (
+    ScreenerResponse, ScreenerRow, ResponseMeta,
+    ConvictionLevel, ActionSignal, UrgencyLevel,
+)
 
 router = APIRouter(prefix="/api/v1/screener", tags=["screener"])
+
+_VALID_UNIVERSE = {"nifty50", "nifty200", "nifty500"}
+_VALID_CONVICTION = {e.value for e in ConvictionLevel}
+_VALID_ACTION = {e.value for e in ActionSignal}
 
 
 @router.get("", response_model=ScreenerResponse)
 async def get_screener(
-    universe: Optional[str] = Query(None, description="nifty50, nifty200, nifty500"),
+    universe: Optional[str] = Query(None),
     sector: Optional[str] = Query(None),
-    conviction: Optional[str] = Query(None, description="HIGH+, HIGH, MEDIUM, LOW, AVOID"),
-    action: Optional[str] = Query(None, description="BUY, ACCUMULATE, WATCH, REDUCE, EXIT"),
+    conviction: Optional[str] = Query(None),
+    action: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> ScreenerResponse:
+    if universe is not None and universe not in _VALID_UNIVERSE:
+        raise HTTPException(422, detail=f"universe must be in {_VALID_UNIVERSE}")
+    if conviction is not None and conviction not in _VALID_CONVICTION:
+        raise HTTPException(422, detail=f"conviction must be in {_VALID_CONVICTION}")
+    if action is not None and action not in _VALID_ACTION:
+        raise HTTPException(422, detail=f"action must be in {_VALID_ACTION}")
+
+    t0 = time.perf_counter()
+    regime_data = await JIPMarketService(db).get_market_regime()
+    regime_str = (regime_data.get("regime") if regime_data else None) or "SIDEWAYS"
+
+    filters = {
+        "universe": universe, "sector": sector,
+        "conviction": conviction, "action": action,
+        "limit": limit, "offset": offset, "regime": regime_str,
+    }
+    rows = await compute_screener_bulk(filters, db)
+    screener_rows = [ScreenerRow(**row) for row in rows]
+    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+    return ScreenerResponse(
+        rows=screener_rows,
+        meta=ResponseMeta(
+            record_count=len(screener_rows),
+            offset=offset,
+            limit=limit,
+            query_ms=elapsed_ms,
+        ),
+    )
 ```
 
-Inside the route:
-1. Fetch current regime string via `JIPMarketService(db).get_market_regime()` — extract `regime_data["regime"]` (string). Default to `"SIDEWAYS"` if None.
-2. Build `filters` dict: `{"universe": universe, "sector": sector, "conviction": conviction, "action": action, "limit": limit, "offset": offset, "regime": regime_str}`.
-3. Call `rows = await compute_screener_bulk(filters, db)`.
-4. Build `ScreenerRow` objects from rows. All Decimal conversions via `Decimal(str(v))`.
-5. Return `ScreenerResponse(rows=screener_rows, meta=ResponseMeta(record_count=len(screener_rows), offset=offset, limit=limit, query_ms=elapsed))`.
+### Wiring `compute_four_factor` into `backend/routes/stocks.py`
 
-### Wiring `compute_four_factor` into deep-dive route
-
-In `backend/routes/stocks.py`, inside `get_stock_deep_dive`, after fetching `stock_detail`:
+Extend the existing C-DER-1 `asyncio.gather` block to include a third task:
 
 ```python
 from backend.services.conviction_engine import compute_four_factor
 
-# Regime needed for action signal — reuse market service
-regime_svc = JIPMarketService(db)
-regime_data = await regime_svc.get_market_regime()
-regime_str = regime_data.get("regime") if regime_data else None
+regime_data = await JIPMarketService(db).get_market_regime()
+regime_str = (regime_data.get("regime") if regime_data else None) or "SIDEWAYS"
 
-# Use own session per asyncio.gather call (asyncpg cannot multiplex)
 async def _four_factor_task() -> Optional[FourFactorConviction]:
     async with async_session_factory() as s:
         return await compute_four_factor(
@@ -397,24 +481,21 @@ async def _four_factor_task() -> Optional[FourFactorConviction]:
             db=s,
             regime=regime_str,
         )
-```
 
-Add `_four_factor_task` to the existing `asyncio.gather` that already runs `_gold_rs_task` and `_piotroski_task` (from C-DER-1). All three run concurrently. Extract result safely:
-
-```python
-four_factor_val = result if isinstance(result, FourFactorConviction) else None
+gold_rs_result, piotroski_result, four_factor_result = await asyncio.gather(
+    _gold_rs_task(), _piotroski_task(), _four_factor_task(),
+    return_exceptions=True,
+)
+four_factor_val = four_factor_result if isinstance(four_factor_result, FourFactorConviction) else None
 ```
 
 Pass `four_factor=four_factor_val` into `StockDeepDive(...)`.
 
 ### Registration in `backend/main.py`
 
-Add after `from backend.routes import ...`:
 ```python
 from backend.routes import screener
-```
-Add after `app.include_router(stocks.router)`:
-```python
+...
 app.include_router(screener.router)
 ```
 
@@ -422,124 +503,115 @@ app.include_router(screener.router)
 
 | Scenario | Behaviour |
 |---|---|
-| Sector is None (no sector data) | factor_sector_rs = False, sector_rs_composite = None |
-| Stock has no technical row for today | Return None for compute_four_factor |
-| roc_21 is NULL in DB | roc_21_pct_rank treated as None, factor_momentum_rs = False |
-| Universe filter "nifty50" + sector filter combined | Both applied as SQL AND conditions |
-| conviction filter "HIGH+" in query string | Value "HIGH+" matches ConvictionLevel.HIGH_PLUS.value |
-| Regime is None (no regime data) | bull_regime = False → action falls to ACCUMULATE or lower |
-| GLD data unavailable | gold_rs signal is still computed (NEUTRAL), four_factor is independent |
+| Sector is None | factor_sector_rs=False, sector_rs_composite=None, model still returned |
+| Stock has no tech row | compute_four_factor returns None |
+| roc_21 NULL | pct_rank=None, factor_momentum_rs=False |
+| universe + sector combined | Both applied as SQL AND |
+| conviction="HIGH+" (URL-encoded) | Matches ConvictionLevel.HIGH_PLUS.value |
+| regime None | bull_regime=False → action not BUY |
+| compute_four_factor raises | gather returns exception → caller sets None |
 
 ---
 
-## Acceptance criteria
+## Points of success (14, all required for DONE)
 
-1. `GET /api/v1/stocks/RELIANCE` response contains `stock.four_factor` with `conviction_level`, `action_signal`, `urgency`, and all 4 `factor_*` booleans.
-2. `GET /api/v1/screener` returns 200 with `rows` list and `meta`.
-3. `GET /api/v1/screener?universe=nifty50` returns only nifty_50=true stocks.
-4. `GET /api/v1/screener?sector=Banking` returns only Banking sector stocks.
-5. `GET /api/v1/screener?conviction=HIGH%2B` filters correctly (URL-encodes "+").
-6. `GET /api/v1/screener?limit=10&offset=0` respects pagination.
-7. Percentile rank for roc_21 is computed in PostgreSQL via `percent_rank()` window function — verified by checking no `sorted()` or `rank` computation in Python in `compute_screener_bulk`.
-8. All 4 factors are False → conviction_level == "AVOID", action_signal == "EXIT".
-9. All 4 factors are True + regime BULL → conviction_level == "HIGH+", action_signal == "BUY".
-10. `ruff check . --select E,F,W` passes on all new/modified files.
-11. `pytest tests/services/test_conviction_engine.py tests/routes/test_screener_route.py -v` shows all 20+ tests passing.
+1. `backend/services/conviction_engine.py` exists, ≥260 lines, exports `compute_four_factor`, `compute_screener_bulk`, `_compute_conviction_from_factors`.
+2. `backend/routes/screener.py` exists, ≥90 lines, defines `GET /api/v1/screener`.
+3. `backend/models/schemas.py` exposes the 6 new models + `four_factor` on `StockDeepDive`.
+4. `backend/routes/stocks.py` runs `compute_four_factor` inside the same `asyncio.gather` as GoldRS / Piotroski.
+5. `backend/main.py` registers `screener.router`.
+6. `GET /api/v1/stocks/RELIANCE` response contains `stock.four_factor` with all 3 enums + 4 booleans + supporting values + `regime` field.
+7. `GET /api/v1/screener` → 200 with `rows: list[ScreenerRow]` and `meta`.
+8. `GET /api/v1/screener?universe=nifty50` returns only nifty_50 rows.
+9. `GET /api/v1/screener?sector=Banking` returns only Banking rows.
+10. `GET /api/v1/screener?conviction=HIGH%2B` filters correctly (URL-encoded "+"). `GET /api/v1/screener?action=BUY` also works.
+11. `GET /api/v1/screener?limit=10&offset=0` respects pagination. `limit > 200` → 422.
+12. **Percentile rank is computed in PostgreSQL** (`percent_rank()` window function). A grep of `backend/services/conviction_engine.py` must show **zero** calls to `sorted()` or `rank()` or manual `.index()` on roc lists. A test enforces this.
+13. **Semantic sentinels:**
+    - All 4 factors True + regime BULL → `conviction=HIGH_PLUS, action=BUY, factors_aligned=4`.
+    - All 4 factors False → `conviction=AVOID, action=EXIT, factors_aligned=0`.
+    - factor_volume_rs requires BOTH cmf_20 > 0 AND mfi_14 > 50 — 3 scenarios covered.
+    - Invalid query params (universe="foo") → 422, not 500.
+14. Quality gate: `ruff check` clean, `mypy backend/services/conviction_engine.py backend/routes/screener.py --ignore-missing-imports` clean, ≥20 + ≥3 tests pass, full suite does not regress.
 
 ---
 
 ## Tests
 
-### `tests/services/test_conviction_engine.py`
+### `tests/services/test_conviction_engine.py` (≥20 tests, ≥400 lines)
 
-All tests mock `AsyncSession.execute` to return controlled data. Use `MagicMock` + `AsyncMock` pattern from existing tests (see `tests/routes/test_stock_conviction.py` for patterns). Do NOT hit real DB.
+All tests mock `AsyncSession.execute`. Do NOT hit real DB.
 
-```
-test_four_factor_all_true_returns_high_plus
-    rs_composite=105, roc_21_pct_rank=0.75, sector_rs=105, cmf_20=0.1, mfi_14=55
-    Assert conviction_level == ConvictionLevel.HIGH_PLUS, factors_aligned == 4
+1. `test_four_factor_all_true_returns_high_plus` — rs=105, pct_rank=0.75, sector_rs=105, cmf=0.1, mfi=55 → HIGH_PLUS, aligned=4.
+2. `test_four_factor_zero_returns_avoid` — rs=90, pct_rank=0.3, sector_rs=90, cmf=-0.1, mfi=40 → AVOID, aligned=0.
+3. `test_four_factor_three_aligned_returns_high` — exactly 3 True → HIGH.
+4. `test_four_factor_two_aligned_returns_medium` — exactly 2 → MEDIUM.
+5. `test_four_factor_one_aligned_returns_low` — exactly 1 → LOW.
+6. `test_four_factor_sector_rs_reads_sector_table` — entity_type='sector' row → factor_sector_rs=True when >100.
+7. `test_four_factor_volume_rs_requires_both` — cmf=0.1/mfi=45 → False; cmf=-0.1/mfi=55 → False; cmf=0.1/mfi=55 → True.
+8. `test_four_factor_handles_missing_sector` — sector=None → factor_sector_rs=False, model still returned.
+9. `test_four_factor_handles_missing_tech_row` — target_tech empty → returns None.
+10. `test_action_bull_regime_high_plus_returns_buy` — HIGH_PLUS + BULL → BUY.
+11. `test_action_bear_regime_high_returns_accumulate` — HIGH + BEAR → ACCUMULATE.
+12. `test_action_medium_returns_watch` — MEDIUM → WATCH regardless of regime.
+13. `test_action_low_falling_returns_reduce` — LOW + rs=95 → REDUCE.
+14. `test_action_avoid_returns_exit` — AVOID → EXIT.
+15. `test_urgency_immediate_strong_momentum` — HIGH_PLUS + roc_5=3.5 → IMMEDIATE.
+16. `test_urgency_developing_positive_roc21` — HIGH + roc_21=2.0 → DEVELOPING.
+17. `test_urgency_patient_default` — MEDIUM or low roc → PATIENT.
+18. `test_screener_uses_sql_percentile_not_python` — **semantic sentinel.** Import `backend.services.conviction_engine`, read `inspect.getsource`, assert "percent_rank" in source and assert `"sorted(" not in source` for any roc-related list.
+19. `test_screener_filters_by_nifty50` — filters["universe"]="nifty50" → generated SQL contains `i.nifty_50 = true`.
+20. `test_screener_filters_by_sector_param_bound` — filters["sector"]="Banking" → SQL contains `:sector` binding, not `'Banking'` interpolated.
+21. `test_screener_filters_by_conviction_python_side` — 5 mocked rows with mixed convictions, filter="HIGH" → only matching rows returned.
+22. `test_screener_returns_conviction_and_action` — row with rs=110, pct_rank=0.8, sector_rs=105, cmf=0.2, mfi=60 + regime=BULL → ScreenerRow has conviction=HIGH_PLUS, action=BUY.
+23. `test_screener_limit_offset_pagination` — filters["limit"]=10, offset=20 → SQL contains LIMIT 10 OFFSET 20.
 
-test_four_factor_zero_returns_avoid
-    rs_composite=90, roc_21_pct_rank=0.3, sector_rs=90, cmf_20=-0.1, mfi_14=40
-    Assert conviction_level == ConvictionLevel.AVOID, factors_aligned == 0
+### `tests/routes/test_screener_route.py` (≥3 tests, ≥80 lines)
 
-test_four_factor_sector_rs_check_uses_sector_table
-    Mock entity_type='sector' query to return sector_rs=110 → factor_sector_rs=True
-    Mock entity_type='sector' query to return None → factor_sector_rs=False
-    Assert both cases correctly
+httpx `AsyncClient` + `app.dependency_overrides[get_db]`.
 
-test_four_factor_volume_rs_requires_both_cmf_and_mfi
-    cmf_20=0.1, mfi_14=45 → factor_volume_rs=False (mfi_14 not > 50)
-    cmf_20=-0.1, mfi_14=55 → factor_volume_rs=False (cmf_20 not > 0)
-    cmf_20=0.1, mfi_14=55 → factor_volume_rs=True
+1. `test_screener_route_returns_200` — GET /api/v1/screener → 200, has `rows` and `meta`.
+2. `test_screener_route_rejects_invalid_universe` — GET /api/v1/screener?universe=foo → 422.
+3. `test_screener_route_filters_universe_nifty50_passes_through` — mock `compute_screener_bulk` → assert the filters dict passed in includes `universe="nifty50"`.
 
-test_action_bull_regime_high_plus_returns_buy
-    conviction=HIGH_PLUS, regime="BULL" → action=BUY
+### Deep-dive non-regression test (append to `tests/routes/test_stock_derived_signals.py` from C-DER-1)
 
-test_action_correction_high_returns_accumulate
-    conviction=HIGH, regime="BEAR" → action=ACCUMULATE
+Add one new test `test_stock_deep_dive_includes_four_factor` — assert `response.stock.four_factor.conviction_level` is one of the 5 enum values, `action_signal` one of 5, `urgency` one of 3, and that `gold_rs` + `piotroski` from C-DER-1 are still present (non-regression).
 
-test_action_medium_conviction_returns_watch
-    conviction=MEDIUM, any regime → action=WATCH
+---
 
-test_action_low_falling_returns_reduce
-    conviction=LOW, rs_composite=95 (< 100) → action=REDUCE
+## Live smoke (required at DONE)
 
-test_action_avoid_returns_exit
-    conviction=AVOID → action=EXIT
+After the chunk ships and the backend service restarts:
 
-test_urgency_immediate_strong_momentum
-    conviction=HIGH_PLUS, roc_5=3.5 (> 3%) → urgency=IMMEDIATE
+```bash
+curl -s https://atlas.jslwealth.in/api/v1/stocks/RELIANCE \
+  | jq '{four_factor: .stock.four_factor.conviction_level,
+         action: .stock.four_factor.action_signal,
+         urgency: .stock.four_factor.urgency,
+         aligned: .stock.four_factor.factors_aligned,
+         gold: .stock.gold_rs.signal,
+         piotroski: .stock.piotroski.score}'
 
-test_urgency_developing_positive_roc21
-    conviction=HIGH, roc_21=2.0 (> 0) → urgency=DEVELOPING
+curl -s "https://atlas.jslwealth.in/api/v1/screener?universe=nifty50&limit=5" \
+  | jq '.rows | map({symbol, conviction: .conviction_level, action: .action_signal}) | .[]'
 
-test_urgency_patient_default
-    conviction=MEDIUM, roc_5=1.0 → urgency=PATIENT
-
-test_four_factor_handles_missing_sector_rs
-    sector_rs CTE returns no rows → factor_sector_rs=False, sector_rs_composite=None
-    Assert full model returned (not None)
-
-test_screener_percentile_rank_sql_not_python
-    Call compute_screener_bulk with mocked session
-    Assert the SQL string in the captured query contains "percent_rank()"
-    Assert no Python sorting of roc_21 values occurs in code
-
-test_screener_filters_by_nifty50
-    filters = {"universe": "nifty50", ...}
-    Assert generated SQL contains "nifty_50 = true"
-
-test_screener_filters_by_sector
-    filters = {"sector": "Banking", ...}
-    Assert generated SQL contains sector parameter binding (not f-string injection)
-
-test_screener_filters_by_conviction
-    Mock 5 rows returned, 2 with conviction=HIGH, 3 with conviction=MEDIUM
-    filters = {"conviction": "HIGH"}
-    Assert only 2 rows returned in result
-
-test_screener_returns_conviction_and_action
-    Mock row with rs_composite=110, roc_21_pct_rank=0.8, sector_rs=105, cmf_20=0.2, mfi_14=60
-    regime="BULL"
-    Assert ScreenerRow has conviction_level=HIGH_PLUS, action_signal=BUY
-
-test_screener_limit_offset_pagination
-    filters = {"limit": 10, "offset": 20}
-    Assert SQL contains LIMIT 10 OFFSET 20
+# Negative: invalid universe must 422
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  "https://atlas.jslwealth.in/api/v1/screener?universe=nonsense"
 ```
 
-### `tests/routes/test_screener_route.py`
+Expected:
+- RELIANCE: returns `four_factor` populated + C-DER-1 fields intact.
+- Screener: 5 rows, all nifty_50 members, each with conviction + action.
+- Invalid universe: `422`.
 
-Route tests using httpx `AsyncClient` with `app.dependency_overrides[get_db]`.
+Paste output into `docs/decisions/session-log.md` under the C-DER-2 entry.
 
-```
-test_screener_route_returns_200
-    GET /api/v1/screener → 200, response has "rows" and "meta"
+---
 
-test_screener_route_filters_universe_nifty50
-    GET /api/v1/screener?universe=nifty50
-    Assert meta.record_count matches mocked filtered count
-```
+## Post-chunk sync invariant
 
-**Total: 20 tests minimum across both test files.**
+`scripts/post-chunk.sh C-DER-2` MUST green: commit+push, service restart,
+smoke probe, /forge-compile, MEMORY.md append. All 5 must pass. Otherwise
+chunk is not DONE.
