@@ -21,6 +21,7 @@ from backend.routes import (
     errors as uql_errors,
     etf,
     global_intel,
+    global_v7,
     intelligence,
     mf,
     portfolio,
@@ -96,6 +97,7 @@ app.include_router(query.router)
 app.include_router(decisions.router)
 app.include_router(intelligence.router)
 app.include_router(global_intel.router)
+app.include_router(global_v7.router)
 app.include_router(mf.router)
 app.include_router(simulate.router)
 app.include_router(portfolio.router)
