@@ -28,6 +28,7 @@ from backend.routes import (
     system,
     system_probes,
     tv,
+    watchlists,
     webhooks,
 )
 from backend.routes.system_probes import health as _health_impl
@@ -95,6 +96,7 @@ app.include_router(portfolio.router)
 app.include_router(system.router)
 app.include_router(system_probes.probes_router)
 app.include_router(tv.router)
+app.include_router(watchlists.router)
 app.include_router(webhooks.router)
 
 
