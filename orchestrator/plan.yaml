@@ -1855,7 +1855,7 @@ chunks:
 
   - id: V6T-1
     title: "Setup: pin tradingview-screener, clean dead config"
-    status: PENDING
+    status: DONE
     quality_targets:
       code: 80
     punch_list:
@@ -1867,14 +1867,19 @@ chunks:
     title: "Bridge rewrite + watchlist sync-tv route removal"
     status: PENDING
     depends_on: [V6T-1]
+    spec: docs/specs/chunks/v6t-2.md
     quality_targets:
       api: 85
       architecture: 85
       code: 80
     punch_list:
-      - "GET /api/tv/ta/RELIANCE returns non-503 with real TV data"
-      - "8+ bridge tests pass"
+      - "GET /api/tv/ta/RELIANCE returns non-503 with real TV data (Recommend.All field present)"
+      - "8+ bridge tests pass in tests/unit/tv/"
       - "POST /api/watchlists/{id}/sync-tv returns 404"
+      - "No httpx in bridge.py — uses tradingview_screener.Query directly"
+      - "asyncio.to_thread() wraps synchronous get_scanner_data() call"
+      - "mypy clean on backend/services/tv/bridge.py"
+      - "pytest tests/unit/tv/ tests/routes/test_tv_routes.py all green"
 
   - id: V6T-3
     title: "TVConvictionPanel component + DeepDivePanel wiring"
