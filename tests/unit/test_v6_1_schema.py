@@ -31,14 +31,18 @@ def test_atlas_tv_cache_composite_pk() -> None:
 
 
 def test_atlas_tv_cache_has_required_columns() -> None:
-    """atlas_tv_cache ORM must have all six required columns."""
+    """atlas_tv_cache ORM must have all six required attributes.
+
+    Note: the DB column is named 'data' but the Python attribute is 'tv_data'
+    (mapped via mapped_column("data", ...)) — we check attribute names here.
+    """
     from backend.db.tv_models import AtlasTvCache
 
     mapper = class_mapper(AtlasTvCache)
-    col_names = {col.key for col in mapper.columns}
+    attr_names = {attr.key for attr in mapper.attrs}
     required = {"symbol", "exchange", "data_type", "interval", "tv_data", "fetched_at"}
-    missing = required - col_names
-    assert not missing, f"Missing columns: {missing}"
+    missing = required - attr_names
+    assert not missing, f"Missing attributes: {missing}"
 
 
 def test_atlas_tv_cache_no_updated_at() -> None:

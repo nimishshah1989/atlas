@@ -19,7 +19,7 @@ class AtlasTvCache(Base):
     exchange: Mapped[str] = mapped_column(String(20), nullable=False, server_default="NSE")
     data_type: Mapped[str] = mapped_column(String(30), primary_key=True)
     interval: Mapped[str] = mapped_column(String(10), primary_key=True, server_default="none")
-    tv_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    tv_data: Mapped[dict[str, Any]] = mapped_column("data", JSONB, nullable=False)
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

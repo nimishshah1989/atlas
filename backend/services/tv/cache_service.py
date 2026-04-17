@@ -196,13 +196,13 @@ class TVCacheService:
                 exchange=exchange,
                 data_type=data_type,
                 interval=interval,
-                tv_data=tv_data,
+                data=tv_data,
                 fetched_at=now,
             )
             .on_conflict_do_update(
                 index_elements=["symbol", "data_type", "interval"],
                 set_={
-                    "tv_data": tv_data,
+                    "data": tv_data,
                     "exchange": exchange,
                     "fetched_at": now,
                 },

@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Market Breadth · India</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── Tooltip ── */
+    .tip { position:relative; display:inline-flex; align-items:center; gap:3px; cursor:help; }
+    .tip .tipbody { visibility:hidden; opacity:0; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); width:240px; background:var(--accent-900); color:#fff; font-size:10px; padding:8px 10px; border-radius:var(--radius-sm); line-height:1.5; z-index:200; pointer-events:none; transition:opacity 80ms; }
+    .tip .tipbody::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--accent-900); }
+    .tip:hover .tipbody { visibility:visible; opacity:1; }
+    .info-i { display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--bg-inset); border:1px solid var(--border-strong); font-size:8px; line-height:12px; text-align:center; color:var(--text-tertiary); font-weight:700; flex-shrink:0; font-style:normal; }
+
+    /* ── Dense metric grid (reused) ── */
+    .mgrid { display:grid; gap:1px; background:var(--border-subtle); border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow:hidden; }
+    .mgrid--2 { grid-template-columns:repeat(2,1fr); }
+    .mgrid--3 { grid-template-columns:repeat(3,1fr); }
+    .mgrid--4 { grid-template-columns:repeat(4,1fr); }
+    .mbox { background:var(--bg-surface); padding:10px 12px; }
+    .mbox__l { font-size:10px; color:var(--text-tertiary); font-weight:500; margin-bottom:3px; }
+    .mbox__v { font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-primary); line-height:1.2; }
+    .mbox__d { font-size:10px; font-variant-numeric:tabular-nums; margin-top:2px; }
+    .mbox__d--pos { color:var(--rag-green-700); }
+    .mbox__d--neg { color:var(--rag-red-700); }
+    .mbox--g { background:var(--rag-green-100); }
+    .mbox--a { background:var(--rag-amber-100); }
+    .mbox--r { background:var(--rag-red-100); }
+
+    /* ── Crumb ── */
+    .crumb { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-tertiary); padding:var(--space-4) 0 var(--space-2); }
+    .crumb a { color:var(--text-accent); cursor:pointer; }
+    .crumb__sep { color:var(--border-strong); }
+    .page { padding:0 var(--space-6) var(--space-10); max-width:var(--maxw-page); margin:0 auto; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §12 REGIME BANNER
+       ───────────────────────────────────────────────────────────────── */
+    .regime-banner {
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:var(--space-5);
+      align-items:center;
+      padding:var(--space-4) var(--space-5);
+      border-radius:var(--radius-md);
+      border:1px solid var(--border-default);
+      background:var(--bg-surface);
+      border-left-width:4px;
+      margin-bottom:var(--space-4);
+    }
+    .regime-banner--correction { border-left-color:var(--rag-amber-500); }
+    .regime-banner--expansion  { border-left-color:var(--rag-green-500); }
+    .regime-banner--contraction{ border-left-color:var(--rag-red-500);   }
+    .regime-banner--recovery   { border-left-color:var(--accent-500);    }
+
+    .rb-left { display:flex; flex-direction:column; gap:2px; }
+    .rb-label { font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; }
+    .rb-name  { font-family:var(--font-serif); font-size:28px; font-weight:400; line-height:1; }
+    .regime-banner--correction .rb-name { color:var(--rag-amber-700); }
+    .regime-banner--expansion  .rb-name { color:var(--rag-green-700); }
+    .regime-banner--contraction .rb-name { color:var(--rag-red-700);  }
+    .regime-banner--recovery   .rb-name { color:var(--accent-700);    }
+
+    .rb-text { font-size:13px; line-height:1.6; color:var(--text-secondary); }
+    .rb-text strong { font-weight:600; }
+    .rb-text .hl-amber { color:var(--rag-amber-700); font-weight:600; }
+    .rb-text .hl-green { color:var(--rag-green-700); font-weight:600; }
+    .rb-text .hl-red   { color:var(--rag-red-700); font-weight:600; }
+
+    .rb-days { text-align:right; }
+    .rb-days .rb-count { font-size:38px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary); line-height:1; }
+    .rb-days .rb-unit  { font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §13 SIGNAL STRIP (the three DMA readings)
+       ───────────────────────────────────────────────────────────────── */
+    .ss-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); margin-bottom:var(--space-4); }
+
+    .ss-card {
+      background:var(--bg-surface);
+      border:1px solid var(--border-default);
+      border-radius:var(--radius-md);
+      padding:var(--space-4) var(--space-5);
+      position:relative;
+    }
+    .ss-card--bull { border-top:3px solid var(--rag-green-500); }
+    .ss-card--bear { border-top:3px solid var(--rag-red-500);   }
+    .ss-card--neut { border-top:3px solid var(--rag-amber-500); }
+
+    .ss-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); }
+    .ss-lbl { font-size:10px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.05em; }
+    .ss-sig { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:var(--radius-full); }
+    .ss-sig--bull { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .ss-sig--bear { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .ss-sig--neut { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+
+    .ss-main { display:flex; align-items:baseline; gap:var(--space-2); margin-bottom:4px; }
+    .ss-val  { font-size:36px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1; color:var(--text-primary); }
+    .ss-denom { font-size:16px; color:var(--text-tertiary); font-weight:400; }
+    .ss-foot { font-size:11px; font-variant-numeric:tabular-nums; color:var(--text-secondary); }
+    .ss-foot .pos { color:var(--rag-green-700); font-weight:600; }
+    .ss-foot .neg { color:var(--rag-red-700);   font-weight:600; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       INDICATOR TABS + PERIOD SELECTOR
+       ───────────────────────────────────────────────────────────────── */
+    .itab-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); }
+    .itabs { display:flex; gap:2px; background:var(--bg-inset); padding:3px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); }
+    .itab { font-size:11px; font-weight:500; color:var(--text-secondary); background:transparent; border:none; cursor:pointer; padding:5px 12px; border-radius:var(--radius-sm); white-space:nowrap; }
+    .itab:hover { color:var(--text-primary); background:var(--bg-hover); }
+    .itab--active { background:var(--bg-surface); color:var(--accent-700); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+
+    .period-sel { display:flex; gap:2px; background:var(--bg-inset); padding:3px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); }
+    .psel { font-size:11px; font-weight:500; color:var(--text-secondary); background:transparent; border:none; cursor:pointer; padding:5px 10px; border-radius:var(--radius-sm); }
+    .psel--active { background:var(--bg-surface); color:var(--accent-700); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §14 OSCILLATOR CHART LAYOUT (main + right rail)
+       ───────────────────────────────────────────────────────────────── */
+    .oc-layout { display:grid; grid-template-columns:1fr 280px; gap:var(--space-4); margin-bottom:var(--space-6); align-items:start; }
+    .oc-main { display:flex; flex-direction:column; gap:var(--space-4); }
+
+    .oc-chart-card {
+      background:var(--bg-surface);
+      border:1px solid var(--border-default);
+      border-radius:var(--radius-md);
+      padding:var(--space-4);
+    }
+    .oc-chart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-2); }
+    .oc-dot-label { display:flex; align-items:center; gap:6px; font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.05em; }
+    .oc-dot { width:7px; height:7px; border-radius:50%; background:var(--accent-500); display:inline-block; }
+    .oc-dot--amber { background:var(--rag-amber-500); }
+    .oc-toggle { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--text-secondary); font-weight:500; }
+    .toggle-pill { width:28px; height:14px; border-radius:999px; background:var(--accent-500); position:relative; flex-shrink:0; }
+    .toggle-pill::after { content:''; position:absolute; left:16px; top:2px; width:10px; height:10px; border-radius:50%; background:#fff; }
+
+    .oc-hero-title { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; font-family:var(--font-serif); }
+    .oc-hero-desc { font-size:11px; color:var(--text-secondary); line-height:1.6; max-width:600px; margin-bottom:var(--space-3); font-family:var(--font-mono); }
+
+    /* SVG chart */
+    .oc-svg-wrap { position:relative; }
+    .oc-svg { width:100%; display:block; }
+
+    /* Chart legend below chart */
+    .chart-legend { display:flex; gap:var(--space-5); margin-top:var(--space-2); padding-top:var(--space-2); border-top:1px solid var(--border-subtle); }
+    .leg-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-secondary); }
+    .leg-line { width:24px; height:2px; }
+    .leg-line--amber { background:var(--rag-amber-500); }
+    .leg-line--petrol { background:var(--accent-500); }
+    .leg-line--dashed { background:repeating-linear-gradient(90deg, var(--rag-red-500) 0px,var(--rag-red-500) 4px,transparent 4px,transparent 7px); }
+    .leg-line--dashed-g { background:repeating-linear-gradient(90deg, var(--rag-green-500) 0px,var(--rag-green-500) 4px,transparent 4px,transparent 7px); }
+    .leg-line--dashed-grey { background:repeating-linear-gradient(90deg, var(--text-tertiary) 0px,var(--text-tertiary) 4px,transparent 4px,transparent 7px); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §15 INTERPRETATION RAIL (right side)
+       ───────────────────────────────────────────────────────────────── */
+    .oc-rail { display:flex; flex-direction:column; gap:var(--space-3); }
+
+    .rail-card { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); }
+    .rail-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); padding-bottom:var(--space-2); border-bottom:1px solid var(--border-subtle); }
+    .rail-head-l { display:flex; align-items:center; gap:6px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); }
+    .rail-head-r { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-tertiary); }
+
+    /* Zones */
+    .zone-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-subtle); font-size:12px; }
+    .zone-row:last-child { border-bottom:none; }
+    .zone-name { display:flex; align-items:center; gap:6px; font-weight:500; color:var(--text-secondary); }
+    .zone-line-swatch { width:20px; height:2px; flex-shrink:0; }
+    .zone-line-swatch--ob   { background:repeating-linear-gradient(90deg, var(--rag-red-500) 0,var(--rag-red-500) 4px,transparent 4px,transparent 7px); }
+    .zone-line-swatch--mid  { background:repeating-linear-gradient(90deg, var(--text-tertiary) 0,var(--text-tertiary) 4px,transparent 4px,transparent 7px); }
+    .zone-line-swatch--os   { background:repeating-linear-gradient(90deg, var(--rag-green-500) 0,var(--rag-green-500) 4px,transparent 4px,transparent 7px); }
+    .zone-val { font-variant-numeric:tabular-nums; font-weight:600; color:var(--text-primary); font-size:12px; }
+
+    /* Reading panel */
+    .read-row { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border-subtle); font-size:12px; }
+    .read-row:last-child { border-bottom:none; }
+    .read-lbl { color:var(--text-secondary); font-weight:500; }
+    .read-val { font-variant-numeric:tabular-nums; font-weight:600; }
+    .read-val--neg { color:var(--rag-red-700); }
+    .read-val--pos { color:var(--rag-green-700); }
+    .read-val--neu { color:var(--text-primary); }
+    .read-val--dim { color:var(--text-tertiary); }
+
+    /* Interpretation */
+    .interp-headline { font-family:var(--font-serif); font-style:italic; font-size:16px; margin-bottom:var(--space-2); }
+    .interp-headline--bear { color:var(--rag-red-700); }
+    .interp-headline--bull { color:var(--rag-green-700); }
+    .interp-body { font-size:12px; line-height:1.65; color:var(--text-secondary); }
+    .interp-body strong { font-weight:600; }
+    .interp-body .hl-amber { color:var(--rag-amber-700); font-weight:600; }
+    .interp-body .hl-red   { color:var(--rag-red-700);   font-weight:600; }
+    .interp-body .hl-green { color:var(--rag-green-700); font-weight:600; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §16 SIGNAL HISTORY TABLE
+       ───────────────────────────────────────────────────────────────── */
+    .sh-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); }
+    .sh-filters { display:flex; gap:2px; background:var(--bg-inset); padding:2px; border-radius:var(--radius-sm); }
+    .shf { font-size:10px; padding:3px 9px; border-radius:3px; cursor:pointer; color:var(--text-secondary); font-weight:500; }
+    .shf--active { background:var(--bg-surface); color:var(--text-primary); font-weight:600; }
+
+    .sh-table { width:100%; border-collapse:collapse; font-size:11px; }
+    .sh-table th { padding:6px 10px; text-align:left; font-size:10px; font-weight:600; color:var(--text-tertiary); border-bottom:2px solid var(--border-default); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+    .sh-table th.r { text-align:right; }
+    .sh-table td { padding:7px 10px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; vertical-align:middle; }
+    .sh-table td.r { text-align:right; }
+    .sh-table tr:hover td { background:var(--bg-hover); }
+    .sh-table tr:last-child td { border-bottom:none; }
+
+    .ev-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:var(--radius-full); display:inline-block; }
+    .ev-badge--os-enter  { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .ev-badge--os-exit   { background:var(--bg-inset); color:var(--text-tertiary); }
+    .ev-badge--ob-enter  { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .ev-badge--ob-exit   { background:var(--bg-inset); color:var(--text-tertiary); }
+    .ev-badge--mid-cross { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTOR BREADTH MATRIX
+       ───────────────────────────────────────────────────────────────── */
+    .sbm-wrap { overflow-x:auto; margin-top:var(--space-3); }
+    .sbm { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; }
+    .sbm th { padding:6px 10px; font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; border-bottom:2px solid var(--border-default); text-align:right; background:var(--bg-surface); position:sticky; top:0; z-index:2; }
+    .sbm th.l { text-align:left; position:sticky; left:0; z-index:3; }
+    .sbm th.health { text-align:center; }
+    .sbm td { padding:6px 10px; border-bottom:1px solid var(--border-subtle); text-align:right; font-variant-numeric:tabular-nums; }
+    .sbm td:first-child { text-align:left; font-weight:500; color:var(--text-primary); position:sticky; left:0; background:var(--bg-surface); border-right:1px solid var(--border-default); z-index:1; }
+    .sbm tr:hover td { background:var(--bg-hover); }
+    .sbm tr:hover td:first-child { background:var(--bg-hover); }
+
+    /* Health score cell */
+    .hs-cell { display:inline-flex; align-items:center; justify-content:center; width:40px; height:22px; border-radius:var(--radius-sm); font-size:11px; font-weight:700; }
+    .hs-g { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .hs-a { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .hs-r { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+
+    /* Indicator cells: colored % */
+    .ic-pct { font-variant-numeric:tabular-nums; font-weight:600; }
+    .ic-g { color:var(--rag-green-700); }
+    .ic-a { color:var(--rag-amber-700); }
+    .ic-r { color:var(--rag-red-700); }
+    .ic-n { color:var(--text-tertiary); }
+    .ic-small { font-size:9px; color:var(--text-tertiary); font-weight:400; }
+
+    /* Trend arrow */
+    .trend { font-size:10px; }
+    .trend--up   { color:var(--rag-green-500); }
+    .trend--down { color:var(--rag-red-500); }
+    .trend--flat { color:var(--text-tertiary); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       FUNDAMENTAL BREADTH (ATLAS-EXCLUSIVE)
+       ───────────────────────────────────────────────────────────────── */
+    .fbs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); margin-top:var(--space-3); }
+    .fb-bar-row { display:flex; align-items:center; gap:var(--space-2); margin-bottom:6px; font-size:11px; }
+    .fb-sector { min-width:100px; color:var(--text-secondary); font-weight:500; text-align:right; flex-shrink:0; }
+    .fb-bar-track { flex:1; height:8px; background:var(--bg-inset); border-radius:999px; overflow:hidden; }
+    .fb-bar-fill { height:100%; border-radius:999px; }
+    .fb-bar-fill--g { background:var(--rag-green-500); }
+    .fb-bar-fill--a { background:var(--rag-amber-500); }
+    .fb-bar-fill--r { background:var(--rag-red-500); }
+    .fb-pct { min-width:34px; font-variant-numeric:tabular-nums; font-weight:600; font-size:11px; text-align:right; }
+    .fb-head { font-size:10px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3); display:flex; align-items:center; gap:var(--space-2); }
+    .fb-head-badge { font-size:8px; font-weight:700; padding:2px 6px; border-radius:999px; background:var(--accent-100); color:var(--accent-700); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       DIVERGENCE PANEL
+       ───────────────────────────────────────────────────────────────── */
+    .div-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); margin-top:var(--space-3); }
+    .div-card { border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); background:var(--bg-surface); }
+    .div-head { display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3); }
+    .div-title { font-size:12px; font-weight:600; color:var(--text-primary); }
+    .div-badge { font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px; }
+    .div-badge--warn { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .div-badge--opp  { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .div-desc { font-size:11px; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-3); }
+    .div-list-item { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border-subtle); font-size:11px; }
+    .div-list-item:last-child { border-bottom:none; }
+    .div-item-name { font-weight:500; color:var(--text-primary); }
+    .div-item-meta { color:var(--text-tertiary); }
+    .div-item-delta { font-variant-numeric:tabular-nums; font-weight:600; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       FLOW CORRELATION
+       ───────────────────────────────────────────────────────────────── */
+    .flow-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-3); margin-top:var(--space-3); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       REGIME HISTORY TABLE
+       ───────────────────────────────────────────────────────────────── */
+    .rh-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:var(--space-3); }
+    .rh-table th { padding:7px 12px; text-align:left; font-size:10px; font-weight:600; color:var(--text-tertiary); border-bottom:2px solid var(--border-default); text-transform:uppercase; letter-spacing:.04em; }
+    .rh-table th.r { text-align:right; }
+    .rh-table td { padding:8px 12px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; }
+    .rh-table td.r { text-align:right; }
+    .rh-table tr.current td { background:var(--accent-100); }
+    .rh-table tr:hover td { background:var(--bg-hover); }
+    .regime-chip { font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .rc--expansion   { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .rc--correction  { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .rc--contraction { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .rc--recovery    { background:var(--accent-100);    color:var(--accent-700);    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SIMULATION TRIGGER CARD (§18)
+       ───────────────────────────────────────────────────────────────── */
+    .sim-trigger {
+      border:1px solid var(--accent-300);
+      border-left:4px solid var(--accent-700);
+      border-radius:var(--radius-md);
+      padding:var(--space-5);
+      background:var(--accent-100);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:var(--space-6);
+      margin-top:var(--space-6);
+    }
+    .sim-trigger-content { flex:1; }
+    .sim-trigger-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--accent-700); margin-bottom:4px; }
+    .sim-trigger-text { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+    .sim-trigger-sub { font-size:12px; color:var(--text-secondary); }
+    .sim-btn { flex-shrink:0; background:var(--accent-700); color:#fff; border:none; padding:10px 20px; border-radius:var(--radius-md); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTION HEADER
+       ───────────────────────────────────────────────────────────────── */
+    .sec-hd { display:flex; align-items:baseline; gap:var(--space-3); margin:var(--space-7) 0 var(--space-4); padding-bottom:var(--space-3); border-bottom:2px solid var(--border-default); }
+    .sec-hd h3 { font-size:13px; font-weight:700; color:var(--text-primary); font-family:var(--font-sans); margin:0; }
+    .sec-hd .sec-sub { font-size:11px; color:var(--text-tertiary); }
+    .sec-hd .sec-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--accent-100); color:var(--accent-700); margin-left:auto; }
+    .sec-hd .sec-badge--excl { background:#FFF3E0; color:#BF360C; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Topbar ── -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link topnav__link--active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>Pulse
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorer
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Builder
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/></svg>Simulate
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10l6-8 6 8v10"/></svg>Signals
+    </a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input placeholder="Search…" />
+  </div>
+  <div class="topbar__meta">
+    <span style="font-size:10px;color:var(--text-tertiary)">● LIVE · 15 APR 2026</span>
+    <div class="topbar__avatar">N</div>
+  </div>
+</header>
+
+<!-- ── Pulse sub-nav ── -->
+<div style="background:var(--bg-surface);border-bottom:1px solid var(--border-default);">
+  <div style="max-width:var(--maxw-page);margin:0 auto;padding:0 var(--space-6);display:flex;align-items:center;gap:var(--space-1);">
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">Global</a>
+    <a style="font-size:12px;font-weight:600;color:var(--accent-700);padding:10px 14px;border-bottom:2px solid var(--accent-700);cursor:pointer;">India</a>
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">United States</a>
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">China</a>
+    <div style="flex:1"></div>
+    <span style="font-size:10px;color:var(--text-tertiary);padding:10px 0;">214 sessions · EoD</span>
+  </div>
+</div>
+
+<!-- ── India sub-nav ── -->
+<div style="background:var(--bg-app);border-bottom:1px solid var(--border-subtle);">
+  <div style="max-width:var(--maxw-page);margin:0 auto;padding:0 var(--space-6);display:flex;align-items:center;gap:0;">
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Overview</a>
+    <a style="font-size:11px;font-weight:700;color:var(--accent-700);padding:8px 14px;border-bottom:2px solid var(--accent-700);cursor:pointer;">Breadth</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Sectors</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Sentiment</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Flows</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Macro</a>
+  </div>
+</div>
+
+<main class="page">
+  <div class="crumb">
+    <a>Global</a><span class="crumb__sep">›</span>
+    <a>India</a><span class="crumb__sep">›</span>
+    <strong style="color:var(--text-primary);">Market Breadth</strong>
+  </div>
+
+  <!-- ── §12 REGIME BANNER ── -->
+  <div class="regime-banner regime-banner--correction">
+    <div class="rb-left">
+      <div class="rb-label">Market Regime</div>
+      <div class="rb-name">Correction</div>
+    </div>
+    <div class="rb-text">
+      Structural breadth has weakened to <span class="hl-amber">245/500</span> above 200-DMA — a <span class="hl-amber">correction regime.</span>
+      Many stocks are now in individual downtrends even as the headline index holds near highs,
+      creating a dangerous divergence between price and participation.
+      <strong>Reduce position sizing, tighten stops,</strong> and wait for a breadth recovery above 270 before adding new exposure.
+    </div>
+    <div class="rb-days">
+      <div class="rb-count">17</div>
+      <div class="rb-unit">Days in Regime</div>
+    </div>
+  </div>
+
+  <!-- ── §13 SIGNAL STRIP (three DMA breadth readings) ── -->
+  <div class="ss-strip">
+    <!-- Above 21 EMA -->
+    <div class="ss-card ss-card--bear">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Above 21 EMA
+            <span class="tipbody">Short-term momentum breadth. Count of Nifty 500 stocks trading above their 21-period exponential moving average. Below 100 = oversold; above 400 = overbought.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--bear">Bearish</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">178</div>
+        <div class="ss-denom">/ 500</div>
+      </div>
+      <div class="ss-foot"><span class="neg">-7 d/d</span> · 35.6% of universe</div>
+    </div>
+
+    <!-- Above 50 DMA -->
+    <div class="ss-card ss-card--bull">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Above 50 DMA
+            <span class="tipbody">Medium-term trend breadth. Count of Nifty 500 stocks above their 50-day simple moving average. The swing-trade health indicator.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--bull">Bullish</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">257</div>
+        <div class="ss-denom">/ 500</div>
+      </div>
+      <div class="ss-foot"><span class="pos">+9 d/d</span> · 51.4% of universe</div>
+    </div>
+
+    <!-- Above 200 DMA -->
+    <div class="ss-card ss-card--bear">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Above 200 DMA
+            <span class="tipbody">Long-term structural breadth. Count of Nifty 500 stocks above their 200-day SMA. Below 50% = structural bear; above 70% = structural bull. Key regime signal.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--bear">Bearish</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">245</div>
+        <div class="ss-denom">/ 500</div>
+      </div>
+      <div class="ss-foot"><span class="pos">+21 d/d</span> · 49.0% of universe</div>
+    </div>
+  </div>
+
+  <!-- ── INDICATOR TABS + PERIOD SELECTOR ── -->
+  <div class="itab-row">
+    <div class="itabs">
+      <button class="itab itab--active">21 EMA</button>
+      <button class="itab">50 DMA</button>
+      <button class="itab">200 DMA</button>
+      <button class="itab">RSI Zone</button>
+      <button class="itab">New High / Low</button>
+      <button class="itab">MACD Bullish%</button>
+      <button class="itab">A/D Ratio</button>
+    </div>
+    <div class="period-sel">
+      <button class="psel">1M</button>
+      <button class="psel">3M</button>
+      <button class="psel psel--active">6M</button>
+      <button class="psel">1Y</button>
+      <button class="psel">ALL</button>
+    </div>
+  </div>
+
+  <!-- ── §14 OSCILLATOR CHART + §15 INTERPRETATION RAIL ── -->
+  <div class="oc-layout">
+
+    <!-- LEFT: main chart -->
+    <div class="oc-main">
+      <div class="oc-chart-card">
+        <div class="oc-chart-head">
+          <div class="oc-dot-label"><span class="oc-dot oc-dot--amber"></span> Breadth Oscillator</div>
+          <div class="oc-toggle">
+            <div class="toggle-pill"></div>
+            <span style="font-size:10px;font-weight:500;color:var(--text-secondary);">Nifty 500 Overlay</span>
+          </div>
+        </div>
+        <div class="oc-hero-title">Stocks above 21 EMA</div>
+        <div class="oc-hero-desc">Short-term momentum breadth. Counts how many Nifty 500 constituents are trading above their 21-period exponential moving average. Readings below 100 historically mark oversold extremes where bounces are likely; readings above 400 signal overbought conditions where consolidation or pullbacks typically follow.</div>
+
+        <!-- §14 DUAL-AXIS SVG CHART -->
+        <div class="oc-svg-wrap">
+          <svg class="oc-svg" viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Amber gradient for breadth area -->
+              <linearGradient id="breadthGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#D9871A" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#D9871A" stop-opacity="0.02"/>
+              </linearGradient>
+              <!-- Clip path for chart area -->
+              <clipPath id="chartClip">
+                <rect x="55" y="16" width="800" height="260"/>
+              </clipPath>
+            </defs>
+
+            <!-- Background band: OB zone (above 400 line) subtle red tint -->
+            <rect x="55" y="16" width="800" height="55" fill="#B63030" fill-opacity="0.04" clip-path="url(#chartClip)"/>
+            <!-- Background band: OS zone (below 100 line) subtle green tint -->
+            <rect x="55" y="225" width="800" height="51" fill="#0B7A4E" fill-opacity="0.04" clip-path="url(#chartClip)"/>
+
+            <!-- OB zone line at y=71 (value=400) -->
+            <line x1="55" y1="71" x2="855" y2="71" stroke="#DB4343" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7"/>
+            <text x="860" y="75" font-size="9" fill="#DB4343" font-family="Inter,sans-serif" font-weight="600">OB 400</text>
+
+            <!-- MID line at y=148 (value=250) -->
+            <line x1="55" y1="148" x2="855" y2="148" stroke="#8A909C" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+            <text x="860" y="152" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="500">MID 250</text>
+
+            <!-- OS zone line at y=224 (value=100) -->
+            <line x1="55" y1="224" x2="855" y2="224" stroke="#10A368" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7"/>
+            <text x="860" y="228" font-size="9" fill="#10A368" font-family="Inter,sans-serif" font-weight="600">OS 100</text>
+
+            <!-- ── BREADTH AREA (amber fill) ── -->
+            <!-- Path: x from 55–667, y mapped from breadth 0-500 to y 275-16 -->
+            <!-- Area fill (closed path down to baseline y=275) -->
+            <path d="M55,71 C65,65 80,60 90,56 C110,50 120,74 130,81 C148,94 162,108 175,117 C190,130 198,145 205,153 C216,165 224,176 230,183 C241,193 250,202 258,209 C266,219 272,230 278,233 C284,228 291,226 298,229 C305,227 310,220 315,216 C325,204 333,195 340,188 C352,175 362,163 370,153 C385,138 395,127 405,117 C418,104 430,97 440,91 C452,82 462,78 470,76 C480,69 490,65 498,63 C507,57 514,53 520,51 C530,49 536,49 540,49 C550,55 558,63 565,71 C574,80 582,83 590,86 C603,91 612,103 620,112 C633,121 642,128 648,132 C655,136 663,163 671,184 L671,275 L55,275 Z"
+                  fill="url(#breadthGrad)" clip-path="url(#chartClip)"/>
+            <!-- Breadth line (amber, solid) -->
+            <path d="M55,71 C65,65 80,60 90,56 C110,50 120,74 130,81 C148,94 162,108 175,117 C190,130 198,145 205,153 C216,165 224,176 230,183 C241,193 250,202 258,209 C266,219 272,230 278,233 C284,228 291,226 298,229 C305,227 310,220 315,216 C325,204 333,195 340,188 C352,175 362,163 370,153 C385,138 395,127 405,117 C418,104 430,97 440,91 C452,82 462,78 470,76 C480,69 490,65 498,63 C507,57 514,53 520,51 C530,49 536,49 540,49 C550,55 558,63 565,71 C574,80 582,83 590,86 C603,91 612,103 620,112 C633,121 642,128 648,132 C655,136 663,163 671,184"
+                  fill="none" stroke="#D9871A" stroke-width="2" stroke-linejoin="round" clip-path="url(#chartClip)"/>
+
+            <!-- ── NIFTY 500 LINE (petrol) ── -->
+            <!-- y mapped: range 19800-24500 (4700), plot 275→16 -->
+            <!-- v=22800→y=116, 22600→128, 22200→150, 21800→173, 21200→207, 21000→218, 20700→235, 20600→241 -->
+            <!-- 20700→235, 21000→218, 21400→196, 21800→173, 22000→162, 22400→139, 22800→116, 23200→94, 23500→77, 23900→54, 23700→65, 23400→82, 23500→77, 23800→60, 24233→35 -->
+            <path d="M55,116 C65,120 80,124 90,128 C110,138 120,144 130,150 C148,160 162,168 175,173 C190,184 198,196 205,207 C216,212 224,215 230,218 C241,225 250,231 258,235 C266,238 272,240 278,241 C284,238 291,236 298,235 C305,228 310,223 315,218 C325,209 333,202 340,196 C352,183 362,177 370,173 C385,167 395,164 405,162 C418,152 430,145 440,139 C452,129 462,121 470,116 C480,108 490,100 498,94 C507,87 514,81 520,77 C530,70 536,62 540,54 C550,59 558,62 565,65 C574,71 582,77 590,82 C603,79 612,77 620,77 C633,69 642,63 648,60 C655,52 663,42 671,35"
+                  fill="none" stroke="#2A7A8B" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="none" opacity="0.85" clip-path="url(#chartClip)"/>
+
+            <!-- ── ZONE EVENT DOTS ── -->
+            <!-- OS entry (below 100) at x=278, y=233 → green -->
+            <circle cx="278" cy="233" r="5" fill="#0B7A4E" stroke="#fff" stroke-width="2"/>
+            <text x="278" y="251" font-size="8" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="600" text-anchor="middle">OS</text>
+
+            <!-- OS exit at x=315, y=216 → lighter green -->
+            <circle cx="315" cy="216" r="4" fill="#7FD4AC" stroke="#fff" stroke-width="1.5"/>
+
+            <!-- OB entry at x=498, y=63 → red -->
+            <circle cx="498" cy="63" r="5" fill="#B63030" stroke="#fff" stroke-width="2"/>
+            <text x="498" y="50" font-size="8" fill="#B63030" font-family="Inter,sans-serif" font-weight="600" text-anchor="middle">OB</text>
+
+            <!-- OB exit at x=565, y=71 → lighter red -->
+            <circle cx="565" cy="71" r="4" fill="#F0A0A0" stroke="#fff" stroke-width="1.5"/>
+
+            <!-- CURRENT reading dot -->
+            <circle cx="671" cy="184" r="5" fill="#D9871A" stroke="#fff" stroke-width="2"/>
+            <text x="685" y="188" font-size="10" fill="#D9871A" font-family="Inter,sans-serif" font-weight="700">178</text>
+
+            <!-- DIVERGENCE ANNOTATION: Nifty near highs while breadth at 184 -->
+            <line x1="671" y1="35" x2="671" y2="184" stroke="#565E6E" stroke-width="1" stroke-dasharray="3 2"/>
+            <text x="676" y="104" font-size="9" fill="#B63030" font-family="Inter,sans-serif" font-weight="700" transform="rotate(-90,676,104)">DIVERGENCE</text>
+
+            <!-- Nifty price annotation -->
+            <text x="671" y="28" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif" font-weight="600">24,233</text>
+
+            <!-- Left Y-axis labels (breadth) -->
+            <text x="48" y="20" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">500</text>
+            <text x="48" y="75" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">400</text>
+            <text x="48" y="152" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">250</text>
+            <text x="48" y="228" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">100</text>
+            <text x="48" y="278" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">0</text>
+            <text x="8" y="148" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="500" transform="rotate(-90,8,148)" text-anchor="middle">BREADTH</text>
+
+            <!-- Right Y-axis labels (Nifty 500 price) -->
+            <text x="870" y="278" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif">19,800</text>
+            <text x="870" y="218" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif">21,000</text>
+            <text x="870" y="162" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif">22,000</text>
+            <text x="870" y="105" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif">23,000</text>
+            <text x="870" y="54" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif">24,000</text>
+            <text x="945" y="148" font-size="9" fill="#2A7A8B" font-family="Inter,sans-serif" font-weight="500" transform="rotate(90,945,148)" text-anchor="middle">NIFTY 500</text>
+
+            <!-- X-axis labels (dates) -->
+            <text x="55"  y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Oct 25</text>
+            <text x="175" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Nov 25</text>
+            <text x="298" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Dec 25</text>
+            <text x="405" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Jan 26</text>
+            <text x="520" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Feb 26</text>
+            <text x="620" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Mar 26</text>
+            <text x="671" y="292" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">Apr 26</text>
+          </svg>
+        </div>
+
+        <!-- Chart legend -->
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-line leg-line--amber"></div> Stocks above 21-EMA (left axis)</div>
+          <div class="leg-item"><div class="leg-line leg-line--petrol" style="height:1.5px;opacity:.85;"></div> Nifty 500 Price (right axis)</div>
+          <div class="leg-item"><div class="leg-line leg-line--dashed"></div> Overbought (≥400)</div>
+          <div class="leg-item"><div class="leg-line leg-line--dashed-grey"></div> Midline (250)</div>
+          <div class="leg-item"><div class="leg-line leg-line--dashed-g"></div> Oversold (≤100)</div>
+        </div>
+      </div><!-- /oc-chart-card -->
+
+      <!-- ── §16 SIGNAL HISTORY ── -->
+      <div class="oc-chart-card">
+        <div class="sh-header">
+          <div class="oc-dot-label"><span class="oc-dot oc-dot--amber"></span> Signal History</div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <span style="font-size:10px;color:var(--text-tertiary)">ZONE EVENTS</span>
+            <div class="sh-filters">
+              <button class="shf shf--active">All</button>
+              <button class="shf">21 EMA</button>
+              <button class="shf">50 DMA</button>
+              <button class="shf">200 DMA</button>
+              <button class="shf">Bullish</button>
+              <button class="shf">Bearish</button>
+            </div>
+          </div>
+        </div>
+        <table class="sh-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Indicator</th>
+              <th>Event</th>
+              <th class="r">Breadth</th>
+              <th class="r">Nifty 500</th>
+              <th class="r">Since Return</th>
+              <th class="r">Δ Breadth 20D</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>17 Apr 26</strong> <small style="color:var(--rag-amber-700)">● NOW</small></td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--mid-cross">Below Midline</span></td>
+              <td class="r" style="color:var(--rag-amber-700);font-weight:600;">178</td>
+              <td class="r">24,233</td>
+              <td class="r" style="color:var(--rag-red-700)">–</td>
+              <td class="r" style="color:var(--rag-red-700)">-193</td>
+            </tr>
+            <tr>
+              <td>21 Mar 26</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
+              <td class="r">400</td>
+              <td class="r">23,841</td>
+              <td class="r" style="color:var(--rag-red-700)">-1.7%</td>
+              <td class="r" style="color:var(--rag-red-700)">-40</td>
+            </tr>
+            <tr>
+              <td>05 Feb 26</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--ob-enter">OB Entry</span></td>
+              <td class="r">416</td>
+              <td class="r">23,194</td>
+              <td class="r" style="color:var(--rag-red-700)">+2.8%</td>
+              <td class="r" style="color:var(--rag-green-700)">+130</td>
+            </tr>
+            <tr>
+              <td>14 Dec 25</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--os-exit">OS Exit</span></td>
+              <td class="r">106</td>
+              <td class="r">20,732</td>
+              <td class="r" style="color:var(--rag-green-700)">+16.4%</td>
+              <td class="r" style="color:var(--rag-green-700)">+167</td>
+            </tr>
+            <tr>
+              <td>25 Nov 25</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--os-enter">OS Entry</span></td>
+              <td class="r">82</td>
+              <td class="r">20,584</td>
+              <td class="r" style="color:var(--rag-green-700)">+17.7%</td>
+              <td class="r" style="color:var(--rag-red-700)">-195</td>
+            </tr>
+            <tr>
+              <td>14 Oct 25</td>
+              <td>200 DMA</td>
+              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
+              <td class="r">418</td>
+              <td class="r">24,180</td>
+              <td class="r" style="color:var(--rag-red-700)">-15.1%</td>
+              <td class="r" style="color:var(--rag-red-700)">-92</td>
+            </tr>
+          </tbody>
+        </table>
+      </div><!-- /signal history -->
+
+    </div><!-- /oc-main -->
+
+    <!-- RIGHT: §15 Interpretation Rail -->
+    <div class="oc-rail">
+
+      <!-- ZONES card -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l"><span class="oc-dot oc-dot--amber"></span> Zones</div>
+          <div class="rail-head-r">Ref</div>
+        </div>
+        <div class="zone-row">
+          <div class="zone-name"><div class="zone-line-swatch zone-line-swatch--ob"></div>Overbought</div>
+          <div class="zone-val" style="color:var(--rag-red-700);">≥ 400</div>
+        </div>
+        <div class="zone-row">
+          <div class="zone-name"><div class="zone-line-swatch zone-line-swatch--mid"></div>Midline</div>
+          <div class="zone-val">250</div>
+        </div>
+        <div class="zone-row">
+          <div class="zone-name"><div class="zone-line-swatch zone-line-swatch--os"></div>Oversold</div>
+          <div class="zone-val" style="color:var(--rag-green-700);">≤ 100</div>
+        </div>
+      </div>
+
+      <!-- READING card -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l"><span class="oc-dot" style="background:var(--rag-green-500)"></span> Reading</div>
+          <div class="rail-head-r">Live</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">Current</div>
+          <div class="read-val read-val--neu">178</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">Δ 1 Day</div>
+          <div class="read-val read-val--neg">-7</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">Δ 5 Day</div>
+          <div class="read-val read-val--neg">-31</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">Δ 20 Day</div>
+          <div class="read-val read-val--neg">-193</div>
+        </div>
+        <div class="read-row" style="border-top:1px solid var(--border-default);margin-top:6px;padding-top:8px;">
+          <div class="read-lbl">60D High</div>
+          <div class="read-val read-val--dim">404</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">60D Low</div>
+          <div class="read-val read-val--dim">118</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl">60D Avg</div>
+          <div class="read-val read-val--dim">255</div>
+        </div>
+        <div class="read-row" style="border-top:1px solid var(--border-default);margin-top:6px;padding-top:8px;">
+          <div class="read-lbl">% of Universe</div>
+          <div class="read-val read-val--neg">35.6%</div>
+        </div>
+        <div class="read-row">
+          <div class="read-lbl" style="font-weight:600;color:var(--text-primary);">vs Nifty 500</div>
+          <div style="font-size:11px;font-weight:700;color:var(--rag-red-700);">↗ DIVERGING</div>
+        </div>
+      </div>
+
+      <!-- §15 INTERPRETATION AUTO-NARRATIVE -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l"><span class="oc-dot" style="background:var(--accent-500)"></span> Interpretation</div>
+          <div class="rail-head-r">Auto</div>
+        </div>
+        <div class="interp-headline interp-headline--bear">Weakening participation</div>
+        <div class="interp-body">
+          At <strong>178</strong>, breadth is <span class="hl-red">below midline</span> and deteriorating sharply over the past week (Δ20D = -193). Most concerning: the Nifty 500 index is holding near <span class="hl-amber">24,233</span> — a record high — while fewer than 36% of its constituents are above their 21-EMA. <strong>This is a narrow-leadership divergence.</strong> History suggests the index eventually follows breadth down, not the reverse. <span class="hl-red">Reduce sizing, tighten stops,</span> and wait for a breadth recovery above 220 before re-risking.
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l">Quick Actions</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button style="width:100%;text-align:left;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+            Simulate bulk-exit playbook
+          </button>
+          <button style="width:100%;text-align:left;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Set alert: breadth crosses 220
+          </button>
+          <button style="width:100%;text-align:left;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            View sector-level breadth →
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /oc-rail -->
+  </div><!-- /oc-layout -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       ATLAS-EXCLUSIVE EXTENDED SECTIONS
+       ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ── SECTOR BREADTH MATRIX ── -->
+  <div class="sec-hd">
+    <h3>Sector Breadth Matrix</h3>
+    <span class="sec-sub">All 48 sectors · 12 indicators · EoD 17 Apr 2026</span>
+    <span class="sec-badge">NIFTY 500 · 6M</span>
+  </div>
+  <div class="sbm-wrap">
+    <table class="sbm">
+      <thead>
+        <tr>
+          <th class="l">Sector</th>
+          <th class="health">Health</th>
+          <th>%>21EMA</th>
+          <th>%>50DMA</th>
+          <th>%>200DMA</th>
+          <th>RSI Zone</th>
+          <th>MACD%</th>
+          <th>52W-Hi%</th>
+          <th>A/D</th>
+          <th>Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NIFTY IT</td>
+          <td style="text-align:center"><div class="hs-cell hs-r">28</div></td>
+          <td><span class="ic-pct ic-r">22%</span></td>
+          <td><span class="ic-pct ic-r">28%</span></td>
+          <td><span class="ic-pct ic-a">44%</span></td>
+          <td><span class="ic-pct ic-r">Fear</span></td>
+          <td><span class="ic-pct ic-r">18%</span></td>
+          <td><span class="ic-pct ic-r">4%</span></td>
+          <td><span class="ic-pct ic-r">0.6</span></td>
+          <td><span class="trend trend--down">↓↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY BANK</td>
+          <td style="text-align:center"><div class="hs-cell hs-a">49</div></td>
+          <td><span class="ic-pct ic-a">40%</span></td>
+          <td><span class="ic-pct ic-a">47%</span></td>
+          <td><span class="ic-pct ic-a">53%</span></td>
+          <td><span class="ic-pct ic-a">Neutral</span></td>
+          <td><span class="ic-pct ic-a">38%</span></td>
+          <td><span class="ic-pct ic-a">11%</span></td>
+          <td><span class="ic-pct ic-a">0.9</span></td>
+          <td><span class="trend trend--down">↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY PHARMA</td>
+          <td style="text-align:center"><div class="hs-cell hs-g">71</div></td>
+          <td><span class="ic-pct ic-g">62%</span></td>
+          <td><span class="ic-pct ic-g">68%</span></td>
+          <td><span class="ic-pct ic-g">74%</span></td>
+          <td><span class="ic-pct ic-g">Greed</span></td>
+          <td><span class="ic-pct ic-g">64%</span></td>
+          <td><span class="ic-pct ic-g">22%</span></td>
+          <td><span class="ic-pct ic-g">1.8</span></td>
+          <td><span class="trend trend--up">↑↑</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY ENERGY</td>
+          <td style="text-align:center"><div class="hs-cell hs-g">66</div></td>
+          <td><span class="ic-pct ic-g">58%</span></td>
+          <td><span class="ic-pct ic-g">61%</span></td>
+          <td><span class="ic-pct ic-g">69%</span></td>
+          <td><span class="ic-pct ic-a">Neutral</span></td>
+          <td><span class="ic-pct ic-g">55%</span></td>
+          <td><span class="ic-pct ic-g">18%</span></td>
+          <td><span class="ic-pct ic-g">1.4</span></td>
+          <td><span class="trend trend--up">↑</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY FMCG</td>
+          <td style="text-align:center"><div class="hs-cell hs-a">52</div></td>
+          <td><span class="ic-pct ic-a">46%</span></td>
+          <td><span class="ic-pct ic-a">50%</span></td>
+          <td><span class="ic-pct ic-g">60%</span></td>
+          <td><span class="ic-pct ic-a">Neutral</span></td>
+          <td><span class="ic-pct ic-a">42%</span></td>
+          <td><span class="ic-pct ic-a">14%</span></td>
+          <td><span class="ic-pct ic-a">1.1</span></td>
+          <td><span class="trend trend--flat">→</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY METAL</td>
+          <td style="text-align:center"><div class="hs-cell hs-r">34</div></td>
+          <td><span class="ic-pct ic-r">27%</span></td>
+          <td><span class="ic-pct ic-r">33%</span></td>
+          <td><span class="ic-pct ic-a">47%</span></td>
+          <td><span class="ic-pct ic-r">Fear</span></td>
+          <td><span class="ic-pct ic-r">24%</span></td>
+          <td><span class="ic-pct ic-r">6%</span></td>
+          <td><span class="ic-pct ic-r">0.7</span></td>
+          <td><span class="trend trend--down">↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY AUTO</td>
+          <td style="text-align:center"><div class="hs-cell hs-a">44</div></td>
+          <td><span class="ic-pct ic-r">38%</span></td>
+          <td><span class="ic-pct ic-a">44%</span></td>
+          <td><span class="ic-pct ic-a">52%</span></td>
+          <td><span class="ic-pct ic-a">Neutral</span></td>
+          <td><span class="ic-pct ic-a">36%</span></td>
+          <td><span class="ic-pct ic-a">12%</span></td>
+          <td><span class="ic-pct ic-a">1.0</span></td>
+          <td><span class="trend trend--down">↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY REALTY</td>
+          <td style="text-align:center"><div class="hs-cell hs-r">24</div></td>
+          <td><span class="ic-pct ic-r">17%</span></td>
+          <td><span class="ic-pct ic-r">22%</span></td>
+          <td><span class="ic-pct ic-r">38%</span></td>
+          <td><span class="ic-pct ic-r">Extreme Fear</span></td>
+          <td><span class="ic-pct ic-r">12%</span></td>
+          <td><span class="ic-pct ic-r">3%</span></td>
+          <td><span class="ic-pct ic-r">0.4</span></td>
+          <td><span class="trend trend--down">↓↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY INFRA</td>
+          <td style="text-align:center"><div class="hs-cell hs-a">41</div></td>
+          <td><span class="ic-pct ic-r">35%</span></td>
+          <td><span class="ic-pct ic-a">42%</span></td>
+          <td><span class="ic-pct ic-a">55%</span></td>
+          <td><span class="ic-pct ic-a">Neutral</span></td>
+          <td><span class="ic-pct ic-a">34%</span></td>
+          <td><span class="ic-pct ic-a">9%</span></td>
+          <td><span class="ic-pct ic-a">0.9</span></td>
+          <td><span class="trend trend--down">↓</span></td>
+        </tr>
+        <tr>
+          <td>NIFTY DEFENSE</td>
+          <td style="text-align:center"><div class="hs-cell hs-g">74</div></td>
+          <td><span class="ic-pct ic-g">68%</span></td>
+          <td><span class="ic-pct ic-g">72%</span></td>
+          <td><span class="ic-pct ic-g">78%</span></td>
+          <td><span class="ic-pct ic-g">Greed</span></td>
+          <td><span class="ic-pct ic-g">66%</span></td>
+          <td><span class="ic-pct ic-g">28%</span></td>
+          <td><span class="ic-pct ic-g">2.1</span></td>
+          <td><span class="trend trend--up">↑↑</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Showing 10 of 48 sectors · <a style="color:var(--text-accent);cursor:pointer;">View all sectors →</a></div>
+
+
+  <!-- ── FUNDAMENTAL BREADTH (ATLAS-EXCLUSIVE) ── -->
+  <div class="sec-hd">
+    <h3>Fundamental Breadth</h3>
+    <span class="sec-sub">% of stocks in each sector with positive fundamental signals</span>
+    <span class="sec-badge sec-badge--excl">ATLAS-EXCLUSIVE</span>
+  </div>
+  <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-5);">
+    <div class="fbs-grid">
+
+      <!-- EPS Growth Positive % -->
+      <div>
+        <div class="fb-head">
+          <span class="tip">% with Positive EPS Growth (YoY)
+            <span class="tipbody">Percentage of stocks in each sector where trailing twelve-month EPS growth (YoY) is positive. This is fundamental participation breadth — a high % confirms price strength has earnings support.</span>
+          </span>
+          <i class="info-i">i</i>
+          <span class="fb-head-badge">Earnings Breadth</span>
+        </div>
+        <div class="fb-bar-row"><div class="fb-sector">Defense</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:82%"></div></div><div class="fb-pct ic-g">82%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Pharma</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:74%"></div></div><div class="fb-pct ic-g">74%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Energy</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:68%"></div></div><div class="fb-pct ic-g">68%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">FMCG</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:51%"></div></div><div class="fb-pct ic-a">51%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Bank</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:48%"></div></div><div class="fb-pct ic-a">48%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Auto</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:44%"></div></div><div class="fb-pct ic-a">44%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">IT</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:31%"></div></div><div class="fb-pct ic-r">31%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Realty</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:22%"></div></div><div class="fb-pct ic-r">22%</div></div>
+      </div>
+
+      <!-- ROE > 15% -->
+      <div>
+        <div class="fb-head">
+          <span class="tip">% with ROE &gt; 15%
+            <span class="tipbody">Percentage of stocks in each sector where Return on Equity exceeds 15% (our quality threshold). High ROE breadth affirms that the sector's strength is quality-driven, not speculative.</span>
+          </span>
+          <i class="info-i">i</i>
+          <span class="fb-head-badge">Quality Breadth</span>
+        </div>
+        <div class="fb-bar-row"><div class="fb-sector">FMCG</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:88%"></div></div><div class="fb-pct ic-g">88%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Pharma</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:71%"></div></div><div class="fb-pct ic-g">71%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Defense</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:66%"></div></div><div class="fb-pct ic-g">66%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Bank</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:62%"></div></div><div class="fb-pct ic-g">62%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">IT</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:54%"></div></div><div class="fb-pct ic-a">54%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Auto</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:42%"></div></div><div class="fb-pct ic-a">42%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Metal</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:28%"></div></div><div class="fb-pct ic-r">28%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Realty</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:19%"></div></div><div class="fb-pct ic-r">19%</div></div>
+      </div>
+
+      <!-- FCF Positive % -->
+      <div>
+        <div class="fb-head">
+          <span class="tip">% with Positive Free Cash Flow
+            <span class="tipbody">Percentage of stocks in each sector with trailing twelve-month free cash flow (FCF) > 0. FCF breadth is the strongest fundamental confirmer — it shows genuine cash generation, not just accounting profits.</span>
+          </span>
+          <i class="info-i">i</i>
+          <span class="fb-head-badge">FCF Breadth</span>
+        </div>
+        <div class="fb-bar-row"><div class="fb-sector">FMCG</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:91%"></div></div><div class="fb-pct ic-g">91%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Pharma</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:78%"></div></div><div class="fb-pct ic-g">78%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">IT</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--g" style="width:76%"></div></div><div class="fb-pct ic-g">76%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Defense</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:52%"></div></div><div class="fb-pct ic-a">52%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Energy</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:48%"></div></div><div class="fb-pct ic-a">48%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Auto</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--a" style="width:44%"></div></div><div class="fb-pct ic-a">44%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Realty</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:24%"></div></div><div class="fb-pct ic-r">24%</div></div>
+        <div class="fb-bar-row"><div class="fb-sector">Metal</div><div class="fb-bar-track"><div class="fb-bar-fill fb-bar-fill--r" style="width:31%"></div></div><div class="fb-pct ic-r">31%</div></div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--border-subtle);font-size:11px;color:var(--text-tertiary);">
+      Composite fundamental health = (Earnings% + Quality% + FCF%) / 3.
+      <strong style="color:var(--rag-green-700);">Pharma + Defense</strong> score &gt;70 across all three dimensions — fundamental breadth confirms their price RS.
+      <strong style="color:var(--rag-red-700);">IT's divergence:</strong> high FCF (76%) + high ROE (54%) but low earnings growth (31%) + poor price breadth — classic value trap watch signal.
+    </div>
+  </div>
+
+
+  <!-- ── DIVERGENCE PANEL ── -->
+  <div class="sec-hd">
+    <h3>Price–Breadth Divergences</h3>
+    <span class="sec-sub">Where price and participation are telling different stories</span>
+  </div>
+  <div class="div-grid">
+
+    <!-- Warning divergence: Price strong, breadth weak -->
+    <div class="div-card" style="border-left:3px solid var(--rag-amber-500);">
+      <div class="div-head">
+        <div class="div-title">⚠ Narrow Leadership (Price → Breadth)</div>
+        <span class="div-badge div-badge--warn">7 Sectors</span>
+      </div>
+      <div class="div-desc">
+        Sector index near 52-week highs but internal breadth deteriorating — fewer than 40% of constituents above 50-DMA. These rallies are being held up by 2–3 heavyweight names. <strong>Reduce exposure; tighten stops on existing longs.</strong>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY IT</div>
+        <div class="div-item-meta">Index -3.2% from peak</div>
+        <div class="div-item-delta" style="color:var(--rag-red-700)">Breadth: 22% vs 64% peak</div>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY BANK</div>
+        <div class="div-item-meta">Index -2.1% from peak</div>
+        <div class="div-item-delta" style="color:var(--rag-amber-700)">Breadth: 40% vs 71% peak</div>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY INFRA</div>
+        <div class="div-item-meta">Index flat from peak</div>
+        <div class="div-item-delta" style="color:var(--rag-red-700)">Breadth: 35% vs 68% peak</div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary)">+ 4 more sectors · <a style="color:var(--text-accent);cursor:pointer">View all</a></div>
+    </div>
+
+    <!-- Opportunity divergence: Price weak, breadth accumulating -->
+    <div class="div-card" style="border-left:3px solid var(--rag-green-500);">
+      <div class="div-head">
+        <div class="div-title">↗ Breadth Outpacing Price (Breadth → Price)</div>
+        <span class="div-badge div-badge--opp">3 Sectors</span>
+      </div>
+      <div class="div-desc">
+        Sector index lagging the market but internal breadth is improving — more constituents recovering above key MAs. Smart money is quietly building positions. <strong>Watch for RS inflection to confirm entry.</strong>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY DEFENSE</div>
+        <div class="div-item-meta">Breadth: 68% → 78%</div>
+        <div class="div-item-delta" style="color:var(--rag-green-700)">RS improving · Vol: Accum.</div>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY PHARMA</div>
+        <div class="div-item-meta">Breadth: 62% → 74%</div>
+        <div class="div-item-delta" style="color:var(--rag-green-700)">RS leading · Vol: Accum.</div>
+      </div>
+      <div class="div-list-item">
+        <div class="div-item-name">NIFTY ENERGY</div>
+        <div class="div-item-meta">Breadth: 51% → 61%</div>
+        <div class="div-item-delta" style="color:var(--rag-green-700)">RS recovering · Vol: Neutral</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── INSTITUTIONAL FLOW CORRELATION ── -->
+  <div class="sec-hd">
+    <h3>Institutional Flow Correlation</h3>
+    <span class="sec-sub">FII/DII net flows vs breadth — last 30 days</span>
+  </div>
+  <div class="flow-grid">
+
+    <!-- FII card -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:var(--space-3);">FII Net Flow · 30D</div>
+      <div style="font-size:28px;font-weight:700;color:var(--rag-red-700);font-variant-numeric:tabular-nums;margin-bottom:2px;">-₹18,240 Cr</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:var(--space-3);">Consistent seller · 18 of last 22 sessions negative</div>
+      <div class="mgrid mgrid--2" style="margin-top:var(--space-3);">
+        <div class="mbox mbox--r"><div class="mbox__l">Corr w/ Breadth</div><div class="mbox__v">+0.82</div><div class="mbox__d mbox__d--pos">Strong</div></div>
+        <div class="mbox mbox--r"><div class="mbox__l">Signal</div><div class="mbox__v" style="font-size:12px;">SELL</div><div class="mbox__d mbox__d--neg">Outflow driving breadth</div></div>
+      </div>
+    </div>
+
+    <!-- DII card -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:var(--space-3);">DII Net Flow · 30D</div>
+      <div style="font-size:28px;font-weight:700;color:var(--rag-green-700);font-variant-numeric:tabular-nums;margin-bottom:2px;">+₹22,810 Cr</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:var(--space-3);">Counter-buyer · SIP-driven floor active</div>
+      <div class="mgrid mgrid--2" style="margin-top:var(--space-3);">
+        <div class="mbox mbox--g"><div class="mbox__l">Corr w/ Breadth</div><div class="mbox__v">-0.41</div><div class="mbox__d mbox__d--pos">Stabiliser role</div></div>
+        <div class="mbox mbox--g"><div class="mbox__l">Signal</div><div class="mbox__v" style="font-size:12px;">FLOOR</div><div class="mbox__d mbox__d--pos">DII preventing deep crash</div></div>
+      </div>
+    </div>
+
+    <!-- Net flow interpretation -->
+    <div style="background:var(--rag-amber-100);border:1px solid var(--rag-amber-300);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--rag-amber-700);margin-bottom:var(--space-3);">Net Position</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:var(--space-2);">FII Selling Offset by DII — Tenuous Stability</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.65;">
+        DII is absorbing FII selling. This historically holds the market from crashing but also limits upside until FII returns. Breadth will not sustainably recover while FII remains in net-sell mode.
+        <strong>Threshold to watch: FII turns net buyer for 5 consecutive sessions.</strong>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── REGIME HISTORY ── -->
+  <div class="sec-hd">
+    <h3>Regime History</h3>
+    <span class="sec-sub">Past breadth regimes with duration and market performance</span>
+  </div>
+  <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
+    <table class="rh-table">
+      <thead>
+        <tr>
+          <th>Regime</th>
+          <th>Start</th>
+          <th>End</th>
+          <th class="r">Duration</th>
+          <th class="r">Entry Breadth</th>
+          <th class="r">Exit Breadth</th>
+          <th class="r">Nifty 500 Return</th>
+          <th class="r">Max DD</th>
+          <th class="r">Signal Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="current">
+          <td><span class="regime-chip rc--correction">Correction</span></td>
+          <td>31 Mar 26</td>
+          <td><em style="color:var(--rag-amber-700)">Ongoing</em></td>
+          <td class="r"><strong>17d</strong></td>
+          <td class="r">312</td>
+          <td class="r">—</td>
+          <td class="r" style="color:var(--rag-red-700)">-3.8%</td>
+          <td class="r" style="color:var(--rag-red-700)">-3.8%</td>
+          <td class="r"><em style="color:var(--rag-amber-700)">In progress</em></td>
+        </tr>
+        <tr>
+          <td><span class="regime-chip rc--expansion">Expansion</span></td>
+          <td>27 Dec 25</td>
+          <td>30 Mar 26</td>
+          <td class="r">65d</td>
+          <td class="r">112</td>
+          <td class="r">312</td>
+          <td class="r" style="color:var(--rag-green-700)">+17.4%</td>
+          <td class="r">-2.1%</td>
+          <td class="r" style="color:var(--rag-green-700)">✓ Strong bull</td>
+        </tr>
+        <tr>
+          <td><span class="regime-chip rc--contraction">Contraction</span></td>
+          <td>10 Nov 25</td>
+          <td>26 Dec 25</td>
+          <td class="r">34d</td>
+          <td class="r">280</td>
+          <td class="r">82</td>
+          <td class="r" style="color:var(--rag-red-700)">-8.2%</td>
+          <td class="r" style="color:var(--rag-red-700)">-8.2%</td>
+          <td class="r" style="color:var(--rag-red-700)">✓ Bear confirmed</td>
+        </tr>
+        <tr>
+          <td><span class="regime-chip rc--correction">Correction</span></td>
+          <td>16 Oct 25</td>
+          <td>09 Nov 25</td>
+          <td class="r">18d</td>
+          <td class="r">422</td>
+          <td class="r">280</td>
+          <td class="r" style="color:var(--rag-red-700)">-5.1%</td>
+          <td class="r">-5.1%</td>
+          <td class="r" style="color:var(--rag-amber-700)">Partial — cushion held</td>
+        </tr>
+        <tr>
+          <td><span class="regime-chip rc--expansion">Expansion</span></td>
+          <td>12 Sep 25</td>
+          <td>15 Oct 25</td>
+          <td class="r">25d</td>
+          <td class="r">224</td>
+          <td class="r">441</td>
+          <td class="r" style="color:var(--rag-green-700)">+9.8%</td>
+          <td class="r">-0.8%</td>
+          <td class="r" style="color:var(--rag-green-700)">✓ OB signal worked</td>
+        </tr>
+        <tr>
+          <td><span class="regime-chip rc--recovery">Recovery</span></td>
+          <td>21 Aug 25</td>
+          <td>11 Sep 25</td>
+          <td class="r">16d</td>
+          <td class="r">98</td>
+          <td class="r">224</td>
+          <td class="r" style="color:var(--rag-green-700)">+6.3%</td>
+          <td class="r">-1.2%</td>
+          <td class="r" style="color:var(--rag-green-700)">✓ OS entry worked</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;padding:0 2px;">
+    OS entry signals (breadth ≤100) have returned avg +12.4% over the following 60 days across 8 historical instances.
+    OB exits (breadth ≥400) have preceded avg -5.2% corrections.
+    Base rate accuracy: <strong style="color:var(--rag-green-700)">OS entry 87.5%</strong> · <strong style="color:var(--rag-amber-700)">OB exit 75.0%</strong>
+  </div>
+
+
+  <!-- ── §18 SIMULATION TRIGGER CARD ── -->
+  <div class="sim-trigger">
+    <div class="sim-trigger-content">
+      <div class="sim-trigger-label">⚡ Playbook Trigger Available</div>
+      <div class="sim-trigger-text">Breadth correction regime · Day 17 · Divergence: Nifty +3.2% vs Breadth -32% from Feb peak</div>
+      <div class="sim-trigger-sub">
+        Historical base rate: When breadth drops &gt;30% from recent OB peak while index holds, Nifty has subsequently declined avg -8.4% (n=6, hit rate 83%).
+        Bulk-exit playbook identifies 14 candidates. Run simulation to preview position sizing, stop levels, and historical outcome distribution.
+      </div>
+    </div>
+    <button class="sim-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+      Run Bulk-Exit Simulation
+    </button>
+  </div>
+
+</main>
+</div><!-- /app -->
+</body>
+</html>
