@@ -6479,6 +6479,76 @@
         "title": "GlobalRegimeResponse",
         "description": "Response for GET /global/regime.\n\nEmits ``data`` (\u00a720.4) containing both regime + breadth, plus ``_meta``."
       },
+      "GoldRS": {
+        "properties": {
+          "signal": {
+            "$ref": "#/components/schemas/GoldRSSignal"
+          },
+          "ratio_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio 3M"
+          },
+          "stock_return_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Return 3M"
+          },
+          "gold_return_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gold Return 3M"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "signal"
+        ],
+        "title": "GoldRS"
+      },
+      "GoldRSSignal": {
+        "type": "string",
+        "enum": [
+          "AMPLIFIES_BULL",
+          "NEUTRAL",
+          "FRAGILE",
+          "AMPLIFIES_BEAR"
+        ],
+        "title": "GoldRSSignal"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -8373,6 +8443,91 @@
         },
         "type": "object",
         "title": "PillarTechnical"
+      },
+      "Piotroski": {
+        "properties": {
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "detail": {
+            "$ref": "#/components/schemas/PiotroskiDetail"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "grade",
+          "detail"
+        ],
+        "title": "Piotroski"
+      },
+      "PiotroskiDetail": {
+        "properties": {
+          "f1_net_profit_positive": {
+            "type": "boolean",
+            "title": "F1 Net Profit Positive",
+            "default": false
+          },
+          "f2_cfo_positive": {
+            "type": "boolean",
+            "title": "F2 Cfo Positive",
+            "default": false
+          },
+          "f3_roe_improving": {
+            "type": "boolean",
+            "title": "F3 Roe Improving",
+            "default": false
+          },
+          "f4_quality_earnings": {
+            "type": "boolean",
+            "title": "F4 Quality Earnings",
+            "default": false
+          },
+          "f5_leverage_falling": {
+            "type": "boolean",
+            "title": "F5 Leverage Falling",
+            "default": false
+          },
+          "f6_liquidity_improving": {
+            "type": "boolean",
+            "title": "F6 Liquidity Improving",
+            "default": false
+          },
+          "f7_no_dilution": {
+            "type": "boolean",
+            "title": "F7 No Dilution",
+            "default": false
+          },
+          "f8_margin_expanding": {
+            "type": "boolean",
+            "title": "F8 Margin Expanding",
+            "default": false
+          },
+          "f9_asset_turnover_improving": {
+            "type": "boolean",
+            "title": "F9 Asset Turnover Improving",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "PiotroskiDetail"
       },
       "PortfolioAttributionResponse": {
         "properties": {
@@ -11101,6 +11256,26 @@
               }
             ],
             "title": "Mf Holder Count"
+          },
+          "gold_rs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GoldRS"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "piotroski": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Piotroski"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
