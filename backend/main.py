@@ -19,6 +19,7 @@ from backend.routes import (
     alerts,
     decisions,
     errors as uql_errors,
+    etf,
     global_intel,
     intelligence,
     mf,
@@ -106,6 +107,7 @@ app.include_router(watchlists.router)
 app.include_router(webhooks.router)
 app.include_router(sectors.router)
 app.include_router(sentiment.router)
+app.include_router(etf.router)
 
 
 @app.get("/", include_in_schema=False)
