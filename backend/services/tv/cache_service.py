@@ -140,7 +140,6 @@ class TVCacheService:
                         exchange=exchange,
                         data_type=data_type,
                         interval=interval,
-                        bridge_base_url=settings.tv_bridge_url,
                     )
                 )
                 return _orm_to_entry(row, is_stale=True)
@@ -234,7 +233,6 @@ async def _background_refresh(
     exchange: str,
     data_type: str,
     interval: str,
-    bridge_base_url: str,
 ) -> None:
     """Background task: refresh a stale cache entry with a fresh bridge call.
 
@@ -248,7 +246,6 @@ async def _background_refresh(
         exchange: Exchange code.
         data_type: Data type key.
         interval: Chart interval.
-        bridge_base_url: Base URL for TVBridgeClient.
     """
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -259,7 +256,7 @@ async def _background_refresh(
         interval=interval,
     )
     try:
-        bridge = TVBridgeClient(base_url=bridge_base_url)
+        bridge = TVBridgeClient()
         tv_data = await _call_bridge(bridge, symbol, exchange, data_type, interval)
 
         engine = create_async_engine(db_url, pool_pre_ping=True)

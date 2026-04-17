@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
     tv_webhook_secret: str = ""
-    tv_bridge_url: str = "http://127.0.0.1:7100"
     tv_cache_ttl_seconds: int = 900  # 15 minutes
 
     @property

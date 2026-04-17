@@ -1,1 +1,2 @@
 -r ../requirements.txt
+tradingview-screener==3.1.0

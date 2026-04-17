@@ -188,6 +188,11 @@ versions:
       - id: V6-7
       - id: V6-8
       - id: V6-9
+      - id: V6T-1
+      - id: V6T-2
+      - id: V6T-3
+      - id: V6T-4
+      - id: V6T-5
 
   - id: V7
     title: "ETF + Global slice"

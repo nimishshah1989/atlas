@@ -1778,3 +1778,62 @@ chunks:
       - "pytest tests/ -v all green"
       - "post-chunk sync completes"
 
+
+  # --- V6T -------------------------------------------------
+
+  - id: V6T-1
+    title: "Setup: pin tradingview-screener, clean dead config"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "tradingview-screener==3.1.0 in requirements.txt"
+      - "tv_bridge_url removed from config"
+      - "tv_webhook_secret and tv_cache_ttl_seconds retained"
+
+  - id: V6T-2
+    title: "Bridge rewrite + watchlist sync-tv route removal"
+    status: PENDING
+    depends_on: [V6T-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/tv/ta/RELIANCE returns non-503 with real TV data"
+      - "8+ bridge tests pass"
+      - "POST /api/watchlists/{id}/sync-tv returns 404"
+
+  - id: V6T-3
+    title: "TVConvictionPanel component + DeepDivePanel wiring"
+    status: PENDING
+    depends_on: [V6T-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "DeepDivePanel shows TVConvictionPanel with 3 coloured rows for any stock with cached TV data"
+      - "Graceful TV data unavailable fallback when tv_ta is null"
+
+  - id: V6T-4
+    title: "Stock table TV column + watchlist Refresh TV signals button"
+    status: PENDING
+    depends_on: [V6T-2]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "Market tab has TV column with 1D chips"
+      - "Watchlist shows Refresh TV signals button (Sync to TV removed)"
+      - "Mini chips appear on refresh"
+
+  - id: V6T-5
+    title: "Quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V6T-3, V6T-4]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "All 7 quality dims >=80"
+      - "npm run build succeeds"
+      - "forge-ship.sh V6T-5 committed and pushed"
+
