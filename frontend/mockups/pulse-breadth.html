@@ -621,8 +621,14 @@
         </div>
       </div><!-- /oc-chart-card -->
 
-      <!-- ── §16 SIGNAL HISTORY ── -->
-      <div class="oc-chart-card">
+    </div><!-- /oc-main – chart card only -->
+
+    <!-- RIGHT: §15 Interpretation Rail PLACEHOLDER closes below -->
+    <!-- (rail is already open, just closing oc-main early so signal history goes full-width) -->
+  </div><!-- close oc-layout early — signal history below is full width -->
+
+  <!-- ── §16 SIGNAL HISTORY (full-width, outside 2-col grid) ── -->
+  <div class="oc-chart-card" style="margin-bottom:0;">
         <div class="sh-header">
           <div class="oc-dot-label"><span class="oc-dot oc-dot--amber"></span> Signal History</div>
           <div style="display:flex;align-items:center;gap:var(--space-3);">
@@ -708,10 +714,10 @@
         </table>
       </div><!-- /signal history -->
 
-    </div><!-- /oc-main -->
-
-    <!-- RIGHT: §15 Interpretation Rail -->
-    <div class="oc-rail">
+  <!-- ── §15 Interpretation Rail (reopened as part of the original oc-layout above) ── -->
+  <div class="oc-layout" style="margin-top:0;padding-top:0;">
+    <div></div><!-- spacer for left col -->
+    <div class="oc-rail" style="margin-top:0;">
 
       <!-- ZONES card -->
       <div class="rail-card">
