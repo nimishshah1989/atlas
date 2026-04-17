@@ -105,7 +105,7 @@
           "stocks"
         ],
         "summary": "Get Breadth",
-        "description": "Get market breadth and regime data.",
+        "description": "Get market breadth and regime data (with regime enrichment).",
         "operationId": "get_breadth_api_v1_stocks_breadth_get",
         "responses": {
           "200": {
@@ -3771,6 +3771,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sectors/rrg": {
+      "get": {
+        "tags": [
+          "sectors"
+        ],
+        "summary": "Get Sector Rrg",
+        "description": "Return Relative Rotation Graph data for all tracked sectors.\n\nResponse includes normalised RS score (100-centred), RS momentum,\nRRG quadrant, breadth data, and a 4-point weekly historical tail per sector.\n\nRaises 503 when no sector RS data is available in the database.",
+        "operationId": "get_sector_rrg_api_v1_sectors_rrg_get",
+        "parameters": [
+          {
+            "name": "benchmark",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Benchmark index name (placeholder \u2014 all sectors returned regardless; future releases will filter to benchmark constituents)",
+              "default": "NIFTY 50",
+              "title": "Benchmark"
+            },
+            "description": "Benchmark index name (placeholder \u2014 all sectors returned regardless; future releases will filter to benchmark constituents)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RRGResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sentiment/composite": {
+      "get": {
+        "tags": [
+          "sentiment"
+        ],
+        "summary": "Get Sentiment Composite",
+        "description": "Return a 0\u2013100 composite sentiment score built from 4 market components.\n\nComponents:\n  - Price Breadth (base weight 0.4): derived from market breadth metrics\n  - Options/PCR (base weight 0.2): put/call ratio (may be unavailable)\n  - Institutional Flow (base weight 0.2): FII flow signals (may be unavailable)\n  - Fundamental Revisions (base weight 0.2): median earnings growth metrics\n\nWeight redistribution is applied automatically when components are unavailable.\n\nRaises 503 when Price Breadth data is empty \u2014 all other component failures\ndegrade gracefully to available=False.",
+        "operationId": "get_sentiment_composite_api_v1_sentiment_composite_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentimentResponse"
                 }
               }
             }
@@ -9360,6 +9428,131 @@
         ],
         "title": "Quadrant"
       },
+      "RRGPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "rs_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rs Score"
+          },
+          "rs_momentum": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rs Momentum"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "rs_score",
+          "rs_momentum"
+        ],
+        "title": "RRGPoint",
+        "description": "Single weekly data point in the 4-point tail of a sector RRG."
+      },
+      "RRGResponse": {
+        "properties": {
+          "sectors": {
+            "items": {
+              "$ref": "#/components/schemas/RRGSector"
+            },
+            "type": "array",
+            "title": "Sectors"
+          },
+          "mean_rs": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Mean Rs"
+          },
+          "stddev_rs": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Stddev Rs"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "meta": {
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sectors",
+          "mean_rs",
+          "stddev_rs",
+          "as_of",
+          "meta"
+        ],
+        "title": "RRGResponse"
+      },
+      "RRGSector": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "rs_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rs Score"
+          },
+          "rs_momentum": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rs Momentum"
+          },
+          "quadrant": {
+            "title": "Quadrant"
+          },
+          "pct_above_50dma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Above 50Dma"
+          },
+          "breadth_regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breadth Regime"
+          },
+          "tail": {
+            "items": {
+              "$ref": "#/components/schemas/RRGPoint"
+            },
+            "type": "array",
+            "title": "Tail",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "rs_score",
+          "rs_momentum",
+          "quadrant"
+        ],
+        "title": "RRGSector"
+      },
       "RSDataPoint": {
         "properties": {
           "date": {
@@ -9584,6 +9777,23 @@
               }
             ],
             "title": "Fii Score"
+          },
+          "days_in_regime": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days In Regime"
+          },
+          "regime_history": {
+            "items": {},
+            "type": "array",
+            "title": "Regime History",
+            "default": []
           }
         },
         "type": "object",
@@ -10504,6 +10714,123 @@
           "stock_count"
         ],
         "title": "SectorMetrics"
+      },
+      "SentimentComponent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": true
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "weight"
+        ],
+        "title": "SentimentComponent"
+      },
+      "SentimentResponse": {
+        "properties": {
+          "composite_score": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Composite Score"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SentimentZone"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/SentimentComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "weight_redistribution_active": {
+            "type": "boolean",
+            "title": "Weight Redistribution Active",
+            "default": false
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "meta": {
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "components",
+          "meta"
+        ],
+        "title": "SentimentResponse"
+      },
+      "SentimentZone": {
+        "type": "string",
+        "enum": [
+          "EXTREME_FEAR",
+          "FEAR",
+          "NEUTRAL",
+          "GREED",
+          "EXTREME_GREED"
+        ],
+        "title": "SentimentZone"
       },
       "SignalType": {
         "type": "string",

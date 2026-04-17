@@ -226,7 +226,7 @@ class ConvictionPillars(BaseModel):
     pillar_3: Optional[PillarExternal] = None
 
 
-from backend.models.derived import GoldRS, GoldRSSignal, Piotroski, PiotroskiDetail  # noqa: E402
+from backend.models.derived import GoldRS, GoldRSSignal, Piotroski, PiotroskiDetail  # noqa: E402, F401
 from backend.models.conviction import ActionSignal, ConvictionLevel, FourFactorConviction, ScreenerRow, UrgencyLevel  # noqa: E402, E501, F401  # fmt: skip
 
 
@@ -331,6 +331,8 @@ class RegimeSnapshot(BaseModel):
     volume_score: Optional[Decimal] = None
     global_score: Optional[Decimal] = None
     fii_score: Optional[Decimal] = None
+    days_in_regime: Optional[int] = None
+    regime_history: list[Any] = []  # list[RegimeTransition] — type alias to avoid circular import
 
 
 class MarketBreadthResponse(BaseModel):
@@ -432,15 +434,11 @@ class DecisionListResponse(BaseModel):
 
 
 # --- UQL Query ---
-# UQL v2 schemas live in backend.models.uql (split out to keep this module
-# under the 500-line modularity budget). Re-exported at the bottom of this
-# file so existing `from backend.models.schemas import UQLRequest` imports
-# keep working.
-
+# UQL v2 schemas live in backend.models.uql (split out to keep this module under the
+# 500-line modularity budget). Re-exported below so existing imports keep working.
 
 # --- Intelligence models live in backend.models.intelligence ---
 # Callers should import directly from backend.models.intelligence.
-
 
 # --- Status ---
 
@@ -463,7 +461,7 @@ class StatusResponse(BaseModel):
 
 
 # Re-export UQL v2 schemas so callers can keep importing from this module.
-from backend.models.uql import (  # noqa: E402  (intentional late import to break cycle)
+from backend.models.uql import (  # noqa: E402, F401
     UQLAggregation,
     UQLAggregationFunction,
     UQLEntityType,
@@ -477,20 +475,24 @@ from backend.models.uql import (  # noqa: E402  (intentional late import to brea
     UQLTimeRange,
 )
 
+# Re-export C-DER-3 models (kept in derived_market.py for line-budget compliance).
+from backend.models.derived_market import (  # noqa: E402, F401
+    RegimeTransition,
+    RRGPoint,
+    RRGResponse,
+    RRGSector,
+    SentimentComponent,
+    SentimentResponse,
+    SentimentZone,
+)
+
+# fmt: off
 __all__ = [
-    "GoldRS",
-    "GoldRSSignal",
-    "Piotroski",
-    "PiotroskiDetail",
-    "UQLAggregation",
-    "UQLAggregationFunction",
-    "UQLEntityType",
-    "UQLFilter",
-    "UQLGranularity",
-    "UQLIncludeModule",
-    "UQLMode",
-    "UQLRequest",
-    "UQLResponse",
-    "UQLSort",
-    "UQLTimeRange",
+    "GoldRS", "GoldRSSignal", "Piotroski", "PiotroskiDetail",
+    "RegimeTransition", "RRGPoint", "RRGResponse", "RRGSector",
+    "SentimentComponent", "SentimentResponse", "SentimentZone",
+    "UQLAggregation", "UQLAggregationFunction", "UQLEntityType", "UQLFilter",
+    "UQLGranularity", "UQLIncludeModule", "UQLMode", "UQLRequest",
+    "UQLResponse", "UQLSort", "UQLTimeRange",
 ]
+# fmt: on

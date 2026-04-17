@@ -296,6 +296,106 @@ async def test_stock_deep_dive_includes_four_factor() -> None:
 
 
 @pytest.mark.asyncio
+async def test_breadth_response_includes_regime_enrichment() -> None:
+    """GET /api/v1/stocks/breadth returns regime with days_in_regime int and regime_history list.
+
+    Also verifies pre-C-DER-3 keys (breadth, regime, meta) are still present (non-regression).
+    """
+    import datetime
+
+    session = _mock_db_session()
+    app.dependency_overrides[get_db] = lambda: session
+
+    breadth_data = {
+        "date": datetime.date(2026, 4, 17),
+        "advance": 350,
+        "decline": 120,
+        "unchanged": 30,
+        "total_stocks": 500,
+        "ad_ratio": 2.9,
+        "pct_above_200dma": 65.0,
+        "pct_above_50dma": 58.0,
+        "new_52w_highs": 40,
+        "new_52w_lows": 5,
+        "mcclellan_oscillator": 45.0,
+        "mcclellan_summation": 200.0,
+    }
+    regime_data = {
+        "date": datetime.date(2026, 4, 17),
+        "regime": "BULL",
+        "confidence": 0.82,
+        "breadth_score": 0.75,
+        "momentum_score": 0.68,
+        "volume_score": 0.60,
+        "global_score": 0.55,
+        "fii_score": 0.50,
+    }
+
+    from backend.models.schemas import RegimeTransition
+
+    mock_transition = RegimeTransition(
+        regime="BEAR",
+        started_date=datetime.date(2026, 1, 1),
+        ended_date=datetime.date(2026, 2, 28),
+        duration_days=59,
+        breadth_pct_at_start=None,
+    )
+
+    try:
+        with (
+            patch("backend.routes.stocks.JIPDataService") as MockJIP,
+            patch(
+                "backend.routes.stocks.compute_regime_enrichment",
+                new=AsyncMock(return_value=(42, [mock_transition])),
+            ),
+        ):
+            mock_svc = AsyncMock()
+            mock_svc.get_market_breadth.return_value = breadth_data
+            mock_svc.get_market_regime.return_value = regime_data
+            MockJIP.return_value = mock_svc
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                response = await client.get("/api/v1/stocks/breadth")
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+    body = response.json()
+
+    # Pre-C-DER-3 keys still present (non-regression)
+    assert "breadth" in body, "breadth key must still be present"
+    assert "regime" in body, "regime key must still be present"
+    assert "meta" in body, "meta key must still be present"
+
+    breadth = body["breadth"]
+    assert breadth["advance"] == 350
+    assert float(breadth["pct_above_200dma"]) == pytest.approx(65.0)
+
+    regime = body["regime"]
+    assert regime["regime"] == "BULL"
+
+    # C-DER-3: regime enrichment fields
+    assert "days_in_regime" in regime, "regime must include days_in_regime (C-DER-3 enrichment)"
+    assert "regime_history" in regime, "regime must include regime_history (C-DER-3 enrichment)"
+
+    days = regime["days_in_regime"]
+    assert isinstance(days, int), f"days_in_regime must be int, got {type(days)}"
+    assert days == 42
+
+    history = regime["regime_history"]
+    assert isinstance(history, list), f"regime_history must be list, got {type(history)}"
+    assert len(history) == 1
+
+    transition = history[0]
+    assert transition["regime"] == "BEAR"
+    assert transition["duration_days"] == 59
+    assert transition["started_date"] == "2026-01-01"
+    assert transition["ended_date"] == "2026-02-28"
+
+
+@pytest.mark.asyncio
 async def test_stock_deep_dive_survives_signal_failure() -> None:
     """GET /api/v1/stocks/RELIANCE returns 200 even when compute_gold_rs raises.
 

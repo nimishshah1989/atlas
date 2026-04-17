@@ -25,6 +25,8 @@ from backend.routes import (
     portfolio,
     query,
     screener,
+    sectors,
+    sentiment,
     simulate,
     stocks,
     system,
@@ -102,6 +104,8 @@ app.include_router(tv.router)
 app.include_router(alerts.router)
 app.include_router(watchlists.router)
 app.include_router(webhooks.router)
+app.include_router(sectors.router)
+app.include_router(sentiment.router)
 
 
 @app.get("/", include_in_schema=False)

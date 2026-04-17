@@ -16,6 +16,7 @@ from backend.db.session import async_session_factory, get_db
 from backend.models.conviction import FourFactorConviction
 from backend.services.conviction_engine import compute_four_factor
 from backend.services.derived_signals import compute_gold_rs, compute_piotroski
+from backend.services.regime_service import compute_regime_enrichment
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 from backend.services.tv.cache_service import TVCacheService
 from backend.services.uql import engine as uql_engine, includes as uql_includes
@@ -190,7 +191,7 @@ async def get_sectors(
 async def get_breadth(
     db: AsyncSession = Depends(get_db),
 ) -> MarketBreadthResponse:
-    """Get market breadth and regime data."""
+    """Get market breadth and regime data (with regime enrichment)."""
     t0 = time.monotonic()
     svc = JIPDataService(db)
 
@@ -200,6 +201,8 @@ async def get_breadth(
     if not breadth_data or not regime_data:
         raise HTTPException(status_code=503, detail="Market data not available")
 
+    # Regime enrichment via isolated sessions (asyncpg cannot multiplex).
+    days_val, history_val = await compute_regime_enrichment(async_session_factory)
     breadth = BreadthSnapshot(
         date=breadth_data["date"],
         advance=breadth_data["advance"],
@@ -224,6 +227,8 @@ async def get_breadth(
         volume_score=_dec(regime_data.get("volume_score")),
         global_score=_dec(regime_data.get("global_score")),
         fii_score=_dec(regime_data.get("fii_score")),
+        days_in_regime=days_val,
+        regime_history=history_val,
     )
 
     elapsed = int((time.monotonic() - t0) * 1000)
