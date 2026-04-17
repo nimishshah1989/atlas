@@ -1,6 +1,7 @@
 """Stock API routes — V1 endpoints."""
 
 import time
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Optional
 
@@ -9,11 +10,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
+from backend.config import get_settings
 from backend.core.computations import build_conviction_pillars, compute_quadrant
 from backend.db.session import get_db
+from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
+from backend.services.tv.cache_service import TVCacheService
 from backend.services.uql import engine as uql_engine, includes as uql_includes
 from backend.models.schemas import (
     BreadthSnapshot,
+    ChartDataPoint,
+    ChartDataResponse,
     MarketBreadthResponse,
     MoverEntry,
     MoversResponse,
@@ -260,6 +266,58 @@ async def get_movers(
     )
 
 
+@router.get("/{symbol}/chart-data", response_model=ChartDataResponse)
+async def get_stock_chart_data(
+    symbol: str,
+    from_date: Optional[datetime] = Query(None, alias="from"),
+    to_date: Optional[datetime] = Query(None, alias="to"),
+    db: AsyncSession = Depends(get_db),
+) -> ChartDataResponse:
+    """Return OHLCV + technicals for a stock over a date range.
+
+    Defaults to the last 365 days when no date range is provided.
+    Returns an empty data list (not 404) when the stock exists but has no OHLCV
+    data in the requested range. Returns 404 only when the symbol is unknown.
+    """
+    today = datetime.now(tz=UTC).date()
+    resolved_to = to_date.date() if to_date else today
+    resolved_from = (
+        from_date.date() if from_date else resolved_to.replace(year=resolved_to.year - 1)
+    )
+
+    svc = JIPDataService(db)
+    rows = await svc.get_chart_data(symbol, resolved_from, resolved_to)
+
+    if not rows:
+        # Return 404 only if the stock itself doesn't exist
+        stock_detail = await svc.get_stock_detail(symbol)
+        if not stock_detail:
+            raise HTTPException(status_code=404, detail=f"Stock {symbol.upper()} not found")
+
+    data_points = [
+        ChartDataPoint(
+            date=r["date"],
+            open=_dec(r.get("open")),
+            high=_dec(r.get("high")),
+            low=_dec(r.get("low")),
+            close=_dec(r.get("close")),
+            volume=r.get("volume"),
+            sma_20=_dec(r.get("sma_20")),
+            sma_50=_dec(r.get("sma_50")),
+            sma_200=_dec(r.get("sma_200")),
+            ema_20=_dec(r.get("ema_20")),
+            rsi_14=_dec(r.get("rsi_14")),
+            macd_histogram=_dec(r.get("macd_histogram")),
+        )
+        for r in rows
+    ]
+    return ChartDataResponse(
+        symbol=symbol.upper(),
+        points=data_points,
+        meta=ResponseMeta(record_count=len(data_points)),
+    )
+
+
 @router.get("/{symbol}", response_model=StockDeepDiveResponse)
 async def get_stock_deep_dive(
     symbol: str,
@@ -281,7 +339,32 @@ async def get_stock_deep_dive(
     if not stock_detail:
         raise HTTPException(status_code=404, detail=f"Stock {symbol.upper()} not found")
 
-    conviction = build_conviction_pillars(stock_detail)
+    # --- Pillar 3: TV TA (external confirmation) ---
+    settings = get_settings()
+    bridge = TVBridgeClient(base_url=settings.tv_bridge_url)
+    tv_cache = TVCacheService()
+    tv_ta_data: Optional[dict[str, Any]] = None
+    tv_partial = False
+    try:
+        entry = await tv_cache.get_or_fetch(
+            session=db,
+            symbol=symbol.upper(),
+            exchange="NSE",
+            data_type="ta_summary",
+            interval="1D",
+            bridge=bridge,
+        )
+        tv_ta_data = entry.tv_data
+    except TVBridgeUnavailableError:
+        tv_partial = True
+        log.warning("tv_bridge_unavailable_for_conviction", symbol=symbol)
+    except (KeyError, ValueError, TypeError, OSError) as exc:
+        # Best-effort isolation: TV TA enrichment failure must not crash deep-dive.
+        # Catches common data/network errors from the cache service path.
+        tv_partial = True
+        log.warning("tv_fetch_failed_for_conviction", symbol=symbol, error=str(exc))
+
+    conviction = build_conviction_pillars(stock_detail, tv_ta_data=tv_ta_data)
 
     stock = StockDeepDive(
         id=stock_detail["id"],
@@ -333,6 +416,7 @@ async def get_stock_deep_dive(
             record_count=1,
             query_ms=elapsed,
             includes_loaded=includes_loaded,
+            partial_data=tv_partial,
         ),
     )
 

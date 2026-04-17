@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_serializer
@@ -95,6 +95,7 @@ class ResponseMeta(BaseModel):
     cache_hit: Optional[bool] = None
     includes_loaded: Optional[list[str]] = None
     staleness: Optional[Literal["fresh", "stale", "unknown"]] = None
+    partial_data: bool = False
 
 
 # --- Stock Models ---
@@ -211,10 +212,18 @@ class PillarInstitutional(BaseModel):
     explanation: str = ""
 
 
+class PillarExternal(BaseModel):
+    """Pillar 3: External confirmation via TradingView TA data."""
+
+    tv_ta: Optional[dict[str, Any]] = None
+    explanation: str = ""
+
+
 class ConvictionPillars(BaseModel):
     rs: PillarRS
     technical: PillarTechnical
     institutional: PillarInstitutional
+    pillar_3: Optional[PillarExternal] = None
 
 
 # --- Deep Dive ---
@@ -337,6 +346,32 @@ class RSHistoryResponse(BaseModel):
     symbol: str
     benchmark: str
     points: list[RSDataPoint]
+    meta: ResponseMeta
+
+
+# --- Chart Data ---
+
+
+class ChartDataPoint(BaseModel):
+    """Single OHLCV + technical indicator data point for charting."""
+
+    date: date
+    open: Optional[Decimal] = None
+    high: Optional[Decimal] = None
+    low: Optional[Decimal] = None
+    close: Optional[Decimal] = None
+    volume: Optional[int] = None
+    sma_20: Optional[Decimal] = None
+    sma_50: Optional[Decimal] = None
+    sma_200: Optional[Decimal] = None
+    ema_20: Optional[Decimal] = None
+    rsi_14: Optional[Decimal] = None
+    macd_histogram: Optional[Decimal] = None
+
+
+class ChartDataResponse(BaseModel):
+    symbol: str
+    points: list[ChartDataPoint]
     meta: ResponseMeta
 
 

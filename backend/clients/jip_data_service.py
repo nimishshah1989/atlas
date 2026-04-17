@@ -4,6 +4,7 @@ When the JIP /internal/ API comes online, swap the underlying services
 with httpx clients. The facade interface (return types) stays identical.
 """
 
+from datetime import date
 from typing import Any, Optional
 
 import asyncpg.exceptions
@@ -249,6 +250,15 @@ class JIPDataService:
                     "instead of a wide snapshot.",
                 ) from exc
             raise
+
+    async def get_chart_data(
+        self,
+        symbol: str,
+        from_date: date,
+        to_date: date,
+    ) -> list[dict[str, Any]]:
+        """Return OHLCV + technical indicators for a symbol over a date range."""
+        return await self._equity.get_chart_data(symbol, from_date, to_date)
 
     async def query_equity(
         self,

@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 from backend.models.schemas import (
     ConvictionPillars,
+    PillarExternal,
     PillarInstitutional,
     PillarRS,
     PillarTechnical,
@@ -39,7 +40,10 @@ def compute_quadrant(
         return Quadrant.LAGGING
 
 
-def build_conviction_pillars(stock_data: dict[str, Any]) -> ConvictionPillars:
+def build_conviction_pillars(
+    stock_data: dict[str, Any],
+    tv_ta_data: Optional[dict[str, Any]] = None,
+) -> ConvictionPillars:
     """Build 4 conviction pillars from stock data. Each pillar is EXPLAINED, not scored."""
 
     rs_composite = _dec(stock_data.get("rs_composite"))
@@ -103,10 +107,18 @@ def build_conviction_pillars(stock_data: dict[str, Any]) -> ConvictionPillars:
         explanation=". ".join(inst_parts) if inst_parts else "No institutional data available",
     )
 
+    # --- Pillar 3 (External): TV TA data ---
+    pillar_ext: Optional[PillarExternal] = None
+    if tv_ta_data is not None:
+        rec = tv_ta_data.get("recommendation_1d") or tv_ta_data.get("RECOMMENDATION")
+        explanation = f"TV TA: {rec}" if rec else "TV TA data available"
+        pillar_ext = PillarExternal(tv_ta=tv_ta_data, explanation=explanation)
+
     return ConvictionPillars(
         rs=pillar_rs,
         technical=pillar_tech,
         institutional=pillar_inst,
+        pillar_3=pillar_ext,
     )
 
 

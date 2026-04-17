@@ -2,6 +2,7 @@
 
 import asyncio
 import time
+from datetime import date
 from typing import Any, Optional
 
 import structlog
@@ -354,3 +355,53 @@ class JIPEquityService:
             "gainers": [row for row in rows if row.get("mover_type") == "gainer"],
             "losers": [row for row in rows if row.get("mover_type") == "loser"],
         }
+
+    async def get_chart_data(
+        self,
+        symbol: str,
+        from_date: date,
+        to_date: date,
+    ) -> list[dict[str, Any]]:
+        """Return OHLCV + technical indicators for a symbol over a date range.
+
+        JOINs de_equity_ohlcv (partitioned parent) with de_equity_technical_daily
+        on (instrument_id, date). LEFT JOIN ensures OHLCV rows without matching
+        technical data are still returned with NULL indicator fields.
+
+        Args:
+            symbol: Ticker symbol (e.g. "HDFCBANK").
+            from_date: Start date (inclusive). Must be a date object — asyncpg rejects strings.
+            to_date: End date (inclusive). Must be a date object.
+
+        Returns:
+            List of dicts with date, OHLCV, and technical indicator fields.
+        """
+        sql = text("""
+            SELECT
+                o.date,
+                o.open,
+                o.high,
+                o.low,
+                o.close,
+                o.volume,
+                t.sma_20,
+                t.sma_50,
+                t.sma_200,
+                t.ema_20,
+                t.rsi_14,
+                t.macd_histogram
+            FROM de_equity_ohlcv o
+            JOIN de_instrument i ON i.id = o.instrument_id
+            LEFT JOIN de_equity_technical_daily t
+                ON t.instrument_id = o.instrument_id AND t.date = o.date
+            WHERE i.current_symbol = :symbol
+              AND i.is_active = true
+              AND o.date BETWEEN :from_date AND :to_date
+            ORDER BY o.date ASC
+        """)
+        query_result = await self.session.execute(
+            sql,
+            {"symbol": symbol.upper(), "from_date": from_date, "to_date": to_date},
+        )
+        rows = query_result.mappings().all()
+        return [dict(r) for r in rows]
