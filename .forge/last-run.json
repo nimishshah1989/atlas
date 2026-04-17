@@ -1,7 +1,1 @@
-{
-  "chunk": "V6-9",
-  "tests_ok": true,
-  "quality_ok": true,
-  "memory_ok": true,
-  "ts": 1776404561
-}
+{"chunk": "C-DER-SPEC", "ts": 1776412904, "commit_type": "docs-only-spec", "tests_passed": true}

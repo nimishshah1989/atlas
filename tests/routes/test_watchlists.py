@@ -271,10 +271,8 @@ async def test_sync_tv_success_sets_tv_synced_true() -> None:
     with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
         instance = MockClient.return_value
         instance.get_screener = AsyncMock(return_value={"close": "1234.5"})
-        with patch("backend.routes.watchlists.get_settings") as mock_settings:
-            mock_settings.return_value.tv_bridge_url = "http://127.0.0.1:7100"
-            async with _client_with_session(session) as ac:
-                resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
+        async with _client_with_session(session) as ac:
+            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -302,10 +300,8 @@ async def test_sync_tv_bridge_unavailable_returns_503() -> None:
     with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
         instance = MockClient.return_value
         instance.get_screener = AsyncMock(side_effect=TVBridgeUnavailableError("down"))
-        with patch("backend.routes.watchlists.get_settings") as mock_settings:
-            mock_settings.return_value.tv_bridge_url = "http://127.0.0.1:7100"
-            async with _client_with_session(session) as ac:
-                resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
+        async with _client_with_session(session) as ac:
+            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
     assert resp.status_code == 503
     assert resp.json()["detail"] == "TV bridge unavailable"
@@ -388,10 +384,8 @@ async def test_sync_tv_empty_symbols_skips_bridge() -> None:
     session.execute = AsyncMock(side_effect=[mock_result_select, mock_result_update])
 
     with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
-        with patch("backend.routes.watchlists.get_settings") as mock_settings:
-            mock_settings.return_value.tv_bridge_url = "http://127.0.0.1:7100"
-            async with _client_with_session(session) as ac:
-                resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
+        async with _client_with_session(session) as ac:
+            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
     assert resp.status_code == 200
     body = resp.json()

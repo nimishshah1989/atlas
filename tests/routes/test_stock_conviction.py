@@ -159,7 +159,6 @@ class TestStockDeepDiveWithTvTa:
                 patch("backend.routes.stocks.JIPDataService") as MockJIP,
                 patch("backend.routes.stocks.TVCacheService") as MockTVCache,
                 patch("backend.routes.stocks.TVBridgeClient"),
-                patch("backend.routes.stocks.get_settings"),
             ):
                 mock_svc = AsyncMock()
                 mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
@@ -193,7 +192,6 @@ class TestStockDeepDiveWithTvTa:
                 patch("backend.routes.stocks.JIPDataService") as MockJIP,
                 patch("backend.routes.stocks.TVCacheService") as MockTVCache,
                 patch("backend.routes.stocks.TVBridgeClient"),
-                patch("backend.routes.stocks.get_settings"),
             ):
                 mock_svc = AsyncMock()
                 mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
@@ -225,7 +223,6 @@ class TestStockDeepDiveWithTvTa:
                 patch("backend.routes.stocks.JIPDataService") as MockJIP,
                 patch("backend.routes.stocks.TVCacheService") as MockTVCache,
                 patch("backend.routes.stocks.TVBridgeClient"),
-                patch("backend.routes.stocks.get_settings"),
             ):
                 mock_svc = AsyncMock()
                 mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
@@ -260,7 +257,6 @@ class TestStockDeepDiveWithTvTa:
                 patch("backend.routes.stocks.JIPDataService") as MockJIP,
                 patch("backend.routes.stocks.TVCacheService") as MockTVCache,
                 patch("backend.routes.stocks.TVBridgeClient"),
-                patch("backend.routes.stocks.get_settings"),
             ):
                 mock_svc = AsyncMock()
                 mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA

@@ -19,7 +19,6 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.config import get_settings
 from backend.db.session import get_db
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 from backend.services.tv.cache_service import TVCacheService
@@ -92,8 +91,7 @@ async def get_ta_summary(
     Raises:
         HTTPException 503: If the TV bridge sidecar is unreachable.
     """
-    settings = get_settings()
-    bridge = TVBridgeClient(base_url=settings.tv_bridge_url)
+    bridge = TVBridgeClient()
     cache_svc = TVCacheService()
 
     resolved_exchange = exchange or "NSE"
@@ -147,8 +145,7 @@ async def get_screener(
     Raises:
         HTTPException 503: If the TV bridge sidecar is unreachable.
     """
-    settings = get_settings()
-    bridge = TVBridgeClient(base_url=settings.tv_bridge_url)
+    bridge = TVBridgeClient()
     cache_svc = TVCacheService()
 
     resolved_exchange = exchange or "NSE"
@@ -197,8 +194,7 @@ async def get_fundamentals(
     Raises:
         HTTPException 503: If the TV bridge sidecar is unreachable.
     """
-    settings = get_settings()
-    bridge = TVBridgeClient(base_url=settings.tv_bridge_url)
+    bridge = TVBridgeClient()
     cache_svc = TVCacheService()
 
     resolved_exchange = exchange or "NSE"

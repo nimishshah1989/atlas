@@ -93,13 +93,6 @@ def _make_client() -> AsyncClient:
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
-def _mock_settings() -> MagicMock:
-    settings = MagicMock()
-    settings.tv_bridge_url = "http://127.0.0.1:7100"
-    settings.tv_cache_ttl_seconds = 900
-    return settings
-
-
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -116,9 +109,8 @@ async def test_ta_fresh_cache_hit_returns_200_with_fields() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/ta/HDFCBANK")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/ta/HDFCBANK")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -139,9 +131,8 @@ async def test_ta_stale_cache_hit_returns_meta_is_stale_true() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/ta/HDFCBANK")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/ta/HDFCBANK")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -156,9 +147,8 @@ async def test_ta_bridge_unavailable_returns_503() -> None:
         instance.get_or_fetch = AsyncMock(
             side_effect=TVBridgeUnavailableError("sidecar not running")
         )
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/ta/HDFCBANK")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/ta/HDFCBANK")
 
     assert resp.status_code == 503
     body = resp.json()
@@ -172,9 +162,8 @@ async def test_screener_returns_200() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/screener/RELIANCE")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/screener/RELIANCE")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -191,9 +180,8 @@ async def test_fundamentals_returns_200() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/fundamentals/RELIANCE")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/fundamentals/RELIANCE")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -210,9 +198,8 @@ async def test_ta_exchange_query_param_passed_to_service() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/ta/HDFCBANK?exchange=BSE")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/ta/HDFCBANK?exchange=BSE")
 
     assert resp.status_code == 200
     call_kwargs = instance.get_or_fetch.call_args
@@ -234,9 +221,8 @@ async def test_ta_empty_tv_data_returns_none_fields() -> None:
     with patch("backend.routes.tv.TVCacheService") as MockSvc:
         instance = MockSvc.return_value
         instance.get_or_fetch = AsyncMock(return_value=entry)
-        with patch("backend.routes.tv.get_settings", return_value=_mock_settings()):
-            async with _make_client() as ac:
-                resp = await ac.get("/api/tv/ta/TATASTEEL")
+        async with _make_client() as ac:
+            resp = await ac.get("/api/tv/ta/TATASTEEL")
 
     assert resp.status_code == 200
     body = resp.json()

@@ -10,7 +10,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
-from backend.config import get_settings
 from backend.core.computations import build_conviction_pillars, compute_quadrant
 from backend.db.session import get_db
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
@@ -340,8 +339,7 @@ async def get_stock_deep_dive(
         raise HTTPException(status_code=404, detail=f"Stock {symbol.upper()} not found")
 
     # --- Pillar 3: TV TA (external confirmation) ---
-    settings = get_settings()
-    bridge = TVBridgeClient(base_url=settings.tv_bridge_url)
+    bridge = TVBridgeClient()
     tv_cache = TVCacheService()
     tv_ta_data: Optional[dict[str, Any]] = None
     tv_partial = False

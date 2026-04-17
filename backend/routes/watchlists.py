@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.config import get_settings
 from backend.db.models import AtlasWatchlist
 from backend.db.session import get_db
 from backend.models.watchlist import (
@@ -181,12 +180,11 @@ async def sync_tv(
     if row is None:
         raise HTTPException(status_code=404, detail="Watchlist not found")
 
-    settings = get_settings()
     symbols: list[str] = row.symbols or []
 
     if symbols:
         # Ping bridge with first symbol as connectivity test
-        client = TVBridgeClient(base_url=settings.tv_bridge_url)
+        client = TVBridgeClient()
         try:
             await client.get_screener(symbols[0], "NSE")
         except TVBridgeUnavailableError:

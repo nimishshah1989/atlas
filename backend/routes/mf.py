@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.clients.jip_data_service import JIPDataService
 from backend.clients.sql_fragments import safe_decimal
 from backend.db.session import get_db
+from backend.services.uql import engine as uql_engine  # noqa: F401  # API standard §17
 from backend.models.mf import (
     CategoriesResponse,
     CategoryRow,
