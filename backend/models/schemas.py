@@ -226,6 +226,15 @@ class ConvictionPillars(BaseModel):
     pillar_3: Optional[PillarExternal] = None
 
 
+# --- Derived Signals (split to backend.models.derived to keep this module < 500L) ---
+from backend.models.derived import (  # noqa: E402
+    GoldRS,
+    GoldRSSignal,
+    Piotroski,
+    PiotroskiDetail,
+)
+
+
 # --- Deep Dive ---
 
 
@@ -273,6 +282,9 @@ class StockDeepDive(BaseModel):
     conviction: ConvictionPillars
     # Institutional
     mf_holder_count: Optional[int] = None
+    # Derived signals (query-time, fault-tolerant)
+    gold_rs: Optional[GoldRS] = None
+    piotroski: Optional[Piotroski] = None
 
 
 class StockDeepDiveResponse(BaseModel):
@@ -470,6 +482,10 @@ from backend.models.uql import (  # noqa: E402  (intentional late import to brea
 )
 
 __all__ = [
+    "GoldRS",
+    "GoldRSSignal",
+    "Piotroski",
+    "PiotroskiDetail",
     "UQLAggregation",
     "UQLAggregationFunction",
     "UQLEntityType",

@@ -1,0 +1,253 @@
+"""Route-level tests for Gold RS + Piotroski derived signals in GET /api/v1/stocks/{symbol}.
+
+Uses ASGI transport + dependency_overrides[get_db] per FastAPI Dependency Patch Gotcha pattern.
+Services are mocked at the module level: backend.routes.stocks.compute_gold_rs etc.
+"""
+
+from __future__ import annotations
+
+import datetime
+from decimal import Decimal
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from backend.db.session import get_db
+from backend.main import app
+from backend.models.schemas import (
+    GoldRS,
+    GoldRSSignal,
+    Piotroski,
+    PiotroskiDetail,
+)
+
+
+# ---------------------------------------------------------------------------
+# Minimal valid stock_detail fixture (mirrors existing test_stock_conviction.py)
+# ---------------------------------------------------------------------------
+
+_STOCK_ID = uuid4()
+
+_BASE_STOCK_DATA: dict[str, Any] = {
+    "id": _STOCK_ID,
+    "symbol": "RELIANCE",
+    "company_name": "Reliance Industries Ltd",
+    "sector": "Energy",
+    "industry": "Refineries",
+    "nifty_50": True,
+    "nifty_200": True,
+    "nifty_500": True,
+    "isin": "INE002A01018",
+    "listing_date": None,
+    "cap_category": "large",
+    "close": Decimal("2800.00"),
+    "rs_composite": Decimal("1.8"),
+    "rs_momentum": Decimal("0.5"),
+    "rs_1w": Decimal("0.2"),
+    "rs_1m": Decimal("0.5"),
+    "rs_3m": Decimal("0.8"),
+    "rs_6m": Decimal("1.1"),
+    "rs_12m": Decimal("1.5"),
+    "rsi_14": Decimal("62.0"),
+    "adx_14": Decimal("28.0"),
+    "macd_histogram": Decimal("10.0"),
+    "above_200dma": True,
+    "above_50dma": True,
+    "mf_holder_count": 420,
+    "delivery_vs_avg": None,
+    "sharpe_1y": Decimal("1.5"),
+    "relative_volume": None,
+    "volatility_20d": None,
+    "max_drawdown_1y": None,
+    "mfi_14": None,
+    "sma_50": None,
+    "sma_200": None,
+    "ema_20": None,
+    "macd_line": None,
+    "macd_signal": None,
+    "sortino_1y": None,
+    "calmar_ratio": None,
+    "obv": None,
+    "bollinger_upper": None,
+    "bollinger_lower": None,
+    "disparity_20": None,
+    "stochastic_k": None,
+    "stochastic_d": None,
+    "rs_date": "2026-04-17",
+    "tech_date": "2026-04-17",
+    "beta_nifty": None,
+}
+
+_GOLD_RS_FIXTURE = GoldRS(
+    signal=GoldRSSignal.AMPLIFIES_BULL,
+    ratio_3m=Decimal("1.0910"),
+    stock_return_3m=Decimal("0.2000"),
+    gold_return_3m=Decimal("0.1000"),
+    as_of=datetime.date(2026, 4, 14),
+)
+
+_PIOTROSKI_FIXTURE = Piotroski(
+    score=7,
+    grade="GOOD",
+    detail=PiotroskiDetail(
+        f1_net_profit_positive=True,
+        f2_cfo_positive=True,
+        f3_roe_improving=True,
+        f4_quality_earnings=True,
+        f5_leverage_falling=True,
+        f6_liquidity_improving=True,
+        f7_no_dilution=True,
+        f8_margin_expanding=False,
+        f9_asset_turnover_improving=False,
+    ),
+    as_of=datetime.date(2025, 3, 31),
+)
+
+
+def _mock_db_session() -> AsyncMock:
+    """Minimal mock AsyncSession."""
+    session = AsyncMock()
+    session.execute = AsyncMock()
+    return session
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_stock_deep_dive_includes_gold_rs_and_piotroski() -> None:
+    """GET /api/v1/stocks/RELIANCE returns stock.gold_rs and stock.piotroski.
+
+    Verifies:
+    - gold_rs.signal is one of the valid enum values
+    - piotroski.score is in [0, 9]
+    - piotroski.grade is one of {WEAK, NEUTRAL, GOOD, STRONG}
+    """
+    session = _mock_db_session()
+    app.dependency_overrides[get_db] = lambda: session
+
+    try:
+        with (
+            patch("backend.routes.stocks.JIPDataService") as MockJIP,
+            patch("backend.routes.stocks.TVCacheService") as MockTVCache,
+            patch("backend.routes.stocks.TVBridgeClient"),
+            patch(
+                "backend.routes.stocks.compute_gold_rs",
+                new=AsyncMock(return_value=_GOLD_RS_FIXTURE),
+            ),
+            patch(
+                "backend.routes.stocks.compute_piotroski",
+                new=AsyncMock(return_value=_PIOTROSKI_FIXTURE),
+            ),
+            patch(
+                "backend.routes.stocks.async_session_factory",
+                return_value=MagicMock(
+                    __aenter__=AsyncMock(return_value=session),
+                    __aexit__=AsyncMock(return_value=False),
+                ),
+            ),
+        ):
+            mock_svc = AsyncMock()
+            mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
+            MockJIP.return_value = mock_svc
+
+            mock_cache_inst = AsyncMock()
+            mock_cache_inst.get_or_fetch.return_value = MagicMock(tv_data=None)
+            MockTVCache.return_value = mock_cache_inst
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                response = await client.get("/api/v1/stocks/RELIANCE")
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert response.status_code == 200
+    body = response.json()
+
+    # Verify gold_rs is present and well-formed
+    gold_rs = body["stock"]["gold_rs"]
+    assert gold_rs is not None, "gold_rs should not be None"
+    valid_signals = {"AMPLIFIES_BULL", "NEUTRAL", "FRAGILE", "AMPLIFIES_BEAR"}
+    assert gold_rs["signal"] in valid_signals, (
+        f"gold_rs.signal must be one of {valid_signals}, got {gold_rs['signal']}"
+    )
+
+    # Verify piotroski is present and well-formed
+    piotroski = body["stock"]["piotroski"]
+    assert piotroski is not None, "piotroski should not be None"
+    assert 0 <= piotroski["score"] <= 9, (
+        f"piotroski.score must be in [0,9], got {piotroski['score']}"
+    )
+    valid_grades = {"WEAK", "NEUTRAL", "GOOD", "STRONG"}
+    assert piotroski["grade"] in valid_grades, (
+        f"piotroski.grade must be one of {valid_grades}, got {piotroski['grade']}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_stock_deep_dive_survives_signal_failure() -> None:
+    """GET /api/v1/stocks/RELIANCE returns 200 even when compute_gold_rs raises.
+
+    Verifies:
+    - Response is 200 (not 500)
+    - stock.gold_rs is None when compute_gold_rs raises an exception
+    - stock.piotroski is still populated (piotroski did not fail)
+    """
+    session = _mock_db_session()
+    app.dependency_overrides[get_db] = lambda: session
+
+    try:
+        with (
+            patch("backend.routes.stocks.JIPDataService") as MockJIP,
+            patch("backend.routes.stocks.TVCacheService") as MockTVCache,
+            patch("backend.routes.stocks.TVBridgeClient"),
+            patch(
+                "backend.routes.stocks.compute_gold_rs",
+                new=AsyncMock(side_effect=Exception("gold rs database error")),
+            ),
+            patch(
+                "backend.routes.stocks.compute_piotroski",
+                new=AsyncMock(return_value=_PIOTROSKI_FIXTURE),
+            ),
+            patch(
+                "backend.routes.stocks.async_session_factory",
+                return_value=MagicMock(
+                    __aenter__=AsyncMock(return_value=session),
+                    __aexit__=AsyncMock(return_value=False),
+                ),
+            ),
+        ):
+            mock_svc = AsyncMock()
+            mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
+            MockJIP.return_value = mock_svc
+
+            mock_cache_inst = AsyncMock()
+            mock_cache_inst.get_or_fetch.return_value = MagicMock(tv_data=None)
+            MockTVCache.return_value = mock_cache_inst
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                response = await client.get("/api/v1/stocks/RELIANCE")
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert response.status_code == 200, (
+        "Deep-dive must return 200 even when Gold RS computation fails"
+    )
+    body = response.json()
+
+    # gold_rs must be None — the exception was swallowed
+    assert body["stock"]["gold_rs"] is None, "gold_rs should be None when compute_gold_rs raises"
+
+    # piotroski must still be populated
+    piotroski = body["stock"]["piotroski"]
+    assert piotroski is not None, "piotroski should still be populated when only gold_rs fails"
+    assert piotroski["score"] == 7
+    assert piotroski["grade"] == "GOOD"

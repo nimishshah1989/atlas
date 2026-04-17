@@ -1,5 +1,6 @@
 """Stock API routes — V1 endpoints."""
 
+import asyncio
 import time
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -11,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
 from backend.core.computations import build_conviction_pillars, compute_quadrant
-from backend.db.session import get_db
+from backend.db.session import async_session_factory, get_db
+from backend.services.derived_signals import compute_gold_rs, compute_piotroski
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 from backend.services.tv.cache_service import TVCacheService
 from backend.services.uql import engine as uql_engine, includes as uql_includes
@@ -19,9 +21,11 @@ from backend.models.schemas import (
     BreadthSnapshot,
     ChartDataPoint,
     ChartDataResponse,
+    GoldRS,
     MarketBreadthResponse,
     MoverEntry,
     MoversResponse,
+    Piotroski,
     RSDataPoint,
     RSHistoryResponse,
     RegimeSnapshot,
@@ -364,6 +368,21 @@ async def get_stock_deep_dive(
 
     conviction = build_conviction_pillars(stock_detail, tv_ta_data=tv_ta_data)
 
+    # --- Derived signals: Gold RS + Piotroski (concurrent, isolated sessions) ---
+    async def _gold_rs_task() -> Optional[GoldRS]:
+        async with async_session_factory() as s:
+            return await compute_gold_rs(stock_detail["id"], s)
+
+    async def _piotroski_task() -> Optional[Piotroski]:
+        async with async_session_factory() as s:
+            return await compute_piotroski(stock_detail["id"], s)
+
+    gold_rs_result, piotroski_result = await asyncio.gather(
+        _gold_rs_task(), _piotroski_task(), return_exceptions=True
+    )
+    gold_rs_val = gold_rs_result if isinstance(gold_rs_result, GoldRS) else None
+    piotroski_val = piotroski_result if isinstance(piotroski_result, Piotroski) else None
+
     stock = StockDeepDive(
         id=stock_detail["id"],
         symbol=stock_detail["symbol"],
@@ -404,6 +423,8 @@ async def get_stock_deep_dive(
         stochastic_d=_dec(stock_detail.get("stochastic_d")),
         conviction=conviction,
         mf_holder_count=stock_detail.get("mf_holder_count"),
+        gold_rs=gold_rs_val,
+        piotroski=piotroski_val,
     )
 
     elapsed = int((time.monotonic() - t0) * 1000)
