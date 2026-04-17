@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -34,3 +34,38 @@ class TvCacheUpsertRequest(BaseModel):
     data_type: str
     interval: str = "none"
     tv_data: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# API response models for GET /api/tv/* routes (V6-4)
+# ---------------------------------------------------------------------------
+
+
+class TvTaData(BaseModel):
+    """Parsed TradingView TA summary fields."""
+
+    symbol: str
+    exchange: str
+    interval: str
+    recommendation_1d: Optional[str] = None
+    oscillator_score: Optional[str] = None
+    ma_score: Optional[str] = None
+    buy: Optional[int] = None
+    sell: Optional[int] = None
+    neutral: Optional[int] = None
+
+
+class TvScreenerData(BaseModel):
+    """Pass-through screener data from TradingView."""
+
+    symbol: str
+    exchange: str
+    raw: dict[str, Any]
+
+
+class TvFundamentalsData(BaseModel):
+    """Pass-through fundamentals data from TradingView."""
+
+    symbol: str
+    exchange: str
+    raw: dict[str, Any]
