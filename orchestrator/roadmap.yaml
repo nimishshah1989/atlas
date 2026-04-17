@@ -193,6 +193,15 @@ versions:
       - id: V6T-3
       - id: V6T-4
       - id: V6T-5
+      - id: C-DER-1
+        title: "Stock Signal Engine — Gold RS + Piotroski"
+        future: true
+      - id: C-DER-2
+        title: "4-Factor Conviction Engine + Action + Urgency + Screener"
+        future: true
+      - id: C-DER-3
+        title: "Regime history + RRG sectors + Sentiment composite"
+        future: true
 
   - id: V7
     title: "ETF + Global slice"

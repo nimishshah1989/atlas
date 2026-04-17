@@ -120,6 +120,15 @@ logs or spec files?" **Severity:** critical if found.
 
 ---
 
+### 1.10 No API key leaks in runner logs / spec files
+
+Scans `.forge/logs/**/*`, `.forge/runner-state.json`, and `specs/` for
+Anthropic-style API key patterns (`sk-ant-...`). Any match → 0/5.
+Zero matches → 5/5. **Plain English:** "Have we leaked credentials into
+build artefacts?" **Severity:** critical.
+
+---
+
 ## Dimension 2 — Code  *(gating)*
 
 Lint, types, coverage, complexity, hygiene. Eleven checks, all run against

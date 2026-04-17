@@ -1364,6 +1364,78 @@ chunks:
       - "scripts/post-chunk.sh V6-9 completes without error"
 
 
+  # --- V6.5 Derived Signal Engine (closes 15% data gap before V7 frontend) ------
+
+  - id: C-DER-1
+    title: "Stock Signal Engine — Gold RS + Piotroski"
+    status: PENDING
+    depends_on: [V6T-5]
+    spec: docs/specs/chunks/c-der-1.md
+    quality_targets:
+      code: 82
+      security: 90
+      architecture: 85
+      api: 90
+    punch_list:
+      - "GET /api/v1/stocks/{symbol} returns gold_rs with signal AMPLIFIES_BULL/NEUTRAL/FRAGILE/AMPLIFIES_BEAR"
+      - "GET /api/v1/stocks/{symbol} returns piotroski.score (0-9) and grade"
+      - "Gold RS ratio uses GLD from de_global_price_daily over 63 trading days"
+      - "Piotroski F1-F9 checks all implemented and tested"
+      - "Missing GLD data returns gold_rs=null without 500"
+      - "Missing fundamentals history returns piotroski=null without 500"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/services/test_derived_signals.py -v >=18 tests green"
+      - "mypy clean"
+      - "scripts/post-chunk.sh C-DER-1 completes"
+
+  - id: C-DER-2
+    title: "4-Factor Conviction Engine + Action + Urgency + Screener"
+    status: PENDING
+    depends_on: [C-DER-1]
+    spec: docs/specs/chunks/c-der-2.md
+    quality_targets:
+      code: 82
+      security: 90
+      architecture: 85
+      api: 90
+    punch_list:
+      - "GET /api/v1/stocks/{symbol} returns four_factor with conviction_level, action_signal, urgency"
+      - "4-factor score: Returns RS × Momentum RS (percentile) × Sector RS × Volume RS"
+      - "Percentile rank for roc_21 computed in SQL (not Python)"
+      - "GET /api/v1/screener returns rows with conviction_level, action_signal, urgency"
+      - "Screener universe/sector/conviction/action filters all functional"
+      - "Screener pagination (limit/offset) works"
+      - "Action derivation: HIGH+ + BULL = BUY; HIGH+ + CORRECTION = ACCUMULATE; MEDIUM = WATCH; LOW falling = REDUCE; AVOID = EXIT"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/services/test_conviction_engine.py -v >=20 tests green"
+      - "mypy clean"
+      - "scripts/post-chunk.sh C-DER-2 completes"
+
+  - id: C-DER-3
+    title: "Sector RRG + Sentiment Composite + Regime Enrichment"
+    status: PENDING
+    depends_on: [C-DER-2]
+    spec: docs/specs/chunks/c-der-3.md
+    quality_targets:
+      code: 82
+      security: 90
+      architecture: 85
+      api: 90
+    punch_list:
+      - "GET /api/v1/stocks/breadth returns regime.days_in_regime and regime.regime_history (last 5 transitions)"
+      - "GET /api/v1/sectors/rrg returns all sectors with rs_score, rs_momentum, quadrant, tail (4 points)"
+      - "RRG rs_score normalized to 100-center (mean/stddev)"
+      - "RRG quadrant: LEADING/WEAKENING/IMPROVING/LAGGING per formula"
+      - "GET /api/v1/sentiment/composite returns composite_score (0-100) and zone"
+      - "Sentiment redistributes PCR+flow weights to breadth+fundamentals when de_fo_summary empty"
+      - "Sentiment never 500s on empty de_fo_summary or de_flow_daily — degrades gracefully"
+      - "Breadth-only sentiment still returns a valid score when 2 components unavailable"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/ -v >=16 new tests green"
+      - "mypy clean"
+      - "scripts/post-chunk.sh C-DER-3 completes"
+
+
   # --- V7 ETF + Global Slice -------------------------------------------------
 
   - id: V7-1
