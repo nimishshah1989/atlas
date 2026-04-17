@@ -370,6 +370,127 @@
         }
       }
     },
+    "/api/v1/screener": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Get Screener",
+        "description": "Return paginated equity rows with conviction/action/urgency signals.\n\nFilters (all optional):\n- universe: nifty50 | nifty200 | nifty500\n- sector: exact sector string\n- conviction: HIGH+ | HIGH | MEDIUM | LOW | AVOID\n- action: BUY | ACCUMULATE | WATCH | REDUCE | EXIT\n\nPagination:\n- limit: 1-200 (default 50)\n- offset: 0+ (default 0)",
+        "operationId": "get_screener_api_v1_screener_get",
+        "parameters": [
+          {
+            "name": "universe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Universe"
+            }
+          },
+          {
+            "name": "sector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sector"
+            }
+          },
+          {
+            "name": "conviction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Conviction"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/query": {
       "post": {
         "tags": [
@@ -3710,6 +3831,17 @@
   },
   "components": {
     "schemas": {
+      "ActionSignal": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "ACCUMULATE",
+          "WATCH",
+          "REDUCE",
+          "EXIT"
+        ],
+        "title": "ActionSignal"
+      },
       "AlertReadResponse": {
         "properties": {
           "id": {
@@ -4964,6 +5096,17 @@
         "title": "CombinedSignalConfig",
         "description": "Config for combined (AND/OR) signal mode."
       },
+      "ConvictionLevel": {
+        "type": "string",
+        "enum": [
+          "HIGH+",
+          "HIGH",
+          "MEDIUM",
+          "LOW",
+          "AVOID"
+        ],
+        "title": "ConvictionLevel"
+      },
       "ConvictionPillars": {
         "properties": {
           "rs": {
@@ -5783,6 +5926,122 @@
           "staleness"
         ],
         "title": "FlowsResponse"
+      },
+      "FourFactorConviction": {
+        "properties": {
+          "conviction_level": {
+            "$ref": "#/components/schemas/ConvictionLevel"
+          },
+          "action_signal": {
+            "$ref": "#/components/schemas/ActionSignal"
+          },
+          "urgency": {
+            "$ref": "#/components/schemas/UrgencyLevel"
+          },
+          "factor_returns_rs": {
+            "type": "boolean",
+            "title": "Factor Returns Rs",
+            "default": false
+          },
+          "factor_momentum_rs": {
+            "type": "boolean",
+            "title": "Factor Momentum Rs",
+            "default": false
+          },
+          "factor_sector_rs": {
+            "type": "boolean",
+            "title": "Factor Sector Rs",
+            "default": false
+          },
+          "factor_volume_rs": {
+            "type": "boolean",
+            "title": "Factor Volume Rs",
+            "default": false
+          },
+          "factors_aligned": {
+            "type": "integer",
+            "title": "Factors Aligned",
+            "default": 0
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "roc_21_pct_rank": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roc 21 Pct Rank"
+          },
+          "sector_rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Rs Composite"
+          },
+          "cmf_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cmf 20"
+          },
+          "mfi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfi 14"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conviction_level",
+          "action_signal",
+          "urgency"
+        ],
+        "title": "FourFactorConviction"
       },
       "Fund": {
         "properties": {
@@ -9727,6 +9986,177 @@
         "title": "SchedulerStatusResponse",
         "description": "GET /api/v1/simulate/scheduler/status response."
       },
+      "ScreenerResponse": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenerRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "meta"
+        ],
+        "title": "ScreenerResponse",
+        "description": "Screener paginated response."
+      },
+      "ScreenerRow": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsi 14"
+          },
+          "above_50dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 50Dma"
+          },
+          "above_200dma": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Above 200Dma"
+          },
+          "macd_bullish": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Bullish"
+          },
+          "market_cap_cr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Cap Cr"
+          },
+          "pe_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pe Ratio"
+          },
+          "conviction_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConvictionLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "action_signal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionSignal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "urgency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UrgencyLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nifty_50": {
+            "type": "boolean",
+            "title": "Nifty 50",
+            "default": false
+          },
+          "nifty_500": {
+            "type": "boolean",
+            "title": "Nifty 500",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "company_name"
+        ],
+        "title": "ScreenerRow"
+      },
       "SectorExposureSummary": {
         "properties": {
           "top_sector": {
@@ -11276,6 +11706,16 @@
                 "type": "null"
               }
             ]
+          },
+          "four_factor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FourFactorConviction"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12446,6 +12886,15 @@
           "staleness"
         ],
         "title": "UniverseResponse"
+      },
+      "UrgencyLevel": {
+        "type": "string",
+        "enum": [
+          "IMMEDIATE",
+          "DEVELOPING",
+          "PATIENT"
+        ],
+        "title": "UrgencyLevel"
       },
       "ValidationError": {
         "properties": {

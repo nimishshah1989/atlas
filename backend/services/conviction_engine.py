@@ -273,25 +273,38 @@ latest_rs_date AS (
     WHERE entity_type = 'equity' AND vs_benchmark = 'NIFTY 500'
 ),
 sector_rs_latest AS (
-    SELECT entity_id AS sector_name, rs_composite AS sector_rs
+    SELECT DISTINCT ON (entity_id) entity_id AS sector_name, rs_composite AS sector_rs
     FROM de_rs_scores
     WHERE entity_type = 'sector'
       AND date = (SELECT MAX(date) FROM de_rs_scores WHERE entity_type = 'sector')
+    ORDER BY entity_id
 ),
 ranked_tech AS (
     SELECT
         instrument_id,
         roc_21, cmf_20, mfi_14, rsi_14, above_50dma, above_200dma, macd_bullish, roc_5,
         percent_rank() OVER (ORDER BY roc_21 ASC NULLS FIRST) AS roc_21_pct_rank
-    FROM de_equity_technical_daily
-    WHERE date = (SELECT d FROM latest_tech_date)
+    FROM (
+        SELECT DISTINCT ON (instrument_id)
+            instrument_id,
+            roc_21, cmf_20, mfi_14, rsi_14, above_50dma, above_200dma, macd_bullish, roc_5
+        FROM de_equity_technical_daily
+        WHERE date = (SELECT d FROM latest_tech_date)
+        ORDER BY instrument_id
+    ) deduped
 ),
 latest_rs AS (
-    SELECT entity_id AS instrument_id_str, rs_composite
+    SELECT DISTINCT ON (entity_id) entity_id AS instrument_id_str, rs_composite
     FROM de_rs_scores
     WHERE entity_type = 'equity'
       AND vs_benchmark = 'NIFTY 500'
       AND date = (SELECT d FROM latest_rs_date)
+    ORDER BY entity_id
+),
+latest_fundamentals AS (
+    SELECT DISTINCT ON (instrument_id) instrument_id, market_cap_cr, pe_ratio
+    FROM de_equity_fundamentals
+    ORDER BY instrument_id
 )
 SELECT
     i.current_symbol AS symbol,
@@ -305,7 +318,7 @@ FROM de_instrument i
 LEFT JOIN ranked_tech t ON t.instrument_id = i.id
 LEFT JOIN latest_rs r ON r.instrument_id_str = i.id::text
 LEFT JOIN sector_rs_latest sr ON sr.sector_name = i.sector
-LEFT JOIN de_equity_fundamentals f ON f.instrument_id = i.id
+LEFT JOIN latest_fundamentals f ON f.instrument_id = i.id
 WHERE i.is_active = true
   {universe_filter}
   {sector_filter}
