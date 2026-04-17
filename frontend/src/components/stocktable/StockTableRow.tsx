@@ -1,6 +1,7 @@
 "use client";
 
 import type { StockSummary } from "@/lib/api";
+import TvChip from "./TvChip";
 import {
   formatCurrency,
   formatDecimal,
@@ -10,17 +11,19 @@ import {
 } from "@/lib/format";
 
 function DmaDot({ above }: { above: boolean | null | undefined }) {
-  if (above === true) return <span className="text-emerald-500">●</span>;
-  if (above === false) return <span className="text-red-500">●</span>;
-  return <>—</>;
+  if (above === true) return <span className="text-emerald-500">{"\u25cf"}</span>;
+  if (above === false) return <span className="text-red-500">{"\u25cf"}</span>;
+  return <>{"\u2014"}</>;
 }
 
 export default function StockTableRow({
   s,
   onSelect,
+  tvScore,
 }: {
   s: StockSummary;
   onSelect: (symbol: string) => void;
+  tvScore?: number | null;
 }) {
   return (
     <tr
@@ -50,7 +53,7 @@ export default function StockTableRow({
         <span
           className={`text-xs px-1.5 py-0.5 rounded border ${quadrantBg(s.quadrant)} ${quadrantColor(s.quadrant)}`}
         >
-          {s.quadrant || "—"}
+          {s.quadrant || "\u2014"}
         </span>
       </td>
       <td className="px-2 py-1.5 text-right tabular-nums">
@@ -74,10 +77,13 @@ export default function StockTableRow({
         {formatDecimal(s.sharpe_1y)}
       </td>
       <td className="px-2 py-1.5 text-right tabular-nums">
-        {s.mf_holder_count ?? "—"}
+        {s.mf_holder_count ?? "\u2014"}
+      </td>
+      <td className="px-2 py-1.5 text-center">
+        <TvChip score={tvScore} size="sm" />
       </td>
       <td className="px-2 py-1.5 text-center text-xs text-gray-500">
-        {s.cap_category || "—"}
+        {s.cap_category || "\u2014"}
       </td>
     </tr>
   );

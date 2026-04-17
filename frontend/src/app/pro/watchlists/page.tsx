@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import {
   getWatchlists,
-  syncWatchlistToTv,
   createWatchlist,
   deleteWatchlist,
   type WatchlistItem,
 } from "@/lib/api-watchlists";
+import { getTvTa } from "@/lib/api";
+import TvChip from "@/components/stocktable/TvChip";
 
 // --- Helpers ---
 
@@ -50,14 +51,15 @@ function SkeletonCard() {
 
 interface WatchlistCardProps {
   watchlist: WatchlistItem;
-  onSync: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
-function WatchlistCard({ watchlist, onSync, onDelete }: WatchlistCardProps) {
-  const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
+function WatchlistCard({ watchlist, onDelete }: WatchlistCardProps) {
+  const [refreshing, setRefreshing] = useState(false);
+  const [tvScores, setTvScores] = useState<Map<string, number | null>>(
+    new Map()
+  );
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -65,21 +67,34 @@ function WatchlistCard({ watchlist, onSync, onDelete }: WatchlistCardProps) {
   const shownSymbols = watchlist.symbols.slice(0, MAX_SHOWN);
   const extraCount = watchlist.symbols.length - MAX_SHOWN;
 
-  async function handleSync() {
-    setSyncing(true);
-    setSyncMsg(null);
-    setSyncError(null);
+  async function handleRefresh() {
+    if (watchlist.symbols.length === 0) return;
+    setRefreshing(true);
+    setRefreshError(null);
     try {
-      const resp = await onSync(watchlist.id);
-      // onSync resolves after updating local state; show success from response
-      void resp;
-      setSyncMsg("Synced to TradingView");
-    } catch (e) {
-      setSyncError(
-        e instanceof Error ? e.message : "Sync failed"
+      const results = await Promise.allSettled(
+        watchlist.symbols.map((sym) => getTvTa(sym))
       );
+      const m = new Map<string, number | null>();
+      let anyFulfilled = false;
+      results.forEach((r, i) => {
+        const sym = watchlist.symbols[i];
+        if (r.status === "fulfilled") {
+          anyFulfilled = true;
+          const raw = (r.value.data?.tv_ta ?? {})["Recommend.All"];
+          m.set(sym, typeof raw === "number" ? raw : null);
+        } else {
+          m.set(sym, null);
+        }
+      });
+      if (!anyFulfilled && results.length > 0) {
+        setRefreshError("Could not reach TV signals endpoint");
+      }
+      setTvScores(m);
+    } catch (e) {
+      setRefreshError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
-      setSyncing(false);
+      setRefreshing(false);
     }
   }
 
@@ -127,11 +142,13 @@ function WatchlistCard({ watchlist, onSync, onDelete }: WatchlistCardProps) {
       {watchlist.symbols.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {shownSymbols.map((sym) => (
-            <span
-              key={sym}
-              className="inline-flex items-center text-xs px-2 py-0.5 rounded border bg-slate-50 text-slate-700 border-slate-200 font-mono"
-            >
-              {sym}
+            <span key={sym} className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center text-xs px-2 py-0.5 rounded border bg-slate-50 text-slate-700 border-slate-200 font-mono">
+                {sym}
+              </span>
+              {tvScores.size > 0 && (
+                <TvChip score={tvScores.get(sym) ?? null} size="sm" />
+              )}
             </span>
           ))}
           {extraCount > 0 && (
@@ -152,14 +169,9 @@ function WatchlistCard({ watchlist, onSync, onDelete }: WatchlistCardProps) {
       </div>
 
       {/* Inline messages */}
-      {syncMsg != null && (
-        <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1 mb-2">
-          {syncMsg}
-        </div>
-      )}
-      {syncError != null && (
+      {refreshError != null && (
         <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1 mb-2">
-          {syncError}
+          {refreshError}
         </div>
       )}
       {deleteError != null && (
@@ -171,17 +183,17 @@ function WatchlistCard({ watchlist, onSync, onDelete }: WatchlistCardProps) {
       {/* Action buttons */}
       <div className="flex items-center gap-2 pt-2 border-t border-[#e4e4e8]">
         <button
-          data-testid="sync-tv-btn"
-          onClick={handleSync}
-          disabled={syncing || deleting}
+          data-testid="refresh-tv-btn"
+          onClick={handleRefresh}
+          disabled={refreshing || deleting}
           className="text-sm bg-[#1D9E75] text-white font-medium px-4 py-1.5 rounded hover:bg-[#178a63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {syncing ? "Syncing..." : "Sync to TV"}
+          {refreshing ? "Refreshing..." : "Refresh TV signals"}
         </button>
 
         <button
           onClick={handleDelete}
-          disabled={deleting || syncing}
+          disabled={deleting || refreshing}
           className="text-sm border border-red-200 text-red-600 font-medium px-3 py-1.5 rounded hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {deleting ? "Deleting..." : "Delete"}
@@ -325,18 +337,6 @@ export default function WatchlistsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleSync(id: string): Promise<void> {
-    await syncWatchlistToTv(id);
-    // Update tv_synced in local state on success
-    setWatchlists((prev) =>
-      prev == null
-        ? prev
-        : prev.map((wl) =>
-            wl.id === id ? { ...wl, tv_synced: true } : wl
-          )
-    );
-  }
-
   async function handleDelete(id: string): Promise<void> {
     await deleteWatchlist(id);
     setWatchlists((prev) =>
@@ -378,7 +378,7 @@ export default function WatchlistsPage() {
           <div>
             <h1 className="text-lg font-semibold text-gray-900">Watchlists</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Manage symbol watchlists and sync them to TradingView.
+              Manage symbol watchlists and sync TradingView signals.
             </p>
           </div>
         </div>
@@ -409,28 +409,33 @@ export default function WatchlistsPage() {
           </div>
         )}
 
-        {!loading && error == null && watchlists != null && watchlists.length === 0 && (
-          <div className="bg-gray-50 border border-[#e4e4e8] rounded-lg p-8 text-center text-sm text-gray-500">
-            No watchlists yet. Create one above.
-          </div>
-        )}
-
-        {!loading && error == null && watchlists != null && watchlists.length > 0 && (
-          <div className="space-y-4" data-testid="watchlist-list">
-            <div className="text-xs text-gray-400 mb-2">
-              {watchlists.length} watchlist
-              {watchlists.length !== 1 ? "s" : ""}
+        {!loading &&
+          error == null &&
+          watchlists != null &&
+          watchlists.length === 0 && (
+            <div className="bg-gray-50 border border-[#e4e4e8] rounded-lg p-8 text-center text-sm text-gray-500">
+              No watchlists yet. Create one above.
             </div>
-            {watchlists.map((wl) => (
-              <WatchlistCard
-                key={wl.id}
-                watchlist={wl}
-                onSync={handleSync}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
+          )}
+
+        {!loading &&
+          error == null &&
+          watchlists != null &&
+          watchlists.length > 0 && (
+            <div className="space-y-4" data-testid="watchlist-list">
+              <div className="text-xs text-gray-400 mb-2">
+                {watchlists.length} watchlist
+                {watchlists.length !== 1 ? "s" : ""}
+              </div>
+              {watchlists.map((wl) => (
+                <WatchlistCard
+                  key={wl.id}
+                  watchlist={wl}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
       </main>
     </div>
   );

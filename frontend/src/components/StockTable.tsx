@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUniverse, type StockSummary } from "@/lib/api";
+import { getUniverse, getTvBulkCache, type StockSummary } from "@/lib/api";
 import StockTableRow from "./stocktable/StockTableRow";
 
 export default function StockTable({
@@ -18,11 +18,29 @@ export default function StockTable({
   const [sortKey, setSortKey] = useState<string>("rs_composite");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [search, setSearch] = useState("");
+  const [tvMap, setTvMap] = useState<Map<string, number | null>>(new Map());
 
   useEffect(() => {
     setLoading(true);
     getUniverse({ sector })
-      .then((res) => setStocks(res.sectors.flatMap((sg) => sg.stocks)))
+      .then((res) => {
+        const fetched = res.sectors.flatMap((sg) => sg.stocks);
+        setStocks(fetched);
+        return fetched;
+      })
+      .then((fetched) => {
+        if (fetched.length === 0) return;
+        return getTvBulkCache(fetched.map((s) => s.symbol))
+          .then((resp) => {
+            const m = new Map<string, number | null>();
+            for (const item of resp.data.items) {
+              const raw = item.tv_ta?.["Recommend.All"];
+              m.set(item.symbol, typeof raw === "number" ? raw : null);
+            }
+            setTvMap(m);
+          })
+          .catch(console.error);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [sector]);
@@ -42,6 +60,13 @@ export default function StockTable({
   );
 
   const sorted = [...filtered].sort((a, b) => {
+    if (sortKey === "tv_score") {
+      const av = tvMap.get(a.symbol) ?? null;
+      const bv = tvMap.get(b.symbol) ?? null;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return sortDir === "desc" ? bv - av : av - bv;
+    }
     const av = (a as unknown as Record<string, unknown>)[sortKey];
     const bv = (b as unknown as Record<string, unknown>)[sortKey];
     if (av === null || av === undefined) return 1;
@@ -68,7 +93,7 @@ export default function StockTable({
     >
       {label}
       {sortKey === field && (
-        <span className="ml-0.5">{sortDir === "desc" ? "↓" : "↑"}</span>
+        <span className="ml-0.5">{sortDir === "desc" ? "\u2193" : "\u2191"}</span>
       )}
     </th>
   );
@@ -90,7 +115,7 @@ export default function StockTable({
           onClick={onBack}
           className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1"
         >
-          ← Sectors
+          \u2190 Sectors
         </button>
         <h2 className="text-lg font-semibold text-gray-800">{sector}</h2>
         <span className="text-xs text-gray-500">{stocks.length} stocks</span>
@@ -121,12 +146,18 @@ export default function StockTable({
               <SH label="Beta" field="beta_nifty" />
               <SH label="Sharpe" field="sharpe_1y" />
               <SH label="MF#" field="mf_holder_count" />
+              <SH label="TV" field="tv_score" />
               <SH label="Cap" field="cap_category" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {sorted.map((s) => (
-              <StockTableRow key={s.id} s={s} onSelect={onSelectStock} />
+              <StockTableRow
+                key={s.id}
+                s={s}
+                onSelect={onSelectStock}
+                tvScore={tvMap.get(s.symbol) ?? null}
+              />
             ))}
           </tbody>
         </table>

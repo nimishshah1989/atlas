@@ -44,31 +44,10 @@ export interface WatchlistListResponse {
   total: number;
 }
 
-export interface SyncTvData {
-  id: string;
-  tv_synced: boolean;
-  message: string;
-}
-
-export interface SyncTvMeta {
-  symbol_count: number;
-}
-
-export interface SyncTvResponse {
-  data: SyncTvData;
-  _meta: SyncTvMeta;
-}
-
 // --- API functions ---
 
 export async function getWatchlists(): Promise<WatchlistListResponse> {
   return fetchApi<WatchlistListResponse>("/api/v1/watchlists/");
-}
-
-export async function syncWatchlistToTv(id: string): Promise<SyncTvResponse> {
-  return fetchApi<SyncTvResponse>(`/api/v1/watchlists/${id}/sync-tv`, {
-    method: "POST",
-  });
 }
 
 export async function createWatchlist(

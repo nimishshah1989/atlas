@@ -330,6 +330,68 @@ export async function getFindings(params?: {
   );
 }
 
+// --- TradingView API --------------------------------------------------------
+
+export interface TvBulkItem {
+  symbol: string;
+  tv_ta: Record<string, number | string | null> | null;
+  fetched_at: string | null;
+}
+
+export interface TvBulkResponse {
+  data: { items: TvBulkItem[] };
+  _meta: {
+    data_as_of: string | null;
+    data_layer: string;
+    cached_count: number;
+    requested_count: number;
+  };
+}
+
+export async function getTvBulkCache(
+  symbols: string[],
+  interval = "1D"
+): Promise<TvBulkResponse> {
+  if (symbols.length === 0) {
+    return {
+      data: { items: [] },
+      _meta: {
+        data_as_of: null,
+        data_layer: "near_realtime",
+        cached_count: 0,
+        requested_count: 0,
+      },
+    };
+  }
+  const qs = new URLSearchParams({ symbols: symbols.join(","), interval });
+  const res = await fetch(`${API_BASE}/api/v1/tv/ta/bulk?${qs.toString()}`);
+  if (!res.ok) throw new Error(`bulk tv cache: ${res.status}`);
+  return res.json();
+}
+
+export interface TvTaResponse {
+  data: {
+    symbol: string;
+    exchange: string;
+    interval: string;
+    recommendation_1d: string | null;
+    tv_ta?: Record<string, number | string | null> | null;
+    [k: string]: unknown;
+  };
+  _meta: { data_as_of: string; is_stale: boolean; data_layer: string };
+}
+
+export async function getTvTa(
+  symbol: string,
+  interval = "1D"
+): Promise<TvTaResponse> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/tv/ta/${encodeURIComponent(symbol)}?interval=${interval}`
+  );
+  if (!res.ok) throw new Error(`tv ta ${symbol}: ${res.status}`);
+  return res.json();
+}
+
 // --- MF API (re-exported from api-mf.ts) ------------------------------------
 
 export {

@@ -119,6 +119,8 @@ async def test_ta_fresh_cache_hit_returns_200_with_fields() -> None:
     assert body["data"]["oscillator_score"] == "BUY"
     assert body["data"]["ma_score"] == "STRONG_BUY"
     assert body["data"]["buy"] == 15
+    assert "tv_ta" in body["data"]
+    assert isinstance(body["data"]["tv_ta"], dict)
     assert "_meta" in body
     assert body["_meta"]["is_stale"] is False
     assert body["_meta"]["data_layer"] == "near_realtime"

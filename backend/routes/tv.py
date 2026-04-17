@@ -1,5 +1,6 @@
 """TV routes — read-through cache endpoints for TradingView data.
 
+GET /api/tv/ta/bulk                 Bulk cache-only TA lookup (registered BEFORE /{symbol})
 GET /api/tv/ta/{symbol}             Technical analysis summary
 GET /api/tv/screener/{symbol}       Screener data
 GET /api/tv/fundamentals/{symbol}   Fundamentals data
@@ -26,6 +27,83 @@ from backend.services.tv.cache_service import TVCacheService
 log = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/tv", tags=["tv"])
+
+
+@router.get("/ta/bulk")
+async def get_ta_bulk_cache(
+    symbols: str,
+    exchange: Optional[str] = "NSE",
+    interval: Optional[str] = "1D",
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Pure-cache lookup for 1D TA across many symbols. No bridge calls, no background refresh.
+
+    Returns a §20.4 envelope with an `items` array — one entry per requested symbol.
+    Uncached symbols yield {symbol, tv_ta: null, fetched_at: null}.
+
+    Query params:
+        symbols  : comma-separated, case-insensitive, upper-cased. Hard cap 500; 400 otherwise.
+        exchange : informational (cache PK is (symbol, data_type, interval)).
+        interval : '1D' by default.
+    """
+    from backend.db.tv_models import AtlasTvCache
+    from sqlalchemy import select
+
+    resolved_interval = interval or "1D"
+
+    raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not raw:
+        raise HTTPException(status_code=400, detail="symbols required")
+    if len(raw) > 500:
+        raise HTTPException(status_code=400, detail="max 500 symbols per call")
+    # Dedupe while preserving order so response array mirrors request
+    seen: set[str] = set()
+    requested: list[str] = []
+    for s in raw:
+        if s not in seen:
+            seen.add(s)
+            requested.append(s)
+
+    stmt = select(AtlasTvCache).where(
+        AtlasTvCache.symbol.in_(requested),
+        AtlasTvCache.data_type == "ta_summary",
+        AtlasTvCache.interval == resolved_interval,
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    by_symbol = {r.symbol: r for r in rows}
+
+    items: list[dict[str, Any]] = []
+    latest: Optional[datetime] = None
+    for sym in requested:
+        row = by_symbol.get(sym)
+        if row is None:
+            items.append({"symbol": sym, "tv_ta": None, "fetched_at": None})
+            continue
+        if latest is None or row.fetched_at > latest:
+            latest = row.fetched_at
+        items.append(
+            {
+                "symbol": sym,
+                "tv_ta": row.tv_data,
+                "fetched_at": row.fetched_at.isoformat(),
+            }
+        )
+
+    log.info(
+        "tv_ta_bulk_cache",
+        requested=len(requested),
+        cached=sum(1 for it in items if it["tv_ta"] is not None),
+    )
+
+    return {
+        "data": {"items": items},
+        "_meta": {
+            "data_as_of": latest.isoformat() if latest else None,
+            "data_layer": "near_realtime",
+            "cached_count": sum(1 for it in items if it["tv_ta"] is not None),
+            "requested_count": len(requested),
+        },
+    }
 
 
 def _build_meta(fetched_at: datetime, is_stale: bool) -> dict[str, Any]:
@@ -124,6 +202,7 @@ async def get_ta_summary(
 
     tv_data = entry.tv_data or {}
     ta_fields = _extract_ta_fields(tv_data, symbol, resolved_exchange, resolved_interval)
+    ta_fields["tv_ta"] = tv_data if tv_data else None  # additive raw field
 
     return {
         "data": ta_fields,
