@@ -16,6 +16,7 @@ from slowapi.util import get_remote_address
 
 from backend.config import get_settings
 from backend.routes import (
+    alerts,
     decisions,
     errors as uql_errors,
     global_intel,
@@ -96,6 +97,7 @@ app.include_router(portfolio.router)
 app.include_router(system.router)
 app.include_router(system_probes.probes_router)
 app.include_router(tv.router)
+app.include_router(alerts.router)
 app.include_router(watchlists.router)
 app.include_router(webhooks.router)
 
