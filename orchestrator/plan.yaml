@@ -1239,3 +1239,542 @@ chunks:
       - "scripts/post-chunk.sh exits 0"
       - "MEMORY.md project_v15_chunk_status.md shows V5-1..V5-16 (plus V5-10a) all DONE"
 
+
+  # --- V6 TradingView Slice -------------------------------------------------
+
+  - id: V6-1
+    title: "V6 DB migration: atlas_tv_cache + atlas_watchlists + atlas_alerts"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head clean"
+      - "describe all 3 tables shows correct schema"
+      - "mypy clean on new models"
+      - "SELECT COUNT(*) FROM atlas_tv_cache returns 0"
+
+  - id: V6-2
+    title: "TV MCP bridge service wrapper"
+    status: PENDING
+    depends_on: [V6-1]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/tv/test_bridge_timeout.py -v green"
+      - "timeout raises TVBridgeUnavailableError (not 500)"
+      - "mypy clean"
+
+  - id: V6-3
+    title: "TV cache service + webhook route"
+    status: PENDING
+    depends_on: [V6-2]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "POST /api/webhooks/tradingview returns 200 on valid payload"
+      - "403 on bad/missing secret"
+      - "422 on malformed body"
+      - "cache hit returns without bridge call"
+      - "stale entry served with is_stale=true while background refresh queued"
+
+  - id: V6-4
+    title: "TV TA + screener + fundamentals API routes"
+    status: PENDING
+    depends_on: [V6-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/tv/ta/HDFCBANK returns recommendation_1d, oscillator_score, ma_score"
+      - "meta.is_stale present"
+      - "scripts/check-api-standard.py green for tv routes"
+      - "pytest tests/api/test_tv_ta.py -v green"
+
+  - id: V6-5
+    title: "Stock conviction pillar 3 (TV TA) + chart-data endpoint"
+    status: PENDING
+    depends_on: [V6-4]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/stocks/HDFCBANK includes conviction.pillar_3.tv_ta"
+      - "when TV down, tv_ta is null and meta.partial_data is true"
+      - "GET /api/stocks/HDFCBANK/chart-data?from=2025-01-01&to=2026-01-01 returns ~252 rows with dates+OHLCV+technicals"
+
+  - id: V6-6
+    title: "Watchlist CRUD + TV sync API"
+    status: PENDING
+    depends_on: [V6-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "CRUD happy paths green"
+      - "POST sync-tv sets tv_synced=true on bridge success"
+      - "POST sync-tv returns 503 with error envelope when bridge unavailable"
+      - "DELETE sets is_deleted=true"
+      - "pytest tests/api/test_watchlists.py -v green"
+
+  - id: V6-7
+    title: "Alerts API + alert rules CRUD"
+    status: PENDING
+    depends_on: [V6-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/alerts?unread=true returns only unread rows"
+      - "source filter works"
+      - "mark-read sets is_read=true"
+      - "POST /api/alerts/999999/read returns 404"
+      - "pytest tests/api/test_alerts.py -v green"
+
+  - id: V6-8
+    title: "Pro shell /pro/alerts + /pro/watchlists pages"
+    status: PENDING
+    depends_on: [V6-5, V6-6, V6-7]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "/pro/alerts renders alert list with source badges and timestamps in IST"
+      - "mark-read action calls POST /api/alerts/{id}/read"
+      - "/pro/watchlists renders list with TV-synced badge"
+      - "sync-to-TV button calls POST sync-tv"
+
+  - id: V6-9
+    title: "V6 polish + 7-dim quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V6-8]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python .quality/checks.py exits 0 (all 7 dims >=80)"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/ -v all green"
+      - "scripts/post-chunk.sh V6-9 completes without error"
+
+
+  # --- V7 ETF + Global Slice -------------------------------------------------
+
+  - id: V7-1
+    title: "ETF JIP client extension + in-process RS computation service"
+    status: PENDING
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/etf/test_etf_rs.py -v green"
+      - "RS formula verified on known values"
+      - "no float used (Decimal only)"
+      - "mypy clean"
+
+  - id: V7-2
+    title: "ETF universe + detail API routes"
+    status: PENDING
+    depends_on: [V7-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/etf/universe returns >=100 active ETFs each with rs_1m field"
+      - "country filter works"
+      - "scripts/check-api-standard.py green for etf routes"
+      - "pytest tests/api/test_etf_universe.py -v green"
+
+  - id: V7-3
+    title: "ETF chart-data + RS history endpoints"
+    status: PENDING
+    depends_on: [V7-2]
+    quality_targets:
+      api: 85
+      code: 80
+    punch_list:
+      - "GET /api/etf/SPY/chart-data?from=2025-01-01&to=2026-01-01 returns ~252 rows with dates+OHLCV+technicals"
+      - "GET /api/etf/SPY/rs-history?months=12 returns ~252 rows"
+      - "pytest green"
+
+  - id: V7-4
+    title: "Global macro ratios + RS heatmap API routes"
+    status: PENDING
+    depends_on: [V7-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/global/ratios returns exactly 9 series each with value + sparkline (10 points) + mom_change"
+      - "GET /api/global/rs-heatmap returns 131 instruments"
+      - "pytest green"
+      - "check-api-standard.py green"
+
+  - id: V7-5
+    title: "Pro shell /pro/etf page — rotation map + macro context"
+    status: PENDING
+    depends_on: [V7-2, V7-4]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "rotation map renders with real RS data"
+      - "macro panel shows real values"
+      - "hover tooltip shows RS scores"
+      - "per-panel error fallback tested"
+
+  - id: V7-6
+    title: "ETF detail page /pro/etf/[ticker]"
+    status: PENDING
+    depends_on: [V7-3, V7-5]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "/pro/etf/SPY renders with real candlestick chart"
+      - "RS history chart shows 12 months of real data"
+      - "summary row shows expense_ratio and benchmark"
+
+  - id: V7-7
+    title: "V7 polish + 7-dim quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V7-6]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python .quality/checks.py exits 0 (all 7 dims >=80)"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/ -v all green"
+      - "post-chunk sync completes"
+
+
+  # --- V8 Advisor Shell -------------------------------------------------
+
+  - id: V8-1
+    title: "V8 DB migration: atlas_advisor_clients + atlas_model_portfolios + atlas_reports"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head clean"
+      - "describe all 3 tables correct"
+      - "FK index=True on client_id"
+      - "mypy clean"
+      - "SELECT COUNT(*) FROM atlas_advisor_clients returns 0"
+
+  - id: V8-2
+    title: "Client management API with PII encryption"
+    status: PENDING
+    depends_on: [V8-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "POST creates client"
+      - "plaintext name never in DB (encrypted)"
+      - "GET /api/advisor/clients/{id} returns decrypted name"
+      - "DELETE sets is_deleted=true"
+      - "404 on missing id"
+      - "pytest tests/api/test_advisor_clients.py -v green"
+
+  - id: V8-3
+    title: "Model portfolios CRUD API"
+    status: PENDING
+    depends_on: [V8-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "CRUD happy paths green"
+      - "weight sum validation (optional but recommended)"
+      - "soft-delete works"
+      - "pytest green"
+
+  - id: V8-4
+    title: "Report generator service + API"
+    status: PENDING
+    depends_on: [V8-2, V8-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "POST /api/advisor/reports returns {id, generated_at}"
+      - "GET /download returns Content-Type: application/pdf"
+      - "404 on missing report id"
+      - "pytest green"
+      - "no PII in logs"
+
+  - id: V8-5
+    title: "Advisor shell: Dashboard + Client List + Client Detail pages"
+    status: PENDING
+    depends_on: [V8-2]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "client list renders with real data"
+      - "AUM formatted as lakh/crore"
+      - "client detail shows portfolio holdings"
+
+  - id: V8-6
+    title: "Advisor shell: Fund Discovery + Model Portfolios pages"
+    status: PENDING
+    depends_on: [V8-3, V8-5]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "AUM filter works with lakh/crore input"
+      - "overlap check renders common holdings"
+      - "model portfolio create/edit modal saves via API"
+
+  - id: V8-7
+    title: "Advisor shell: Reports + Market View pages"
+    status: PENDING
+    depends_on: [V8-4, V8-6]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "generate report button calls POST /api/advisor/reports"
+      - "download triggers file download"
+      - "market view shows briefing headline and sector summary"
+
+  - id: V8-8
+    title: "V8 polish + 7-dim quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V8-7]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python .quality/checks.py exits 0"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/ -v all green"
+      - "post-chunk sync completes"
+
+
+  # --- V9 Retail Shell -------------------------------------------------
+
+  - id: V9-1
+    title: "V9 DB migration: atlas_retail_goals"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head clean"
+      - "FK index=True on portfolio_id"
+      - "Numeric(20,4) on money columns"
+      - "mypy clean"
+      - "SELECT COUNT(*) FROM atlas_retail_goals returns 0"
+
+  - id: V9-2
+    title: "Retail fund discovery API (simplified, no raw RS)"
+    status: PENDING
+    depends_on: [V9-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/retail/discover returns funds with traffic_light field (green/amber/red)"
+      - "no rs_1m field in response"
+      - "GET /api/retail/discover/{mstar_id} includes health_checks_passed and health_checks_total"
+      - "pytest green"
+
+  - id: V9-3
+    title: "Goal planner service + goals API"
+    status: PENDING
+    depends_on: [V9-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "test_goal_planner.py: given target=20000000 (2Cr), current=500000, rate=12%, tenure=14y, required SIP matches expected Decimal value"
+      - "no float used"
+      - "POST /api/retail/goals/calculate returns required_monthly_sip as Decimal"
+      - "pytest green"
+
+  - id: V9-4
+    title: "Retail shell: Home + Fund Discovery pages (mobile-first)"
+    status: PENDING
+    depends_on: [V9-2]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "discover page shows traffic light badges"
+      - "fund detail shows health checks count"
+      - "no technical jargon"
+      - "mobile layout renders correctly at 375px"
+
+  - id: V9-5
+    title: "Retail shell: Portfolio + Goals pages"
+    status: PENDING
+    depends_on: [V9-3, V9-4]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "portfolio page shows value in lakh/crore"
+      - "goal form calculates required SIP on input change"
+      - "progress bar shows current_value/target_amount%"
+      - "save stores via POST /api/retail/goals"
+
+  - id: V9-6
+    title: "Retail shell: SIP Calculator + Alerts + Learn pages"
+    status: PENDING
+    depends_on: [V9-5]
+    quality_targets:
+      frontend: 80
+    punch_list:
+      - "npm run build succeeds"
+      - "SIP calculator shows projected corpus chart"
+      - "no technical jargon on any page"
+      - "learn page renders static content correctly"
+
+  - id: V9-7
+    title: "V9 polish + 7-dim quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V9-6]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python .quality/checks.py exits 0 (all 7 dims >=80)"
+      - "pytest tests/ -v all green"
+      - "scripts/post-chunk.sh V9-7 completes"
+
+
+  # --- V10 Qlib + Advanced -------------------------------------------------
+
+  - id: V10-1
+    title: "V10 DB migration: atlas_qlib_features + atlas_qlib_signals + atlas_events"
+    status: PENDING
+    quality_targets:
+      code: 80
+    punch_list:
+      - "alembic upgrade head clean"
+      - "all 3 tables created"
+      - "FK index=True on instrument_id in both qlib tables"
+      - "mypy clean"
+      - "SELECT COUNT(*) FROM atlas_qlib_features returns 0"
+
+  - id: V10-2
+    title: "Alpha158 feature computation (158 factors, pandas vectorized)"
+    status: PENDING
+    depends_on: [V10-1]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "pytest tests/unit/qlib/test_alpha158.py -v green"
+      - "all 158 column names present in output"
+      - "KMID formula verified on known values"
+      - "no iterrows"
+      - "mypy clean"
+
+  - id: V10-3
+    title: "Nightly Qlib pipeline: OHLCV → alpha158 → atlas_qlib_features"
+    status: PENDING
+    depends_on: [V10-2]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Pipeline runs on real OHLCV data"
+      - "atlas_qlib_features gains rows for all stocks with >=60 days data"
+      - "second run on same day leaves row count unchanged"
+      - "structlog shows before/after row counts"
+      - "pytest green"
+
+  - id: V10-4
+    title: "Event system: producer + HTTP polling + WebSocket endpoint"
+    status: PENDING
+    depends_on: [V10-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "emit_event writes to atlas_events"
+      - "GET /api/events returns events with undelivered filter"
+      - "WebSocket client receives event within 2s of emit"
+      - "pytest tests/api/test_events_http.py + test_events_ws.py green"
+
+  - id: V10-5
+    title: "Wire event emitters into existing subsystems + RS change detector"
+    status: PENDING
+    depends_on: [V10-4]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Simulation service emits SIMULATION_COMPLETE event on run completion"
+      - "RS change detector correctly identifies quadrant changes on known test data"
+      - "pytest tests/unit/events/test_rs_change_detector.py green"
+
+  - id: V10-6
+    title: "Simulation parameter optimization (Optuna)"
+    status: PENDING
+    depends_on: [V10-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "POST /api/simulate/optimize with valid body runs >=10 trials and returns best_params"
+      - "invalid signal type returns 422 with error envelope"
+      - "pytest tests/api/test_simulate_optimize.py green"
+
+  - id: V10-7
+    title: "Factor validation (alphalens) + tearsheet API"
+    status: PENDING
+    depends_on: [V10-3]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/qlib/factor-tearsheet/KMID returns {ic_mean, ic_std, quantile_returns, turnover}"
+      - "requires atlas_qlib_features to have >=30 days data"
+      - "pytest green"
+
+  - id: V10-8
+    title: "LightGBM signal model (Phase 2 — best-effort)"
+    status: PENDING
+    depends_on: [V10-3]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "Model trains on real data when >=90 days features available"
+      - "predictions written to atlas_qlib_signals"
+      - "model skips gracefully if <90 days available"
+      - "pytest green"
+
+  - id: V10-9
+    title: "V10 polish + 7-dim quality gate + post-chunk sync"
+    status: PENDING
+    depends_on: [V10-5, V10-6, V10-7, V10-8]
+    quality_targets:
+      code: 80
+    punch_list:
+      - "python .quality/checks.py exits 0 (all 7 dims >=80)"
+      - "scripts/check-api-standard.py green"
+      - "pytest tests/ -v all green"
+      - "post-chunk sync completes"
+

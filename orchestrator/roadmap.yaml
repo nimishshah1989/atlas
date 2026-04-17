@@ -175,29 +175,76 @@ versions:
   - id: V6
     title: "TradingView slice"
     goal: >
-      TradingView slice (MCP bridge, charts, bidirectional sync).
-    chunks: []
+      TradingView slice (TV MCP bridge, webhook handler, Lightweight Charts,
+      conviction pillar 3, watchlist CRUD, bidirectional portfolio-watchlist sync,
+      Pro shell alerts + watchlists pages).
+    chunks:
+      - id: V6-1
+      - id: V6-2
+      - id: V6-3
+      - id: V6-4
+      - id: V6-5
+      - id: V6-6
+      - id: V6-7
+      - id: V6-8
+      - id: V6-9
 
   - id: V7
     title: "ETF + Global slice"
     goal: >
-      ETF + Global slice. ETF and global instrument coverage.
-    chunks: []
+      ETF + Global slice (258 ETFs x 5 countries with in-process RS scores,
+      global macro ratios + RS heatmap, Pro shell /pro/etf rotation map).
+    chunks:
+      - id: V7-1
+      - id: V7-2
+      - id: V7-3
+      - id: V7-4
+      - id: V7-5
+      - id: V7-6
+      - id: V7-7
 
   - id: V8
     title: "Advisor shell"
     goal: >
-      Advisor shell. Advisor experience surface.
-    chunks: []
+      Advisor shell (client management + PII encryption, fund discovery workflow,
+      model portfolios, Jinja2+PDF report generator, /advisor/* frontend pages).
+    chunks:
+      - id: V8-1
+      - id: V8-2
+      - id: V8-3
+      - id: V8-4
+      - id: V8-5
+      - id: V8-6
+      - id: V8-7
+      - id: V8-8
 
   - id: V9
     title: "Retail shell"
     goal: >
-      Retail shell. Retail MF investor surface.
-    chunks: []
+      Retail shell (mobile-first, traffic light health, Decimal goal planner,
+      SIP calculator, simplified fund discovery, /retail/* frontend pages).
+    chunks:
+      - id: V9-1
+      - id: V9-2
+      - id: V9-3
+      - id: V9-4
+      - id: V9-5
+      - id: V9-6
+      - id: V9-7
 
   - id: V10
     title: "Qlib + Advanced"
     goal: >
-      Qlib + Advanced (Alpha158, ML models, parameter optimization).
-    chunks: []
+      Qlib + Advanced (Alpha158 158-factor pipeline, nightly batch, event system
+      WebSocket push, Optuna simulation optimizer, alphalens factor validation,
+      optional LightGBM signal model).
+    chunks:
+      - id: V10-1
+      - id: V10-2
+      - id: V10-3
+      - id: V10-4
+      - id: V10-5
+      - id: V10-6
+      - id: V10-7
+      - id: V10-8
+      - id: V10-9

@@ -164,6 +164,7 @@ class AtlasWatchlist(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     symbols: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    tv_synced: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
