@@ -1,0 +1,269 @@
+version: "1"
+slice: "V6"
+source: "ATLAS-DEFINITIVE-SPEC.md §10 (TradingView Integration)"
+
+# V6 TradingView Integration completion criteria.
+# V6-1..V6-9 + V6T-1..V6T-4 shipped all TV sidecar infrastructure,
+# cache ORM, bridge client, TA routes, conviction pillar, watchlist CRUD,
+# alerts API, pro pages, and the asyncio.to_thread bridge migration.
+#
+# These criteria provide evidence for the V6 TradingView slice.
+# §10 covers TV sidecar, cache, alerts, watchlists, and frontend pages.
+
+criteria:
+  - id: v6-01
+    title: "atlas_tv_cache table has required columns"
+    description: >
+      The atlas_tv_cache table must exist with all core columns:
+      symbol, data_type, interval, data, fetched_at.
+      These columns define the composite PK and JSONB payload.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_tv_cache'
+        AND column_name IN ('symbol', 'data_type', 'interval', 'data', 'fetched_at')
+      min: 5
+
+  - id: v6-02
+    title: "atlas_watchlists table has required columns"
+    description: >
+      The atlas_watchlists table must exist with all core columns:
+      id, name, symbols, tv_synced, is_deleted, created_at, updated_at.
+      These columns support the watchlist CRUD and TV sync features.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_watchlists'
+        AND column_name IN (
+          'id', 'name', 'symbols', 'tv_synced',
+          'is_deleted', 'created_at', 'updated_at'
+        )
+      min: 7
+
+  - id: v6-03
+    title: "atlas_alerts table has required columns"
+    description: >
+      The atlas_alerts table must exist with all core columns:
+      id, symbol, source, message, is_read, created_at, updated_at.
+      These columns support the alerts API and frontend alerts page.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_alerts'
+        AND column_name IN (
+          'id', 'symbol', 'source', 'message',
+          'is_read', 'created_at', 'updated_at'
+        )
+      min: 7
+
+  - id: v6-04
+    title: "atlas_alerts table has at least 10 columns"
+    description: >
+      The atlas_alerts table must exist with at least 10 columns
+      supporting the alerts API (including metadata, rs_at_alert,
+      quadrant_at_alert, alert_type, instrument_id, is_deleted).
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: sql_count
+      query: >
+        SELECT COUNT(*) FROM information_schema.columns
+        WHERE table_name = 'atlas_alerts'
+      min: 10
+
+  - id: v6-05
+    title: "GET /api/tv/ta/{symbol} endpoint reachable"
+    description: >
+      The TradingView technical analysis endpoint for a single symbol must
+      be registered. Acceptable statuses: 200/400/422/503.
+      503 is acceptable when the TV bridge is offline.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tv_ta_endpoint"
+
+  - id: v6-06
+    title: "GET /api/tv/screener/{symbol} endpoint reachable"
+    description: >
+      The TradingView screener data endpoint for a single symbol must be
+      registered. Acceptable statuses: 200/400/422/503.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tv_screener_endpoint"
+
+  - id: v6-07
+    title: "GET /api/tv/fundamentals/{symbol} endpoint reachable"
+    description: >
+      The TradingView fundamentals endpoint for a single symbol must be
+      registered. Acceptable statuses: 200/400/422/503.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tv_fundamentals_endpoint"
+
+  - id: v6-08
+    title: "GET /api/tv/ta/bulk bulk endpoint reachable (not 503)"
+    description: >
+      The TV bulk TA lookup endpoint must be registered and not return 503.
+      Acceptable statuses: 200/400/422. 503 is NOT acceptable here because
+      the bulk endpoint uses cached data and must not depend on live TV.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tv_ta_bulk_endpoint"
+
+  - id: v6-09
+    title: "POST /api/webhooks/tradingview returns 403 without secret"
+    description: >
+      The TradingView webhook endpoint must reject requests without the
+      X-Tradingview-Secret header, returning 403 Forbidden.
+      This enforces the webhook security guard.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tv_webhook_requires_secret"
+
+  - id: v6-10
+    title: "POST /api/v1/watchlists/{id}/sync-tv returns 404 (removed)"
+    description: >
+      The sync-tv sub-route was removed in V6T-2. POSTing to it with a
+      dummy UUID must return 404, not 200/422. This validates the removal
+      is in effect and no stale route is registered.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_sync_tv_is_404"
+
+  - id: v6-11
+    title: "GET /api/v1/watchlists/ returns 200"
+    description: >
+      The watchlists list endpoint must be registered and return 200.
+      This is a core CRUD endpoint required by the pro watchlists page.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_watchlists_list_endpoint"
+
+  - id: v6-12
+    title: "GET /api/alerts returns 200"
+    description: >
+      The alerts list endpoint must be registered and return 200.
+      This is a core endpoint required by the pro alerts page.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_alerts_list_endpoint"
+
+  - id: v6-13
+    title: "No httpx import in bridge.py (asyncio.to_thread bridge)"
+    description: >
+      backend/services/tv/bridge.py must not import httpx. The V6T-2
+      migration replaced the httpx sidecar with direct tradingview_screener
+      library calls via asyncio.to_thread. Any httpx import is a regression.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_bridge_no_httpx"
+
+  - id: v6-14
+    title: "tradingview-screener pinned in requirements.txt"
+    description: >
+      backend/requirements.txt must contain tradingview-screener with an
+      exact version pin (e.g. tradingview-screener==3.1.0). Unpinned
+      dependencies risk breaking the TV integration on deploy.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_tradingview_screener_pinned"
+
+  - id: v6-15
+    title: "No float annotations in V6 backend files (Decimal-only)"
+    description: >
+      AST scan of V6 backend files (bridge.py, cache_service.py, alert.py,
+      watchlist.py, routes/tv.py, routes/alerts.py, routes/watchlists.py,
+      routes/webhooks.py) finds zero ': float' type annotations.
+      All financial values must use Decimal.
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_v6_no_float"
+
+  - id: v6-16
+    title: "No print() calls in V6 backend files (structlog only)"
+    description: >
+      AST scan of the same V6 backend files finds zero print() calls.
+      All logging must go through structlog per project conventions.
+    severity: high
+    source_spec_section: "§10"
+    check:
+      type: python_callable
+      dotted_path: "quality_product_checks_v6.check_v6_no_print"
+
+  - id: v6-17
+    title: "Frontend /pro/watchlists/page.tsx exists"
+    description: >
+      The pro watchlists page component must exist at
+      frontend/src/app/pro/watchlists/page.tsx.
+      This page is required for the watchlist management UI.
+    severity: high
+    source_spec_section: "§10"
+    check:
+      type: file_exists
+      path: "frontend/src/app/pro/watchlists/page.tsx"
+
+  - id: v6-18
+    title: "Frontend /pro/alerts/page.tsx exists"
+    description: >
+      The pro alerts page component must exist at
+      frontend/src/app/pro/alerts/page.tsx.
+      This page is required for the alerts management UI.
+    severity: high
+    source_spec_section: "§10"
+    check:
+      type: file_exists
+      path: "frontend/src/app/pro/alerts/page.tsx"
+
+  - id: v6-19
+    title: "Frontend src/lib/tv.ts exists"
+    description: >
+      The TV API client library must exist at
+      frontend/src/lib/tv.ts.
+      This module provides the typed fetch helpers for TV data.
+    severity: high
+    source_spec_section: "§10"
+    check:
+      type: file_exists
+      path: "frontend/src/lib/tv.ts"
+
+  - id: v6-20
+    title: "Frontend TVConvictionPanel.tsx exists"
+    description: >
+      The TV Conviction Panel component must exist somewhere under
+      frontend/src/components/.
+      This component renders the TV TA conviction pillar in deep-dive.
+    severity: high
+    source_spec_section: "§10"
+    check:
+      type: file_exists
+      path: "frontend/src/components/deepdive/TVConvictionPanel.tsx"
