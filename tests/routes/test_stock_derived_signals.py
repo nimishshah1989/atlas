@@ -191,6 +191,111 @@ async def test_stock_deep_dive_includes_gold_rs_and_piotroski() -> None:
 
 
 @pytest.mark.asyncio
+async def test_stock_deep_dive_includes_four_factor() -> None:
+    """GET /api/v1/stocks/RELIANCE includes four_factor + C-DER-1 fields intact.
+
+    Verifies:
+    - stock.four_factor.conviction_level is one of the 5 ConvictionLevel values
+    - stock.four_factor.action_signal is one of the 5 ActionSignal values
+    - stock.four_factor.urgency is one of the 3 UrgencyLevel values
+    - stock.gold_rs is still present (non-regression for C-DER-1)
+    - stock.piotroski is still present (non-regression for C-DER-1)
+    """
+    from backend.models.conviction import (
+        ActionSignal,
+        ConvictionLevel,
+        FourFactorConviction,
+        UrgencyLevel,
+    )
+
+    four_factor_fixture = FourFactorConviction(
+        conviction_level=ConvictionLevel.HIGH_PLUS,
+        action_signal=ActionSignal.BUY,
+        urgency=UrgencyLevel.IMMEDIATE,
+        factor_returns_rs=True,
+        factor_momentum_rs=True,
+        factor_sector_rs=True,
+        factor_volume_rs=True,
+        factors_aligned=4,
+        rs_composite=Decimal("110.0"),
+    )
+
+    session = _mock_db_session()
+    app.dependency_overrides[get_db] = lambda: session
+
+    try:
+        with (
+            patch("backend.routes.stocks.JIPDataService") as MockJIP,
+            patch("backend.routes.stocks.TVCacheService") as MockTVCache,
+            patch("backend.routes.stocks.TVBridgeClient"),
+            patch(
+                "backend.routes.stocks.compute_gold_rs",
+                new=AsyncMock(return_value=_GOLD_RS_FIXTURE),
+            ),
+            patch(
+                "backend.routes.stocks.compute_piotroski",
+                new=AsyncMock(return_value=_PIOTROSKI_FIXTURE),
+            ),
+            patch(
+                "backend.routes.stocks.compute_four_factor",
+                new=AsyncMock(return_value=four_factor_fixture),
+            ),
+            patch(
+                "backend.routes.stocks.async_session_factory",
+                return_value=MagicMock(
+                    __aenter__=AsyncMock(return_value=session),
+                    __aexit__=AsyncMock(return_value=False),
+                ),
+            ),
+        ):
+            mock_svc = AsyncMock()
+            mock_svc.get_stock_detail.return_value = _BASE_STOCK_DATA
+            mock_svc.get_market_regime = AsyncMock(return_value={"regime": "BULL"})
+            MockJIP.return_value = mock_svc
+
+            mock_cache_inst = AsyncMock()
+            mock_cache_inst.get_or_fetch.return_value = MagicMock(tv_data=None)
+            MockTVCache.return_value = mock_cache_inst
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                response = await client.get("/api/v1/stocks/RELIANCE")
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert response.status_code == 200
+    body = response.json()
+
+    # Verify four_factor is present and well-formed
+    four_factor = body["stock"]["four_factor"]
+    assert four_factor is not None, "four_factor should not be None"
+
+    valid_convictions = {"HIGH+", "HIGH", "MEDIUM", "LOW", "AVOID"}
+    assert four_factor["conviction_level"] in valid_convictions, (
+        f"conviction_level must be in {valid_convictions}, got {four_factor['conviction_level']}"
+    )
+
+    valid_actions = {"BUY", "ACCUMULATE", "WATCH", "REDUCE", "EXIT"}
+    assert four_factor["action_signal"] in valid_actions, (
+        f"action_signal must be in {valid_actions}, got {four_factor['action_signal']}"
+    )
+
+    valid_urgencies = {"IMMEDIATE", "DEVELOPING", "PATIENT"}
+    assert four_factor["urgency"] in valid_urgencies, (
+        f"urgency must be in {valid_urgencies}, got {four_factor['urgency']}"
+    )
+
+    # Non-regression: C-DER-1 fields must still be present
+    assert body["stock"]["gold_rs"] is not None, (
+        "gold_rs must still be present (C-DER-1 non-regression)"
+    )
+    assert body["stock"]["piotroski"] is not None, (
+        "piotroski must still be present (C-DER-1 non-regression)"
+    )
+
+
+@pytest.mark.asyncio
 async def test_stock_deep_dive_survives_signal_failure() -> None:
     """GET /api/v1/stocks/RELIANCE returns 200 even when compute_gold_rs raises.
 

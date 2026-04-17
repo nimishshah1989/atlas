@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.clients.jip_data_service import JIPDataService
 from backend.core.computations import build_conviction_pillars, compute_quadrant
 from backend.db.session import async_session_factory, get_db
+from backend.models.conviction import FourFactorConviction
+from backend.services.conviction_engine import compute_four_factor
 from backend.services.derived_signals import compute_gold_rs, compute_piotroski
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 from backend.services.tv.cache_service import TVCacheService
@@ -368,7 +370,15 @@ async def get_stock_deep_dive(
 
     conviction = build_conviction_pillars(stock_detail, tv_ta_data=tv_ta_data)
 
-    # --- Derived signals: Gold RS + Piotroski (concurrent, isolated sessions) ---
+    # --- Derived signals: Gold RS + Piotroski + 4-Factor (concurrent, isolated sessions) ---
+    # Fetch regime for four_factor action derivation (best-effort).
+    regime_str_ff = "SIDEWAYS"
+    try:
+        regime_data_ff = await svc.get_market_regime()
+        regime_str_ff = (regime_data_ff.get("regime") if regime_data_ff else None) or "SIDEWAYS"
+    except (KeyError, TypeError, OSError):
+        pass
+
     async def _gold_rs_task() -> Optional[GoldRS]:
         async with async_session_factory() as s:
             return await compute_gold_rs(stock_detail["id"], s)
@@ -377,11 +387,23 @@ async def get_stock_deep_dive(
         async with async_session_factory() as s:
             return await compute_piotroski(stock_detail["id"], s)
 
-    gold_rs_result, piotroski_result = await asyncio.gather(
-        _gold_rs_task(), _piotroski_task(), return_exceptions=True
+    async def _four_factor_task() -> Optional[FourFactorConviction]:
+        async with async_session_factory() as s:
+            return await compute_four_factor(
+                instrument_id=stock_detail["id"],
+                sector=stock_detail.get("sector"),
+                db=s,
+                regime=regime_str_ff,
+            )
+
+    gold_rs_result, piotroski_result, four_factor_result = await asyncio.gather(
+        _gold_rs_task(), _piotroski_task(), _four_factor_task(), return_exceptions=True
     )
     gold_rs_val = gold_rs_result if isinstance(gold_rs_result, GoldRS) else None
     piotroski_val = piotroski_result if isinstance(piotroski_result, Piotroski) else None
+    four_factor_val = (
+        four_factor_result if isinstance(four_factor_result, FourFactorConviction) else None
+    )
 
     stock = StockDeepDive(
         id=stock_detail["id"],
@@ -425,6 +447,7 @@ async def get_stock_deep_dive(
         mf_holder_count=stock_detail.get("mf_holder_count"),
         gold_rs=gold_rs_val,
         piotroski=piotroski_val,
+        four_factor=four_factor_val,
     )
 
     elapsed = int((time.monotonic() - t0) * 1000)

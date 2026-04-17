@@ -226,13 +226,8 @@ class ConvictionPillars(BaseModel):
     pillar_3: Optional[PillarExternal] = None
 
 
-# --- Derived Signals (split to backend.models.derived to keep this module < 500L) ---
-from backend.models.derived import (  # noqa: E402
-    GoldRS,
-    GoldRSSignal,
-    Piotroski,
-    PiotroskiDetail,
-)
+from backend.models.derived import GoldRS, GoldRSSignal, Piotroski, PiotroskiDetail  # noqa: E402
+from backend.models.conviction import ActionSignal, ConvictionLevel, FourFactorConviction, ScreenerRow, UrgencyLevel  # noqa: E402, E501, F401  # fmt: skip
 
 
 # --- Deep Dive ---
@@ -285,6 +280,7 @@ class StockDeepDive(BaseModel):
     # Derived signals (query-time, fault-tolerant)
     gold_rs: Optional[GoldRS] = None
     piotroski: Optional[Piotroski] = None
+    four_factor: Optional[FourFactorConviction] = None
 
 
 class StockDeepDiveResponse(BaseModel):

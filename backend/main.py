@@ -24,6 +24,7 @@ from backend.routes import (
     mf,
     portfolio,
     query,
+    screener,
     simulate,
     stocks,
     system,
@@ -87,6 +88,7 @@ async def _enforce_api_rate_limit(request: Request, call_next: Any) -> Any:
 uql_errors.register(app)
 
 app.include_router(stocks.router)
+app.include_router(screener.router)
 app.include_router(query.router)
 app.include_router(decisions.router)
 app.include_router(intelligence.router)
