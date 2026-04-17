@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Sector Compass · India</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── Tooltip ── */
+    .tip { position:relative; display:inline-flex; align-items:center; gap:3px; cursor:help; }
+    .tip .tipbody { visibility:hidden; opacity:0; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); width:240px; background:var(--accent-900); color:#fff; font-size:10px; padding:8px 10px; border-radius:var(--radius-sm); line-height:1.5; z-index:200; pointer-events:none; transition:opacity 80ms; }
+    .tip .tipbody::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--accent-900); }
+    .tip:hover .tipbody { visibility:visible; opacity:1; }
+    .info-i { display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--bg-inset); border:1px solid var(--border-strong); font-size:8px; line-height:12px; text-align:center; color:var(--text-tertiary); font-weight:700; flex-shrink:0; font-style:normal; }
+
+    /* ── Crumb ── */
+    .crumb { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-tertiary); padding:var(--space-4) 0 var(--space-2); }
+    .crumb a { color:var(--text-accent); cursor:pointer; }
+    .crumb__sep { color:var(--border-strong); }
+    .page { padding:0 var(--space-6) var(--space-10); max-width:var(--maxw-page); margin:0 auto; }
+
+    /* ── Page title row ── */
+    .page-title-row { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:var(--space-4); }
+    .page-title { font-family:var(--font-serif); font-size:28px; font-weight:400; color:var(--text-primary); margin:0; line-height:1.1; }
+    .page-meta { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §12 REGIME BANNER
+       ───────────────────────────────────────────────────────────────── */
+    .regime-banner {
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:var(--space-5);
+      align-items:center;
+      padding:var(--space-4) var(--space-5);
+      border-radius:var(--radius-md);
+      border:1px solid var(--border-default);
+      background:var(--bg-surface);
+      border-left-width:4px;
+      margin-bottom:var(--space-4);
+    }
+    .regime-banner--correction { border-left-color:var(--rag-amber-500); }
+
+    .rb-left { display:flex; flex-direction:column; gap:2px; }
+    .rb-label { font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; }
+    .rb-name  { font-family:var(--font-serif); font-size:28px; font-weight:400; line-height:1; }
+    .regime-banner--correction .rb-name { color:var(--rag-amber-700); }
+
+    .rb-text { font-size:13px; line-height:1.6; color:var(--text-secondary); }
+    .rb-text strong { font-weight:600; }
+    .rb-text .hl-amber { color:var(--rag-amber-700); font-weight:600; }
+    .rb-text .hl-green { color:var(--rag-green-700); font-weight:600; }
+    .rb-text .hl-red   { color:var(--rag-red-700); font-weight:600; }
+
+    .rb-days { text-align:right; }
+    .rb-days .rb-count { font-size:38px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary); line-height:1; }
+    .rb-days .rb-unit  { font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.06em; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       §13 SIGNAL STRIP
+       ───────────────────────────────────────────────────────────────── */
+    .ss-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); margin-bottom:var(--space-5); }
+
+    .ss-card {
+      background:var(--bg-surface);
+      border:1px solid var(--border-default);
+      border-radius:var(--radius-md);
+      padding:var(--space-4) var(--space-5);
+      position:relative;
+    }
+    .ss-card--bull { border-top:3px solid var(--rag-green-500); }
+    .ss-card--bear { border-top:3px solid var(--rag-red-500);   }
+    .ss-card--neut { border-top:3px solid var(--rag-amber-500); }
+
+    .ss-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); }
+    .ss-lbl { font-size:10px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.05em; }
+    .ss-sig { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:var(--radius-full); }
+    .ss-sig--bull { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .ss-sig--bear { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .ss-sig--neut { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+
+    .ss-main { display:flex; align-items:baseline; gap:var(--space-2); margin-bottom:4px; }
+    .ss-val  { font-size:36px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1; color:var(--text-primary); }
+    .ss-denom { font-size:16px; color:var(--text-tertiary); font-weight:400; }
+    .ss-foot { font-size:11px; font-variant-numeric:tabular-nums; color:var(--text-secondary); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       RRG LAYOUT
+       ───────────────────────────────────────────────────────────────── */
+    .rrg-layout { display:grid; grid-template-columns:1fr 280px; gap:var(--space-4); margin-bottom:var(--space-6); align-items:start; }
+
+    .rrg-card {
+      background:var(--bg-surface);
+      border:1px solid var(--border-default);
+      border-radius:var(--radius-md);
+      padding:var(--space-4);
+    }
+    .rrg-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-2); }
+    .rrg-title-block { display:flex; flex-direction:column; gap:2px; }
+    .rrg-title { font-size:13px; font-weight:700; color:var(--text-primary); }
+    .rrg-subtitle { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+    .rrg-axis-label { font-size:10px; color:var(--text-tertiary); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+
+    .rrg-svg-wrap { position:relative; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       RRG LEGEND PANEL (right rail)
+       ───────────────────────────────────────────────────────────────── */
+    .rrg-rail { display:flex; flex-direction:column; gap:var(--space-3); }
+    .rail-card { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-4); }
+    .rail-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3); padding-bottom:var(--space-2); border-bottom:1px solid var(--border-subtle); }
+    .rail-head-l { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); }
+    .rail-head-r { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-tertiary); }
+
+    .quad-key-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border-subtle); font-size:11px; }
+    .quad-key-row:last-child { border-bottom:none; }
+    .quad-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .quad-dot--lead { background:var(--rag-green-500); }
+    .quad-dot--weak { background:var(--rag-amber-500); }
+    .quad-dot--lag  { background:var(--rag-red-500); }
+    .quad-dot--impr { background:var(--accent-500); }
+    .quad-name { font-weight:600; color:var(--text-primary); }
+    .quad-desc { font-size:10px; color:var(--text-tertiary); margin-left:auto; }
+
+    /* Period + Universe selector */
+    .sel-group { display:flex; gap:2px; background:var(--bg-inset); padding:3px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); margin-bottom:var(--space-2); }
+    .sel-btn { font-size:11px; font-weight:500; color:var(--text-secondary); background:transparent; border:none; cursor:pointer; padding:4px 10px; border-radius:var(--radius-sm); white-space:nowrap; }
+    .sel-btn--active { background:var(--bg-surface); color:var(--accent-700); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+
+    /* Toggle pill */
+    .toggle-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--border-subtle); margin-top:6px; }
+    .toggle-pill { width:28px; height:14px; border-radius:999px; background:var(--accent-500); position:relative; flex-shrink:0; cursor:pointer; }
+    .toggle-pill::after { content:''; position:absolute; left:16px; top:2px; width:10px; height:10px; border-radius:50%; background:#fff; }
+    .toggle-label { font-size:11px; color:var(--text-secondary); font-weight:500; }
+
+    /* Rotation speed note */
+    .rot-note { font-size:10px; color:var(--text-tertiary); line-height:1.5; padding:8px 0; border-top:1px solid var(--border-subtle); margin-top:6px; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTOR COMPARISON TABLE
+       ───────────────────────────────────────────────────────────────── */
+    .sec-hd { display:flex; align-items:baseline; gap:var(--space-3); margin:var(--space-7) 0 var(--space-4); padding-bottom:var(--space-3); border-bottom:2px solid var(--border-default); }
+    .sec-hd h3 { font-size:13px; font-weight:700; color:var(--text-primary); font-family:var(--font-sans); margin:0; }
+    .sec-hd .sec-sub { font-size:11px; color:var(--text-tertiary); }
+    .sec-hd .sec-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--accent-100); color:var(--accent-700); margin-left:auto; }
+    .sec-hd .sec-badge--excl { background:#FFF3E0; color:#BF360C; }
+
+    .sec-name-cell { display:flex; flex-direction:column; gap:1px; }
+    .sec-index-name { font-size:12px; font-weight:600; color:var(--text-primary); }
+    .sec-full-name { font-size:10px; color:var(--text-tertiary); font-weight:400; }
+
+    .sct-wrap { overflow-x:auto; }
+    .sct { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; }
+    .sct th { padding:7px 10px; font-size:9px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; border-bottom:2px solid var(--border-default); text-align:right; background:var(--bg-surface); position:sticky; top:0; z-index:2; white-space:nowrap; }
+    .sct th.l { text-align:left; }
+    .sct th.c { text-align:center; }
+    .sct td { padding:7px 10px; border-bottom:1px solid var(--border-subtle); font-variant-numeric:tabular-nums; vertical-align:middle; text-align:right; }
+    .sct td.l { text-align:left; }
+    .sct td.c { text-align:center; }
+    .sct tr:hover td { background:var(--bg-hover); }
+    .sct tr:last-child td { border-bottom:none; }
+
+    /* Quadrant chip in table */
+    .quad-chip { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:var(--radius-full); text-transform:uppercase; letter-spacing:.03em; }
+    .quad-chip--lead { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .quad-chip--weak { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .quad-chip--lag  { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .quad-chip--impr { background:var(--accent-100);    color:var(--accent-700);    }
+
+    /* Gold RS badges */
+    .gold-badge { display:inline-block; font-size:8px; font-weight:700; padding:2px 6px; border-radius:var(--radius-full); text-transform:uppercase; letter-spacing:.02em; }
+    .gold-badge--amp-bull { background:#FFF9C4; color:#6D5003; }
+    .gold-badge--neutral  { background:var(--bg-inset); color:var(--text-tertiary); }
+    .gold-badge--fragile  { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .gold-badge--amp-bear { background:var(--rag-red-100); color:var(--rag-red-700); }
+
+    /* Vol signal */
+    .vol-badge { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:var(--radius-full); text-transform:uppercase; }
+    .vol-badge--accum { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .vol-badge--distr { background:var(--rag-red-100);   color:var(--rag-red-700);   }
+    .vol-badge--neut  { background:var(--bg-inset);      color:var(--text-tertiary); }
+
+    /* Conviction chip */
+    .conv-chip { display:inline-block; font-size:9px; font-weight:700; padding:2px 8px; border-radius:var(--radius-full); text-transform:uppercase; letter-spacing:.03em; }
+    .conv-chip--high-plus { background:var(--rag-green-100); color:var(--rag-green-700); border:1px solid var(--rag-green-300); }
+    .conv-chip--high      { background:var(--rag-green-100); color:var(--rag-green-700); }
+    .conv-chip--med       { background:var(--rag-amber-100); color:var(--rag-amber-700); }
+    .conv-chip--low       { background:var(--bg-inset);      color:var(--text-tertiary); }
+
+    /* Action chip */
+    .act-chip { display:inline-block; font-size:9px; font-weight:700; padding:2px 10px; border-radius:var(--radius-full); text-transform:uppercase; }
+    .act-chip--buy   { background:var(--accent-700); color:#fff; }
+    .act-chip--hold  { background:var(--bg-inset);   color:var(--text-secondary); border:1px solid var(--border-default); }
+    .act-chip--avoid { background:var(--rag-red-100); color:var(--rag-red-700); }
+
+    /* rag number helpers */
+    .pos { color:var(--rag-green-700); font-weight:600; }
+    .neg { color:var(--rag-red-700);   font-weight:600; }
+    .neu { color:var(--text-secondary); }
+    .ic-g { color:var(--rag-green-700); font-weight:600; }
+    .ic-a { color:var(--rag-amber-700); font-weight:600; }
+    .ic-r { color:var(--rag-red-700);   font-weight:600; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       FOUR-FACTOR CONVERGENCE PANEL
+       ───────────────────────────────────────────────────────────────── */
+    .ffc-outer { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; }
+    .ffc-table { width:100%; border-collapse:collapse; font-size:11px; }
+    .ffc-table th { padding:8px 14px; font-size:9px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid var(--border-default); text-align:center; background:var(--bg-surface); }
+    .ffc-table th.sector-col { text-align:left; min-width:140px; }
+    .ffc-table td { padding:6px 14px; border-bottom:1px solid var(--border-subtle); text-align:center; vertical-align:middle; }
+    .ffc-table td.sector-col { text-align:left; font-weight:600; color:var(--text-primary); font-size:11px; }
+    .ffc-table tr:hover td { background:var(--bg-hover); }
+    .ffc-table tr:last-child td { border-bottom:none; }
+
+    /* Factor RAG dot */
+    .fdot { display:inline-block; width:12px; height:12px; border-radius:50%; }
+    .fdot--g { background:var(--rag-green-500); }
+    .fdot--a { background:var(--rag-amber-500); }
+    .fdot--r { background:var(--rag-red-500);   }
+
+    /* All-4 highlight row */
+    .ffc-all4 { background:var(--rag-green-100) !important; }
+    .ffc-all4 td { background:var(--rag-green-100) !important; }
+    .ffc-all4 td.sector-col { color:var(--rag-green-700) !important; }
+
+    /* Convergence footer */
+    .ffc-footer { padding:10px 14px; background:var(--bg-inset); border-top:1px solid var(--border-default); font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:8px; }
+    .ffc-footer strong { color:var(--rag-green-700); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       ROTATION NARRATIVE
+       ───────────────────────────────────────────────────────────────── */
+    .narr-card {
+      background:var(--bg-surface);
+      border:1px solid var(--border-default);
+      border-radius:var(--radius-md);
+      padding:var(--space-6);
+    }
+    .narr-headline { font-family:var(--font-serif); font-style:italic; font-size:20px; color:var(--rag-amber-700); margin:0 0 var(--space-4); line-height:1.3; }
+    .narr-body { font-size:13px; line-height:1.7; color:var(--text-secondary); }
+    .narr-body p { margin:0 0 var(--space-4); }
+    .narr-body p:last-child { margin-bottom:0; }
+    .narr-body strong { font-weight:600; color:var(--text-primary); }
+    .narr-hl-g { color:var(--rag-green-700); font-weight:600; }
+    .narr-hl-r { color:var(--rag-red-700);   font-weight:600; }
+    .narr-hl-a { color:var(--rag-amber-700); font-weight:600; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SIMULATION TRIGGER CARD
+       ───────────────────────────────────────────────────────────────── */
+    .sim-trigger {
+      border:1px solid var(--accent-300);
+      border-left:4px solid var(--accent-700);
+      border-radius:var(--radius-md);
+      padding:var(--space-5);
+      background:var(--accent-100);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:var(--space-6);
+      margin-top:var(--space-6);
+    }
+    .sim-trigger-content { flex:1; }
+    .sim-trigger-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--accent-700); margin-bottom:4px; }
+    .sim-trigger-text { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+    .sim-trigger-sub { font-size:12px; color:var(--text-secondary); }
+    .sim-btn { flex-shrink:0; background:var(--accent-700); color:#fff; border:none; padding:10px 20px; border-radius:var(--radius-md); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+    .sim-btn:hover { background:var(--accent-900); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTION HEADING (reused)
+       ───────────────────────────────────────────────────────────────── */
+    .sec-hd { display:flex; align-items:baseline; gap:var(--space-3); margin:var(--space-7) 0 var(--space-4); padding-bottom:var(--space-3); border-bottom:2px solid var(--border-default); }
+    .sec-hd h3 { font-size:13px; font-weight:700; color:var(--text-primary); font-family:var(--font-sans); margin:0; }
+    .sec-hd .sec-sub { font-size:11px; color:var(--text-tertiary); }
+    .sec-hd .sec-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--accent-100); color:var(--accent-700); margin-left:auto; }
+    .sec-hd .sec-badge--excl { background:#FFF3E0; color:#BF360C; }
+
+    /* small period badge */
+    .period-sel { display:flex; gap:2px; background:var(--bg-inset); padding:3px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); }
+    .psel { font-size:11px; font-weight:500; color:var(--text-secondary); background:transparent; border:none; cursor:pointer; padding:5px 10px; border-radius:var(--radius-sm); }
+    .psel--active { background:var(--bg-surface); color:var(--accent-700); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Topbar ── -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link topnav__link--active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>Pulse
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorer
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Builder
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/></svg>Simulate
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10l6-8 6 8v10"/></svg>Signals
+    </a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input placeholder="Search…" />
+  </div>
+  <div class="topbar__meta">
+    <span style="font-size:10px;color:var(--text-tertiary)">● LIVE · 17 APR 2026</span>
+    <div class="topbar__avatar">N</div>
+  </div>
+</header>
+
+<!-- ── Pulse sub-nav ── -->
+<div style="background:var(--bg-surface);border-bottom:1px solid var(--border-default);">
+  <div style="max-width:var(--maxw-page);margin:0 auto;padding:0 var(--space-6);display:flex;align-items:center;gap:var(--space-1);">
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">Global</a>
+    <a style="font-size:12px;font-weight:600;color:var(--accent-700);padding:10px 14px;border-bottom:2px solid var(--accent-700);cursor:pointer;">India</a>
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">United States</a>
+    <a style="font-size:12px;font-weight:500;color:var(--text-secondary);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;">China</a>
+    <div style="flex:1"></div>
+    <span style="font-size:10px;color:var(--text-tertiary);padding:10px 0;">214 sessions · EoD</span>
+  </div>
+</div>
+
+<!-- ── India sub-nav ── -->
+<div style="background:var(--bg-app);border-bottom:1px solid var(--border-subtle);">
+  <div style="max-width:var(--maxw-page);margin:0 auto;padding:0 var(--space-6);display:flex;align-items:center;gap:0;">
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Overview</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Breadth</a>
+    <a style="font-size:11px;font-weight:700;color:var(--accent-700);padding:8px 14px;border-bottom:2px solid var(--accent-700);cursor:pointer;">Sectors</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Sentiment</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Flows</a>
+    <a style="font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;">Macro</a>
+  </div>
+</div>
+
+<main class="page">
+  <!-- ── §1 Crumb + Page header ── -->
+  <div class="crumb">
+    <a>ATLAS</a><span class="crumb__sep">›</span>
+    <a>India</a><span class="crumb__sep">›</span>
+    <strong style="color:var(--text-primary);">Sectors</strong>
+  </div>
+  <div class="page-title-row">
+    <h1 class="page-title">Sector Compass</h1>
+    <span class="page-meta">EoD 17 Apr 2026 · NIFTY 500 Universe</span>
+  </div>
+
+  <!-- ── §12 REGIME BANNER ── -->
+  <div class="regime-banner regime-banner--correction">
+    <div class="rb-left">
+      <div class="rb-label">Market Regime</div>
+      <div class="rb-name">Correction</div>
+    </div>
+    <div class="rb-text">
+      Broad market is in a <span class="hl-amber">correction regime</span> — headline indices hold up but participation is narrowing sharply.
+      Only <span class="hl-green">3 of 10 major sectors</span> are beating the benchmark on a relative-strength basis, a classic defensive rotation signature.
+      Capital is rotating into Pharma and Defence (quality/visibility) and out of IT and Realty (growth/leverage).
+      <strong>Reduce cyclical exposure, hold defensive leaders, and wait for breadth confirmation before adding fresh risk.</strong>
+    </div>
+    <div class="rb-days">
+      <div class="rb-count">17</div>
+      <div class="rb-unit">Days in Regime</div>
+    </div>
+  </div>
+
+  <!-- ── §13 SIGNAL STRIP ── -->
+  <div class="ss-strip">
+    <!-- Leading Sectors -->
+    <div class="ss-card ss-card--bull">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Leading Sectors
+            <span class="tipbody">Sectors in the LEADING quadrant of the RRG: RS score above benchmark AND RS momentum improving. These are the current strongest sector rotation bets.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--bull">Defensive Rotation</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">3</div>
+        <div class="ss-denom">/ 10</div>
+      </div>
+      <div class="ss-foot">Pharma · Defence · Energy · <span class="pos">↑ All accelerating</span></div>
+    </div>
+
+    <!-- Breadth Improving -->
+    <div class="ss-card ss-card--neut">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Breadth Improving
+            <span class="tipbody">Sectors in IMPROVING or WEAKENING quadrant. IMPROVING sectors are below benchmark but momentum is recovering — potential rotation candidates. WEAKENING need watching for further deterioration.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--neut">Mixed</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">4</div>
+        <div class="ss-denom">/ 10</div>
+      </div>
+      <div class="ss-foot">FMCG · Bank (weakening) · Metal · Realty (improving)</div>
+    </div>
+
+    <!-- Lagging / Avoid -->
+    <div class="ss-card ss-card--bear">
+      <div class="ss-top">
+        <div class="ss-lbl">
+          <span class="tip">Lagging / Avoid
+            <span class="tipbody">Sectors in the LAGGING quadrant: RS score below benchmark AND RS momentum declining. These sectors are actively destroying relative value. Avoid fresh entries; reduce existing exposure.</span>
+          </span>
+          <i class="info-i">i</i>
+        </div>
+        <div class="ss-sig ss-sig--bear">Bearish Majority</div>
+      </div>
+      <div class="ss-main">
+        <div class="ss-val">3</div>
+        <div class="ss-denom">/ 10</div>
+      </div>
+      <div class="ss-foot">IT · Auto · Infra · <span class="neg">↓ Momentum deteriorating</span></div>
+    </div>
+  </div>
+
+  <!-- ── §4 RRG — Relative Rotation Graph ── -->
+  <div class="sec-hd" style="margin-top:0;">
+    <h3>Relative Rotation Graph (RRG)</h3>
+    <span class="sec-sub">RS Score (x) vs RS Momentum (y) · Benchmark: NIFTY 500 · 3M lookback</span>
+    <span class="sec-badge">ATLAS-EXCLUSIVE</span>
+  </div>
+
+  <div class="rrg-layout">
+    <!-- LEFT: RRG SVG -->
+    <div class="rrg-card">
+      <div class="rrg-head">
+        <div class="rrg-title-block">
+          <div class="rrg-title">Sector Rotation Map</div>
+          <div class="rrg-subtitle">Clockwise rotation: IMPROVING → LEADING → WEAKENING → LAGGING</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div class="rrg-axis-label">↑ RS Momentum (y)</div>
+          <div class="rrg-axis-label" style="text-align:right;">RS Score (x) →</div>
+        </div>
+      </div>
+
+      <!-- RRG SVG: 640×520, center at (320,260), scale 90px/unit x, 100px/unit y -->
+      <div class="rrg-svg-wrap">
+        <svg width="640" height="520" viewBox="0 0 640 520" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;max-width:640px;">
+          <defs>
+            <!-- Quadrant tint gradients -->
+            <clipPath id="svgClip"><rect x="0" y="0" width="640" height="520"/></clipPath>
+          </defs>
+
+          <!-- ── Quadrant background fills ── -->
+          <!-- TOP-RIGHT: LEADING (green) -->
+          <rect x="320" y="0" width="320" height="260" fill="#10A368" fill-opacity="0.07"/>
+          <!-- TOP-LEFT: WEAKENING (amber) -->
+          <rect x="0"   y="0" width="320" height="260" fill="#D9871A" fill-opacity="0.06"/>
+          <!-- BOTTOM-LEFT: LAGGING (red) -->
+          <rect x="0"   y="260" width="320" height="260" fill="#DB4343" fill-opacity="0.06"/>
+          <!-- BOTTOM-RIGHT: IMPROVING (petrol) -->
+          <rect x="320" y="260" width="320" height="260" fill="#2A7A8B" fill-opacity="0.07"/>
+
+          <!-- ── Axis lines ── -->
+          <!-- Horizontal axis (y=260) -->
+          <line x1="20" y1="260" x2="620" y2="260" stroke="#CDD2DA" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <!-- Vertical axis (x=320) -->
+          <line x1="320" y1="20" x2="320" y2="500" stroke="#CDD2DA" stroke-width="1.5" stroke-dasharray="5 3"/>
+
+          <!-- ── Axis arrows ── -->
+          <!-- Right arrow tip -->
+          <polygon points="622,256 636,260 622,264" fill="#CDD2DA"/>
+          <!-- Up arrow tip -->
+          <polygon points="316,18 320,4 324,18" fill="#CDD2DA"/>
+
+          <!-- ── Axis labels ── -->
+          <text x="630" y="264" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="600" text-anchor="start">RS+</text>
+          <text x="28" y="264" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="600" text-anchor="start">RS-</text>
+          <text x="325" y="12" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="600" text-anchor="start">Mom+</text>
+          <text x="325" y="498" font-size="9" fill="#8A909C" font-family="Inter,sans-serif" font-weight="600" text-anchor="start">Mom-</text>
+
+          <!-- ── X-axis tick marks ── -->
+          <!-- -2 = 320-180=140, -1=230, 0=320, +1=410, +2=500 -->
+          <line x1="140" y1="257" x2="140" y2="263" stroke="#CDD2DA" stroke-width="1"/>
+          <line x1="230" y1="257" x2="230" y2="263" stroke="#CDD2DA" stroke-width="1"/>
+          <line x1="410" y1="257" x2="410" y2="263" stroke="#CDD2DA" stroke-width="1"/>
+          <line x1="500" y1="257" x2="500" y2="263" stroke="#CDD2DA" stroke-width="1"/>
+          <text x="140" y="275" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">-2</text>
+          <text x="230" y="275" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">-1</text>
+          <text x="320" y="275" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">0</text>
+          <text x="410" y="275" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">+1</text>
+          <text x="500" y="275" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="middle">+2</text>
+
+          <!-- ── Y-axis tick marks ── -->
+          <!-- +1 = 260-100=160, -1=360 -->
+          <line x1="317" y1="160" x2="323" y2="160" stroke="#CDD2DA" stroke-width="1"/>
+          <line x1="317" y1="360" x2="323" y2="360" stroke="#CDD2DA" stroke-width="1"/>
+          <text x="308" y="163" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">+1</text>
+          <text x="308" y="363" font-size="8" fill="#8A909C" font-family="Inter,sans-serif" text-anchor="end">-1</text>
+
+          <!-- ── Quadrant corner labels ── -->
+          <!-- TOP-RIGHT: LEADING -->
+          <text x="612" y="22" font-size="10" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">LEADING</text>
+          <text x="612" y="34" font-size="9" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="400" text-anchor="end" opacity="0.8">RS↑ Momentum↑</text>
+          <!-- TOP-LEFT: WEAKENING -->
+          <text x="28" y="22" font-size="10" fill="#9A6410" font-family="Inter,sans-serif" font-weight="700" text-anchor="start">WEAKENING</text>
+          <text x="28" y="34" font-size="9" fill="#9A6410" font-family="Inter,sans-serif" font-weight="400" text-anchor="start" opacity="0.8">RS↑ Momentum↓</text>
+          <!-- BOTTOM-LEFT: LAGGING -->
+          <text x="28" y="498" font-size="10" fill="#B63030" font-family="Inter,sans-serif" font-weight="700" text-anchor="start">LAGGING</text>
+          <text x="28" y="486" font-size="9" fill="#B63030" font-family="Inter,sans-serif" font-weight="400" text-anchor="start" opacity="0.8">RS↓ Momentum↓</text>
+          <!-- BOTTOM-RIGHT: IMPROVING -->
+          <text x="612" y="498" font-size="10" fill="#134F5C" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">IMPROVING</text>
+          <text x="612" y="486" font-size="9" fill="#134F5C" font-family="Inter,sans-serif" font-weight="400" text-anchor="end" opacity="0.8">RS↓ Momentum↑</text>
+
+          <!--
+            Coordinate formula:
+              dot_x = 320 + (rs_score * 90)
+              dot_y = 260 - (rs_momentum * 100)
+
+            NIFTY PHARMA:  rs=+1.8, mom=+0.9  → x=482, y=170  r=14  green
+            NIFTY DEFENSE: rs=+2.1, mom=+1.2  → x=509, y=140  r=16  green (strongest)
+            NIFTY ENERGY:  rs=+0.8, mom=+0.4  → x=392, y=220  r=10  green
+            NIFTY FMCG:    rs=+0.3, mom=-0.2  → x=347, y=280  r=9   amber
+            NIFTY BANK:    rs=-0.4, mom=-0.1  → x=284, y=270  r=12  amber
+            NIFTY AUTO:    rs=-0.6, mom=-0.3  → x=266, y=290  r=8   red
+            NIFTY INFRA:   rs=-0.9, mom=-0.5  → x=239, y=310  r=9   red
+            NIFTY IT:      rs=-1.4, mom=-0.8  → x=194, y=340  r=13  red (notable)
+            NIFTY METAL:   rs=-1.1, mom=+0.2  → x=221, y=240  r=8   petrol
+            NIFTY REALTY:  rs=-1.8, mom=+0.5  → x=158, y=210  r=7   petrol
+          -->
+
+          <!-- ── SECTOR DOTS ── -->
+
+          <!-- NIFTY DEFENSE (strongest, LEADING) -->
+          <circle cx="509" cy="140" r="16" fill="#0B7A4E" fill-opacity="0.18" stroke="#0B7A4E" stroke-width="2"/>
+          <circle cx="509" cy="140" r="8"  fill="#0B7A4E"/>
+          <text x="509" y="122" font-size="9" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="700" text-anchor="middle">DEFENSE</text>
+          <text x="509" y="112" font-size="8" fill="#0B7A4E" font-family="Inter,sans-serif" text-anchor="middle">+2.1 / +1.2</text>
+
+          <!-- NIFTY PHARMA (LEADING) -->
+          <circle cx="482" cy="170" r="14" fill="#10A368" fill-opacity="0.18" stroke="#10A368" stroke-width="2"/>
+          <circle cx="482" cy="170" r="7"  fill="#10A368"/>
+          <text x="497" y="165" font-size="9" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="700" text-anchor="start">PHARMA</text>
+          <text x="497" y="175" font-size="8" fill="#0B7A4E" font-family="Inter,sans-serif" text-anchor="start">+1.8 / +0.9</text>
+
+          <!-- NIFTY ENERGY (LEADING, smaller) -->
+          <circle cx="392" cy="220" r="10" fill="#10A368" fill-opacity="0.18" stroke="#10A368" stroke-width="1.5"/>
+          <circle cx="392" cy="220" r="5"  fill="#10A368"/>
+          <text x="406" y="216" font-size="9" fill="#0B7A4E" font-family="Inter,sans-serif" font-weight="700" text-anchor="start">ENERGY</text>
+          <text x="406" y="226" font-size="8" fill="#0B7A4E" font-family="Inter,sans-serif" text-anchor="start">+0.8 / +0.4</text>
+
+          <!-- NIFTY FMCG (WEAKENING) -->
+          <circle cx="347" cy="280" r="9" fill="#D9871A" fill-opacity="0.18" stroke="#D9871A" stroke-width="1.5"/>
+          <circle cx="347" cy="280" r="4" fill="#D9871A"/>
+          <text x="358" y="276" font-size="9" fill="#9A6410" font-family="Inter,sans-serif" font-weight="700" text-anchor="start">FMCG</text>
+          <text x="358" y="286" font-size="8" fill="#9A6410" font-family="Inter,sans-serif" text-anchor="start">+0.3 / -0.2</text>
+
+          <!-- NIFTY BANK (WEAKENING) -->
+          <circle cx="284" cy="270" r="12" fill="#D9871A" fill-opacity="0.18" stroke="#D9871A" stroke-width="1.5"/>
+          <circle cx="284" cy="270" r="6"  fill="#D9871A"/>
+          <text x="268" y="258" font-size="9" fill="#9A6410" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">BANK</text>
+          <text x="268" y="268" font-size="8" fill="#9A6410" font-family="Inter,sans-serif" text-anchor="end">-0.4 / -0.1</text>
+
+          <!-- NIFTY AUTO (LAGGING) -->
+          <circle cx="266" cy="290" r="8" fill="#DB4343" fill-opacity="0.18" stroke="#DB4343" stroke-width="1.5"/>
+          <circle cx="266" cy="290" r="4" fill="#DB4343"/>
+          <text x="252" y="308" font-size="9" fill="#B63030" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">AUTO</text>
+          <text x="252" y="318" font-size="8" fill="#B63030" font-family="Inter,sans-serif" text-anchor="end">-0.6 / -0.3</text>
+
+          <!-- NIFTY INFRA (LAGGING) -->
+          <circle cx="239" cy="310" r="9" fill="#DB4343" fill-opacity="0.18" stroke="#DB4343" stroke-width="1.5"/>
+          <circle cx="239" cy="310" r="4" fill="#DB4343"/>
+          <text x="225" y="330" font-size="9" fill="#B63030" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">INFRA</text>
+          <text x="225" y="340" font-size="8" fill="#B63030" font-family="Inter,sans-serif" text-anchor="end">-0.9 / -0.5</text>
+
+          <!-- NIFTY IT (LAGGING, notable/large) -->
+          <circle cx="194" cy="340" r="13" fill="#DB4343" fill-opacity="0.18" stroke="#DB4343" stroke-width="2"/>
+          <circle cx="194" cy="340" r="6"  fill="#DB4343"/>
+          <text x="178" y="358" font-size="9" fill="#B63030" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">IT</text>
+          <text x="178" y="368" font-size="8" fill="#B63030" font-family="Inter,sans-serif" text-anchor="end">-1.4 / -0.8</text>
+
+          <!-- NIFTY METAL (IMPROVING) -->
+          <circle cx="221" cy="240" r="8" fill="#2A7A8B" fill-opacity="0.18" stroke="#2A7A8B" stroke-width="1.5"/>
+          <circle cx="221" cy="240" r="4" fill="#2A7A8B"/>
+          <text x="207" y="227" font-size="9" fill="#134F5C" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">METAL</text>
+          <text x="207" y="237" font-size="8" fill="#134F5C" font-family="Inter,sans-serif" text-anchor="end">-1.1 / +0.2</text>
+
+          <!-- NIFTY REALTY (IMPROVING) -->
+          <circle cx="158" cy="210" r="7" fill="#2A7A8B" fill-opacity="0.18" stroke="#2A7A8B" stroke-width="1.5"/>
+          <circle cx="158" cy="210" r="3" fill="#2A7A8B"/>
+          <text x="144" y="198" font-size="9" fill="#134F5C" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">REALTY</text>
+          <text x="144" y="208" font-size="8" fill="#134F5C" font-family="Inter,sans-serif" text-anchor="end">-1.8 / +0.5</text>
+
+          <!-- ── Benchmark reference dot (center) ── -->
+          <circle cx="320" cy="260" r="5" fill="none" stroke="#8A909C" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text x="330" y="258" font-size="8" fill="#8A909C" font-family="Inter,sans-serif">NIFTY 500</text>
+        </svg>
+      </div>
+
+      <!-- Chart attribution -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);">
+        <div style="font-size:10px;color:var(--text-tertiary);">Dot size ∝ RS score magnitude · Rings show confidence band · Center = benchmark neutral</div>
+        <div style="font-size:10px;color:var(--text-tertiary);">EoD 17 Apr 2026 · JIP data</div>
+      </div>
+    </div><!-- /rrg-card -->
+
+    <!-- RIGHT: RRG Legend + Controls -->
+    <div class="rrg-rail">
+
+      <!-- Quadrant key -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l">Quadrant Key</div>
+          <div class="rail-head-r">What it means</div>
+        </div>
+        <div class="quad-key-row">
+          <div class="quad-dot quad-dot--lead"></div>
+          <div>
+            <div class="quad-name">Leading</div>
+            <div style="font-size:10px;color:var(--text-tertiary);">RS &gt; 0, Momentum &gt; 0</div>
+          </div>
+          <div class="quad-desc">Buy / Hold</div>
+        </div>
+        <div class="quad-key-row">
+          <div class="quad-dot quad-dot--weak"></div>
+          <div>
+            <div class="quad-name">Weakening</div>
+            <div style="font-size:10px;color:var(--text-tertiary);">RS &gt; 0, Momentum &lt; 0</div>
+          </div>
+          <div class="quad-desc">Trim</div>
+        </div>
+        <div class="quad-key-row">
+          <div class="quad-dot quad-dot--lag"></div>
+          <div>
+            <div class="quad-name">Lagging</div>
+            <div style="font-size:10px;color:var(--text-tertiary);">RS &lt; 0, Momentum &lt; 0</div>
+          </div>
+          <div class="quad-desc">Avoid</div>
+        </div>
+        <div class="quad-key-row">
+          <div class="quad-dot quad-dot--impr"></div>
+          <div>
+            <div class="quad-name">Improving</div>
+            <div style="font-size:10px;color:var(--text-tertiary);">RS &lt; 0, Momentum &gt; 0</div>
+          </div>
+          <div class="quad-desc">Watch</div>
+        </div>
+      </div>
+
+      <!-- Period selector -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l">Lookback Period</div>
+        </div>
+        <div class="sel-group">
+          <button class="sel-btn">1M</button>
+          <button class="sel-btn sel-btn--active">3M</button>
+          <button class="sel-btn">6M</button>
+          <button class="sel-btn">1Y</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-tertiary);line-height:1.5;">RS score computed as rolling 3-month relative return of sector vs NIFTY 500. Momentum = 4-week change in RS score.</div>
+      </div>
+
+      <!-- Universe selector -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l">Universe</div>
+        </div>
+        <div class="sel-group">
+          <button class="sel-btn sel-btn--active">NIFTY 500</button>
+          <button class="sel-btn">NIFTY 200</button>
+          <button class="sel-btn">MidCap 150</button>
+        </div>
+      </div>
+
+      <!-- Gold RS toggle + rotation note -->
+      <div class="rail-card">
+        <div class="rail-head">
+          <div class="rail-head-l">Gold RS Amplifier</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;margin-bottom:8px;">
+          Sectors beating both NIFTY 500 AND MCX Gold receive an <strong style="color:#6D5003;">AMPLIFIES_BULL</strong> signal — highest conviction long in risk-on cycles.
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-pill"></div>
+          <div class="toggle-label">Show Gold RS amplifier</div>
+        </div>
+        <div class="rot-note">
+          <strong>Rotation speed:</strong> Arrows in live view show trail direction (clockwise = healthy rotation). Fast clockwise = sector accelerating into LEADING. Fast counter-clockwise = deterioration signal.
+          <br><br>
+          <em>Trail arrows not shown in this mockup — implemented in React with animated SVG paths.</em>
+        </div>
+      </div>
+
+    </div><!-- /rrg-rail -->
+
+  </div><!-- /rrg-layout -->
+
+  <!-- ── §5 SECTOR COMPARISON TABLE ── -->
+  <div class="sec-hd">
+    <h3>Sector Comparison Table</h3>
+    <span class="sec-sub">All 10 sectors · sorted by RS Score descending · vs NIFTY 500</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <div class="period-sel">
+        <button class="psel">1M</button>
+        <button class="psel psel--active">3M</button>
+        <button class="psel">6M</button>
+        <button class="psel">1Y</button>
+      </div>
+      <button style="font-size:11px;font-weight:600;color:var(--accent-700);background:var(--accent-100);border:1px solid var(--accent-300);border-radius:var(--radius-sm);padding:5px 12px;cursor:pointer;">↓ CSV</button>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
+    <div class="sct-wrap">
+      <table class="sct">
+        <thead>
+          <tr>
+            <th class="l">Sector</th>
+            <th class="c">Quadrant</th>
+            <th>
+              <span class="tip">RS Score
+                <span class="tipbody">Relative Strength score vs NIFTY 500. Positive = outperforming. Computed as 3-month rolling return differential.</span>
+              </span>
+            </th>
+            <th>
+              <span class="tip">RS Momentum
+                <span class="tipbody">Change in RS score over last 4 weeks. Positive = RS improving (sector accelerating vs benchmark).</span>
+              </span>
+            </th>
+            <th class="c">
+              <span class="tip">Gold RS
+                <span class="tipbody">RS of sector vs MCX Gold INR. AMPLIFIES_BULL = beating both benchmark and gold (highest conviction). FRAGILE = beating benchmark only on equity weakness. AMPLIFIES_BEAR = lagging both.</span>
+              </span>
+            </th>
+            <th>
+              <span class="tip">Breadth
+                <span class="tipbody">% of stocks in the sector trading above their 50-day moving average. Governs timing — breadth must confirm before adding size.</span>
+              </span>
+            </th>
+            <th class="c">
+              <span class="tip">Vol Signal
+                <span class="tipbody">Volume signal: ACCUMULATION = rising price on expanding volume. DISTRIBUTION = rising price on falling volume or falling price on expanding volume.</span>
+              </span>
+            </th>
+            <th>1M Ret</th>
+            <th>3M Ret</th>
+            <th class="c">
+              <span class="tip">Conviction
+                <span class="tipbody">Four-factor convergence: Returns RS × Momentum RS × Breadth RS × Volume RS. All 4 green = HIGH+. 3 green = HIGH. Mixed = MED. Mostly red = LOW.</span>
+              </span>
+            </th>
+            <th class="c">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 1. NIFTY DEFENSE: RS=+2.1, Mom=+1.2, LEADING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY DEFENSE</div><div class="sec-full-name">Defence &amp; Aerospace</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lead">Leading</span></td>
+            <td class="pos">+2.1</td>
+            <td class="pos">+1.2</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bull">Amplifies_Bull</span></td>
+            <td class="ic-g">78%</td>
+            <td class="c"><span class="vol-badge vol-badge--accum">Accumulation</span></td>
+            <td class="pos">+8.4%</td>
+            <td class="pos">+18.2%</td>
+            <td class="c"><span class="conv-chip conv-chip--high-plus">HIGH+</span></td>
+            <td class="c"><span class="act-chip act-chip--buy">BUY</span></td>
+          </tr>
+          <!-- 2. NIFTY PHARMA: RS=+1.8, Mom=+0.9, LEADING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY PHARMA</div><div class="sec-full-name">Pharmaceuticals</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lead">Leading</span></td>
+            <td class="pos">+1.8</td>
+            <td class="pos">+0.9</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bull">Amplifies_Bull</span></td>
+            <td class="ic-g">71%</td>
+            <td class="c"><span class="vol-badge vol-badge--accum">Accumulation</span></td>
+            <td class="pos">+6.1%</td>
+            <td class="pos">+14.7%</td>
+            <td class="c"><span class="conv-chip conv-chip--high-plus">HIGH+</span></td>
+            <td class="c"><span class="act-chip act-chip--buy">BUY</span></td>
+          </tr>
+          <!-- 3. NIFTY ENERGY: RS=+0.8, Mom=+0.4, LEADING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY ENERGY</div><div class="sec-full-name">Energy &amp; Power</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lead">Leading</span></td>
+            <td class="pos">+0.8</td>
+            <td class="pos">+0.4</td>
+            <td class="c"><span class="gold-badge gold-badge--neutral">Neutral_Bench_Only</span></td>
+            <td class="ic-g">62%</td>
+            <td class="c"><span class="vol-badge vol-badge--accum">Accumulation</span></td>
+            <td class="pos">+3.2%</td>
+            <td class="pos">+7.4%</td>
+            <td class="c"><span class="conv-chip conv-chip--high">HIGH</span></td>
+            <td class="c"><span class="act-chip act-chip--buy">BUY</span></td>
+          </tr>
+          <!-- 4. NIFTY FMCG: RS=+0.3, Mom=-0.2, WEAKENING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY FMCG</div><div class="sec-full-name">Fast-Moving Consumer Goods</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--weak">Weakening</span></td>
+            <td class="pos">+0.3</td>
+            <td class="neg">-0.2</td>
+            <td class="c"><span class="gold-badge gold-badge--fragile">Fragile</span></td>
+            <td class="ic-a">54%</td>
+            <td class="c"><span class="vol-badge vol-badge--neut">Neutral</span></td>
+            <td class="neg">-0.8%</td>
+            <td class="pos">+2.1%</td>
+            <td class="c"><span class="conv-chip conv-chip--med">MED</span></td>
+            <td class="c"><span class="act-chip act-chip--hold">HOLD</span></td>
+          </tr>
+          <!-- 5. NIFTY BANK: RS=-0.4, Mom=-0.1, WEAKENING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY BANK</div><div class="sec-full-name">Banking &amp; Financial Services</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--weak">Weakening</span></td>
+            <td class="neg">-0.4</td>
+            <td class="neg">-0.1</td>
+            <td class="c"><span class="gold-badge gold-badge--fragile">Fragile</span></td>
+            <td class="ic-a">48%</td>
+            <td class="c"><span class="vol-badge vol-badge--neut">Neutral</span></td>
+            <td class="neg">-1.9%</td>
+            <td class="neg">-3.8%</td>
+            <td class="c"><span class="conv-chip conv-chip--med">MED</span></td>
+            <td class="c"><span class="act-chip act-chip--hold">HOLD</span></td>
+          </tr>
+          <!-- 6. NIFTY METAL: RS=-1.1, Mom=+0.2, IMPROVING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY METAL</div><div class="sec-full-name">Metals &amp; Mining</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--impr">Improving</span></td>
+            <td class="neg">-1.1</td>
+            <td class="pos">+0.2</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bear">Amplifies_Bear</span></td>
+            <td class="ic-a">43%</td>
+            <td class="c"><span class="vol-badge vol-badge--neut">Neutral</span></td>
+            <td class="pos">+1.4%</td>
+            <td class="neg">-9.2%</td>
+            <td class="c"><span class="conv-chip conv-chip--low">LOW</span></td>
+            <td class="c"><span class="act-chip act-chip--hold">HOLD</span></td>
+          </tr>
+          <!-- 7. NIFTY REALTY: RS=-1.8, Mom=+0.5, IMPROVING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY REALTY</div><div class="sec-full-name">Real Estate</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--impr">Improving</span></td>
+            <td class="neg">-1.8</td>
+            <td class="pos">+0.5</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bear">Amplifies_Bear</span></td>
+            <td class="ic-r">32%</td>
+            <td class="c"><span class="vol-badge vol-badge--neut">Neutral</span></td>
+            <td class="pos">+2.8%</td>
+            <td class="neg">-14.6%</td>
+            <td class="c"><span class="conv-chip conv-chip--low">LOW</span></td>
+            <td class="c"><span class="act-chip act-chip--hold">HOLD</span></td>
+          </tr>
+          <!-- 8. NIFTY AUTO: RS=-0.6, Mom=-0.3, LAGGING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY AUTO</div><div class="sec-full-name">Automobiles</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lag">Lagging</span></td>
+            <td class="neg">-0.6</td>
+            <td class="neg">-0.3</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bear">Amplifies_Bear</span></td>
+            <td class="ic-r">38%</td>
+            <td class="c"><span class="vol-badge vol-badge--distr">Distribution</span></td>
+            <td class="neg">-3.1%</td>
+            <td class="neg">-5.9%</td>
+            <td class="c"><span class="conv-chip conv-chip--low">LOW</span></td>
+            <td class="c"><span class="act-chip act-chip--avoid">AVOID</span></td>
+          </tr>
+          <!-- 9. NIFTY INFRA: RS=-0.9, Mom=-0.5, LAGGING -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY INFRA</div><div class="sec-full-name">Infrastructure</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lag">Lagging</span></td>
+            <td class="neg">-0.9</td>
+            <td class="neg">-0.5</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bear">Amplifies_Bear</span></td>
+            <td class="ic-r">34%</td>
+            <td class="c"><span class="vol-badge vol-badge--distr">Distribution</span></td>
+            <td class="neg">-4.2%</td>
+            <td class="neg">-8.1%</td>
+            <td class="c"><span class="conv-chip conv-chip--low">LOW</span></td>
+            <td class="c"><span class="act-chip act-chip--avoid">AVOID</span></td>
+          </tr>
+          <!-- 10. NIFTY IT: RS=-1.4, Mom=-0.8, LAGGING (notable) -->
+          <tr>
+            <td class="l"><div class="sec-name-cell"><div class="sec-index-name">NIFTY IT</div><div class="sec-full-name">Information Technology</div></div></td>
+            <td class="c"><span class="quad-chip quad-chip--lag">Lagging</span></td>
+            <td class="neg">-1.4</td>
+            <td class="neg">-0.8</td>
+            <td class="c"><span class="gold-badge gold-badge--amp-bear">Amplifies_Bear</span></td>
+            <td class="ic-r">29%</td>
+            <td class="c"><span class="vol-badge vol-badge--distr">Distribution</span></td>
+            <td class="neg">-6.7%</td>
+            <td class="neg">-12.4%</td>
+            <td class="c"><span class="conv-chip conv-chip--low">LOW</span></td>
+            <td class="c"><span class="act-chip act-chip--avoid">AVOID</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Returns shown relative to NIFTY 500 benchmark · Breadth = % above 50-DMA within sector · All data EoD 17 Apr 2026</div>
+
+  <!-- ── §6 FOUR-FACTOR CONVERGENCE PANEL ── -->
+  <div class="sec-hd">
+    <h3>Factor Convergence · Where All 4 Align</h3>
+    <span class="sec-sub">Green across all 4 factors = maximum conviction · Same sector sort as table above</span>
+    <span class="sec-badge sec-badge--excl">ATLAS-EXCLUSIVE</span>
+  </div>
+
+  <div class="ffc-outer">
+    <table class="ffc-table">
+      <thead>
+        <tr>
+          <th class="sector-col">Sector</th>
+          <th>
+            <span class="tip">Returns RS
+              <span class="tipbody">Relative return of sector vs NIFTY 500 over the selected period. Green = outperforming.</span>
+            </span>
+          </th>
+          <th>
+            <span class="tip">Momentum RS
+              <span class="tipbody">4-week change in RS score. Green = RS accelerating upward (sector gaining speed vs benchmark).</span>
+            </span>
+          </th>
+          <th>
+            <span class="tip">Breadth RS
+              <span class="tipbody">% of sector stocks above 50-DMA vs universe median. Green = sector breadth better than broad market average.</span>
+            </span>
+          </th>
+          <th>
+            <span class="tip">Volume RS
+              <span class="tipbody">Sector volume trend vs 30-day average. ACCUMULATION (green) = above-average volume on up-days. DISTRIBUTION (red) = above-average volume on down-days.</span>
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Defense: all 4 green = ALL-4 highlight -->
+        <tr class="ffc-all4">
+          <td class="sector-col">NIFTY DEFENSE</td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+        </tr>
+        <!-- Pharma: all 4 green -->
+        <tr class="ffc-all4">
+          <td class="sector-col">NIFTY PHARMA</td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+        </tr>
+        <!-- Energy: 3 green, 1 amber (gold RS neutral) -->
+        <tr>
+          <td class="sector-col">NIFTY ENERGY</td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--g"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+        </tr>
+        <!-- FMCG: 2 green, 2 amber -->
+        <tr>
+          <td class="sector-col">NIFTY FMCG</td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+        </tr>
+        <!-- Bank: 2 amber, 2 red -->
+        <tr>
+          <td class="sector-col">NIFTY BANK</td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+        </tr>
+        <!-- Metal: improving - mixed -->
+        <tr>
+          <td class="sector-col">NIFTY METAL</td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+        </tr>
+        <!-- Realty: improving but breadth lagging -->
+        <tr>
+          <td class="sector-col">NIFTY REALTY</td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--a"></span></td>
+        </tr>
+        <!-- Auto: mostly red -->
+        <tr>
+          <td class="sector-col">NIFTY AUTO</td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+        </tr>
+        <!-- Infra: all red -->
+        <tr>
+          <td class="sector-col">NIFTY INFRA</td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+        </tr>
+        <!-- IT: all red, strongest bearish signal -->
+        <tr>
+          <td class="sector-col">NIFTY IT</td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+          <td><span class="fdot fdot--r"></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="ffc-footer">
+      <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#10A368"/></svg>
+      <strong>Max Conviction (all 4 green):</strong> NIFTY DEFENSE, NIFTY PHARMA · Both carry HIGH+ conviction. Position sizing may be 1.5× normal sector weight.
+    </div>
+  </div>
+
+  <!-- ── §7 ROTATION NARRATIVE ── -->
+  <div class="sec-hd">
+    <h3>Rotation Narrative</h3>
+    <span class="sec-sub">Auto-generated interpretation · EoD 17 Apr 2026</span>
+    <span class="sec-badge">ATLAS-GENERATED</span>
+  </div>
+
+  <div class="narr-card">
+    <p class="narr-headline">"Defensive rotation in progress — money is moving to quality and visibility as broad-market breadth thins."</p>
+    <div class="narr-body">
+      <p>
+        The current correction regime has produced a textbook defensive rotation: <span class="narr-hl-g">Pharma (+1.8 RS) and Defence (+2.1 RS)</span>
+        are firmly in the LEADING quadrant with improving momentum and broad internal participation — over 70% of stocks in both sectors are
+        trading above their 50-day moving averages. Crucially, both sectors are also outperforming <strong>MCX Gold INR</strong>, earning the
+        <strong>AMPLIFIES_BULL</strong> classification. This is the highest-conviction signal in the ATLAS framework: a sector simultaneously
+        beating the equity benchmark and gold implies genuine strength, not merely a flight-to-safety bid. Position sizing in these two sectors
+        may be scaled to 1.5× normal sector weight, subject to portfolio mandate limits.
+      </p>
+      <p>
+        <span class="narr-hl-a">FMCG (+0.3 RS) and Bank (-0.4 RS) have both entered the WEAKENING quadrant</span> — their RS scores remain
+        elevated relative to laggards, but four-week momentum is now negative. This is an early-warning signal. The typical RRG pattern is
+        clockwise rotation: sectors exit LEADING into WEAKENING before migrating into LAGGING. FMCG's transition is particularly worth
+        monitoring: consumer staples historically hold up during corrections, but with rural demand softening and input costs rising, the sector
+        may be losing its defensive premium. <strong>Watch for RS momentum to turn negative two consecutive weeks</strong> — that would confirm
+        the transition to LAGGING and warrant a trim to below-benchmark weight.
+      </p>
+      <p>
+        <span class="narr-hl-a">Metal and Realty are in the IMPROVING quadrant</span> — both show negative RS scores but rising RS momentum,
+        suggesting the rate of underperformance is slowing. However, <strong>breadth has not confirmed this improvement</strong>: only 43% of
+        Metal stocks and 32% of Realty stocks are above their 50-DMA, well below the 50% threshold ATLAS uses as a breadth confirmation gate.
+        <span class="narr-hl-r">IT (-1.4 RS, -0.8 momentum) remains the clearest LAGGING sector</span> — global tech demand uncertainty, rupee
+        headwinds, and rising offshore competition have combined into a sustained de-rating cycle. All four factors are red. Reduce or avoid.
+        <strong>Do not enter Metal or Realty until breadth crosses 50% — the IMPROVING signal is a watch, not an entry.</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── §8 SIMULATION TRIGGER ── -->
+  <div class="sim-trigger">
+    <div class="sim-trigger-content">
+      <div class="sim-trigger-label">Simulation Lab · Sector Rotation Playbook</div>
+      <div class="sim-trigger-text">Simulate: IT → Pharma + Defence rotation · 3 months ago</div>
+      <div class="sim-trigger-sub">
+        If you had rotated out of NIFTY IT (equal weight) and into NIFTY PHARMA + NIFTY DEFENSE (50/50) on 17 Jan 2026,
+        what would the hypothetical P&amp;L look like today? Includes slippage, rebalancing cost, and tax impact (STCG).
+      </div>
+    </div>
+    <button class="sim-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Run Simulation
+    </button>
+  </div>
+
+</main>
+</div><!-- /app -->
+</body>
+</html>

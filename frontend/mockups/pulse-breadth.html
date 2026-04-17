@@ -332,6 +332,11 @@
     .sec-hd .sec-sub { font-size:11px; color:var(--text-tertiary); }
     .sec-hd .sec-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--accent-100); color:var(--accent-700); margin-left:auto; }
     .sec-hd .sec-badge--excl { background:#FFF3E0; color:#BF360C; }
+
+    /* Sector name cell with sub-label */
+    .sec-name-cell { display:flex; flex-direction:column; gap:1px; }
+    .sec-index-name { font-size:12px; font-weight:600; color:var(--text-primary); }
+    .sec-full-name { font-size:10px; color:var(--text-tertiary); font-weight:400; }
   </style>
 </head>
 <body>
@@ -621,103 +626,10 @@
         </div>
       </div><!-- /oc-chart-card -->
 
-    </div><!-- /oc-main – chart card only -->
+    </div><!-- /oc-main -->
 
-    <!-- RIGHT: §15 Interpretation Rail PLACEHOLDER closes below -->
-    <!-- (rail is already open, just closing oc-main early so signal history goes full-width) -->
-  </div><!-- close oc-layout early — signal history below is full width -->
-
-  <!-- ── §16 SIGNAL HISTORY (full-width, outside 2-col grid) ── -->
-  <div class="oc-chart-card" style="margin-bottom:0;">
-        <div class="sh-header">
-          <div class="oc-dot-label"><span class="oc-dot oc-dot--amber"></span> Signal History</div>
-          <div style="display:flex;align-items:center;gap:var(--space-3);">
-            <span style="font-size:10px;color:var(--text-tertiary)">ZONE EVENTS</span>
-            <div class="sh-filters">
-              <button class="shf shf--active">All</button>
-              <button class="shf">21 EMA</button>
-              <button class="shf">50 DMA</button>
-              <button class="shf">200 DMA</button>
-              <button class="shf">Bullish</button>
-              <button class="shf">Bearish</button>
-            </div>
-          </div>
-        </div>
-        <table class="sh-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Indicator</th>
-              <th>Event</th>
-              <th class="r">Breadth</th>
-              <th class="r">Nifty 500</th>
-              <th class="r">Since Return</th>
-              <th class="r">Δ Breadth 20D</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>17 Apr 26</strong> <small style="color:var(--rag-amber-700)">● NOW</small></td>
-              <td>21 EMA</td>
-              <td><span class="ev-badge ev-badge--mid-cross">Below Midline</span></td>
-              <td class="r" style="color:var(--rag-amber-700);font-weight:600;">178</td>
-              <td class="r">24,233</td>
-              <td class="r" style="color:var(--rag-red-700)">–</td>
-              <td class="r" style="color:var(--rag-red-700)">-193</td>
-            </tr>
-            <tr>
-              <td>21 Mar 26</td>
-              <td>21 EMA</td>
-              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
-              <td class="r">400</td>
-              <td class="r">23,841</td>
-              <td class="r" style="color:var(--rag-red-700)">-1.7%</td>
-              <td class="r" style="color:var(--rag-red-700)">-40</td>
-            </tr>
-            <tr>
-              <td>05 Feb 26</td>
-              <td>21 EMA</td>
-              <td><span class="ev-badge ev-badge--ob-enter">OB Entry</span></td>
-              <td class="r">416</td>
-              <td class="r">23,194</td>
-              <td class="r" style="color:var(--rag-red-700)">+2.8%</td>
-              <td class="r" style="color:var(--rag-green-700)">+130</td>
-            </tr>
-            <tr>
-              <td>14 Dec 25</td>
-              <td>21 EMA</td>
-              <td><span class="ev-badge ev-badge--os-exit">OS Exit</span></td>
-              <td class="r">106</td>
-              <td class="r">20,732</td>
-              <td class="r" style="color:var(--rag-green-700)">+16.4%</td>
-              <td class="r" style="color:var(--rag-green-700)">+167</td>
-            </tr>
-            <tr>
-              <td>25 Nov 25</td>
-              <td>21 EMA</td>
-              <td><span class="ev-badge ev-badge--os-enter">OS Entry</span></td>
-              <td class="r">82</td>
-              <td class="r">20,584</td>
-              <td class="r" style="color:var(--rag-green-700)">+17.7%</td>
-              <td class="r" style="color:var(--rag-red-700)">-195</td>
-            </tr>
-            <tr>
-              <td>14 Oct 25</td>
-              <td>200 DMA</td>
-              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
-              <td class="r">418</td>
-              <td class="r">24,180</td>
-              <td class="r" style="color:var(--rag-red-700)">-15.1%</td>
-              <td class="r" style="color:var(--rag-red-700)">-92</td>
-            </tr>
-          </tbody>
-        </table>
-      </div><!-- /signal history -->
-
-  <!-- ── §15 Interpretation Rail (reopened as part of the original oc-layout above) ── -->
-  <div class="oc-layout" style="margin-top:0;padding-top:0;">
-    <div></div><!-- spacer for left col -->
-    <div class="oc-rail" style="margin-top:0;">
+    <!-- RIGHT: §15 Interpretation Rail -->
+    <div class="oc-rail">
 
       <!-- ZONES card -->
       <div class="rail-card">
@@ -819,6 +731,93 @@
     </div><!-- /oc-rail -->
   </div><!-- /oc-layout -->
 
+  <!-- §16 SIGNAL HISTORY (full-width, below chart+rail) -->
+  <div class="oc-chart-card" style="margin-bottom:var(--space-6);">
+        <div class="sh-header">
+          <div class="oc-dot-label"><span class="oc-dot oc-dot--amber"></span> Signal History</div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <span style="font-size:10px;color:var(--text-tertiary)">ZONE EVENTS</span>
+            <div class="sh-filters">
+              <button class="shf shf--active">All</button>
+              <button class="shf">21 EMA</button>
+              <button class="shf">50 DMA</button>
+              <button class="shf">200 DMA</button>
+              <button class="shf">Bullish</button>
+              <button class="shf">Bearish</button>
+            </div>
+          </div>
+        </div>
+        <table class="sh-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Indicator</th>
+              <th>Event</th>
+              <th class="r">Breadth</th>
+              <th class="r">Nifty 500</th>
+              <th class="r">Since Return</th>
+              <th class="r">Δ Breadth 20D</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>17 Apr 26</strong> <small style="color:var(--rag-amber-700)">● NOW</small></td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--mid-cross">Below Midline</span></td>
+              <td class="r" style="color:var(--rag-amber-700);font-weight:600;">178</td>
+              <td class="r">24,233</td>
+              <td class="r" style="color:var(--rag-red-700)">–</td>
+              <td class="r" style="color:var(--rag-red-700)">-193</td>
+            </tr>
+            <tr>
+              <td>21 Mar 26</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
+              <td class="r">400</td>
+              <td class="r">23,841</td>
+              <td class="r" style="color:var(--rag-red-700)">-1.7%</td>
+              <td class="r" style="color:var(--rag-red-700)">-40</td>
+            </tr>
+            <tr>
+              <td>05 Feb 26</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--ob-enter">OB Entry</span></td>
+              <td class="r">416</td>
+              <td class="r">23,194</td>
+              <td class="r" style="color:var(--rag-red-700)">+2.8%</td>
+              <td class="r" style="color:var(--rag-green-700)">+130</td>
+            </tr>
+            <tr>
+              <td>14 Dec 25</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--os-exit">OS Exit</span></td>
+              <td class="r">106</td>
+              <td class="r">20,732</td>
+              <td class="r" style="color:var(--rag-green-700)">+16.4%</td>
+              <td class="r" style="color:var(--rag-green-700)">+167</td>
+            </tr>
+            <tr>
+              <td>25 Nov 25</td>
+              <td>21 EMA</td>
+              <td><span class="ev-badge ev-badge--os-enter">OS Entry</span></td>
+              <td class="r">82</td>
+              <td class="r">20,584</td>
+              <td class="r" style="color:var(--rag-green-700)">+17.7%</td>
+              <td class="r" style="color:var(--rag-red-700)">-195</td>
+            </tr>
+            <tr>
+              <td>14 Oct 25</td>
+              <td>200 DMA</td>
+              <td><span class="ev-badge ev-badge--ob-exit">OB Exit</span></td>
+              <td class="r">418</td>
+              <td class="r">24,180</td>
+              <td class="r" style="color:var(--rag-red-700)">-15.1%</td>
+              <td class="r" style="color:var(--rag-red-700)">-92</td>
+            </tr>
+          </tbody>
+        </table>
+      </div><!-- /signal history -->
+
 
   <!-- ══════════════════════════════════════════════════════════════════
        ATLAS-EXCLUSIVE EXTENDED SECTIONS
@@ -848,7 +847,7 @@
       </thead>
       <tbody>
         <tr>
-          <td>NIFTY IT</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY IT</div><div class="sec-full-name">Information Technology</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-r">28</div></td>
           <td><span class="ic-pct ic-r">22%</span></td>
           <td><span class="ic-pct ic-r">28%</span></td>
@@ -860,7 +859,7 @@
           <td><span class="trend trend--down">↓↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY BANK</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY BANK</div><div class="sec-full-name">Banking &amp; Finance</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-a">49</div></td>
           <td><span class="ic-pct ic-a">40%</span></td>
           <td><span class="ic-pct ic-a">47%</span></td>
@@ -872,7 +871,7 @@
           <td><span class="trend trend--down">↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY PHARMA</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY PHARMA</div><div class="sec-full-name">Healthcare &amp; Pharma</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-g">71</div></td>
           <td><span class="ic-pct ic-g">62%</span></td>
           <td><span class="ic-pct ic-g">68%</span></td>
@@ -884,7 +883,7 @@
           <td><span class="trend trend--up">↑↑</span></td>
         </tr>
         <tr>
-          <td>NIFTY ENERGY</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY ENERGY</div><div class="sec-full-name">Energy &amp; Power</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-g">66</div></td>
           <td><span class="ic-pct ic-g">58%</span></td>
           <td><span class="ic-pct ic-g">61%</span></td>
@@ -896,7 +895,7 @@
           <td><span class="trend trend--up">↑</span></td>
         </tr>
         <tr>
-          <td>NIFTY FMCG</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY FMCG</div><div class="sec-full-name">Consumer Goods</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-a">52</div></td>
           <td><span class="ic-pct ic-a">46%</span></td>
           <td><span class="ic-pct ic-a">50%</span></td>
@@ -908,7 +907,7 @@
           <td><span class="trend trend--flat">→</span></td>
         </tr>
         <tr>
-          <td>NIFTY METAL</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY METAL</div><div class="sec-full-name">Metals &amp; Mining</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-r">34</div></td>
           <td><span class="ic-pct ic-r">27%</span></td>
           <td><span class="ic-pct ic-r">33%</span></td>
@@ -920,7 +919,7 @@
           <td><span class="trend trend--down">↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY AUTO</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY AUTO</div><div class="sec-full-name">Automobiles</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-a">44</div></td>
           <td><span class="ic-pct ic-r">38%</span></td>
           <td><span class="ic-pct ic-a">44%</span></td>
@@ -932,7 +931,7 @@
           <td><span class="trend trend--down">↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY REALTY</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY REALTY</div><div class="sec-full-name">Real Estate</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-r">24</div></td>
           <td><span class="ic-pct ic-r">17%</span></td>
           <td><span class="ic-pct ic-r">22%</span></td>
@@ -944,7 +943,7 @@
           <td><span class="trend trend--down">↓↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY INFRA</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY INFRA</div><div class="sec-full-name">Infrastructure</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-a">41</div></td>
           <td><span class="ic-pct ic-r">35%</span></td>
           <td><span class="ic-pct ic-a">42%</span></td>
@@ -956,7 +955,7 @@
           <td><span class="trend trend--down">↓</span></td>
         </tr>
         <tr>
-          <td>NIFTY DEFENSE</td>
+          <td><div class="sec-name-cell"><div class="sec-index-name">NIFTY DEFENSE</div><div class="sec-full-name">Defence &amp; Aerospace</div></div></td>
           <td style="text-align:center"><div class="hs-cell hs-g">74</div></td>
           <td><span class="ic-pct ic-g">68%</span></td>
           <td><span class="ic-pct ic-g">72%</span></td>
