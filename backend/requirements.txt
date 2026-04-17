@@ -1,2 +1,3 @@
 -r ../requirements.txt
 tradingview-screener==3.1.0
+redis[hiredis]>=5.2.0

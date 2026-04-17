@@ -1436,99 +1436,6 @@ chunks:
       - "scripts/post-chunk.sh C-DER-3 completes"
 
 
-  # --- V7 ETF + Global Slice -------------------------------------------------
-
-  - id: V7-1
-    title: "ETF JIP client extension + in-process RS computation service"
-    status: PENDING
-    quality_targets:
-      architecture: 85
-      code: 80
-    punch_list:
-      - "pytest tests/unit/etf/test_etf_rs.py -v green"
-      - "RS formula verified on known values"
-      - "no float used (Decimal only)"
-      - "mypy clean"
-
-  - id: V7-2
-    title: "ETF universe + detail API routes"
-    status: PENDING
-    depends_on: [V7-1]
-    quality_targets:
-      api: 85
-      architecture: 85
-      code: 80
-    punch_list:
-      - "GET /api/etf/universe returns >=100 active ETFs each with rs_1m field"
-      - "country filter works"
-      - "scripts/check-api-standard.py green for etf routes"
-      - "pytest tests/api/test_etf_universe.py -v green"
-
-  - id: V7-3
-    title: "ETF chart-data + RS history endpoints"
-    status: PENDING
-    depends_on: [V7-2]
-    quality_targets:
-      api: 85
-      code: 80
-    punch_list:
-      - "GET /api/etf/SPY/chart-data?from=2025-01-01&to=2026-01-01 returns ~252 rows with dates+OHLCV+technicals"
-      - "GET /api/etf/SPY/rs-history?months=12 returns ~252 rows"
-      - "pytest green"
-
-  - id: V7-4
-    title: "Global macro ratios + RS heatmap API routes"
-    status: PENDING
-    depends_on: [V7-1]
-    quality_targets:
-      api: 85
-      architecture: 85
-      code: 80
-    punch_list:
-      - "GET /api/global/ratios returns exactly 9 series each with value + sparkline (10 points) + mom_change"
-      - "GET /api/global/rs-heatmap returns 131 instruments"
-      - "pytest green"
-      - "check-api-standard.py green"
-
-  - id: V7-5
-    title: "Pro shell /pro/etf page — rotation map + macro context"
-    status: PENDING
-    depends_on: [V7-2, V7-4]
-    quality_targets:
-      frontend: 80
-    punch_list:
-      - "npm run build succeeds"
-      - "rotation map renders with real RS data"
-      - "macro panel shows real values"
-      - "hover tooltip shows RS scores"
-      - "per-panel error fallback tested"
-
-  - id: V7-6
-    title: "ETF detail page /pro/etf/[ticker]"
-    status: PENDING
-    depends_on: [V7-3, V7-5]
-    quality_targets:
-      frontend: 80
-    punch_list:
-      - "npm run build succeeds"
-      - "/pro/etf/SPY renders with real candlestick chart"
-      - "RS history chart shows 12 months of real data"
-      - "summary row shows expense_ratio and benchmark"
-
-  - id: V7-7
-    title: "V7 polish + 7-dim quality gate + post-chunk sync"
-    status: PENDING
-    depends_on: [V7-6]
-    quality_targets:
-      code: 80
-      frontend: 80
-    punch_list:
-      - "python .quality/checks.py exits 0 (all 7 dims >=80)"
-      - "scripts/check-api-standard.py green"
-      - "pytest tests/ -v all green"
-      - "post-chunk sync completes"
-
-
   # --- V8 Advisor Shell -------------------------------------------------
 
   - id: V8-1
@@ -1913,4 +1820,81 @@ chunks:
       - "All 7 quality dims >=80"
       - "npm run build succeeds"
       - "forge-ship.sh V6T-5 committed and pushed"
+
+
+  # --- V7 ETF + Global + Gold RS -------------------------------------------------
+
+  - id: V7-0
+    title: "Gold RS foundation — atlas_gold_rs_cache migration + GoldRSService + 6 unit tests"
+    status: PENDING
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "atlas_gold_rs_cache table exists with natural-key UNIQUE + 3 indexes"
+      - "Alembic upgrade/downgrade idempotent"
+      - "GoldRSService computes Decimal-only rs_vs_gold_{1m,3m,6m,12m} with null-on-missing and STALE logic"
+      - "Redis 15-min cache read-through"
+      - "all 6 unit tests pass"
+      - "post-chunk.sh completes 5 phases"
+
+  - id: V7-1
+    title: "ETF universe API — /api/etf/universe + DISTINCT ON helper + service"
+    status: PENDING
+    depends_on: [V7-0]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/etf/universe?country=US returns >=100 rows with Decimal rs, technicals, optional gold_rs block"
+      - "DISTINCT ON wraps every de_etf_technical_daily/de_rs_scores read"
+      - "spec §17/§18/§20 green via check-api-standard.py"
+      - "error envelope uniform with ETF_NOT_FOUND, INVALID_INCLUDE, JIP_UNAVAILABLE"
+      - "opt-in gold_rs leaves default response shape-stable"
+
+  - id: V7-2
+    title: "ETF detail + chart-data + rs-history routes"
+    status: PENDING
+    depends_on: [V7-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/etf/{ticker} returns Decimal-typed summary+rs+technicals+gold_rs"
+      - "/chart-data returns ~252 rows for default 1y"
+      - "/rs-history?months=12 returns ~252 points"
+      - "INVALID_DATE_RANGE + DATE_RANGE_TOO_LARGE errors"
+      - "all DISTINCT ON wrapped"
+      - "check-api-standard.py exit 0"
+
+  - id: V7-3
+    title: "Global routes — /api/global/ratios + /rs-heatmap + /indices with four_bench_verdict"
+    status: PENDING
+    depends_on: [V7-0]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "/api/global/ratios returns exactly 9 series each with 10-pt sparkline + MoM change"
+      - "/rs-heatmap total=131 grouped by instrument_type"
+      - "/indices every row has four_bench_verdict (STRONG_BUY|BUY|HOLD|CAUTION|AVOID) and gold_rs_signal from 5-enum"
+      - "nulls count as non-positive in verdict derivation"
+      - "check-api-standard.py exit 0"
+
+  - id: V7-7
+    title: "Integration gate — check-api-standard.py + backend 7-dim gate + final sync"
+    status: PENDING
+    depends_on: [V7-2, V7-3]
+    quality_targets:
+      code: 80
+      devops: 80
+    punch_list:
+      - "check-api-standard.py exits 0 across all 7 new routes"
+      - "integration suite hits real DB snapshot without mocks"
+      - "7-dim gate >=80 each dim (frontend dim n/a pass for backend-only slice)"
+      - "Decimal-only grep clean in gold_rs_service / etf_service / global_service"
+      - "post-chunk.sh final sync green"
 

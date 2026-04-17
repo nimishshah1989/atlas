@@ -112,6 +112,8 @@ rejected by review.
 - PostgreSQL (JIP `de_*` tables, read-only via `backend/clients/jip_data_service.py`). This chunk writes nothing — no `atlas_*` table changes, no Alembic migration. (main)
 - Python 3.11 (existing `backend/venv`), TypeScript 5 (Next.js 16, React 19, existing `frontend/`) (005-v3-simulation-engine)
 - Existing Postgres RDS with `vector` extension (HNSW index m=16, ef_construction=64). New V5-owned tables live in `atlas_*` namespace. No cross-writes to `de_*`. (005-v3-simulation-engine)
+- Python 3.11 (backend venv `/home/ubuntu/atlas/venv`); TypeScript 5 / Next.js 16 / React 19 (frontend). + FastAPI async, Pydantic v2, SQLAlchemy 2.0 async, `asyncpg`, Alembic, structlog, `redis[hiredis]>=5.2.0` (cache), `httpx` (for JIP client — already wired). Frontend: `recharts@2.15`, `lightweight-charts@5.1`, `swr@2.4`, `@radix-ui/*` via shadcn. **No new third-party dependencies added by V7.** (temp-006-clean)
+- PostgreSQL RDS. Reads only from `de_*` (via `backend/clients/jip_data_service.py`). Writes only to new `atlas_gold_rs_cache` table (plus existing `atlas_*` as needed). Redis cache for hot paths. (temp-006-clean)
 
 ## Recent Changes
 - main: Added Python 3.11 (matches existing `backend/` venv: `/home/ubuntu/atlas/venv`) + `claude-agent-sdk` (pinned), `structlog` (existing), `sqlalchemy[asyncio]` (existing, used read-only here — `state.db` is a separate SQLite file from atlas_*), `alembic` (existing), `click` or stdlib `argparse` for CLI (pick argparse — no new dep)

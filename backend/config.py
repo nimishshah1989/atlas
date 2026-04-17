@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
     tv_webhook_secret: str = ""
     tv_cache_ttl_seconds: int = 900  # 15 minutes
+    redis_url: str = "redis://localhost:6379/0"
 
     @property
     def cors_origin_list(self) -> list[str]:

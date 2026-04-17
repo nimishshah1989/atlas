@@ -204,17 +204,23 @@ versions:
         future: true
 
   - id: V7
-    title: "ETF + Global slice"
+    title: "ETF + Global slice + Gold RS amplifier"
     goal: >
-      ETF + Global slice (258 ETFs x 5 countries with in-process RS scores,
-      global macro ratios + RS heatmap, Pro shell /pro/etf rotation map).
+      ETF + Global backend slice (258 ETFs x 5 countries with JIP read-through
+      RS + technicals, 131 global instruments, 9 macro ratios, Gold RS amplifier
+      via single atlas_gold_rs_cache table). Backend-only; frontend V7-4..V7-6
+      deferred to a later run after backend stabilizes.
     chunks:
+      - id: V7-0
       - id: V7-1
       - id: V7-2
       - id: V7-3
       - id: V7-4
+        future: true
       - id: V7-5
+        future: true
       - id: V7-6
+        future: true
       - id: V7-7
 
   - id: V8
