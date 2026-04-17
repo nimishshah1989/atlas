@@ -1,16 +1,16 @@
-"""Unit tests for watchlist CRUD + TV sync routes (V6-6).
+"""Unit tests for watchlist CRUD routes (V6-6, updated V6T-2).
 
 Uses ASGITransport + AsyncClient against the real FastAPI app.
 DB session is overridden via dependency_overrides.
-TVBridgeClient is patched so no live bridge calls occur.
 No real DB connections — all data is in-memory mocks.
+sync-tv route removed in V6T-2: tests 7, 8, 11 now expect 404.
 """
 
 from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -18,8 +18,6 @@ from httpx import ASGITransport, AsyncClient
 from backend.db.models import AtlasWatchlist
 from backend.db.session import get_db
 from backend.main import app
-from backend.services.tv.bridge import TVBridgeUnavailableError
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -250,61 +248,39 @@ async def test_delete_sets_is_deleted_true() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 7. Sync TV — success → 200 + tv_synced=true
+# 7. Sync TV — removed route → 404
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_sync_tv_success_sets_tv_synced_true() -> None:
-    """POST /api/v1/watchlists/{id}/sync-tv with bridge success → 200, tv_synced=true."""
+    """POST /api/v1/watchlists/{id}/sync-tv → 404 (route removed in V6T-2)."""
     wl_id = uuid.uuid4()
-    wl = _make_watchlist_mock(wl_id=wl_id, symbols=["RELIANCE"])
+    session = _mock_session_factory()
 
-    mock_result_select = MagicMock()
-    mock_result_select.scalar_one_or_none.return_value = wl
-    mock_result_update = MagicMock()
+    async with _client_with_session(session) as ac:
+        resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
-    session = AsyncMock()
-    session.commit = AsyncMock()
-    session.execute = AsyncMock(side_effect=[mock_result_select, mock_result_update])
-
-    with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
-        instance = MockClient.return_value
-        instance.get_screener = AsyncMock(return_value={"close": "1234.5"})
-        async with _client_with_session(session) as ac:
-            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["data"]["tv_synced"] is True
-    assert body["data"]["id"] == str(wl_id)
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "sync-tv has been removed"
 
 
 # ---------------------------------------------------------------------------
-# 8. Sync TV — bridge unavailable → 503
+# 8. Sync TV — removed route → 404
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_sync_tv_bridge_unavailable_returns_503() -> None:
-    """POST /api/v1/watchlists/{id}/sync-tv with TVBridgeUnavailableError → 503."""
+    """POST /api/v1/watchlists/{id}/sync-tv → 404 (route removed in V6T-2)."""
     wl_id = uuid.uuid4()
-    wl = _make_watchlist_mock(wl_id=wl_id, symbols=["RELIANCE"])
+    session = _mock_session_factory()
 
-    mock_result_select = MagicMock()
-    mock_result_select.scalar_one_or_none.return_value = wl
+    async with _client_with_session(session) as ac:
+        resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
-    session = AsyncMock()
-    session.execute = AsyncMock(return_value=mock_result_select)
-
-    with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
-        instance = MockClient.return_value
-        instance.get_screener = AsyncMock(side_effect=TVBridgeUnavailableError("down"))
-        async with _client_with_session(session) as ac:
-            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
-
-    assert resp.status_code == 503
-    assert resp.json()["detail"] == "TV bridge unavailable"
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "sync-tv has been removed"
 
 
 # ---------------------------------------------------------------------------
@@ -365,33 +341,21 @@ async def test_create_empty_symbols_allowed() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 11. Sync TV with empty symbols — 200 (no bridge call)
+# 11. Sync TV — removed route → 404 regardless of symbols
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_sync_tv_empty_symbols_skips_bridge() -> None:
-    """POST /{id}/sync-tv on empty watchlist → 200, tv_synced=true (no bridge call)."""
+    """POST /{id}/sync-tv → 404 (route removed in V6T-2, regardless of symbols)."""
     wl_id = uuid.uuid4()
-    wl = _make_watchlist_mock(wl_id=wl_id, symbols=[])
+    session = _mock_session_factory()
 
-    mock_result_select = MagicMock()
-    mock_result_select.scalar_one_or_none.return_value = wl
-    mock_result_update = MagicMock()
+    async with _client_with_session(session) as ac:
+        resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
 
-    session = AsyncMock()
-    session.commit = AsyncMock()
-    session.execute = AsyncMock(side_effect=[mock_result_select, mock_result_update])
-
-    with patch("backend.routes.watchlists.TVBridgeClient") as MockClient:
-        async with _client_with_session(session) as ac:
-            resp = await ac.post(f"/api/v1/watchlists/{wl_id}/sync-tv")
-
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["data"]["tv_synced"] is True
-    # Bridge client should NOT have been instantiated (no symbols)
-    MockClient.assert_not_called()
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "sync-tv has been removed"
 
 
 # ---------------------------------------------------------------------------

@@ -19,7 +19,6 @@ from backend.models.watchlist import (
     WatchlistResponse,
     WatchlistUpdateRequest,
 )
-from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 
 log = structlog.get_logger(__name__)
 
@@ -162,50 +161,13 @@ async def delete_watchlist(
 
 
 # ---------------------------------------------------------------------------
-# POST /{id}/sync-tv — push watchlist to TradingView bridge
+# POST /{id}/sync-tv — removed (V6T-2)
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{watchlist_id}/sync-tv")
+@router.post("/{watchlist_id}/sync-tv", status_code=404)
 async def sync_tv(
     watchlist_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    stmt = select(AtlasWatchlist).where(
-        AtlasWatchlist.id == watchlist_id,
-        AtlasWatchlist.is_deleted == False,  # noqa: E712
-    )
-    execute_out = await session.execute(stmt)
-    row = execute_out.scalar_one_or_none()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Watchlist not found")
-
-    symbols: list[str] = row.symbols or []
-
-    if symbols:
-        # Ping bridge with first symbol as connectivity test
-        client = TVBridgeClient()
-        try:
-            await client.get_screener(symbols[0], "NSE")
-        except TVBridgeUnavailableError:
-            log.warning("sync_tv_bridge_unavailable", watchlist_id=str(watchlist_id))
-            raise HTTPException(status_code=503, detail="TV bridge unavailable")
-
-    # Mark synced
-    sync_stmt = (
-        update(AtlasWatchlist).where(AtlasWatchlist.id == watchlist_id).values(tv_synced=True)
-    )
-    await session.execute(sync_stmt)
-    await session.commit()
-
-    log.info("watchlist_tv_synced", id=str(watchlist_id), symbol_count=len(symbols))
-
-    response_data: dict[str, Any] = {
-        "id": str(watchlist_id),
-        "tv_synced": True,
-        "message": "Watchlist synced to TradingView",
-    }
-    return {
-        "data": response_data,
-        "_meta": {"symbol_count": len(symbols)},
-    }
+) -> None:
+    raise HTTPException(status_code=404, detail="sync-tv has been removed")

@@ -1,39 +1,68 @@
-"""TV MCP bridge client — wraps the local TradingView MCP Node.js sidecar.
+"""TV bridge — direct tradingview_screener library integration.
 
-The sidecar runs on the same EC2 at a local port (default 7100). This module
-provides an async HTTP wrapper that converts transport errors into
-TVBridgeUnavailableError so callers never see raw httpx exceptions.
+Previously wrapped an HTTP sidecar; now queries TradingView in-process.
+TVBridgeUnavailableError is raised when the TradingView API is unreachable
+or the symbol is not found, so callers remain unchanged.
 """
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
-import httpx
 import structlog
 
 log = structlog.get_logger(__name__)
 
 
 class TVBridgeUnavailableError(Exception):
-    """Raised when the TV MCP sidecar is unreachable or timed out."""
+    """Raised when TradingView data cannot be fetched."""
+
+
+_TA_COLUMNS = [
+    "name",
+    "Recommend.All",
+    "Recommend.MA",
+    "Recommend.Other",
+    "RSI",
+    "RSI[1]",
+    "MACD.macd",
+    "MACD.signal",
+    "EMA200",
+    "SMA20",
+    "BB.upper",
+    "BB.lower",
+    "close",
+    "volume",
+]
+
+_SCREENER_COLUMNS = [
+    "name",
+    "close",
+    "volume",
+    "market_cap_basic",
+    "price_earnings_ttm",
+    "earnings_per_share_basic_ttm",
+    "52_week_high",
+    "52_week_low",
+]
+
+_FUNDAMENTAL_COLUMNS = [
+    "name",
+    "earnings_per_share_basic_ttm",
+    "price_earnings_ttm",
+    "price_to_book_ratio",
+    "debt_to_equity",
+    "return_on_equity",
+    "gross_margin",
+    "net_margin",
+    "revenue_per_employee",
+    "market_cap_basic",
+]
 
 
 class TVBridgeClient:
-    """Async HTTP client wrapping the TradingView MCP sidecar.
-
-    Args:
-        base_url: Base URL of the local MCP sidecar. Default: http://127.0.0.1:7100
-        timeout: HTTP request timeout in seconds. Default: 10.0
-    """
-
-    def __init__(
-        self,
-        base_url: str = "http://127.0.0.1:7100",
-        timeout_secs: int = 10,
-    ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.timeout_secs = timeout_secs
+    """In-process TradingView data client using tradingview_screener library."""
 
     async def get_ta_summary(
         self,
@@ -41,98 +70,62 @@ class TVBridgeClient:
         exchange: str,
         interval: str,
     ) -> dict[str, Any]:
-        """Fetch technical analysis summary from the MCP sidecar.
+        """Fetch TA summary for a symbol.
 
         Args:
-            symbol: Ticker symbol (e.g. "RELIANCE").
-            exchange: Exchange code (e.g. "NSE").
-            interval: Chart interval (e.g. "1D", "1W", "1M").
+            symbol: Ticker (e.g. 'RELIANCE').
+            exchange: Exchange code (e.g. 'NSE') — used to prefix ticker.
+            interval: Ignored in library mode (library returns daily data).
 
         Returns:
-            Dict of TA summary data as returned by the sidecar.
+            Dict with TA fields.
 
         Raises:
-            TVBridgeUnavailableError: If the sidecar is unreachable or times out.
+            TVBridgeUnavailableError: If symbol not found or network error.
         """
-        url = f"{self.base_url}/ta_summary"
-        params = {"symbol": symbol, "exchange": exchange, "interval": interval}
-        log.debug(
-            "tv_bridge_ta_summary_request",
-            symbol=symbol,
-            exchange=exchange,
-            interval=interval,
-        )
-        return await self._get(url, params)
+        return await self._fetch(symbol, exchange, _TA_COLUMNS)
 
     async def get_screener(
         self,
         symbol: str,
         exchange: str,
     ) -> dict[str, Any]:
-        """Fetch screener data from the MCP sidecar.
-
-        Args:
-            symbol: Ticker symbol (e.g. "RELIANCE").
-            exchange: Exchange code (e.g. "NSE").
-
-        Returns:
-            Dict of screener data as returned by the sidecar.
-
-        Raises:
-            TVBridgeUnavailableError: If the sidecar is unreachable or times out.
-        """
-        url = f"{self.base_url}/screener"
-        params = {"symbol": symbol, "exchange": exchange}
-        log.debug("tv_bridge_screener_request", symbol=symbol, exchange=exchange)
-        return await self._get(url, params)
+        """Fetch screener data for a symbol."""
+        return await self._fetch(symbol, exchange, _SCREENER_COLUMNS)
 
     async def get_fundamentals(
         self,
         symbol: str,
         exchange: str,
     ) -> dict[str, Any]:
-        """Fetch fundamentals data from the MCP sidecar.
+        """Fetch fundamentals data for a symbol."""
+        return await self._fetch(symbol, exchange, _FUNDAMENTAL_COLUMNS)
 
-        Args:
-            symbol: Ticker symbol (e.g. "RELIANCE").
-            exchange: Exchange code (e.g. "NSE").
-
-        Returns:
-            Dict of fundamentals data as returned by the sidecar.
-
-        Raises:
-            TVBridgeUnavailableError: If the sidecar is unreachable or times out.
-        """
-        url = f"{self.base_url}/fundamentals"
-        params = {"symbol": symbol, "exchange": exchange}
-        log.debug("tv_bridge_fundamentals_request", symbol=symbol, exchange=exchange)
-        return await self._get(url, params)
-
-    async def _get(self, url: str, params: dict[str, str]) -> dict[str, Any]:
-        """Perform a GET request to the sidecar, wrapping transport errors.
-
-        Args:
-            url: Full URL to request.
-            params: Query parameters to include.
-
-        Returns:
-            Parsed JSON response as a dict.
-
-        Raises:
-            TVBridgeUnavailableError: On timeout or connection failure.
-        """
+    async def _fetch(
+        self,
+        symbol: str,
+        exchange: str,
+        columns: list[str],
+    ) -> dict[str, Any]:
         try:
-            async with httpx.AsyncClient(timeout=self.timeout_secs) as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                payload: dict[str, Any] = response.json()
-                log.debug("tv_bridge_response_ok", url=url, status=response.status_code)
-                return payload
-        except (httpx.TimeoutException, httpx.ConnectError) as exc:
-            log.warning(
-                "tv_bridge_unavailable",
-                url=url,
-                error=str(exc),
-                error_type=type(exc).__name__,
-            )
-            raise TVBridgeUnavailableError(f"TV MCP sidecar unavailable at {url}: {exc}") from exc
+            from tradingview_screener.query import Query  # lazy import
+
+            ticker = f"{exchange}:{symbol}"
+
+            def _run_query() -> dict[str, Any]:
+                _, df = (
+                    Query().select(*columns).set_tickers(ticker).set_markets("india")
+                ).get_scanner_data()
+                if df.empty:
+                    raise TVBridgeUnavailableError(f"Symbol {ticker!r} not found in TradingView")
+                row: dict[str, Any] = df.iloc[0].to_dict()
+                return row
+
+            fetched = await asyncio.to_thread(_run_query)
+            log.debug("tv_bridge_fetch_ok", symbol=symbol, columns=len(columns))
+            return fetched
+        except TVBridgeUnavailableError:
+            raise
+        except Exception as exc:
+            log.warning("tv_bridge_fetch_error", symbol=symbol, error=str(exc))
+            raise TVBridgeUnavailableError(f"TradingView fetch failed for {symbol}: {exc}") from exc
