@@ -213,6 +213,10 @@ export interface ConvictionPillars {
     delivery_vs_avg: string | null;
     explanation: string;
   };
+  pillar_3?: {
+    tv_ta: Record<string, number | string | null> | null;
+    explanation: string;
+  } | null;
 }
 
 export interface StockDeepDive {

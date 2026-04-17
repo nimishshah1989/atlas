@@ -10,6 +10,7 @@ import { formatCurrency, quadrantBg, quadrantColor } from "@/lib/format";
 import RsChart, { type RsPoint } from "./deepdive/RsChart";
 import ConvictionPillars from "./deepdive/ConvictionPillars";
 import KeyTechnicalsGrid from "./deepdive/KeyTechnicalsGrid";
+import TVConvictionPanel from "./deepdive/TVConvictionPanel";
 import FindingChips from "./FindingChips";
 
 export default function DeepDivePanel({
@@ -98,6 +99,10 @@ export default function DeepDivePanel({
       <FindingChips entity={symbol} />
       <RsChart data={rsData} />
       <ConvictionPillars conviction={stock.conviction} />
+      <TVConvictionPanel
+        tvTa={stock.conviction.pillar_3?.tv_ta ?? null}
+        explanation={stock.conviction.pillar_3?.explanation}
+      />
       <KeyTechnicalsGrid stock={stock} />
     </div>
   );
