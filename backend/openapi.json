@@ -2901,6 +2901,85 @@
         }
       }
     },
+    "/api/tv/ta/bulk": {
+      "get": {
+        "tags": [
+          "tv"
+        ],
+        "summary": "Get Ta Bulk Cache",
+        "description": "Pure-cache lookup for 1D TA across many symbols. No bridge calls, no background refresh.\n\nReturns a \u00a720.4 envelope with an `items` array \u2014 one entry per requested symbol.\nUncached symbols yield {symbol, tv_ta: null, fetched_at: null}.\n\nQuery params:\n    symbols  : comma-separated, case-insensitive, upper-cased. Hard cap 500; 400 otherwise.\n    exchange : informational (cache PK is (symbol, data_type, interval)).\n    interval : '1D' by default.",
+        "operationId": "get_ta_bulk_cache_api_tv_ta_bulk_get",
+        "parameters": [
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbols"
+            }
+          },
+          {
+            "name": "exchange",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "NSE",
+              "title": "Exchange"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "1D",
+              "title": "Interval"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Ta Bulk Cache Api Tv Ta Bulk Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tv/ta/{symbol}": {
       "get": {
         "tags": [
@@ -3495,15 +3574,11 @@
           }
         ],
         "responses": {
-          "200": {
+          "404": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Sync Tv Api V1 Watchlists  Watchlist Id  Sync Tv Post"
-                }
+                "schema": {}
               }
             }
           },
