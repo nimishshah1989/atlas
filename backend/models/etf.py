@@ -8,7 +8,7 @@ import datetime
 
 from pydantic import BaseModel, model_serializer
 
-from backend.models.schemas import Quadrant, ResponseMeta
+from backend.models.schemas import Quadrant, ResponseMeta  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -124,4 +124,103 @@ class ETFUniverseResponse(BaseModel):
             serialized["data"] = serialized.pop("etf_rows")
         if "meta" in serialized:
             serialized["_meta"] = serialized.pop("meta")
+        return serialized
+
+
+# ---------------------------------------------------------------------------
+# ETF Detail response models (V7-2)
+# ---------------------------------------------------------------------------
+
+
+class ETFDetailResponse(BaseModel):
+    """ETF detail response — all blocks always present (optional if unavailable)."""
+
+    ticker: str
+    name: str
+    exchange: Optional[str] = None
+    country: str
+    currency: str
+    sector: Optional[str] = None
+    asset_class: Optional[str] = None
+    category: Optional[str] = None
+    benchmark: Optional[str] = None
+    expense_ratio: Optional[Decimal] = None
+    inception_date: Optional[datetime.date] = None
+    is_active: bool = True
+    last_price: Optional[Decimal] = None
+    last_date: Optional[datetime.date] = None
+    rs: Optional[ETFRSBlock] = None
+    technicals: Optional[ETFTechnicals] = None
+    gold_rs: Optional[ETFGoldRSBlock] = None
+    meta: ResponseMeta
+
+    @model_serializer(mode="wrap")
+    def _serialize_with_envelope(self, handler: Any) -> Any:
+        serialized = handler(self)
+        meta = serialized.pop("meta", None)
+        return {"data": serialized, "_meta": meta}
+
+
+class ETFChartPoint(BaseModel):
+    """OHLCV + key technicals for a single trading day."""
+
+    date: datetime.date
+    open: Optional[Decimal] = None
+    high: Optional[Decimal] = None
+    low: Optional[Decimal] = None
+    close: Optional[Decimal] = None
+    volume: Optional[int] = None
+    sma_50: Optional[Decimal] = None
+    sma_200: Optional[Decimal] = None
+    ema_20: Optional[Decimal] = None
+    rsi_14: Optional[Decimal] = None
+    macd_line: Optional[Decimal] = None
+    macd_signal: Optional[Decimal] = None
+    macd_histogram: Optional[Decimal] = None
+    bollinger_upper: Optional[Decimal] = None
+    bollinger_lower: Optional[Decimal] = None
+    adx_14: Optional[Decimal] = None
+
+
+class ETFChartDataResponse(BaseModel):
+    """ETF chart-data response envelope."""
+
+    ticker: str
+    points: list[ETFChartPoint]
+    meta: ResponseMeta
+
+    @model_serializer(mode="wrap")
+    def _serialize_with_envelope(self, handler: Any) -> Any:
+        serialized = handler(self)
+        meta = serialized.pop("meta", None)
+        points = serialized.pop("points", [])
+        serialized["data"] = points
+        serialized["_meta"] = meta
+        return serialized
+
+
+class ETFRSHistoryPoint(BaseModel):
+    """Single RS data point in the RS history series."""
+
+    date: datetime.date
+    rs_composite: Optional[Decimal] = None
+    rs_momentum: Optional[Decimal] = None
+    quadrant: Optional[Quadrant] = None
+
+
+class ETFRSHistoryResponse(BaseModel):
+    """ETF RS history response envelope."""
+
+    ticker: str
+    months: int
+    points: list[ETFRSHistoryPoint]
+    meta: ResponseMeta
+
+    @model_serializer(mode="wrap")
+    def _serialize_with_envelope(self, handler: Any) -> Any:
+        serialized = handler(self)
+        meta = serialized.pop("meta", None)
+        points = serialized.pop("points", [])
+        serialized["data"] = points
+        serialized["_meta"] = meta
         return serialized

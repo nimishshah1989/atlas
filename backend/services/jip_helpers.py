@@ -198,3 +198,96 @@ async def etf_master_rows(
     elapsed = (time.perf_counter() - t0) * 1000
     log.info("jip_etf_master_fetched", count=len(rows), elapsed_ms=round(elapsed, 1))
     return [dict(row) for row in rows]
+
+
+async def etf_single_master(
+    session: AsyncSession,
+    ticker: str,
+) -> Optional[dict[str, Any]]:
+    """Fetch single ETF master row. Returns None if ticker not found."""
+    sql = text("""
+        SELECT
+            ticker, name, exchange, country, currency, sector,
+            asset_class, category, benchmark, expense_ratio,
+            inception_date, is_active
+        FROM de_etf_master
+        WHERE ticker = :ticker
+        LIMIT 1
+    """)
+    await session.execute(text("SET LOCAL statement_timeout = '5000'"))
+    query_result = await session.execute(sql, {"ticker": ticker.upper()})
+    row = query_result.mappings().first()
+    return dict(row) if row else None
+
+
+async def etf_chart_data(
+    session: AsyncSession,
+    ticker: str,
+    from_date: datetime.date,
+    to_date: datetime.date,
+) -> list[dict[str, Any]]:
+    """
+    Return OHLCV + key technicals for ticker over date range.
+    DISTINCT ON (o.date) prevents duplicate date rows.
+    """
+    sql = text("""
+        SELECT DISTINCT ON (o.date)
+            o.date,
+            o.open,
+            o.high,
+            o.low,
+            o.close,
+            o.volume,
+            t.sma_50,
+            t.sma_200,
+            t.ema_20,
+            t.rsi_14,
+            t.macd_line,
+            t.macd_signal,
+            t.macd_histogram,
+            t.bollinger_upper,
+            t.bollinger_lower,
+            t.adx_14
+        FROM de_etf_ohlcv o
+        LEFT JOIN de_etf_technical_daily t
+            ON t.ticker = o.ticker AND t.date = o.date
+        WHERE o.ticker = :ticker
+          AND o.date BETWEEN :from_date AND :to_date
+        ORDER BY o.date ASC
+    """)
+    await session.execute(text("SET LOCAL statement_timeout = '10000'"))
+    query_result = await session.execute(
+        sql,
+        {"ticker": ticker.upper(), "from_date": from_date, "to_date": to_date},
+    )
+    return [dict(r) for r in query_result.mappings().all()]
+
+
+async def etf_rs_history(
+    session: AsyncSession,
+    ticker: str,
+    from_date: datetime.date,
+    to_date: datetime.date,
+) -> list[dict[str, Any]]:
+    """
+    Return RS time-series for a single ETF ticker over date range.
+    DISTINCT ON (date) prevents duplicate date rows.
+    """
+    sql = text("""
+        SELECT DISTINCT ON (date)
+            date,
+            rs_composite,
+            rs_momentum,
+            quadrant
+        FROM de_rs_scores
+        WHERE entity_type = 'etf'
+          AND entity_id = :ticker
+          AND date BETWEEN :from_date AND :to_date
+        ORDER BY date ASC
+    """)
+    await session.execute(text("SET LOCAL statement_timeout = '5000'"))
+    query_result = await session.execute(
+        sql,
+        {"ticker": ticker.upper(), "from_date": from_date, "to_date": to_date},
+    )
+    return [dict(r) for r in query_result.mappings().all()]
