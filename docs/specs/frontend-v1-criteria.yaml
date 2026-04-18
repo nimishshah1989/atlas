@@ -1,0 +1,1802 @@
+version: "1"
+slice: "V1-Frontend-Stage1"
+source: "docs/design/frontend-v1-spec.md"
+locked_at: "2026-04-18"
+
+# ============================================================================
+# ATLAS Frontend V1 — Stage 1 machine-readable criteria
+# ============================================================================
+#
+# Every criterion here is one executable check the quality harness runs
+# before a frontend chunk can reach DONE. Criteria map 1:1 to sections in
+# frontend-v1-spec.md — that spec is the source of truth; this YAML is how
+# we enforce it.
+#
+# Check types understood by scripts/check-frontend-criteria.py (authored in
+# chunk S1-PRE-0). v1.1 vocabulary — complete inventory:
+#
+#   ---- static / grep ----
+#   grep_forbid         pattern P across files F must return 0 matches
+#   grep_require        pattern P across files F must return >=N matches
+#   kill_list           no BUY/HOLD/SELL/verdict language in file F
+#   i18n_indian         file F has no $, million, billion, MM-DD date patterns
+#
+#   ---- file system ----
+#   file_exists         every path in `paths` exists and is non-empty
+#   url_reachable       curl URL U returns 200
+#   link_integrity      all href/src in F resolve (local exists, anchor valid,
+#                       external optional via allow_external flag)
+#
+#   ---- DOM / selector ----
+#   dom_required        CSS selector S in file F must match >=N nodes
+#                       (supports must_include_data_* enum-coverage clauses)
+#   dom_forbidden       CSS selector S in file F must match 0 nodes
+#   attr_required       selector S in file F must carry attribute A
+#   attr_enum           selector S attribute A ∈ allowed[] enum
+#   attr_numeric_range  selector S attribute A is numeric in [min, max]
+#                       (integer_only flag supported)
+#
+#   ---- HTML / accessibility ----
+#   html5_valid             html5validator passes on file F
+#   design_tokens_only      file F may not declare raw colors/fonts outside tokens.css
+#   no_inline_style         file F contains 0 `style="..."` attributes
+#   chart_contract          every .chart element in F carries legend+axis+source+tooltip+explain
+#   methodology_footer      every page has footer with data-as-of + source attribution
+#
+#   ---- Playwright (runs against headless HTTP server) ----
+#   playwright_screenshot            screenshot of URL U has delta <X% from baseline
+#   playwright_a11y                  axe-core WCAG AA passes on URL U
+#   playwright_no_horizontal_scroll  scrollWidth <= innerWidth + tolerance at viewport
+#   playwright_tap_target            min tap-target dims at viewport (WCAG 2.5.5)
+#
+#   ---- Fixture / JSON ----
+#   fixture_schema            fixture file F validates against JSON Schema S
+#   fixture_parity            fixture F has a matching endpoint in spec §15
+#   fixture_field_required    JSONPath path exists on every match (value_type, format, min_length supported)
+#   fixture_numeric_range     JSONPath values are numeric in [min, max] (decimal_places_max supported)
+#   fixture_array_length      JSONPath arrays have len >= min_length
+#   fixture_enum              JSONPath values ∈ allowed[] enum
+#   fixture_endpoint_reference  every endpoint in endpoints_must_appear[] is referenced by ≥1 fixture
+#
+#   ---- Rule engine meta ----
+#   rule_coverage       every rule id in V1.1 rule-set has ≥1 hook slot in spec
+#
+# Each type is implemented as one function in scripts/check-frontend-criteria.py
+# (S1-PRE-0). Adding a new type = ADR + function + entry in this list.
+#
+# severity: critical | high | medium | low
+#   critical — blocks ship
+#   high     — blocks ship unless exception approved
+#   medium   — recorded in quality score, does not block
+#   low      — informational
+#
+# All file paths are relative to /home/ubuntu/atlas/frontend/mockups/ unless
+# noted.
+# ============================================================================
+
+settings:
+  mockups_root: frontend/mockups
+  fixtures_root: frontend/mockups/fixtures
+  fixture_schemas_root: frontend/mockups/fixtures/schemas
+  baseline_screenshots_root: frontend/mockups/.baselines
+  spec_file: docs/design/frontend-v1-spec.md
+  design_principles_file: docs/design/design-principles.md
+  all_pages:
+    - today.html
+    - explore-global.html
+    - explore-country.html
+    - explore-sector.html
+    - stock-detail.html
+    - mf-detail.html
+    - mf-rank.html
+    - breadth.html
+    - portfolios.html
+    - lab.html
+  existing_pages_pre_strip:
+    - explore-global.html
+    - explore-country.html
+    - explore-sector.html
+    - stock-detail.html
+    - mf-detail.html
+    - portfolios.html
+  new_pages_stage1:
+    - today.html
+    - mf-rank.html
+    - breadth.html
+    - lab.html
+
+# ============================================================================
+# GROUP 1 — Global invariants (apply to every page)
+# ============================================================================
+
+criteria:
+
+  # ---------- Reachability ----------
+  - id: fe-g-01
+    title: "Every V1 page is reachable at /mockups/{page}"
+    description: "After deploy, every page in settings.all_pages returns HTTP 200."
+    severity: critical
+    source_spec_section: "§2"
+    check:
+      type: url_reachable
+      url_template: "https://atlas.jslwealth.in/mockups/{page}"
+      pages_from: settings.all_pages
+
+  - id: fe-g-02
+    title: "Spec viewer + spec markdown are reachable"
+    description: "The locked spec renders at the atlas URL."
+    severity: high
+    source_spec_section: "§0"
+    check:
+      type: url_reachable
+      urls:
+        - "https://atlas.jslwealth.in/mockups/frontend-v1-spec.html"
+        - "https://atlas.jslwealth.in/mockups/frontend-v1-spec.md"
+
+  # ---------- HTML validity ----------
+  - id: fe-g-03
+    title: "All mockup pages are valid HTML5"
+    description: "html5validator must report 0 errors across every page."
+    severity: critical
+    source_spec_section: "§0 (non-goal integrity)"
+    check:
+      type: html5_valid
+      files: "frontend/mockups/*.html"
+
+  # ---------- Design language purity ----------
+  - id: fe-g-04
+    title: "Pages use only tokens from tokens.css (no raw colors/fonts)"
+    description: >
+      Locked design language: no hex/rgb/hsl declarations outside tokens.css.
+      Font-family declarations limited to the approved pair (Fraunces/Inter
+      with JetBrains Mono for code). No inline styles except where explicitly
+      whitelisted for per-instance geometry.
+    severity: critical
+    source_spec_section: "§1.5, design-principles §1, §2"
+    check:
+      type: design_tokens_only
+      files: "frontend/mockups/*.html"
+      allow_inline_style_properties: [width, height, transform, grid-column, grid-row]
+
+  - id: fe-g-05
+    title: "No dark-mode residue"
+    description: "Dark-mode tokens, toggles, and `prefers-color-scheme: dark` media queries are forbidden."
+    severity: critical
+    source_spec_section: "§17 out-of-scope, user reset 2026-04-18"
+    check:
+      type: grep_forbid
+      pattern: "prefers-color-scheme: dark|data-theme=\"dark\"|class=\"dark\"|--bg-dark|--dark-"
+      files: "frontend/mockups/*.html frontend/mockups/*.css"
+
+  # ---------- Commentary kill list ----------
+  - id: fe-g-06
+    title: "No LLM/verdict/recommendation prose (RECOMMEND tier gated to V1.1)"
+    description: >
+      V1 is data-representation only. Any BUY/HOLD/SELL/ADD ON DIPS/REDUCE
+      verdict language or LLM-generated commentary must be absent. EXPLAIN
+      and DESCRIBE tiers are allowed.
+    severity: critical
+    source_spec_section: "§1.1, §17"
+    check:
+      type: kill_list
+      patterns:
+        - "\\bBUY\\b"
+        - "\\bHOLD\\b"
+        - "\\bSELL\\b"
+        - "ADD ON DIPS"
+        - "REDUCE\\b"
+        - "Atlas Verdict"
+        - "Atlas Insight"
+        - "AI verdict"
+        - "AI commentary"
+        - "GPT"
+        - "LLM says"
+        - "our recommendation"
+      exceptions_files:
+        - frontend-v1-spec.html
+        - frontend-v1-spec.md
+        - breadth-simulator-v8.html  # base file preserved for reference
+      files: "frontend/mockups/*.html"
+
+  # ---------- Indian i18n ----------
+  - id: fe-g-07
+    title: "All monetary display uses ₹ lakh/crore, never $ or million/billion"
+    description: "CLAUDE.md hard stop: Indian formatting only."
+    severity: critical
+    source_spec_section: "§1.6"
+    check:
+      type: i18n_indian
+      files: "frontend/mockups/*.html frontend/mockups/fixtures/*.json"
+      forbidden_patterns:
+        - "\\$[0-9]"               # dollar-prefix numbers
+        - "\\bmillion\\b"
+        - "\\bbillion\\b"
+        - "\\btrillion\\b"
+        - "[0-9]{4}-[0-9]{2}-[0-9]{2}T"  # ISO datetimes in visible DOM (IST display only)
+      allowed_in_fixtures: true  # ISO dates OK inside fixture payloads
+
+  # ---------- Commentary blocks (tiered) ----------
+  - id: fe-g-08
+    title: "Every page has an EXPLAIN block"
+    description: "Static pedagogical block with formulas, at least one per page."
+    severity: critical
+    source_spec_section: "§1.1"
+    check:
+      type: dom_required
+      selector: ".explain-block, [data-tier=explain]"
+      min_count: 1
+      files: "frontend/mockups/*.html"
+      pages_from: settings.all_pages
+
+  - id: fe-g-09
+    title: "Every page has a methodology footer"
+    description: "Footer with data-as-of, source attribution, last rebuild."
+    severity: critical
+    source_spec_section: "§1.1, §1.7"
+    check:
+      type: methodology_footer
+      selector: "footer[data-role=methodology], .methodology-footer"
+      must_contain:
+        - "Source:"
+        - "Data as of"
+      pages_from: settings.all_pages
+
+  # ---------- Info tooltips (ⓘ) ----------
+  - id: fe-g-10
+    title: "Every KPI tile carries a ⓘ info-tooltip"
+    description: "§1.3 info-tooltip standard — mandatory on every metric."
+    severity: high
+    source_spec_section: "§1.3"
+    check:
+      type: dom_required
+      parent_selector: ".kpi-tile, .metric-tile, [data-role=kpi]"
+      child_selector: ".info-tooltip, [data-tooltip], .tooltip-icon"
+      ratio: 1.0  # every parent must have at least one child
+      pages_from: settings.all_pages
+
+  - id: fe-g-11
+    title: "Every info-tooltip carries a title attribute"
+    description: "Tooltip content must be declarative (no hollow icons)."
+    severity: high
+    source_spec_section: "§1.3"
+    check:
+      type: attr_required
+      selector: ".info-tooltip, .tooltip-icon"
+      attribute: "title"
+      min_length: 10
+
+  # ---------- Chart contract (shared) ----------
+  - id: fe-g-12
+    title: "Every chart carries the 5-block contract"
+    description: >
+      Every .chart / .chart-with-events element must have: legend,
+      axis-labels, source-attribution, hover-tooltip hook, EXPLAIN.
+    severity: critical
+    source_spec_section: "§1.5"
+    check:
+      type: chart_contract
+      selector: ".chart-with-events, .chart"
+      required_children:
+        - ".chart__legend, [data-role=legend]"
+        - ".chart__axis-x, [data-role=axis-x]"
+        - ".chart__axis-y, [data-role=axis-y]"
+        - ".chart__source, [data-role=source]"
+        - ".chart__tooltip, [data-role=tooltip]"
+        - ".chart__explain, [data-role=explain]"
+      pages_from: settings.all_pages
+
+  # ---------- Accessibility ----------
+  - id: fe-g-13
+    title: "Every page passes axe-core WCAG AA"
+    description: "Baseline accessibility — headings hierarchy, contrast, alt text, aria labels."
+    severity: high
+    source_spec_section: "global, design-principles implied"
+    check:
+      type: playwright_a11y
+      level: "wcag2aa"
+      urls_from: settings.all_pages
+
+  # ---------- Visual regression ----------
+  - id: fe-g-14
+    title: "Every page matches its visual baseline within 2% delta"
+    description: "Playwright screenshot diff — prevents design drift chunk-over-chunk."
+    severity: high
+    source_spec_section: "§1.5, design-principles §1"
+    check:
+      type: playwright_screenshot
+      max_delta_pct: 2.0
+      viewport: { width: 1440, height: 900 }
+      baselines_dir: settings.baseline_screenshots_root
+      pages_from: settings.all_pages
+
+  # ---------- Nav shell ----------
+  - id: fe-g-15
+    title: "Every page embeds the shared nav shell with all 10 entries"
+    description: "Top nav shows all 10 Stage-1 pages + global search box."
+    severity: critical
+    source_spec_section: "§2, §13"
+    check:
+      type: dom_required
+      selector: "nav.atlas-nav a, [data-role=nav] a"
+      min_count: 10
+      must_include_text:
+        - "Today"
+        - "Explore"
+        - "Breadth"
+        - "MF rank"
+        - "Portfolios"
+        - "Lab"
+      pages_from: settings.all_pages
+
+  - id: fe-g-16
+    title: "Global search box present in top nav on every page"
+    description: "§13 — the fuzzy search box is global, present everywhere."
+    severity: critical
+    source_spec_section: "§13"
+    check:
+      type: dom_required
+      selector: "input.atlas-search, [data-role=global-search]"
+      min_count: 1
+      pages_from: settings.all_pages
+
+  # ---------- Benchmark-mandatory rule ----------
+  - id: fe-g-17
+    title: "Every quantitative chart has a benchmark overlay or active-weight encoding"
+    description: >
+      design-principles §3: benchmark comparison is mandatory on every
+      quantitative visual. Check: every chart carries either a benchmark
+      line (Pattern A), zero-anchored bars (Pattern B), or a reference
+      marker (Pattern C).
+    severity: critical
+    source_spec_section: "design-principles §3"
+    check:
+      type: dom_required
+      parent_selector: ".chart-with-events, .chart[data-type=quantitative]"
+      child_selector: "[data-role=benchmark], .chart__benchmark, [data-pattern=A], [data-pattern=B], [data-pattern=C]"
+      ratio: 1.0
+
+  # ---------- Deterministic rendering ----------
+  - id: fe-g-18
+    title: "No non-deterministic JS in mockups"
+    description: "No Math.random() without seed, no unseeded new Date() visible in DOM."
+    severity: high
+    source_spec_section: "§0 (system guarantees)"
+    check:
+      type: grep_forbid
+      pattern: "Math\\.random\\(\\)|new Date\\(\\)\\.(toString|toLocaleString|toISOString)"
+      files: "frontend/mockups/*.html frontend/mockups/*.js"
+      exceptions_files:
+        - breadth-simulator-v8.html  # base file preserved
+
+  # ---------- rec-slot placeholders ----------
+  - id: fe-g-19
+    title: "rec-slot placeholders present per §14 rule-hook slot index"
+    description: "Every page listed in §14 has the declared rec-slot div, empty, with data-rule-scope + data-page."
+    severity: critical
+    source_spec_section: "§14"
+    check:
+      type: dom_required
+      selector: "div.rec-slot[data-rule-scope][data-page]"
+      min_count_per_page:
+        today.html: 1
+        explore-global.html: 1
+        explore-country.html: 1
+        explore-sector.html: 2
+        stock-detail.html: 2
+        mf-detail.html: 1
+        mf-rank.html: 1
+        breadth.html: 3
+        portfolios.html: 4
+        lab.html: 2
+
+# ============================================================================
+# GROUP 2 — Per-page specific criteria (§3..§12)
+# ============================================================================
+
+  # ---------- §3 Today / Pulse ----------
+  - id: fe-p3-01
+    title: "today.html: hero strip with 3 pulse tiles"
+    severity: critical
+    source_spec_section: "§3"
+    check:
+      type: dom_required
+      file: today.html
+      selectors:
+        - { selector: ".pulse-hero", min: 1 }
+        - { selector: ".pulse-tile", min: 3 }
+
+  - id: fe-p3-02
+    title: "today.html: regime band with days-in-regime"
+    severity: critical
+    source_spec_section: "§3"
+    check:
+      type: dom_required
+      file: today.html
+      selector: "[data-role=regime-band]"
+      must_contain_text_any: ["Expansion", "Correction", "Distress"]
+
+  - id: fe-p3-03
+    title: "today.html: sector board (RRG) + movers strip + fund strip"
+    severity: high
+    source_spec_section: "§3"
+    check:
+      type: dom_required
+      file: today.html
+      selectors:
+        - { selector: "[data-role=sector-board]", min: 1 }
+        - { selector: "[data-role=movers]", min: 1 }
+        - { selector: "[data-role=fund-strip]", min: 1 }
+
+  # ---------- §4 Explore · Global ----------
+  - id: fe-p4-01
+    title: "explore-global.html: macros/rates/FX/commod/credit blocks all present"
+    severity: critical
+    source_spec_section: "§4"
+    check:
+      type: dom_required
+      file: explore-global.html
+      selectors:
+        - { selector: "[data-block=macros]", min: 1 }
+        - { selector: "[data-block=rates]", min: 1 }
+        - { selector: "[data-block=fx]", min: 1 }
+        - { selector: "[data-block=commodities]", min: 1 }
+        - { selector: "[data-block=credit]", min: 1 }
+
+  - id: fe-p4-02
+    title: "explore-global.html: stripped of verdict language + commentary blocks"
+    severity: critical
+    source_spec_section: "§4 V1 additions, §17 out-of-scope"
+    check:
+      type: kill_list
+      file: explore-global.html
+      extra_patterns: ["Atlas Insight", "Atlas Verdict", "risk-on verdict", "risk-off verdict"]
+
+  # ---------- §5 Explore · Country ----------
+  - id: fe-p5-01
+    title: "explore-country.html: embedded breadth panel per §5.1"
+    severity: critical
+    source_spec_section: "§5, §5.1"
+    check:
+      type: dom_required
+      file: explore-country.html
+      selector: "[data-block=breadth-compact]"
+      min_count: 1
+
+  - id: fe-p5-02
+    title: "explore-country.html: compact signal-playback embed present"
+    severity: high
+    source_spec_section: "§10.5"
+    check:
+      type: dom_required
+      file: explore-country.html
+      selector: "[data-component=signal-playback][data-mode=compact]"
+      min_count: 1
+
+  - id: fe-p5-03
+    title: "explore-country.html: sectors RRG + flows blocks present"
+    severity: critical
+    source_spec_section: "§5"
+    check:
+      type: dom_required
+      file: explore-country.html
+      selectors:
+        - { selector: "[data-block=sectors-rrg]", min: 1 }
+        - { selector: "[data-block=flows]", min: 1 }
+
+  - id: fe-p5-04
+    title: "explore-country.html: stripped of sect-comm, sect-alloc narrative"
+    severity: critical
+    source_spec_section: "§5 post-strip"
+    check:
+      type: dom_forbidden
+      file: explore-country.html
+      selectors:
+        - "[data-block=sect-comm]"
+        - "[data-block=sect-alloc]"
+        - ".sect-narrative"
+
+  # ---------- §6 Explore · Sector ----------
+  - id: fe-p6-01
+    title: "explore-sector.html: full breadth panel + full signal-playback present"
+    severity: critical
+    source_spec_section: "§6, §10.5"
+    check:
+      type: dom_required
+      file: explore-sector.html
+      selectors:
+        - { selector: "[data-block=breadth-full]", min: 1 }
+        - { selector: "[data-component=signal-playback][data-mode=full]", min: 1 }
+
+  - id: fe-p6-02
+    title: "explore-sector.html: members table + sector RS/Mom/Vol chips"
+    severity: high
+    source_spec_section: "§6"
+    check:
+      type: dom_required
+      file: explore-sector.html
+      selectors:
+        - { selector: "[data-block=members]", min: 1 }
+        - { selector: "[data-chip=rs]", min: 1 }
+        - { selector: "[data-chip=momentum]", min: 1 }
+        - { selector: "[data-chip=volume]", min: 1 }
+        - { selector: "[data-chip=breadth]", min: 1 }
+
+  # ---------- §7 Stock detail ----------
+  - id: fe-p7-01
+    title: "stock-detail.html: hero + chart + 4 RRG chips + peers + signal-playback compact"
+    severity: critical
+    source_spec_section: "§7, §10.5"
+    check:
+      type: dom_required
+      file: stock-detail.html
+      selectors:
+        - { selector: "[data-block=hero]", min: 1 }
+        - { selector: ".chart-with-events", min: 1 }
+        - { selector: "[data-chip=rs]", min: 1 }
+        - { selector: "[data-chip=momentum]", min: 1 }
+        - { selector: "[data-chip=volume]", min: 1 }
+        - { selector: "[data-chip=breadth]", min: 1 }
+        - { selector: "[data-block=peers]", min: 1 }
+        - { selector: "[data-component=signal-playback][data-mode=compact]", min: 1 }
+
+  - id: fe-p7-02
+    title: "stock-detail.html: Atlas Insight block removed"
+    severity: critical
+    source_spec_section: "§7 post-strip"
+    check:
+      type: dom_forbidden
+      file: stock-detail.html
+      selectors:
+        - ".atlas-insight"
+        - ".verdict-strip"
+        - "[data-block=atlas-insight]"
+
+  # ---------- §8 MF detail ----------
+  - id: fe-p8-01
+    title: "mf-detail.html: returns + alpha + holdings + weighted-technicals chips + signal-playback compact"
+    severity: critical
+    source_spec_section: "§8, §10.5"
+    check:
+      type: dom_required
+      file: mf-detail.html
+      selectors:
+        - { selector: "[data-block=returns]", min: 1 }
+        - { selector: "[data-block=alpha]", min: 1 }
+        - { selector: "[data-block=holdings]", min: 1 }
+        - { selector: "[data-block=weighted-technicals]", min: 1 }
+        - { selector: "[data-component=signal-playback][data-mode=compact]", min: 1 }
+
+  - id: fe-p8-02
+    title: "mf-detail.html: Atlas Verdict HOLD/ADD ON DIPS removed"
+    severity: critical
+    source_spec_section: "§8 post-strip"
+    check:
+      type: kill_list
+      file: mf-detail.html
+      extra_patterns: ["Atlas Verdict", "HOLD / ADD ON DIPS", "ADD ON DIPS"]
+
+  # ---------- §9 MF rank ----------
+  - id: fe-p9-01
+    title: "mf-rank.html: 4-factor scoring disclosed (Returns, Risk, Resilience, Consistency)"
+    severity: critical
+    source_spec_section: "§9"
+    check:
+      type: dom_required
+      file: mf-rank.html
+      selector: "[data-factor]"
+      min_count: 4
+      must_include_attr_values:
+        data-factor: ["returns", "risk", "resilience", "consistency"]
+
+  - id: fe-p9-02
+    title: "mf-rank.html: tie-break indicator shown when composites tie"
+    severity: high
+    source_spec_section: "§9 tie-break order"
+    check:
+      type: dom_required
+      file: mf-rank.html
+      selector: "[data-role=tie-break]"
+      min_count: 1
+
+  - id: fe-p9-03
+    title: "mf-rank.html: formula disclosure block present"
+    severity: critical
+    source_spec_section: "§9 EXPLAIN"
+    check:
+      type: dom_required
+      file: mf-rank.html
+      selector: ".explain-block[data-topic=mf-rank-formula]"
+      must_contain_text_all:
+        - "Returns"
+        - "Risk"
+        - "Resilience"
+        - "Consistency"
+        - "Composite"
+
+  - id: fe-p9-04
+    title: "mf-rank.html: filter rail + rank table present"
+    severity: critical
+    source_spec_section: "§9"
+    check:
+      type: dom_required
+      file: mf-rank.html
+      selectors:
+        - { selector: "[data-block=filter-rail]", min: 1 }
+        - { selector: "[data-block=rank-table]", min: 1 }
+        - { selector: "[data-block=rank-table] thead th", min: 8 }
+
+  # ---------- §10 Breadth Terminal ----------
+  - id: fe-p10-01
+    title: "breadth.html: hero with 3 headline counts (21-EMA, 50-DMA, 200-DMA)"
+    severity: critical
+    source_spec_section: "§10"
+    check:
+      type: dom_required
+      file: breadth.html
+      selector: "[data-headline=ema21], [data-headline=dma50], [data-headline=dma200]"
+      min_count: 3
+
+  - id: fe-p10-02
+    title: "breadth.html: regime band + 3 KPI cards + oscillator chart + zone reference + DESCRIBE + signal history"
+    severity: critical
+    source_spec_section: "§10 blocks 2-7"
+    check:
+      type: dom_required
+      file: breadth.html
+      selectors:
+        - { selector: "[data-role=regime-band]", min: 1 }
+        - { selector: "[data-block=breadth-kpi]", min: 3 }
+        - { selector: "[data-block=oscillator]", min: 1 }
+        - { selector: "[data-block=zone-reference]", min: 1 }
+        - { selector: ".describe-block", min: 1 }
+        - { selector: "[data-block=signal-history]", min: 1 }
+
+  - id: fe-p10-03
+    title: "breadth.html: universe selector + MA selector pills"
+    severity: high
+    source_spec_section: "§10 URL params"
+    check:
+      type: dom_required
+      file: breadth.html
+      selectors:
+        - { selector: "[data-role=universe-selector]", min: 1 }
+        - { selector: "[data-role=ma-selector]", min: 1 }
+
+  - id: fe-p10-04
+    title: "breadth.html: zone bands rendered (OB >=400 red tint, OS <=100 green tint, midline 250)"
+    severity: critical
+    source_spec_section: "§10 block 4"
+    check:
+      type: dom_required
+      file: breadth.html
+      selectors:
+        - { selector: "[data-zone=overbought]", min: 1 }
+        - { selector: "[data-zone=oversold]", min: 1 }
+        - { selector: "[data-zone=midline]", min: 1 }
+
+  # ---------- §10.5 Signal Playback ----------
+  - id: fe-p10_5-01
+    title: "signal-playback: all 14 input parameters present with declared ids"
+    description: >
+      v1.1 revision elevates magic numbers 350 (exit-mode trigger) and 200
+      (SIP resume) to named editable params `L_exit` and `L_sip_resume`,
+      and formalises `L_os` (oversold sim trigger) + `L_ob` (overbought sim
+      trigger) as explicit inputs. See §10.5.1 table.
+    severity: critical
+    source_spec_section: "§10.5.1"
+    check:
+      type: dom_required
+      selector_file_pairs:
+        - { file: breadth.html, selector: "#i_initial, #i_sip, #i_lumpsum, #i_sell400, #i_furtherLvl, #i_furtherPct, #i_redeployLvl, #i_redeployPct, #i_redeploy2Lvl, #i_redeploy2Pct, #i_l_os, #i_l_ob, #i_l_exit, #i_l_sip_resume" }
+        - { file: lab.html, selector: "#i_initial, #i_sip, #i_lumpsum, #i_sell400, #i_furtherLvl, #i_furtherPct, #i_redeployLvl, #i_redeployPct, #i_redeploy2Lvl, #i_redeploy2Pct, #i_l_os, #i_l_ob, #i_l_exit, #i_l_sip_resume" }
+      min_count: 14
+
+  - id: fe-p10_5-02
+    title: "signal-playback: 3-overlay benchmark (Strategy, Nifty 50 B&H, Nifty 500 B&H)"
+    severity: critical
+    source_spec_section: "§10.5.4"
+    check:
+      type: dom_required
+      selector: "[data-overlay=strategy], [data-overlay=nifty50-bh], [data-overlay=nifty500-bh]"
+      min_count: 3
+
+  - id: fe-p10_5-03
+    title: "signal-playback: three tabs (Transaction Log, Cashflow, Tax Analysis)"
+    severity: critical
+    source_spec_section: "§10.5.5"
+    check:
+      type: dom_required
+      selector: "[data-tab=log], [data-tab=cashflow], [data-tab=tax]"
+      min_count: 3
+
+  - id: fe-p10_5-04
+    title: "signal-playback: light-token port (no dark-v8 palette residue)"
+    severity: critical
+    source_spec_section: "§10.5 preamble"
+    check:
+      type: grep_forbid
+      pattern: "--bg:\\s*#080810|--card:\\s*#0f0f1e|--accent:\\s*#7c7cff|IBM Plex Mono|Plus Jakarta Sans"
+      files: "frontend/mockups/signal-playback.html frontend/mockups/signal-playback.js"
+
+  - id: fe-p10_5-05
+    title: "signal-playback: FIFO tax regime split coded (2024-07-23 cutoff)"
+    severity: critical
+    source_spec_section: "§10.5.3"
+    check:
+      type: grep_require
+      pattern: "2024-07-23"
+      files: "frontend/mockups/signal-playback.js"
+      min_matches: 1
+
+  # ---------- §11 Portfolios ----------
+  - id: fe-p11-01
+    title: "portfolios.html: 4 book cards + holdings tables + benchmark comparison"
+    severity: critical
+    source_spec_section: "§11"
+    check:
+      type: dom_required
+      file: portfolios.html
+      selectors:
+        - { selector: "[data-book]", min: 4 }
+        - { selector: "[data-block=holdings]", min: 4 }
+        - { selector: "[data-role=benchmark]", min: 4 }
+
+  - id: fe-p11-02
+    title: "portfolios.html: accountability banner + pending-rec ledger removed"
+    severity: critical
+    source_spec_section: "§11 post-strip"
+    check:
+      type: dom_forbidden
+      file: portfolios.html
+      selectors:
+        - ".acc-banner"
+        - "[data-block=rec-ledger]"
+        - "[data-block=pending-recs]"
+
+  # ---------- §12 Lab ----------
+  - id: fe-p12-01
+    title: "lab.html: 3 mode tabs (Breadth Playback, Rule Backtest V1.1 disabled, Compare)"
+    severity: critical
+    source_spec_section: "§12 block 0"
+    check:
+      type: dom_required
+      file: lab.html
+      selectors:
+        - { selector: "[data-mode=breadth-playback]", min: 1 }
+        - { selector: "[data-mode=rule-backtest][aria-disabled=true]", min: 1 }
+        - { selector: "[data-mode=compare]", min: 1 }
+
+  - id: fe-p12-02
+    title: "lab.html: strategy config panel + run button + results area"
+    severity: critical
+    source_spec_section: "§12"
+    check:
+      type: dom_required
+      file: lab.html
+      selectors:
+        - { selector: "[data-block=strategy-config]", min: 1 }
+        - { selector: "[data-role=run]", min: 1 }
+        - { selector: "[data-block=results]", min: 1 }
+
+  - id: fe-p12-03
+    title: "lab.html: full signal-playback embed in Breadth Playback mode"
+    severity: critical
+    source_spec_section: "§12, §10.5"
+    check:
+      type: dom_required
+      file: lab.html
+      selector: "[data-component=signal-playback][data-mode=full]"
+      min_count: 1
+
+# ============================================================================
+# GROUP 3 — Shared components (§1.5)
+# ============================================================================
+
+  - id: fe-c-01
+    title: "components.css + tokens.css + _shared.html exist"
+    severity: critical
+    source_spec_section: "§1.5"
+    check:
+      type: file_exists
+      paths:
+        - frontend/mockups/components.css
+        - frontend/mockups/tokens.css
+        - frontend/mockups/_shared.html
+
+  - id: fe-c-02
+    title: "Every page imports tokens.css + components.css"
+    severity: critical
+    source_spec_section: "§1.5"
+    check:
+      type: grep_require
+      pattern: "href=\"tokens\\.css\".*href=\"components\\.css\""
+      files: "frontend/mockups/*.html"
+      pages_from: settings.all_pages
+      multiline: true
+
+  - id: fe-c-03
+    title: "Every reusable primitive present in components.css"
+    severity: critical
+    source_spec_section: "§1.5"
+    check:
+      type: grep_require
+      file: "frontend/mockups/components.css"
+      patterns:
+        - "\\.chip"
+        - "\\.kpi-tile|\\.kpi-strip"
+        - "\\.data-table"
+        - "\\.sparkline"
+        - "\\.rs-mini"
+        - "\\.sector-tile"
+        - "\\.chart-with-events"
+        - "\\.atlas-search"
+        - "\\.explain-block"
+        - "\\.describe-block"
+        - "\\.rec-slot"
+        - "\\.atlas-nav"
+      min_matches_each: 1
+
+# ============================================================================
+# GROUP 4 — Fixture schemas + endpoint parity
+# ============================================================================
+
+  - id: fe-f-01
+    title: "Every fixture JSON validates against its JSON Schema"
+    severity: critical
+    source_spec_section: "§10.5.7, fixtures contract"
+    check:
+      type: fixture_schema
+      fixtures_dir: frontend/mockups/fixtures
+      schemas_dir: frontend/mockups/fixtures/schemas
+
+  - id: fe-f-02
+    title: "Every fixture maps to an endpoint in spec §15"
+    severity: critical
+    source_spec_section: "§15"
+    check:
+      type: fixture_parity
+      fixtures_dir: frontend/mockups/fixtures
+      spec_endpoints_section: "§15"
+      allow_new_endpoints_list: docs/specs/frontend-v1-stage2-endpoints.yaml
+
+  - id: fe-f-03
+    title: "Core fixtures present (v1.1 — 8 schemas)"
+    description: >
+      v1.1 adds mf_rank_universe.schema.json (§9 MF-rank 4-factor composite with
+      dimensional-fix z_cat normalisation) and sector_rrg.schema.json (§6 Sector
+      RRG chart). Both are mandatory to unblock §6 and §9 chunks.
+    severity: critical
+    source_spec_section: "§1.7, §9, §10.5.7, §15"
+    check:
+      type: file_exists
+      paths:
+        - frontend/mockups/fixtures/events.json
+        - frontend/mockups/fixtures/breadth_daily_5y.json
+        - frontend/mockups/fixtures/zone_events.json
+        - frontend/mockups/fixtures/search_index.json
+        - frontend/mockups/fixtures/ppfas_flexi_nav_5y.json
+        - frontend/mockups/fixtures/reliance_close_5y.json
+        - frontend/mockups/fixtures/schemas/events.schema.json
+        - frontend/mockups/fixtures/schemas/breadth_daily_5y.schema.json
+        - frontend/mockups/fixtures/schemas/zone_events.schema.json
+        - frontend/mockups/fixtures/schemas/search_index.schema.json
+        - frontend/mockups/fixtures/schemas/nav_series.schema.json
+        - frontend/mockups/fixtures/schemas/price_series.schema.json
+        - frontend/mockups/fixtures/schemas/mf_rank_universe.schema.json
+        - frontend/mockups/fixtures/schemas/sector_rrg.schema.json
+
+# ============================================================================
+# GROUP 5 — Commentary tiers (§1.1)
+# ============================================================================
+
+  - id: fe-m-01
+    title: "EXPLAIN blocks carry a formula or methodology sentence"
+    severity: high
+    source_spec_section: "§1.1 EXPLAIN tier"
+    check:
+      type: dom_required
+      selector: ".explain-block"
+      must_contain_child: "[data-role=formula], code, math"
+      min_count_per_match: 1
+
+  - id: fe-m-02
+    title: "DESCRIBE blocks are deterministic (no opinion/action language)"
+    severity: critical
+    source_spec_section: "§1.1 DESCRIBE tier"
+    check:
+      type: kill_list
+      selector: ".describe-block"
+      patterns: ["recommend", "should buy", "should sell", "better to", "advise"]
+
+  - id: fe-m-03
+    title: "No RECOMMEND-tier prose outside rec-slot placeholders"
+    severity: critical
+    source_spec_section: "§1.1 RECOMMEND tier (V1.1 only)"
+    check:
+      type: kill_list
+      patterns:
+        - "recommendation"
+        - "we recommend"
+        - "Buy signal"
+        - "Sell signal"
+      exceptions_selectors:
+        - ".rec-slot"  # placeholder content allowed inside rec-slots
+
+# ============================================================================
+# GROUP 6 — V1.1 rule-hook slot index (§14)
+# ============================================================================
+
+  - id: fe-r-01
+    title: "Every §14 rule-hook slot rendered as empty rec-slot placeholder"
+    severity: critical
+    source_spec_section: "§14"
+    check:
+      type: dom_required
+      slots:
+        - { file: today.html, id: "pulse-regime" }
+        - { file: explore-global.html, id: "global-regime" }
+        - { file: explore-country.html, id: "country-breadth" }
+        - { file: explore-sector.html, id: "sector-breadth" }
+        - { file: explore-sector.html, id: "sector-members" }
+        - { file: stock-detail.html, id: "stock-hero" }
+        - { file: stock-detail.html, id: "stock-news" }
+        - { file: stock-detail.html, id: "stock-playback" }
+        - { file: mf-detail.html, id: "mf-suitability" }
+        - { file: mf-detail.html, id: "mf-playback" }
+        - { file: mf-rank.html, id: "mfrank-screens" }
+        - { file: breadth.html, id: "breadth-regime" }
+        - { file: breadth.html, id: "breadth-signal-header" }
+        - { file: breadth.html, id: "breadth-playback-halo" }
+        - { file: explore-sector.html, id: "sector-playback" }
+        - { file: portfolios.html, id: "portfolio-book-1" }
+        - { file: portfolios.html, id: "portfolio-book-2" }
+        - { file: portfolios.html, id: "portfolio-book-3" }
+        - { file: portfolios.html, id: "portfolio-book-4" }
+        - { file: lab.html, id: "lab-rule-selector" }
+        - { file: lab.html, id: "lab-playback-overlay" }
+      selector_template: "div.rec-slot[data-slot-id={id}]"
+
+  - id: fe-r-02
+    title: "Every V1.1 rule (1-10) has at least one rec-slot binding in §14"
+    severity: high
+    source_spec_section: "§14, project_rule_engine_v1_1.md"
+    check:
+      type: rule_coverage
+      rules_expected: 10
+      mapping_file: docs/specs/frontend-v1-criteria.yaml
+      assert: "each rule id (1-10) has >=1 rec-slot data-rule-scope binding"
+
+# ============================================================================
+# GROUP 7 — Signal Feed preservation (V1.1 coupling)
+# ============================================================================
+
+  - id: fe-s-01
+    title: "RRG chip vocabulary rendered consistently across all instrument pages"
+    severity: critical
+    source_spec_section: "§1.2, project_rule_engine_v1_1.md"
+    check:
+      type: grep_require
+      patterns:
+        - "LEADING|IMPROVING|WEAKENING|LAGGING"     # RS
+        - "ACCEL|STALL|DECEL"                       # Momentum
+        - "ACCUM|NEUT|DISTRIB"                      # Volume
+        - "EXPANDING|NARROW|THIN"                   # Breadth
+      files: "frontend/mockups/stock-detail.html frontend/mockups/mf-detail.html frontend/mockups/explore-sector.html"
+      min_matches_each: 1
+
+  - id: fe-s-02
+    title: "Signal-feed endpoints referenced by at least one fixture (V1.1 preservation)"
+    severity: critical
+    source_spec_section: "project_rule_engine_v1_1.md Preserve list"
+    check:
+      type: fixture_endpoint_reference
+      endpoints_must_appear:
+        - "/api/v1/stocks/breadth"
+        - "/api/v1/mf/{id}/weighted-technicals"
+        - "/api/v1/mf/{id}/rs-history"
+        - "/api/v1/stocks/{symbol}/rs-history"
+        - "/api/v1/sectors/rrg"
+
+# ============================================================================
+# GROUP 8 — Link integrity + index page
+# ============================================================================
+
+  - id: fe-l-01
+    title: "index page links to all 10 Stage-1 mockups"
+    severity: critical
+    source_spec_section: "§2"
+    check:
+      type: dom_required
+      file: index.html
+      selector: "a[href*='.html']"
+      must_include_href_any:
+        - today.html
+        - explore-global.html
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - breadth.html
+        - portfolios.html
+        - lab.html
+
+  - id: fe-l-02
+    title: "No dead links in any mockup"
+    severity: high
+    source_spec_section: "global"
+    check:
+      type: link_integrity
+      files: "frontend/mockups/*.html"
+      allow_external: true
+      allow_anchor_only: true
+
+# ============================================================================
+# GROUP 9 — Design-principles enforcement (v1.1 DP cross-ref matrix §1.10)
+# ============================================================================
+#
+# Spec §1.10 binds every page to a set of mandatory components from
+# design-principles.md. GROUP 9 makes that mapping executable: each check
+# asserts the required component exists in the DOM of every page listed in
+# its `files` clause. Selectors match the semantic class names laid down in
+# §1.5 + §1.10 (component library is authored in S1-PRE-1).
+# ============================================================================
+
+  # ---------- DP §12 Regime banner (mandatory on 8 pages) ----------
+  - id: fe-dp-01
+    title: "regime-banner present on all market-facing pages (DP §12)"
+    description: >
+      Every page that renders a regime-sensitive block (Today, Explore-*,
+      Stock Detail, MF Detail, MF Rank, Breadth, Lab) must open with a
+      regime-banner component. Lab may carry a dimmed variant when no
+      simulation has been loaded — still required in the DOM.
+    severity: critical
+    source_spec_section: "DP §12; spec §1.10 row 1"
+    check:
+      type: dom_required
+      files:
+        - today.html
+        - explore-global.html
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - breadth.html
+        - lab.html
+      selector: ".regime-banner, [data-component='regime-banner']"
+      min_count: 1
+      must_carry_attrs:
+        - "data-regime"        # one of: risk-on | risk-off | neutral
+        - "data-as-of"         # ISO date
+
+  - id: fe-dp-02
+    title: "regime-banner: regime value drawn from a constrained enum"
+    severity: high
+    source_spec_section: "DP §12"
+    check:
+      type: attr_enum
+      files:
+        - today.html
+        - explore-global.html
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - breadth.html
+        - lab.html
+      selector: "[data-component='regime-banner']"
+      attr: "data-regime"
+      allowed: ["risk-on", "risk-off", "neutral", "mixed"]
+
+  # ---------- DP §13 Signal strip (mandatory on instrument-row pages) ----------
+  - id: fe-dp-03
+    title: "signal-strip present on all instrument-row pages (DP §13)"
+    description: >
+      Every page that lists instruments (Explore-Country, Explore-Sector,
+      MF Rank, Portfolios) or shows a single-instrument deep-dive
+      (Stock Detail, MF Detail) must render a signal-strip carrying the
+      7 canonical chips (RS, Momentum, Volume, Breadth, Gold-RS amp,
+      Conviction + Divergences flag) per §1.2 + §1.2.1 + §1.2.2.
+    severity: critical
+    source_spec_section: "DP §13; spec §1.2, §1.10 row 2"
+    check:
+      type: dom_required
+      files:
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - portfolios.html
+      selector: ".signal-strip, [data-component='signal-strip']"
+      min_count: 1
+
+  - id: fe-dp-04
+    title: "signal-strip carries all 4 base RRG chips"
+    severity: critical
+    source_spec_section: "DP §13; spec §1.2"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+      selector: "[data-component='signal-strip'] [data-chip]"
+      min_count: 4
+      must_include_data_chip:
+        - rs
+        - momentum
+        - volume
+        - breadth
+
+  # ---------- DP §10 Gold RS amplifier + Conviction chip ----------
+  - id: fe-dp-05
+    title: "gold-rs-chip present on every instrument-row + deep-dive page"
+    description: >
+      §1.2.1 elevates Gold RS from a hidden composite to an explicit 5th
+      chip rendered adjacent to the four RRG chips. Conviction (6th) and
+      Divergences flag (7th) sit right of it.
+    severity: critical
+    source_spec_section: "DP §10; spec §1.2.1"
+    check:
+      type: dom_required
+      files:
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - portfolios.html
+      selector: "[data-chip='gold-rs'], .gold-rs-chip"
+      min_count: 1
+
+  - id: fe-dp-06
+    title: "conviction-chip present on every deep-dive page"
+    severity: critical
+    source_spec_section: "DP §10; spec §1.2"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+      selector: "[data-chip='conviction'], .conviction-chip"
+      min_count: 1
+      must_carry_attrs:
+        - "data-score"         # 0..100 integer
+        - "data-band"          # low | medium | high
+
+  - id: fe-dp-07
+    title: "divergences-block present on deep-dive pages (DP §10 row 3)"
+    description: >
+      §1.2.2 surfaces price–breadth / price–volume divergences as an
+      explicit block. Absence doesn't mean no data — the block must be
+      present even if empty (with a zero-state label).
+    severity: high
+    source_spec_section: "DP §10; spec §1.2.2"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+      selector: "[data-component='divergences-block'], .divergences-block"
+      min_count: 1
+
+  # ---------- DP §14 Dual-axis overlay (price+NAV vs benchmark) ----------
+  - id: fe-dp-08
+    title: "dual-axis-overlay present on every chart-bearing detail page"
+    description: >
+      DP §14 mandates that any performance chart comparing instrument vs
+      benchmark renders with dual axes and a differentiated right-axis.
+      Stock Detail, MF Detail, Explore-Country, Explore-Sector all qualify.
+    severity: critical
+    source_spec_section: "DP §14; spec §1.10 row 3"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+        - explore-country.html
+        - explore-sector.html
+      selector: ".chart[data-dual-axis='true'], [data-component='dual-axis-overlay']"
+      min_count: 1
+
+  # ---------- DP §15 Interpretation sidecar ----------
+  - id: fe-dp-09
+    title: "interpretation-sidecar present on all deep-dive pages"
+    description: >
+      DP §15 demands an interpretation sidecar adjacent to every headline
+      chart — the three-tier EXPLAIN / DESCRIBE / RECOMMEND ladder
+      per §1.1 commentary tiers. RECOMMEND tier must be absent from V1
+      (v1.1 gated) — check only the tier tabs.
+    severity: critical
+    source_spec_section: "DP §15; spec §1.1, §1.10 row 4"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+        - explore-country.html
+        - explore-sector.html
+        - breadth.html
+      selector: "[data-component='interpretation-sidecar'], .interpretation-sidecar"
+      min_count: 1
+      must_carry_attrs:
+        - "data-tier"          # explain | describe  (recommend: V1.1 gated)
+
+  - id: fe-dp-10
+    title: "interpretation-sidecar: RECOMMEND tier is gated OFF in V1"
+    description: >
+      V1.1 rule-engine wiring carries RECOMMEND tier. V1 must render only
+      EXPLAIN + DESCRIBE. A tier=recommend node in any V1 mockup is a ship
+      blocker — catches premature copy-paste.
+    severity: critical
+    source_spec_section: "spec §1.1 kill-list, V1.1 gating"
+    check:
+      type: dom_forbidden
+      files:
+        - today.html
+        - explore-global.html
+        - explore-country.html
+        - explore-sector.html
+        - stock-detail.html
+        - mf-detail.html
+        - mf-rank.html
+        - breadth.html
+        - portfolios.html
+        - lab.html
+      selector: "[data-tier='recommend']"
+
+  # ---------- DP §16 Signal history table ----------
+  - id: fe-dp-11
+    title: "signal-history-table present on deep-dive pages (DP §16)"
+    description: >
+      DP §16 prescribes a compact table showing the last N regime /
+      signal transitions for the instrument (ENTRY/EXIT/REGIME/WARN/CONFIRM
+      classes). Must be present even if empty.
+    severity: high
+    source_spec_section: "DP §16; spec §1.10 row 5"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+        - breadth.html
+      selector: "[data-component='signal-history-table'], .signal-history-table"
+      min_count: 1
+
+  # ---------- DP §11 Four-decision card (Lab + Today) ----------
+  - id: fe-dp-12
+    title: "four-decision-card slot on Today + Lab pages (DP §11)"
+    description: >
+      DP §11 mandates the four canonical decision cards: Buy-side /
+      Size-up / Size-down / Sell-side — rendered as a 2x2 grid with
+      trigger state per card. Today summarises, Lab interacts.
+    severity: critical
+    source_spec_section: "DP §11; spec §1.10 row 6"
+    check:
+      type: dom_required
+      files:
+        - today.html
+        - lab.html
+      selector: "[data-component='four-decision-card'], .four-decision-card"
+      min_count: 1
+
+  - id: fe-dp-13
+    title: "four-decision-card: all 4 cards present and labelled"
+    severity: critical
+    source_spec_section: "DP §11"
+    check:
+      type: dom_required
+      files:
+        - today.html
+        - lab.html
+      selector: "[data-component='four-decision-card'] [data-card]"
+      min_count: 4
+      must_include_data_card:
+        - buy-side
+        - size-up
+        - size-down
+        - sell-side
+
+  # ---------- DP §18 Simulate-this affordance ----------
+  - id: fe-dp-14
+    title: "simulate-this affordance on every deep-dive + breadth page"
+    description: >
+      DP §18 requires every analytical surface to expose a 'Simulate this'
+      entry point that deep-links to the Lab with prefilled params.
+      Selector variants allowed: button, anchor, or component shell.
+    severity: critical
+    source_spec_section: "DP §18; spec §1.10 row 7"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - mf-detail.html
+        - breadth.html
+        - explore-country.html
+        - explore-sector.html
+      selector: "[data-action='simulate-this'], .simulate-this, a[href*='lab.html']"
+      min_count: 1
+
+  # ---------- DP §3 Four universal benchmarks ----------
+  - id: fe-dp-15
+    title: "four-universal-benchmarks row on Global + Country + Stock + MF"
+    description: >
+      DP §3 mandates MSCI World · S&P 500 · Nifty 50 TRI · Gold as the four
+      universal benchmarks rendered on every performance-context page.
+      Label text variants permitted via data-benchmark attr.
+    severity: critical
+    source_spec_section: "DP §3; spec §4, §5, §7, §8, §1.10 row 8"
+    check:
+      type: dom_required
+      files:
+        - explore-global.html
+        - explore-country.html
+        - stock-detail.html
+        - mf-detail.html
+      selector: "[data-component='four-universal-benchmarks'] [data-benchmark]"
+      min_count: 4
+      must_include_data_benchmark:
+        - msci-world
+        - sp500
+        - nifty50tri
+        - gold
+
+  # ---------- DP §10 Conviction score range ----------
+  - id: fe-dp-16
+    title: "conviction-chip: data-score is an integer 0..100"
+    severity: high
+    source_spec_section: "DP §10"
+    check:
+      type: attr_numeric_range
+      files:
+        - stock-detail.html
+        - mf-detail.html
+      selector: "[data-chip='conviction']"
+      attr: "data-score"
+      min: 0
+      max: 100
+      integer_only: true
+
+  # ---------- DP cross-reference matrix coverage ----------
+  - id: fe-dp-17
+    title: "spec §1.10 cross-reference matrix lists every DP-mandated component"
+    description: >
+      Meta-check: the cross-reference table in spec §1.10 must enumerate
+      every component referenced by GROUP 9. Prevents silent drift where
+      a DP component is added without a binding in the page x component
+      matrix.
+    severity: high
+    source_spec_section: "spec §1.10"
+    check:
+      type: grep_require
+      file: docs/design/frontend-v1-spec.md
+      patterns:
+        - "regime-banner"
+        - "signal-strip"
+        - "gold-rs-chip"
+        - "conviction-chip"
+        - "divergences-block"
+        - "dual-axis-overlay"
+        - "interpretation-sidecar"
+        - "signal-history-table"
+        - "four-decision-card"
+        - "simulate-this"
+        - "four-universal-benchmarks"
+      min_matches_each: 1
+
+# ============================================================================
+# GROUP 10 — Mobile responsiveness (§1.8, docs/design/frontend-v1-mobile.md)
+# ============================================================================
+#
+# Every page MUST render without horizontal overflow at the narrowest
+# supported viewport (360px, XS). Checks run Playwright in mobile emulation
+# and assert scrollWidth <= innerWidth + tolerance.
+# ============================================================================
+
+  - id: fe-mob-01
+    title: "No horizontal scroll at 360px — today.html"
+    severity: critical
+    source_spec_section: "spec §1.8; frontend-v1-mobile.md"
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/today.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-02
+    title: "No horizontal scroll at 360px — explore-global.html"
+    severity: critical
+    source_spec_section: "spec §1.8; frontend-v1-mobile.md"
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/explore-global.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-03
+    title: "No horizontal scroll at 360px — explore-country.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/explore-country.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-04
+    title: "No horizontal scroll at 360px — explore-sector.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/explore-sector.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-05
+    title: "No horizontal scroll at 360px — stock-detail.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/stock-detail.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-06
+    title: "No horizontal scroll at 360px — mf-detail.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/mf-detail.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-07
+    title: "No horizontal scroll at 360px — mf-rank.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/mf-rank.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-08
+    title: "No horizontal scroll at 360px — breadth.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/breadth.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-09
+    title: "No horizontal scroll at 360px — portfolios.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/portfolios.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-10
+    title: "No horizontal scroll at 360px — lab.html"
+    severity: critical
+    check:
+      type: playwright_no_horizontal_scroll
+      url: "http://localhost:8080/lab.html"
+      viewport: { width: 360, height: 720 }
+      tolerance_px: 2
+
+  - id: fe-mob-11
+    title: "Data-dense tables gain horizontal-scroll wrapper on S/XS"
+    description: >
+      §1.8 rule: grids/tables with >4 columns collapse to a
+      horizontally-scrollable container at <960px. Wrapper class
+      .mobile-scroll must be present on every such table.
+    severity: high
+    source_spec_section: "§1.8 mobile rules"
+    check:
+      type: dom_required
+      files:
+        - mf-rank.html
+        - explore-country.html
+        - explore-sector.html
+        - portfolios.html
+      selector: ".table-dense, table[data-dense='true']"
+      parent_selector: ".mobile-scroll, [data-mobile-scroll='true']"
+      min_count: 1
+
+  - id: fe-mob-12
+    title: "Tap targets ≥ 44x44 px at XS (WCAG 2.5.5)"
+    severity: high
+    source_spec_section: "§1.8 mobile rules"
+    check:
+      type: playwright_tap_target
+      urls:
+        - "http://localhost:8080/today.html"
+        - "http://localhost:8080/stock-detail.html"
+        - "http://localhost:8080/lab.html"
+      viewport: { width: 360, height: 720 }
+      selector: "button, a[href], [role='button'], input[type='number']"
+      min_width_px: 44
+      min_height_px: 44
+
+# ============================================================================
+# GROUP 11 — Canonical states (§1.9, docs/design/frontend-v1-states.md)
+# ============================================================================
+#
+# Every stale-capable block must carry a data-as-of attribute. Every
+# empty/loading/error surface must be renderable without breaking layout.
+# §1.9 defines the 4 canonical states: default, empty, loading, error.
+# ============================================================================
+
+  - id: fe-state-01
+    title: "Every chart carries a data-as-of attribute"
+    description: >
+      Financial-domain guardrail (CLAUDE.md 'Always include data_as_of
+      timestamp') — UI mirror. Every .chart element must declare when
+      its underlying series was last refreshed.
+    severity: critical
+    source_spec_section: "§1.9; CLAUDE.md financial-domain"
+    check:
+      type: attr_required
+      files_any: "frontend/mockups/*.html"
+      selector: ".chart, [data-component*='chart']"
+      attr: "data-as-of"
+
+  - id: fe-state-02
+    title: "Every regime-banner declares data-as-of"
+    severity: critical
+    source_spec_section: "§1.9"
+    check:
+      type: attr_required
+      files_any: "frontend/mockups/*.html"
+      selector: "[data-component='regime-banner']"
+      attr: "data-as-of"
+
+  - id: fe-state-03
+    title: "Every signal-strip declares data-as-of"
+    severity: high
+    source_spec_section: "§1.9"
+    check:
+      type: attr_required
+      files_any: "frontend/mockups/*.html"
+      selector: "[data-component='signal-strip']"
+      attr: "data-as-of"
+
+  - id: fe-state-04
+    title: "Empty-state pattern library present (DP-compliant)"
+    description: >
+      §1.9 requires a single reusable empty-state component with icon,
+      title, body, and optional CTA. Mockup component library must
+      contain at least one <template data-state='empty'>.
+    severity: high
+    source_spec_section: "§1.9 empty"
+    check:
+      type: dom_required
+      files:
+        - components.html
+      selector: "[data-state='empty'], .empty-state"
+      min_count: 1
+
+  - id: fe-state-05
+    title: "Loading skeleton pattern library present"
+    severity: high
+    source_spec_section: "§1.9 loading; rules/frontend-viz.md"
+    check:
+      type: dom_required
+      files:
+        - components.html
+      selector: "[data-state='loading'], .skeleton"
+      min_count: 1
+
+  - id: fe-state-06
+    title: "Error-state pattern library present"
+    severity: high
+    source_spec_section: "§1.9 error"
+    check:
+      type: dom_required
+      files:
+        - components.html
+      selector: "[data-state='error'], .error-state"
+      min_count: 1
+
+  - id: fe-state-07
+    title: "Staleness badge variants present (fresh / stale / very-stale)"
+    description: >
+      §1.9 staleness thresholds (JIP-calibrated): fresh ≤ 1 business day,
+      stale 1–3 days, very-stale > 3 days. Component library must carry
+      one visual variant per bucket.
+    severity: high
+    source_spec_section: "§1.9 staleness; project_jip_empty_tables.md"
+    check:
+      type: dom_required
+      files:
+        - components.html
+      selector: "[data-staleness]"
+      min_count: 3
+      must_include_data_staleness:
+        - fresh
+        - stale
+        - very-stale
+
+  - id: fe-state-08
+    title: "Methodology footer renders on every page"
+    severity: critical
+    source_spec_section: "§1.9; CLAUDE.md financial-domain; rules/frontend-viz.md"
+    check:
+      type: methodology_footer
+      files_any: "frontend/mockups/*.html"
+      must_contain:
+        - "data as of"        # case-insensitive
+        - "source"             # case-insensitive
+
+  - id: fe-state-09
+    title: "No naked '—' dashes without a staleness or empty label"
+    description: >
+      Kill-list addition: raw em-dash / en-dash / '-' as the only
+      content of a cell usually means 'we couldn't fetch this' — which
+      the user should see explicitly via an empty-state badge, not a
+      silent dash.
+    severity: medium
+    source_spec_section: "§1.9 empty"
+    check:
+      type: dom_forbidden
+      files_any: "frontend/mockups/*.html"
+      selector: "td:only-child:empty, td[data-value='']:not([data-staleness]):not([data-state])"
+
+  - id: fe-state-10
+    title: "Every simulated/delayed block has an explicit delay label"
+    description: >
+      §1.9 — when a field depends on a feed with known lag (e.g., INDIAVIX
+      4d lag per project_jip_empty_tables.md), the UI must surface the
+      lag rather than hiding it.
+    severity: high
+    source_spec_section: "§1.9; project_jip_empty_tables.md"
+    check:
+      type: dom_required
+      files:
+        - stock-detail.html
+        - breadth.html
+      selector: "[data-lag], .lag-badge"
+      min_count: 0   # informational pass-through; scored when applicable
+      soft: true
+
+# ============================================================================
+# GROUP 12 — v1.1 fixture additions (mf_rank_universe, sector_rrg)
+# ============================================================================
+#
+# GROUP 4 fe-f-03 already asserts file existence. GROUP 12 adds content-
+# shape checks for the two newly-introduced schemas to guarantee they
+# carry the fields the §6 + §9 pages bind to.
+# ============================================================================
+
+  - id: fe-f-04
+    title: "mf_rank_universe fixture carries all 4 composite factors per row"
+    description: >
+      §9 MF-rank 4-factor composite: Returns, Risk, Resilience, Consistency.
+      Each row in the fixture must expose all four as separate numeric fields
+      plus the composite — so the §9 mockup can render the breakdown without
+      any math in the template.
+    severity: critical
+    source_spec_section: "§9; frontend-v1-spec.md v1.1 MF-rank formula block"
+    check:
+      type: fixture_field_required
+      fixture: frontend/mockups/fixtures/mf_rank_universe.json
+      path: "$.funds[*]"
+      required_fields:
+        - scheme_code
+        - scheme_name
+        - category
+        - returns_score
+        - risk_score
+        - resilience_score
+        - consistency_score
+        - composite_score
+        - tie_break_rank
+
+  - id: fe-f-05
+    title: "mf_rank_universe: composite_score is 0..100 with 1dp precision"
+    severity: high
+    source_spec_section: "§9 MF-rank"
+    check:
+      type: fixture_numeric_range
+      fixture: frontend/mockups/fixtures/mf_rank_universe.json
+      path: "$.funds[*].composite_score"
+      min: 0
+      max: 100
+      decimal_places_max: 1
+
+  - id: fe-f-06
+    title: "sector_rrg fixture carries RS-ratio + RS-momentum per sector"
+    description: >
+      §6 Sector RRG chart expects one point per sector with both axes
+      plus a sector_name + tail (historical 8-week trajectory) for the
+      canonical RRG rendering.
+    severity: critical
+    source_spec_section: "§6 Sector RRG"
+    check:
+      type: fixture_field_required
+      fixture: frontend/mockups/fixtures/sector_rrg.json
+      path: "$.sectors[*]"
+      required_fields:
+        - sector_code
+        - sector_name
+        - rs_ratio
+        - rs_momentum
+        - quadrant        # leading | weakening | lagging | improving
+        - tail
+
+  - id: fe-f-07
+    title: "sector_rrg: every sector carries a tail of length >= 8"
+    description: >
+      §6 renders an 8-week trajectory tail into each RRG quadrant.
+      Shorter tail = broken chart.
+    severity: high
+    source_spec_section: "§6 Sector RRG"
+    check:
+      type: fixture_array_length
+      fixture: frontend/mockups/fixtures/sector_rrg.json
+      path: "$.sectors[*].tail"
+      min_length: 8
+
+  - id: fe-f-08
+    title: "sector_rrg: quadrant value drawn from a fixed enum"
+    severity: critical
+    source_spec_section: "§6 Sector RRG"
+    check:
+      type: fixture_enum
+      fixture: frontend/mockups/fixtures/sector_rrg.json
+      path: "$.sectors[*].quadrant"
+      allowed: ["leading", "weakening", "lagging", "improving"]
+
+  - id: fe-f-09
+    title: "All fixtures carry a top-level data_as_of ISO date"
+    description: >
+      Mirrors fe-state-01/02/03 from the UI side — fixture files must
+      declare their own data_as_of so the mockup page can hydrate the
+      staleness badges without hard-coding a date in HTML.
+    severity: critical
+    source_spec_section: "§1.9; CLAUDE.md financial-domain"
+    check:
+      type: fixture_field_required
+      fixture_glob: "frontend/mockups/fixtures/*.json"
+      path: "$.data_as_of"
+      format: "date"         # YYYY-MM-DD
+
+  - id: fe-f-10
+    title: "All fixtures carry a source attribution string"
+    severity: high
+    source_spec_section: "§1.9; rules/frontend-viz.md 'data source attribution always'"
+    check:
+      type: fixture_field_required
+      fixture_glob: "frontend/mockups/fixtures/*.json"
+      path: "$.source"
+      value_type: "string"
+      min_length: 3
+
+# ============================================================================
+# End of criteria. Total: ~100 checks (v1.1 revision).
+# ============================================================================
+#
+# Grouping summary:
+#   GROUP 1   Global invariants                            19 checks
+#   GROUP 2   Per-page §3..§12                             ~22 checks
+#   GROUP 3   Shared components (§1.5)                      3 checks
+#   GROUP 4   Fixture schemas + endpoint parity             3 checks
+#   GROUP 5   Commentary tiers (§1.1)                       3 checks
+#   GROUP 6   V1.1 rule-hook slot index (§14)               ~6 checks
+#   GROUP 7   Signal Feed preservation (V1.1)               2 checks
+#   GROUP 8   Link integrity + index                        2 checks
+#   GROUP 9   Design-principles enforcement (v1.1)         17 checks
+#   GROUP 10  Mobile responsiveness (§1.8)                 12 checks
+#   GROUP 11  Canonical states (§1.9)                      10 checks
+#   GROUP 12  v1.1 fixture additions                        7 checks
+#                                                         ─────────
+#                                                          ~106 checks
+#
+# Any new check must cite its source_spec_section. Any check type not
+# already understood by scripts/check-frontend-criteria.py is implemented
+# in chunk S1-PRE-0. The critical-severity count gates Monday ship:
+# 0 criticals failing = green; any critical failing = red.
+# ============================================================================

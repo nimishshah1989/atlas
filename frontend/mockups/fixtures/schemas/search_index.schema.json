@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/search_index.schema.json",
+  "title": "ATLAS · Global search flat index",
+  "description": "Flat array powering the top-nav global search component (frontend-v1 spec §13). Stage 1 is a ~200-entry hand-curated fixture consumed client-side by Fuse.js. Stage 2 backs this shape with Postgres tsvector + trigram index behind `/api/v1/search?q=X`. Entries span stocks, mutual funds, ETFs, sectors, indices, macro tickers, commodities, and internal pages so one box finds anything.",
+  "type": "array",
+  "minItems": 0,
+  "items": {
+    "type": "object",
+    "title": "Search index entry",
+    "description": "A single searchable entity. Fuzzy matching runs against `display_name` + `aliases` (Jaro-Winkler + token-subset + n-gram). Grouping in the results dropdown uses `entity_type`. Default ordering when the query is empty uses `ranking_weight` descending.",
+    "required": ["id", "entity_type", "display_name", "aliases", "primary_url", "ranking_weight"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120,
+        "pattern": "^[a-z0-9_:.-]+$",
+        "description": "Stable unique identifier. Namespaced by entity_type, lowercased, slug-style. Examples: `stock:RELIANCE`, `mf:INF090I01JM1`, `sector:nifty_it`, `index:nifty_50`, `macro:india_vix`, `page:breadth-terminal`.",
+        "examples": ["stock:RELIANCE", "mf:INF090I01JM1", "sector:nifty_it"]
+      },
+      "entity_type": {
+        "type": "string",
+        "enum": [
+          "stock",
+          "mf",
+          "etf",
+          "sector",
+          "index",
+          "macro",
+          "commodity",
+          "currency",
+          "page"
+        ],
+        "description": "Category. Drives results grouping in the dropdown. `page` covers internal landing pages like Breadth Terminal or MF Rank so navigation also flows through the search.",
+        "examples": ["stock", "mf", "page"]
+      },
+      "display_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "description": "Canonical user-facing name shown in the results row.",
+        "examples": ["Reliance Industries", "HDFC Flexi Cap Fund Direct Growth", "Nifty IT"]
+      },
+      "aliases": {
+        "type": "array",
+        "minItems": 0,
+        "description": "Alternative spellings / abbreviations / tickers / lowercase variants that should still match this entry. Improves recall for typos and partial input. `HDFC Flexi Cap Fund` carries `[\"HDFC flexi\", \"hdfc flexi cap\", \"HDFCFLEXI\"]`.",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "examples": [["HDFC flexi", "hdfc flexi cap", "HDFCFLEXI"]]
+      },
+      "primary_url": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Relative path to the detail page or landing for this entity. Relative (starts with `/`) so it works across dev / staging / prod hosts.",
+        "pattern": "^/",
+        "examples": ["/mockups/stock-detail.html?symbol=RELIANCE", "/mockups/mf-detail.html?id=ppfas-flexi", "/mockups/breadth.html"]
+      },
+      "ranking_weight": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Default ordering weight (0–1) used when the query is empty or when two results tie on fuzzy-match score. Higher = shows first. Populate from AUM, market cap, or editorial pinning.",
+        "examples": [0.95, 0.62]
+      },
+      "sub_label": {
+        "type": "string",
+        "maxLength": 120,
+        "description": "Optional secondary line shown under `display_name` in the dropdown. Typically the category, sector, or AMC.",
+        "examples": ["Energy · Large Cap", "PPFAS · Flexi Cap", "Broad Index"]
+      },
+      "symbol": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "Optional ticker/scheme code shown as a monospace badge in the result row (e.g. NSE symbol for stocks, scheme_code for MFs, index code).",
+        "examples": ["RELIANCE", "122639", "NIFTY_50"]
+      }
+    }
+  }
+}

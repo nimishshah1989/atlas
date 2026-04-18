@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/events.schema.json",
+  "title": "ATLAS · Key Event Markers",
+  "description": "Shared key-event markers feed consumed by every 5Y chart in ATLAS (frontend-v1 spec §1.7). Each entry represents a discrete, dated event (election, RBI policy, budget, COVID, demonetisation, sector shock, global macro, corporate action) that should render as a vertical rule + hover label on historical charts. Stage 1: hand-curated JSON fixture at `frontend/mockups/fixtures/events.json`. Stage 2: backed by `/api/v1/global/events` (spec §15). Dates are ISO YYYY-MM-DD in implicit IST.",
+  "type": "array",
+  "minItems": 0,
+  "items": {
+    "type": "object",
+    "title": "Event marker",
+    "description": "A single key event. `date` is the calendar day the event is anchored to; `category` and `severity` drive the marker colour and stroke weight; `affects` scopes which charts the marker renders on.",
+    "required": ["date", "category", "severity", "label", "affects"],
+    "additionalProperties": false,
+    "properties": {
+      "date": {
+        "type": "string",
+        "format": "date",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+        "description": "Event date in ISO YYYY-MM-DD (IST implicit). Must be a valid calendar date.",
+        "examples": ["2020-03-23", "2016-11-08", "2024-06-04"]
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "election",
+          "rbi_policy",
+          "budget",
+          "covid",
+          "demonetisation",
+          "sector_shock",
+          "global_macro",
+          "corporate_action"
+        ],
+        "description": "Event taxonomy. Controls default marker colour and legend grouping. `rbi_policy` covers rate decisions (cuts, hikes, holds). `sector_shock` covers IT export bans, AQR, USFDA actions etc. `global_macro` covers Fed decisions, oil shocks, Russia-Ukraine, SVB.",
+        "examples": ["covid", "rbi_policy", "election"]
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "critical"],
+        "description": "Marker emphasis. `critical` = page-defining (COVID lockdown, demonetisation). `high` = major rate/policy shift. `medium` = notable (budget, quarterly result boundary). `low` = contextual marker.",
+        "examples": ["critical", "high"]
+      },
+      "label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60,
+        "description": "Short hover label rendered on the marker. Under 60 chars so it fits in a tooltip without wrapping.",
+        "examples": ["COVID lockdown announced", "RBI cuts repo by 75bps", "2024 General Election result"]
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 300,
+        "description": "Optional long-form context (1–2 sentences). Shown in expanded tooltip or side drawer. Under 300 chars.",
+        "examples": ["Nationwide lockdown imposed in response to COVID-19; markets gap down, Nifty 50 closes at 7610."]
+      },
+      "affects": {
+        "type": "array",
+        "minItems": 1,
+        "description": "Scope selector. A chart renders this marker if ANY of its entries match the chart's scope. Entries are enum-like strings: `global`, `india`, `sector:{slug}` (e.g. `sector:nifty_it`), or `stock:{symbol}` (e.g. `stock:RELIANCE`).",
+        "items": {
+          "type": "string",
+          "pattern": "^(global|india|sector:[a-z0-9_]+|stock:[A-Z0-9&._-]+)$",
+          "examples": ["global", "india", "sector:nifty_it", "stock:RELIANCE"]
+        }
+      },
+      "display_color": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$",
+        "description": "Optional override for the marker colour. 6-digit hex, `#` prefixed. When omitted the chart picks a colour from the category palette.",
+        "examples": ["#b91c1c", "#1d9e75"]
+      },
+      "source_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Optional provenance link (RBI press release, ECI result page, company filing).",
+        "examples": ["https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=49522"]
+      }
+    }
+  }
+}

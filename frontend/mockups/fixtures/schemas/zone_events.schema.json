@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/zone_events.schema.json",
+  "title": "ATLAS · Breadth zone-crossing events",
+  "description": "Chronological log of breadth oscillator zone crossings (entered/exited OB or OS, crossed midline) for a given universe and indicator family. Powers the Signal history table on §10 Breadth Terminal (spec §10 block 7, design-principles §16). Every narrative claim in the Interpretation sidecar (design-principles §15) must be backed by a row in this table. Stage 2 source: `/api/v1/stocks/breadth/zone-events?universe=X&range=5y`.",
+  "type": "object",
+  "required": ["universe", "data_as_of", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "universe": {
+      "type": "string",
+      "pattern": "^(nifty50|nifty500|nifty_midcap150|nifty_smallcap250|sector:[a-z0-9_]+)$",
+      "description": "Universe identifier this zone-event log belongs to. Broad indices use the bare slug; sector-scoped universes use the `sector:{slug}` shape.",
+      "examples": ["nifty500", "sector:nifty_it"]
+    },
+    "data_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Most recent session included when the log was built. Matches the associated breadth_daily_5y `data_as_of`.",
+      "examples": ["2026-04-17"]
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Zone thresholds used when classifying events. All values are absolute counts (not percentages) against the universe size.",
+      "additionalProperties": false,
+      "properties": {
+        "overbought": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "OB threshold — crossings at or above this count are `entered_ob` / `exited_ob`. Default for Nifty 500 = 400.",
+          "examples": [400]
+        },
+        "midline": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Midline — crossings here emit `crossed_midline_up` / `crossed_midline_down`. Default for Nifty 500 = 250.",
+          "examples": [250]
+        },
+        "oversold": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "OS threshold — crossings at or below this count are `entered_os` / `exited_os`. Default for Nifty 500 = 100.",
+          "examples": [100]
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "Chronological list of zone events, ascending by `date`. Typical 5Y window yields 20–60 events across all three indicators.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["date", "universe", "indicator", "event_type", "value", "prior_zone_duration_days", "prior_zone"],
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "Trading session on which the crossing was confirmed (edge-triggered: `prevCount → count` transition).",
+            "examples": ["2026-03-25"]
+          },
+          "universe": {
+            "type": "string",
+            "pattern": "^(nifty50|nifty500|nifty_midcap150|nifty_smallcap250|sector:[a-z0-9_]+)$",
+            "description": "Universe identifier (repeated per-row for CSV-exported slices). Must match the top-level `universe`.",
+            "examples": ["nifty500"]
+          },
+          "indicator": {
+            "type": "string",
+            "enum": ["ema21", "dma50", "dma200"],
+            "description": "Which moving-average family this crossing was observed on.",
+            "examples": ["dma200"]
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "entered_ob",
+              "exited_ob",
+              "entered_os",
+              "exited_os",
+              "crossed_midline_up",
+              "crossed_midline_down"
+            ],
+            "description": "Edge-triggered event classification. `entered_ob` = count upcrossed OB; `exited_ob` = count downcrossed OB; `entered_os` = count downcrossed OS; `exited_os` = count upcrossed OS; midline crossings are directional.",
+            "examples": ["entered_ob", "crossed_midline_down"]
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Absolute breadth count observed on `date` at the moment of the crossing.",
+            "examples": [404, 98]
+          },
+          "prior_zone_duration_days": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of trading sessions spent in `prior_zone` immediately before this event. 0 is legal (back-to-back crossings).",
+            "examples": [17, 42]
+          },
+          "prior_zone": {
+            "type": "string",
+            "enum": ["ob", "os", "neutral"],
+            "description": "Zone the count was in immediately before this crossing. `neutral` = strictly between OS and OB thresholds.",
+            "examples": ["neutral", "os"]
+          }
+        }
+      }
+    }
+  }
+}

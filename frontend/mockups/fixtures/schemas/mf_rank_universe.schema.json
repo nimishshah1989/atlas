@@ -1,0 +1,272 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/mf_rank_universe.schema.json",
+  "title": "ATLAS · MF Rank scored universe",
+  "description": "Pre-scored universe for the MF Rank page (frontend-v1 spec §9). 4-factor composite (Returns / Risk / Resilience / Consistency) computed from raw `factor_inputs` then mapped to a 0–100 score via `100 · Φ(z)`. Stage 2 source: `/api/v1/mf/rank` (backlog). All numeric fields are Decimal-representable to 4 decimal places. Tie-break order is locked at `Consistency → Risk → Returns → Resilience` per spec §9 formula disclosure.",
+  "type": "object",
+  "required": ["data_as_of", "universe_size", "ranking_as_of", "tie_break_order", "funds"],
+  "additionalProperties": false,
+  "properties": {
+    "data_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Date of the underlying NAV/holdings snapshot (ISO YYYY-MM-DD, IST).",
+      "examples": ["2026-04-17"]
+    },
+    "universe_size": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of funds in the scored universe. Matches `funds.length`.",
+      "examples": [347]
+    },
+    "ranking_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Date the composite ranking was last rebuilt (daily EOD cadence per spec §9 methodology footer).",
+      "examples": ["2026-04-17"]
+    },
+    "tie_break_order": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "description": "Locked tie-break sequence applied when `composite_score` ties. Fixed order per spec §9: `[\"consistency\", \"risk\", \"returns\", \"resilience\"]`.",
+      "items": {
+        "type": "string",
+        "enum": ["consistency", "risk", "returns", "resilience"]
+      },
+      "examples": [["consistency", "risk", "returns", "resilience"]]
+    },
+    "benchmark_map": {
+      "type": "object",
+      "description": "Optional mapping from category → benchmark id used for the `excess_return_*` inputs. Enables consumers to display the per-fund benchmark without looking it up.",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "examples": [{"large_cap": "NIFTY_100_TRI", "flexi_cap": "NIFTY_500_TRI"}]
+    },
+    "funds": {
+      "type": "array",
+      "description": "Per-fund scored rows, ordered by `rank` ascending. Tied funds share a `rank` and carry a populated `tied_with` array.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "fund_id",
+          "scheme_code",
+          "fund_name",
+          "category",
+          "aum_crore",
+          "age_years",
+          "returns_score",
+          "risk_score",
+          "resilience_score",
+          "consistency_score",
+          "composite_score",
+          "rank",
+          "factor_inputs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fund_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Internal ATLAS fund identifier (matches nav_series.schema.json → fund_id).",
+            "examples": ["ppfas-flexi-cap-direct-growth"]
+          },
+          "scheme_code": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]+$",
+            "minLength": 5,
+            "maxLength": 20,
+            "description": "AMFI ISIN or numeric scheme code.",
+            "examples": ["INF879O01027"]
+          },
+          "fund_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Full scheme name.",
+            "examples": ["Parag Parikh Flexi Cap Fund - Direct Plan - Growth"]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "large_cap",
+              "mid_cap",
+              "small_cap",
+              "flexi_cap",
+              "multi_cap",
+              "focused",
+              "elss",
+              "hybrid_aggressive",
+              "hybrid_balanced",
+              "debt_short",
+              "debt_long",
+              "index",
+              "sectoral",
+              "etf"
+            ],
+            "description": "SEBI scheme category (ATLAS taxonomy, matches MF Rank filter rail and nav_series.schema.json).",
+            "examples": ["flexi_cap"]
+          },
+          "aum_crore": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01,
+            "description": "Scheme AUM in ₹ crore on `ranking_as_of`, 2 decimal places. Used by AUM-band filter (§9 filter rail).",
+            "examples": [62340.25]
+          },
+          "age_years": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01,
+            "description": "Fund age from inception to `ranking_as_of`, in years, 2 decimal places. Used by the `min fund age` filter.",
+            "examples": [12.34]
+          },
+          "returns_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Returns factor score (0–100). Formula: `100 · Φ((excess_return_1Y + excess_return_3Y + excess_return_5Y) / 3)` per spec §9.",
+            "examples": [78.4321]
+          },
+          "risk_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Risk factor score (0–100). Formula: `100 · Φ(−(0.4·vol_3Y + 0.4·max_dd_3Y + 0.2·downside_dev_3Y))` — negated so lower risk = higher score.",
+            "examples": [72.1000]
+          },
+          "resilience_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Resilience factor score (0–100). Formula: `100 · Φ(−(0.6·downside_capture_3Y + 0.4·worst_rolling_6M_return))`.",
+            "examples": [80.5500]
+          },
+          "consistency_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Consistency factor score (0–100). Formula: `100 · Φ(0.5·rolling_12M_alpha_median + 0.5·pct_rolling_periods_beating_bench)`.",
+            "examples": [85.2000]
+          },
+          "composite_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Average of the four factor scores. Composite = (Returns + Risk + Resilience + Consistency) / 4.",
+            "examples": [79.0705]
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-based rank within the entire universe after tie-break order is applied. Ties share the same `rank` value and each carries a populated `tied_with` array.",
+            "examples": [1, 23]
+          },
+          "tied_with": {
+            "type": "array",
+            "description": "Optional list of fund_ids that share this rank after tie-break. Present only when the tie persisted through all four tie-break fields.",
+            "items": {
+              "type": "string"
+            },
+            "examples": [["hdfc-flexi-cap-direct-growth"]]
+          },
+          "factor_inputs": {
+            "type": "object",
+            "description": "Raw per-fund inputs used to compute the four factor scores. Every value is Decimal-representable to 4 decimal places. Returns/vol/dd are decimal fractions (0.1234 = 12.34%) unless otherwise noted.",
+            "required": [
+              "excess_return_1y",
+              "excess_return_3y",
+              "excess_return_5y",
+              "vol_3y",
+              "max_dd_3y",
+              "downside_dev_3y",
+              "downside_capture",
+              "worst_rolling_6m",
+              "rolling_12m_alpha",
+              "rolling_pct_beating_bench"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "excess_return_1y": {
+                "type": "number",
+                "multipleOf": 0.0001,
+                "description": "1Y fund return minus category benchmark TRI return, as decimal fraction (0.0234 = +2.34% alpha).",
+                "examples": [0.0234]
+              },
+              "excess_return_3y": {
+                "type": "number",
+                "multipleOf": 0.0001,
+                "description": "3Y annualised excess return vs category benchmark TRI, decimal fraction.",
+                "examples": [0.0412]
+              },
+              "excess_return_5y": {
+                "type": "number",
+                "multipleOf": 0.0001,
+                "description": "5Y annualised excess return vs category benchmark TRI, decimal fraction.",
+                "examples": [0.0387]
+              },
+              "vol_3y": {
+                "type": "number",
+                "minimum": 0,
+                "multipleOf": 0.0001,
+                "description": "3Y annualised standard deviation of monthly returns, decimal fraction (0.1425 = 14.25% vol).",
+                "examples": [0.1425]
+              },
+              "max_dd_3y": {
+                "type": "number",
+                "minimum": 0,
+                "multipleOf": 0.0001,
+                "description": "3Y maximum drawdown, stored as positive decimal fraction (0.2218 = 22.18% drawdown). Computed from peak via running maximum.",
+                "examples": [0.2218]
+              },
+              "downside_dev_3y": {
+                "type": "number",
+                "minimum": 0,
+                "multipleOf": 0.0001,
+                "description": "3Y downside deviation (semi-deviation below MAR=0), annualised, decimal fraction.",
+                "examples": [0.0912]
+              },
+              "downside_capture": {
+                "type": "number",
+                "minimum": 0,
+                "multipleOf": 0.0001,
+                "description": "3Y downside capture ratio vs benchmark. 1.0 = captures all downside, <1 = defensive, >1 = amplifies. Decimal fraction.",
+                "examples": [0.8821]
+              },
+              "worst_rolling_6m": {
+                "type": "number",
+                "multipleOf": 0.0001,
+                "description": "Worst 6-month rolling return observed in 3Y window, decimal fraction (negative for loss).",
+                "examples": [-0.1420]
+              },
+              "rolling_12m_alpha": {
+                "type": "number",
+                "multipleOf": 0.0001,
+                "description": "Median of rolling 12-month alpha (fund 12M return − benchmark 12M TRI return) over the 3Y window, decimal fraction.",
+                "examples": [0.0412]
+              },
+              "rolling_pct_beating_bench": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "multipleOf": 0.0001,
+                "description": "Share of rolling 12-month windows in the past 3Y where the fund beat its benchmark, decimal fraction 0–1 (0.7200 = 72% of windows).",
+                "examples": [0.7200]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

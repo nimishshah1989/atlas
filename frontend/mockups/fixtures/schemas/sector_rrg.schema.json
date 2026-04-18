@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/sector_rrg.schema.json",
+  "title": "ATLAS · Sector RRG snapshot",
+  "description": "Sector Relative Rotation Graph data (frontend-v1 spec §3 Sector board, §4 Explore · Global sectors, §5 Explore · Country, §6 Explore · Sector). Produces the classic 4-quadrant rotation plot: x-axis = RS-Ratio (level), y-axis = RS-Momentum (rate of change). Quadrant derivation: leading (RS>100 & Mom>100), improving (RS<100 & Mom>100), weakening (RS>100 & Mom<100), lagging (RS<100 & Mom<100). Stage 2 source: `/api/v1/sectors/rrg`. RS values are normalised around 100 (100 = equal to benchmark).",
+  "type": "object",
+  "required": ["data_as_of", "benchmark_id", "lookback_weeks", "sectors"],
+  "additionalProperties": false,
+  "properties": {
+    "data_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Most recent trading session included in the RRG computation (ISO YYYY-MM-DD, IST).",
+      "examples": ["2026-04-17"]
+    },
+    "benchmark_id": {
+      "type": "string",
+      "description": "Benchmark series used to compute each sector's relative strength. Default `NIFTY_500_TRI` per spec.",
+      "default": "NIFTY_500_TRI",
+      "examples": ["NIFTY_500_TRI"]
+    },
+    "lookback_weeks": {
+      "type": "integer",
+      "minimum": 4,
+      "maximum": 52,
+      "default": 14,
+      "description": "Lookback window (in weeks) used to compute RS-Ratio and RS-Momentum. Default 14 weeks — the classic RRG parameter.",
+      "examples": [14]
+    },
+    "universe_size_total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Optional total count of stocks across all sectors in the snapshot (sanity check against `sum(sectors[].universe_size)`).",
+      "examples": [500]
+    },
+    "sectors": {
+      "type": "array",
+      "description": "One row per sector index. Typically 11 rows for the NSE sector family (Auto, Bank, Consumer Durables, Energy, Financial Services, FMCG, Healthcare, IT, Media, Metal, Pharma, PSU Bank, Realty — use the 11 load-bearing ones per spec §3).",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["sector_slug", "sector_name", "rs_ratio", "rs_momentum", "quadrant", "universe_size"],
+        "additionalProperties": false,
+        "properties": {
+          "sector_slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "URL-safe slug. Matches the universe pattern used elsewhere (e.g. `nifty_it` pairs with `sector:nifty_it` on breadth).",
+            "examples": ["nifty_it", "nifty_bank", "nifty_auto"]
+          },
+          "sector_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "Display name of the sector index.",
+            "examples": ["Nifty IT", "Nifty Bank"]
+          },
+          "rs_ratio": {
+            "type": "number",
+            "multipleOf": 0.0001,
+            "description": "RS-Ratio (level). Normalised around 100: >100 = outperforming benchmark, <100 = underperforming. 4 decimal places.",
+            "examples": [103.2500, 97.8100]
+          },
+          "rs_momentum": {
+            "type": "number",
+            "multipleOf": 0.0001,
+            "description": "RS-Momentum (rate of change of RS-Ratio). Normalised around 100: >100 = RS improving, <100 = RS deteriorating. 4 decimal places.",
+            "examples": [101.4000, 98.6200]
+          },
+          "quadrant": {
+            "type": "string",
+            "enum": ["leading", "improving", "weakening", "lagging"],
+            "description": "Derived quadrant. `leading` = RS>100 & Mom>100; `improving` = RS<100 & Mom>100; `weakening` = RS>100 & Mom<100; `lagging` = RS<100 & Mom<100. Boundary values (exactly 100) are classified conservatively toward the lower-performance quadrant.",
+            "examples": ["leading", "lagging"]
+          },
+          "universe_size": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of constituent stocks in this sector index on `data_as_of`.",
+            "examples": [10, 12, 15]
+          },
+          "breadth_count_ema21": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Optional count of constituents above their 21-EMA on `data_as_of`. Must satisfy `<= universe_size`. Enables Today/Sector-board breadth chip without a second API call.",
+            "examples": [7]
+          },
+          "breadth_count_dma200": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Optional count of constituents above their 200-DMA on `data_as_of`. Must satisfy `<= universe_size`.",
+            "examples": [5]
+          },
+          "rs_composite": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.0001,
+            "description": "Optional 4-factor conviction chip composite (RS + Momentum + Volume + Breadth) used by the sector tile in spec §3. 0–100 scale.",
+            "examples": [72.5000]
+          }
+        }
+      }
+    }
+  }
+}

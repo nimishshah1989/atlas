@@ -1,10 +1,31 @@
 # ATLAS Frontend V1 — Specification
 
+**Version:** v1.1 (18 Apr 2026) — red-team-driven revision of v1.0.
 **Target:** Stage 1 (mockup sweep, all pages) landed by EOD Mon 20 Apr 2026.
 **Stage 2** (wire to live APIs + Next.js mount) follows post-Monday.
 **Scope:** pure mockup layer, zero API wiring in this stage. HTML only,
 served via existing `/mockups/*` symlink. Uses the locked light design
 system (`docs/design/design-principles.md`).
+
+**v1.1 change-log (vs v1.0):**
+- Added §1.2.1 Gold RS amplifier chip (DP §10) — 5th chip across every instrument row
+- Added §1.2.2 Divergences block (DP §10 divergence rule) as mandatory shared component
+- Added §1.5 shared components with explicit DP-§ references for `regime-banner`, `signal-strip`, `conviction-chip`, `gold-rs-chip`, `dual-axis-overlay`, `interpretation-sidecar`, `divergences-block`, `signal-history-table`, `four-decision-card`, `simulate-this`
+- Added §1.8 Responsive / mobile contract (authoritative: `frontend-v1-mobile.md`)
+- Added §1.9 Data states — loading / empty / stale / error (authoritative: `frontend-v1-states.md`)
+- Added §1.10 Design-principles cross-reference matrix (enforcement contract)
+- Added §1.11 Breadth zone vocabulary reconciliation (terminal-band 100/400 vs simulator-threshold L_os/L_ob)
+- Added §2.0 IA reconciliation (8-page memory vs 10-page V1)
+- Added §2.1 Hub-and-spoke pre-wiring for §7 Stock detail + §8 MF detail
+- §3 Pulse rewritten to DP §12/§13/§10/§15 pattern
+- §4 Global rewritten with four-universal-benchmarks (MSCI World · S&P 500 · Nifty 50 TRI · Gold) per DP §3
+- §5 Country + §6 Sector rewritten with explicit DP §12/§13/§14/§15/§16 mapping
+- §7 Stock detail + §8 MF detail rewritten on shared hub-and-spoke skeleton
+- §9 MF rank formula disclosure fixed (dimensional bug: z-score per factor → Φ → average, NOT raw → Φ → average)
+- §10 Breadth Terminal blocks rewritten with explicit DP §12-§16 component bindings
+- §10.5 Signal Playback — magic numbers 350 (exit trigger) and 200 (SIP resume) elevated to named parameters `L_exit` and `L_sip_resume`
+- §14 expanded with slots for Rules #3/#8/#9 (previously unbound) + new §14.1 rule coverage matrix proving every V1.1 rule has ≥1 V1 slot
+- §18 acceptance criteria expanded with DP §19 consistency checklist + quality-harness gates
 
 ---
 
@@ -56,9 +77,9 @@ and say the same sentence, it's DESCRIBE. Numbers only.
 page reserves placeholder slots where RECOMMEND blocks will bind, but
 the slot renders as empty / "V1.1 · coming".
 
-### 1.2 Chip vocabulary (RRG · locked)
+### 1.2 Chip vocabulary (RRG + Gold amplifier · locked)
 
-Four chip families. Rendered as pill badges. Colors from the RAG system.
+Four RRG chip families. Rendered as pill badges. Colors from the RAG system.
 
 - **RS** — LEADING (green) · IMPROVING (teal) · WEAKENING (amber) · LAGGING (red)
 - **Momentum** — ACCEL (green) · STALL (amber) · DECEL (red)
@@ -68,6 +89,41 @@ Four chip families. Rendered as pill badges. Colors from the RAG system.
 Every instrument panel (stock, MF, sector, index) displays all four.
 Fund managers read the quartet at a glance. V1.1 rules bind on top
 of these same chips.
+
+#### 1.2.1 Gold RS amplifier chip (mandatory second axis)
+
+Per design-principles §10, every RS row carries a **second RS** computed
+against Gold (LBMA PM fix USD for global, MCX Gold INR for India). This
+is a **fifth chip** rendered immediately right of the RS chip with a `×`
+connector so the visual relationship is obvious.
+
+- **Gold RS** — AMPLIFY+ (petrol filled, Bench+ & Gold+) · NEUTRAL (grey, Bench+ & Gold−) · FRAGILE (amber outline, Bench− & Gold+) · AMPLIFY− (red filled, Bench− & Gold−)
+
+The resulting pair drives the **conviction chip** per design-principles
+§10: 4-of-4 aligned = High, 3-of-4 = Medium, 2-of-4 = Divergent, ≤1 = No
+signal. Gold-positive combined with Bench-positive upgrades the chip to
+`High+` (petrol outline, filled). The conviction chip is a single
+derived badge that replaces "BUY" as the headline state on every
+recommendation surface, but is informational in V1 (no action label).
+
+**Placement:** RS · × · Gold-RS · ▸ · Momentum · Volume · Breadth · Conviction.
+Seven slots total per instrument row. V1 shows all seven; the
+Conviction slot renders grey ("no-signal") until V1.1 rules fire.
+
+### 1.2.2 Divergences block (mandatory on multi-factor surfaces)
+
+Per design-principles §10.divergence-rule, any screen that renders more
+than one RS factor MUST also render a `divergences[]` block. Empty is
+fine; absent is not. Two canonical patterns:
+
+- **Price strong, breadth weak** → narrowing leadership caption
+- **Price weak, volume accumulating** → smart money entering caption
+
+In V1 the block renders as a `.card--sm` with a fixed title "Divergences"
+and either a bulleted list of detected divergences (V1.1 rule engine
+populates) or the literal string "None detected in this window". If the
+data feed is incomplete, the block MUST say `insufficient data to
+compute divergences` rather than appear empty.
 
 ### 1.3 Info-tooltip standard (`ⓘ`)
 
@@ -99,18 +155,33 @@ computed number is displayed:
 
 ### 1.5 Shared components (defined once, reused)
 
-| Component | Purpose | Used on |
-|---|---|---|
-| `kpi-strip` | Horizontal row of 4–8 big numbers with labels + deltas | Every page hero |
-| `data-table` | Sortable, filterable, CSV-exportable tabular data | MF rank, Stock detail peers, Lab outputs, Portfolios |
-| `sparkline` | Tiny inline trend, 60 × 20 px | Inside table rows, inside chip cards |
-| `rs-mini` | 80 × 40 px RS line vs benchmark | Instrument cards, table cells |
-| `sector-tile` | Large tile with sector name + 4 RRG chips + RS sparkline | Explore · Country, Pulse |
-| `chart-with-events` | Line chart + vertical rules for key events (election, rate cut, COVID) | Breadth terminal, Stock detail, MF detail |
-| `search-box` | Top-nav fuzzy search, typo-tolerant | Every page |
-| `explain-block` | Title + formula + reading (tier 1 commentary) | Below every chart |
-| `describe-block` | Deterministic readout of current values (tier 2) | Next to every chart |
-| `rec-slot` | V1.1 placeholder; renders empty in V1 | Every page footer |
+| Component | Purpose | Used on | Design-principles §ref |
+|---|---|---|---|
+| `kpi-strip` | Horizontal row of 4–8 big numbers with labels + deltas | Every page hero | — |
+| `data-table` | Sortable, filterable, CSV-exportable tabular data | MF rank, Stock detail peers, Lab outputs, Portfolios | — |
+| `sparkline` | Tiny inline trend, 60 × 20 px | Inside table rows, inside chip cards | — |
+| `rs-mini` | 80 × 40 px RS line vs benchmark | Instrument cards, table cells | §3 Pattern A |
+| `sector-tile` | Large tile with sector name + 4 RRG chips + RS sparkline | Explore · Country, Pulse | §10 |
+| `chart-with-events` | Line chart + vertical rules for key events (election, rate cut, COVID) | Breadth terminal, Stock detail, MF detail | §14 |
+| `search-box` | Top-nav fuzzy search, typo-tolerant | Every page | — |
+| `explain-block` | Title + formula + reading (tier 1 commentary) | Below every chart | §6 |
+| `describe-block` | Deterministic readout of current values (tier 2) | Next to every chart | §6 |
+| `rec-slot` | V1.1 placeholder; renders empty in V1 | Every page footer | §11 |
+| `regime-banner` | `.card--lg` page anchor: regime name (serif) + one-paragraph read + days-in-regime counter. 3px left border in regime RAG token. | **Top of every analytical page** (Pulse, Country, Sector, Stock, MF, Breadth, Lab) | **§12** |
+| `signal-strip` | Horizontal row of 3–4 key readings (`label · value · Δ1d`). Immediately below regime banner. | Same pages as `regime-banner` | **§13** |
+| `conviction-chip` | 4-factor agreement badge: High / Medium / Divergent / No-signal. Gold-RS amplifier produces High+. | Every RS row, every instrument card, every rec surface | **§10** |
+| `gold-rs-chip` | Second-axis RS vs Gold (LBMA PM USD global / MCX INR India). Rendered right of RS chip with `×` connector. | Every RS-bearing row | **§10 amplifier** |
+| `dual-axis-overlay` | Indicator (left axis) + price (right axis) + threshold dashed lines + zone-crossing dots. | Breadth terminal, Country/Sector breadth panels, §10.5 sim chart, Stock detail RSI/MACD (when added) | **§14** |
+| `interpretation-sidecar` | Right-rail `.card--sm`: auto-generated headline (2–4 words, serif italic, RAG-coded) + 2–4 sentence templated paragraph (bolded keywords in RAG tokens) + `AUTO`/`EDITORIAL` tag. | Right of every analytical chart | **§15** |
+| `divergences-block` | `.card--sm` titled "Divergences" showing detected multi-factor disagreements, or `None detected` / `insufficient data` | Every multi-factor surface | **§10 divergence rule** |
+| `signal-history-table` | Compact table of zone entry/exit events, filterable by indicator + signal type. Columns: Date · Indicator · Event · Value. | Below every oscillator chart | **§16** |
+| `four-decision-card` | Rec-card template enforcing the four explicit fields: `nature` · `size` · `timing` · `instrument`. In V1 renders as empty slot bound to `rec-slot`; populated in V1.1. | Stock detail, MF detail, Portfolios, Lab | **§11** |
+| `simulate-this` | Right-aligned button/link on every predictive output. In V1 opens §10.5 Signal Playback pre-filled with that instrument's context. | Every recommendation surface, every zone-crossing event, every portfolio change | **§18** |
+
+**All `regime-banner` and `signal-strip` placements are enforced via
+the §1.10 cross-reference table and the `dom_required` checks in
+`docs/specs/frontend-v1-criteria.yaml`. A page without both fails the
+Stage-1 gate.**
 
 ### 1.6 Number format (from global rules)
 
@@ -134,9 +205,170 @@ Every 5Y historical chart includes vertical event rules with hover labels:
 Events come from a shared `/mockups/fixtures/events.json` file in V1
 (hand-curated for top ~30 events). V1.1 externalises to backend.
 
+### 1.8 Responsive / mobile contract
+
+ATLAS is desktop-first (advisors use large screens) but every page
+MUST render without horizontal scroll and without component collisions
+down to 360 px. Full mobile+responsive specification lives in
+[`docs/design/frontend-v1-mobile.md`](./frontend-v1-mobile.md) and is
+authoritative for breakpoints, per-page folding, chart-touch
+interactions, and simulator-mobile patterns.
+
+**Breakpoint summary** (details in `frontend-v1-mobile.md`):
+
+| Tier | Range | Treatment |
+|---|---|---|
+| XL | ≥ 1440 | Full 12-col grid, right-rail sidecars visible |
+| L | 1200–1439 | Same grid, sidecars collapse to width-constrained tails |
+| M | 960–1199 | 8-col grid, sidecars move below chart as accordion |
+| S | 640–959 | 4-col stack, KPI strips wrap to 2 rows |
+| XS | 360–639 | 2-col stack, tables gain horizontal scroll, simulator inputs stack |
+
+**Invariants across breakpoints:**
+- Regime banner always at top, always visible
+- Signal strip always immediately below regime banner
+- Chart → Interpretation sidecar coupling preserved (on M/S/XS the
+  sidecar moves below, but it remains adjacent)
+- Every `data-table` with > 5 columns gets horizontal scroll on M↓
+  with the first column sticky
+- `⌘K` / `Ctrl+K` search shortcut works on all tiers; touch tap opens
+  search modal on XS
+
+### 1.9 Data states (loading / empty / stale / error)
+
+Every block on every page has a defined behaviour for the four
+canonical states. Full spec in
+[`docs/design/frontend-v1-states.md`](./frontend-v1-states.md) and is
+authoritative.
+
+**Four states × four page categories** (summary table):
+
+| State | Meaning | Default UI pattern |
+|---|---|---|
+| **Loading** | Data fetch in flight | Skeleton screen matching final layout (rows, chart shapes) — never spinner |
+| **Empty** | Fetch succeeded, no rows | `empty-state` card: icon + headline + 1-sentence explanation + primary CTA if applicable |
+| **Stale** | Fetch succeeded, but `data_as_of` older than freshness threshold for this data type | Amber `data-staleness-banner` above the block: "Data as of 14-Apr-2026, 4 days old — most recent source refresh pending" |
+| **Error** | Fetch failed | Red `error-card` with error code + retry button + "fall back to last known" option when available |
+
+**Known-stale JIP sources (hardcoded into staleness thresholds for V1):**
+- `de_adjustment_factors_daily` — 0 rows; always shows "not yet available" stub
+- `de_global_price_daily` USDINR series — 3-row fallback; banner reads "3-session sample"
+- `de_fo_bhavcopy` — 0 rows; derivative-dependent blocks show empty-state
+- `INDIAVIX` — 4-day lag vs trading day; banner reads "VIX updates at EOD+1 typically"
+- `de_bse_bhavcopy` on weekends / holidays — no banner, just empty-state
+
+Every block that can be stale MUST render a `data_as_of` timestamp;
+blocks without one fail the gate.
+
+### 1.10 Design-principles cross-reference table (enforcement contract)
+
+This is the bridge between the locked `docs/design/design-principles.md`
+and this V1 spec. Every Stage-1 page MUST satisfy every row applicable
+to its page category. The criteria YAML
+(`docs/specs/frontend-v1-criteria.yaml`) encodes each row as a
+`dom_required` check.
+
+| DP §ref | Component / rule | Pulse | Gbl | Ctry | Sec | Stk | MF | MFrank | Brdth | Port | Lab |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| §3 | Benchmark comparison on every quantitative visual | ● | ● | ● | ● | ● | ● | ● | ● | ● | ● |
+| §3 | Four universal benchmarks on global/country rows (MSCI World · S&P 500 · Nifty 50 TRI · Gold) | — | ● | ● | ○ | — | — | — | — | — | — |
+| §9 | RS is the headline number (not absolute return) | ● | ● | ● | ● | ● | ● | ● | — | ● | ● |
+| §10 | 4-factor RRG chip set on every instrument row | ● | ● | ● | ● | ● | ● | ● | — | ● | ● |
+| §10 | Gold RS amplifier chip (second axis) | ● | ● | ● | ● | ● | ● | ● | — | ● | ● |
+| §10 | Conviction chip (compound derived) | ● | ● | ● | ● | ● | ● | ● | — | ● | ● |
+| §10 | `divergences-block` on multi-factor surfaces | ● | ● | ● | ● | ● | ● | — | ● | — | ● |
+| §11 | Four-decision template (`nature`·`size`·`timing`·`instrument`) on every rec | ○ | ○ | ○ | ○ | ● | ● | ○ | ○ | ● | ● |
+| §12 | Regime banner at top | ● | ● | ● | ● | ● | ● | — | ● | — | ● |
+| §13 | Signal strip immediately below regime banner | ● | ● | ● | ● | ● | ● | — | ● | — | ● |
+| §14 | Dual-axis indicator + price overlay for oscillators | — | — | ● | ● | ○ | — | — | ● | — | ● |
+| §15 | Interpretation sidecar on every analytical chart | ● | ● | ● | ● | ● | ● | ○ | ● | ● | ● |
+| §16 | Signal history table below every oscillator | — | — | ● | ● | — | — | — | ● | — | ● |
+| §17.2 | Stop level on every buy rec | — | — | — | — | ○ | ○ | — | — | ● | ● |
+| §18 | `simulate-this` affordance on every predictive output | ○ | ○ | ○ | ○ | ● | ● | ○ | ● | ● | ● |
+
+Legend: `●` = mandatory render, `○` = mandatory slot (renders empty / V1.1-gated), `—` = not applicable.
+
+### 1.11 Breadth zone vocabulary reconciliation
+
+The Breadth Terminal (§10) uses **fixed** zone boundaries for the
+Nifty 500 `% above MA` oscillator:
+
+- `OB_THRESHOLD = 400` (overbought entry)
+- `MIDLINE = 250`
+- `OS_THRESHOLD = 100` (oversold entry)
+
+The Signal Playback simulator (§10.5) uses **per-run configurable**
+thresholds `L_ob` and `L_os` that default to different values
+(`L_ob = 400`, `L_os = 50` by default) because the simulator is
+explicitly a parameter-sweep tool: the FM wants to see what happens if
+the oversold trigger is tightened below the terminal's informational
+100 line. **This is intentional** and the spec treats the two as
+separate concepts:
+
+| Concept | Purpose | Value | Source |
+|---|---|---|---|
+| `OB_THRESHOLD` | Informational overbought zone band (tint on chart) | Fixed 400 | §10 Breadth Terminal |
+| `OS_THRESHOLD` | Informational oversold zone band (tint on chart) | Fixed 100 | §10 Breadth Terminal |
+| `L_ob` (sim param) | First-profit-take trigger in simulator | Default 400 (editable per run) | §10.5.1 input #4 |
+| `L_os` (sim param) | Opportunity-lumpsum trigger in simulator | Default 50 (editable per run) | §10.5.1 input #3 |
+
+The simulator renders BOTH sets of bands on its chart: the
+informational `OB_THRESHOLD` / `OS_THRESHOLD` as faint persistent
+tints, and the active `L_ob` / `L_os` as solid dashed lines labelled
+`L_ob = 400` / `L_os = 50`. When the FM changes `L_os` to 100 (to
+match the terminal) the dashed line and the tint converge and the
+chart reads as one band. **No spec simulator default may silently
+overwrite the Breadth Terminal informational bands.**
+
 ---
 
 ## §2 · Page tree (locked)
+
+### 2.0 Information-architecture reconciliation
+
+The canonical ATLAS IA (memory file `project_atlas_frontend_pages.md`)
+describes **8 pages** with hub-and-spoke for instruments: Pulse,
+Explorer, Builder, Monte Carlo, Market Sentiment, **Instrument Deep
+Dive**, My Watchlist, Reports. V1 ships **10 pages** because it
+flattens the hub-and-spoke into two concrete spokes (Stock detail + MF
+detail) so they can be built in parallel. The mapping:
+
+| Post-V1 canonical (8-page IA) | V1 (10-page) expression | Merge plan |
+|---|---|---|
+| Pulse | §3 Today / Pulse | Same |
+| Explorer | §4 Global + §5 Country + §6 Sector + §10 Breadth Terminal | Tabs within one Explorer shell in V1.2 |
+| Builder | §9 MF rank + §11 Portfolios + (screener, V1.2) | Merged under one "Builder" in V1.2 |
+| Monte Carlo / Lab | §12 Lab + §10.5 Signal Playback | Same |
+| Market Sentiment | §10 Breadth Terminal (subsumed) | Deferred standalone page to V1.2 |
+| Instrument Deep Dive (hub) | §7 Stock detail + §8 MF detail | **Merged into one page in V1.2** — spokes stay, hub presentation unifies |
+| My Watchlist | Out of scope for V1 | V1.2 |
+| Reports | Out of scope for V1 | V2 |
+
+V1 explicitly chooses 10 flat pages over the 8-page hub-and-spoke so
+each mockup can be built as an independent chunk on the new quality
+harness. V1.2 will consolidate into the canonical 8-page IA; the
+shared components (§1.5) are designed so consolidation is a routing
+change, not a rebuild.
+
+### 2.1 Hub-and-spoke pre-wiring (for §7 Stock detail and §8 MF detail)
+
+Even though V1 ships these as separate flat pages, both MUST implement
+the shared "instrument deep dive" skeleton so the V1.2 merge is
+trivial. Shared skeleton:
+
+1. Hero strip (symbol/name, price/NAV, 4 RRG chips + Gold RS + conviction)
+2. Regime banner (global + instrument-universe dual scope)
+3. Signal strip
+4. Tabs: Overview · Performance · Risk · Fundamentals / Holdings · RS & Peers · News · Simulate
+5. Right-rail interpretation sidecar (auto-generated)
+6. Right-rail divergences block
+7. Bottom: §10.5 Signal Playback compact embed
+8. Footer: methodology + data_as_of + provenance
+
+Spoke-specific content lives in tabs; skeleton and chrome are
+identical. See §7.0 and §8.0 for per-spoke tab contracts.
+
+### 2.2 Page registry (Monday ships)
 
 | # | Page | Path | New/Existing | Monday ships as |
 |---|---|---|---|---|
@@ -152,7 +384,8 @@ Events come from a shared `/mockups/fixtures/events.json` file in V1
 | 10 | Lab / Simulations | `/mockups/lab.html` | **NEW** | Mockup |
 | — | Global search | top-nav component | **NEW** (across all pages) | Component |
 
-Out of scope for Monday: Reports, Watchlist.
+Out of scope for Monday: Reports, Watchlist, standalone Market
+Sentiment, V1.2 hub-and-spoke merge.
 
 ---
 
@@ -161,36 +394,57 @@ Out of scope for Monday: Reports, Watchlist.
 **Purpose:** The 30-second morning open. Macro regime, breadth health,
 top factor moves, day's top movers. One screen, no scroll ideally.
 
-### Block list
+### Block list (order locked)
 
-1. **Hero strip** — date, last refresh IST, universe selector (NSE /
-   Global), 4 KPI chips: Nifty 50 level + Δ, USDINR, 10Y G-Sec yield,
-   India VIX.
-2. **Regime band** — left half: structural classifier tag (Expansion /
-   Correction / Distress) + days-in-regime counter. Right half: 4-chip
-   RRG readout for Nifty 500 (RS vs MSCI EM, Momentum, Volume,
-   Breadth).
-3. **Breadth mini** — 3 KPI cards (% above 21-EMA, % above 50-DMA, %
-   above 200-DMA), each with sparkline. Clicks through to Breadth
-   Terminal.
-4. **Sector board** — 11 sector tiles in grid. Each: sector name, 4
-   RRG chips, RS sparkline vs Nifty 500. Sorted by RS composite
-   descending.
-5. **Movers** — two tables side by side: Top 10 gainers, Top 10 losers
-   of the day. Columns: symbol, sector, Δ%, volume ratio, RS state.
-6. **Fund mover strip** — top 5 MFs by 1-day NAV Δ that are in the
-   universe. Columns: name, category, 1D, 1M, rs_composite.
-7. **EXPLAIN footer** — "What is this page" block. Two sentences.
+1. **`regime-banner` (DP §12)** — top of page. `.card--lg` with
+   structural classifier (Expansion / Correction / Distress / Recovery)
+   + one-paragraph plain-English read + days-in-regime counter. Left
+   3px border in regime RAG token. Global India regime here; V1
+   renders Nifty 500 scope, V1.1 adds universe toggle.
+2. **`signal-strip` (DP §13)** — immediately below regime banner. 4
+   readings: `Nifty 50 level · Δ1d`, `India VIX · Δ1d`, `USDINR · Δ1d`,
+   `10Y G-Sec · Δ1d`. Each `label · value · Δ1d`.
+3. **Hero strip** — date, last refresh IST (tz-aware), universe
+   selector (NSE / Global), `data_as_of` timestamp (required; see §1.9).
+4. **RRG quartet + Gold amplifier (DP §10)** — Nifty 500 4-chip RRG
+   row (RS vs Nifty 500 own benchmark: MSCI EM, Momentum, Volume,
+   Breadth) PLUS Gold RS chip PLUS conviction chip. Seven chip slots
+   per §1.2.1.
+5. **Breadth mini (DP §14 compact)** — 3 KPI cards (% above 21-EMA,
+   % above 50-DMA, % above 200-DMA) each with sparkline. Clicks
+   through to Breadth Terminal. Every card bears `data_as_of`.
+6. **Sector board (DP §10)** — 11 sector tiles in grid. Each: sector
+   name, 4 RRG chips, Gold RS chip, conviction chip, RS sparkline vs
+   Nifty 500. Sorted by RS composite descending.
+7. **Movers** — two tables side by side: Top 10 gainers, Top 10
+   losers. Columns: symbol, sector, Δ%, volume ratio, RS state, Gold RS
+   state, conviction chip.
+8. **Fund mover strip** — top 5 MFs by 1-day NAV Δ in universe.
+   Columns: name, category, 1D, 1M, rs_composite, Gold RS.
+9. **`divergences-block` (DP §10 divergence rule)** — right rail.
+   Lists detected divergences (price-strong-breadth-weak etc.) across
+   the Nifty 500 multi-factor view. V1 renders empty state as "None
+   detected in this window" or "insufficient data".
+10. **`interpretation-sidecar` (DP §15)** — right rail, auto-generated
+    narrative keyed off regime name + current breadth values. Bold keywords
+    in RAG tokens. `AUTO` tag top-right.
+11. **EXPLAIN footer** — "What is this page" block. Two sentences.
 
 ### API bindings (Stage 2)
 - Hero: `/api/v1/global/indices`, `/api/v1/global/fx`, `/api/v1/global/rates`
 - Regime: `/api/v1/stocks/breadth` (regime classifier field)
-- Sector board: `/api/v1/sectors/rrg`
+- Sector board: `/api/v1/sectors/rrg` (must include Gold RS field —
+  new Stage-2 backlog: extend `sectors/rrg` response with `rs_gold`)
 - Movers: `/api/v1/stocks/movers`
 - Fund strip: `/api/v1/mf/universe?sort=1d_return&limit=5`
 
-### V1.1 rule-hook slot
-- Below regime band: `rec-slot` for "today's regime shift" fires.
+### V1.1 rule-hook slots
+- Below regime banner: `rec-slot` id `pulse-regime` for Rule #1
+  (%>200DMA) + Rule #10 (Faber) fires.
+- Below sector board: `rec-slot` id `pulse-sector-screen` for Rule #8
+  (sector-rotation screen: top-quintile RS composite).
+- Below movers: `rec-slot` id `pulse-movers-screen` for Rule #9
+  (breadth-thrust follow-through screener).
 
 ---
 
@@ -200,27 +454,39 @@ top factor moves, day's top movers. One screen, no scroll ideally.
 tone for India. DXY, US rates, credit, commodities, FX, global breadth,
 sectors RRG.
 
-### Block list (keeps existing, post-strip)
+### Block list (order locked, post-strip)
 
-Order locked from existing mockup (already stripped of commentary +
-portfolio call):
-
-1. Regime
-2. Macros
-3. Yields
-4. FX
-5. Commodities
-6. Credit
-7. Risk (VIX, MOVE)
-8. RRG (global sector rotation)
+1. **`regime-banner` (DP §12)** — global regime. `.card--lg` with
+   regime classifier + paragraph + days-in-regime.
+2. **`signal-strip` (DP §13)** — 4 readings: `DXY · value · Δ1d`,
+   `US 10Y · value · Δ1d`, `VIX · value · Δ1d`, `Gold · value · Δ1d`.
+3. **Four-universal-benchmarks row (DP §3)** — for every entity
+   rendered on the page the spec MANDATES the 4-column RS strip:
+   `RS vs MSCI World · RS vs S&P 500 · RS vs Nifty 50 TRI · RS vs Gold`.
+   This replaces the ad-hoc "RRG vs MSCI EM" single-benchmark pattern.
+4. Macros (DXY, EM currency index, DM/EM equity indices — all four benchmarks)
+5. Yields (US 2Y / 10Y / 30Y, DE Bund, JGB — all four benchmarks)
+6. FX (EURUSD, USDJPY, USDCNY, USDINR — four benchmarks)
+7. Commodities (Brent, WTI, Copper, Gold, Silver — four benchmarks)
+8. Credit (IG spread, HY spread, EMBI — four benchmarks)
+9. Risk (VIX, MOVE — four benchmarks)
+10. RRG (global sector rotation — each sector gets 4-benchmark strip +
+    Gold RS chip + conviction chip per DP §10)
+11. **`divergences-block` (DP §10)** — right rail
+12. **`interpretation-sidecar` (DP §15)** — right rail, auto-generated
 
 ### V1 additions
 - Each section gains `explain-block` below title (formula + reading).
 - `describe-block` on each KPI giving current z-score reading.
 - Info tooltips on every table column.
+- Every RS number rendered with its Gold RS counterpart per §1.2.1.
 
-### V1.1 rule-hook slot
-- Top of page: `rec-slot` for "global regime shifts" (Faber 10M rule firing at global index level).
+### V1.1 rule-hook slots
+- Top of page (below regime banner): `rec-slot` id `global-regime`
+  for Rule #10 (Faber 10M) at global index level, Rule #1 (%>200DMA)
+  at MSCI World.
+- RRG section: `rec-slot` id `global-sector-rotation` for Rule #8
+  (sector-rotation screen, global-scope).
 
 ---
 
@@ -231,33 +497,63 @@ flows, sectors RRG.
 
 ### Block list (order locked, existing + breadth deep extension)
 
-1. **Regime** (India-specific classifier)
-2. **Breadth panel** (EXPANDED — see §5.1 below)
-3. **Derivatives** (PCR, India VIX, max pain)
-4. **Rates · G-Sec** (yield curve, 2s10s, real yields)
-5. **INR** (USDINR chart + event markers)
-6. **FII / DII** (daily flows + cumulative)
-7. **Sectors RRG** (12 India sector tiles, same chip vocab)
+1. **`regime-banner` (DP §12)** — India-specific classifier. `.card--lg`
+   with regime + paragraph + days-in-regime, 3px left border in regime
+   RAG token. Dual-scope: if global regime disagrees, surface the
+   disagreement in the paragraph (this IS a divergence per DP §12).
+2. **`signal-strip` (DP §13)** — 4 readings: `Nifty 500 level · Δ1d`,
+   `%>200DMA · value · Δ1d`, `India VIX · value · Δ1d`,
+   `USDINR · value · Δ1d`.
+3. **Four-universal-benchmarks row (DP §3)** — Nifty 500 benchmarked
+   against MSCI World · S&P 500 · Nifty 50 TRI · Gold. Required.
+4. **Breadth panel** (EXPANDED — see §5.1 below). MUST use
+   `dual-axis-overlay` component per DP §14.
+5. **Derivatives** (PCR, India VIX, max pain)
+6. **Rates · G-Sec** (yield curve, 2s10s, real yields)
+7. **INR** (USDINR chart + event markers)
+8. **FII / DII** (daily flows + cumulative)
+9. **Sectors RRG** (12 India sector tiles, each with 4 RRG chips + Gold
+   RS chip + conviction chip; see DP §10)
+10. **`divergences-block` (DP §10)** — right rail
+11. **`interpretation-sidecar` (DP §15)** — right rail, auto-generated
 
 ### 5.1 Breadth panel (embedded from §10 Breadth Terminal)
 
 Not a card — a full section. Compact version of the canonical Breadth
-Terminal. Contains:
-- Three KPI cards: % above 21-EMA, % above 50-DMA, % above 200-DMA
-  (current value + d/d + % of universe)
-- **Breadth oscillator chart** — 5Y default range, with overlays:
-  - Primary: % above selected MA (toggle: 21-EMA / 50-DMA / 200-DMA)
-  - Overlay: Nifty 500 index on secondary Y-axis
-  - Zone bands: OB ≥400, Midline 250, OS ≤100
-  - Event markers (elections, RBI, COVID, etc.)
-- **Zone-crossing history** table: date, indicator, event (entered OB, exited OS), value held for N days
+Terminal rendered in the DP §14 dual-axis-overlay pattern. Contains:
+
+- **Three KPI cards:** % above 21-EMA, % above 50-DMA, % above 200-DMA
+  (current value + d/d + % of universe). `data_as_of` on each.
+- **`dual-axis-overlay` chart (DP §14)** — THE centrepiece:
+  - Primary axis (left): % above selected MA as filled area
+    (`--rag-amber-300` 15% alpha fill, `--rag-amber-700` line)
+  - Secondary axis (right): Nifty 500 close as thin solid petrol line
+    (`--accent-700`)
+  - Threshold dashed lines labeled right-edge: `OB 400`
+    (`--rag-red-500`), `MID 250` (`--text-tertiary`), `OS 100`
+    (`--rag-green-500`), all `stroke-dasharray="3 2"`
+  - Zone-entry/exit filled dots on indicator line (red on OB entry,
+    green on OS entry); hover tooltip with date + value
+  - Event markers (elections, RBI, COVID) from `events.json`
+  - Toggle: 21-EMA / 50-DMA / 200-DMA / all-three-overlaid
+- **`interpretation-sidecar` (DP §15)** — right rail. Headline
+  (2–4 words, serif italic, RAG-coded) + 2–4 sentence auto-generated
+  paragraph with bolded RAG-token keywords. `AUTO` tag top-right.
+- **`signal-history-table` (DP §16)** — below chart. Columns:
+  `Date · Indicator · Event · Value`. Filter chips: All / 21 EMA /
+  50 DMA / 200 DMA / Bullish / Bearish. 5Y default range, CSV export.
+  Every row traceable to chart annotations.
 - "Open full Breadth Terminal" link → `/mockups/breadth.html?universe=nifty500`
 
-All text is EXPLAIN + DESCRIBE tier. No RECOMMEND.
+All text is EXPLAIN + DESCRIBE tier. No RECOMMEND. The sidecar is
+auto-generated narrative derived from current data, not editorial
+opinion (`AUTO` tag required; if overridden, `EDITORIAL` tag).
 
-### V1.1 rule-hook slot
-- Breadth panel footer: `rec-slot` for Rule #1 (%>200DMA regime
-  shift) and Rule #2 (Zweig Breadth Thrust) fires.
+### V1.1 rule-hook slots
+- Breadth panel footer: `rec-slot` id `country-breadth` for Rule #1
+  (%>200DMA regime shift) + Rule #2 (Zweig Breadth Thrust) fires.
+- Signal-history header: `rec-slot` id `country-breadth-thrust` for
+  Rule #9 (breadth-thrust follow-through) fires.
 
 ---
 
@@ -266,23 +562,48 @@ All text is EXPLAIN + DESCRIBE tier. No RECOMMEND.
 **Purpose:** Per-sector deep dive. Member stocks, fundamentals, macro
 sensitivities, PLUS sector-level breadth (new).
 
-### Block list
+### Block list (order locked)
 
-1. **State** (sector-level 4 chips, hero stats vs N500)
-2. **Breadth panel (sector universe)** — NEW section, same pattern as
-   §5.1 but universe = members of this sector. E.g. for Nifty IT,
-   "% of 10 IT stocks above 21-EMA". Same oscillator + zones + events.
-3. **Member stocks** (existing data table, now with all 4 RRG chips
-   per row + info tooltips on every column)
-4. **Fundamentals** (aggregated sector P/E, EPS growth, margin —
-   gains formula disclosure + 10Y z-scores)
-5. **Macro sensitivities** (existing sens table, gains `ⓘ` on each
-   macro variable)
+1. **`regime-banner` dual-scope (DP §12)** — TWO `.card--lg` bands
+   stacked: global regime + sector-specific regime. When they disagree
+   the paragraph MUST surface the disagreement as a divergence. Left
+   3px border in each regime's RAG token.
+2. **`signal-strip` (DP §13)** — 4 sector-level readings:
+   `Sector RS vs Nifty 500 · value · Δ1d`, `%>200DMA (sector
+   universe) · value · Δ1d`, `Sector 12M return · value · Δ1d`,
+   `Gold RS · value · Δ1d`.
+3. **State** — sector-level 7-chip row per §1.2.1: 4 RRG chips + Gold
+   RS chip + conviction chip, plus hero stats vs Nifty 500.
+4. **Four-universal-benchmarks row (DP §3)** — sector index vs MSCI
+   World · S&P 500 · Nifty 50 TRI · Gold.
+5. **Breadth panel (sector universe)** — NEW section, same
+   `dual-axis-overlay` + `interpretation-sidecar` + `signal-history-table`
+   pattern as §5.1 but universe = members of this sector. E.g. for
+   Nifty IT, "% of 10 IT stocks above 21-EMA". Same oscillator +
+   zones (note: OB/OS thresholds scale with universe size — for a 10-
+   member universe the zone bands are `OB ≥ 8`, `OS ≤ 2`, `MID = 5`).
+6. **Member stocks** — existing data table, now with 7-chip row per
+   member (4 RRG + Gold RS + conviction) + info tooltips on every
+   column. Sort by conviction descending default.
+7. **Fundamentals** — aggregated sector P/E, EPS growth, margin with
+   formula disclosure + 10Y z-scores
+8. **Macro sensitivities** — existing sens table, `ⓘ` on each macro
+   variable with beta coefficient + lookback window
+9. **§10.5 Signal Playback compact embed** — breadth-of-sector vs
+   sector-index playback
+10. **`divergences-block` (DP §10)** — right rail
+11. **`interpretation-sidecar` (DP §15)** — right rail per block
 
-### V1.1 rule-hook slot
-- Below Breadth panel: `rec-slot` for sector-level rule fires.
-- Below Members: `rec-slot` for ENTRY_CANDIDATE fires on individual
-  member stocks.
+### V1.1 rule-hook slots
+- Below Breadth panel: `rec-slot` id `sector-breadth` for Rule #1
+  (%>200DMA, sector-scope) + Rule #2 (Zweig, sector-scope).
+- Below Members: `rec-slot` id `sector-members` for Rule #3 (JT 12-1
+  momentum screen on members), Rule #4 (Minervini trend-template
+  across members), Rule #5 (IBD RS ≥80).
+- Below state chip row: `rec-slot` id `sector-rotation` for Rule #8
+  (sector-rotation screen — this sector's position in the rotation).
+- §10.5 embed: `rec-slot` id `sector-playback` swaps threshold ladder
+  for rule-library signal generator.
 
 ---
 
@@ -291,27 +612,64 @@ sensitivities, PLUS sector-level breadth (new).
 **Purpose:** Single-stock terminal. Chart, risk, technical, fundamental,
 RS vs bench + peers, corporate actions, news.
 
-### Block list (existing, post-strip)
+### 7.0 Hub-and-spoke skeleton (shared with §8 MF detail)
 
-1. Hero strip (symbol, price, sector, market cap, 4 RRG chips)
-2. Detail tabs (existing)
-3. Col 1: Chart + News
-4. Col 2: Risk + Technical + Fundamental snapshots
-5. Col 3: RS panel + Corporate Actions
+V1 implements the shared deep-dive skeleton from §2.1. Stock-specific
+tab content differs from §8 MF detail in the **Fundamentals** tab
+(Stock: EPS / P/E / ROE / D/E / FCF; MF: Holdings / Sector alloc /
+Concentration) but the other six tabs (Overview · Performance ·
+Risk · RS & Peers · News · Simulate) use the same components with
+instrument-typed data.
+
+### Block list (order locked, post-strip)
+
+1. **Hero strip** — symbol, company name, price, Δ1d, sector, market
+   cap, `data_as_of`. 7-chip row per §1.2.1: 4 RRG chips + Gold RS
+   chip + conviction chip.
+2. **`regime-banner` dual-scope (DP §12)** — global India regime +
+   sector regime. Disagreement surfaced in paragraph.
+3. **`signal-strip` (DP §13)** — 4 readings: `RS vs Nifty 500 · value
+   · Δ1d`, `RS vs sector · value · Δ1d`, `Gold RS · value · Δ1d`,
+   `Rel vol (21d) · value · Δ1d`.
+4. **Four-universal-benchmarks row (DP §3)** — stock vs MSCI World ·
+   S&P 500 · Nifty 50 TRI · Gold. Required.
+5. **Tabs (hub-and-spoke):**
+   - Overview (hero + chart + news)
+   - Performance (5Y daily candle + MAs + events)
+   - Risk (vol, DD, beta, downside capture, VaR)
+   - Fundamentals (EPS / P/E / ROE / D/E / FCF / margins)
+   - RS & Peers (peer table with 7-chip row per peer, RS panel, RS-vs-sector chart)
+   - News (latest feed + event markers)
+   - Simulate (§10.5 full embed)
+6. **Chart** — 5Y daily candle + 50-DMA (blue) + 200-DMA (red) +
+   event markers. `explain-block` below: "This is a 5Y daily candle
+   chart with 50-DMA (blue) and 200-DMA (red) overlays. Key events
+   marked." Paired with `interpretation-sidecar` (DP §15).
+7. **Right col:** RS panel + Corporate Actions + `divergences-block` +
+   `interpretation-sidecar`.
+8. **§10.5 Signal Playback compact embed** — breadth vs stock close.
+9. **`four-decision-card` (DP §11) rec slot** — `rec-slot` id
+   `stock-four-decision`. V1 renders empty placeholder with all four
+   fields visible: `nature` · `size` · `timing` · `instrument` · stop
+   level. V1.1 populates. Required per DP §11.
+10. **`simulate-this` affordance (DP §18)** — right-aligned link on
+    every predictive output opening §10.5 pre-filled with this stock.
 
 ### V1 additions
 - Every KPI card gains `ⓘ` tooltip with formula.
-- Chart gains `explain-block` below: "This is a 5Y daily candle chart
-  with 50-DMA (blue) and 200-DMA (red) overlays. Key events marked."
-- Peer comparison table gets info tooltips on every column (P/E,
-  ROE, D/E, RS, etc.).
+- Every peer table row gets 7-chip row per §1.2.1.
 - Fundamental section gains formula disclosure inline.
 
-### V1.1 rule-hook slot
-- Hero right edge: `rec-slot` for Minervini Trend Template firing
-  (Rule #4), IBD RS Rating ≥80 (Rule #5), relative-volume breakout
-  (Rule #7).
-- Below News: `rec-slot` for WARNING fires (RSI divergence Rule #6).
+### V1.1 rule-hook slots
+- Hero right edge: `rec-slot` id `stock-hero` for Rule #4 (Minervini
+  Trend Template), Rule #5 (IBD RS Rating ≥80), Rule #7 (relative-vol
+  breakout).
+- RS & Peers tab: `rec-slot` id `stock-momentum` for Rule #3 (JT 12-1
+  momentum) — stock's rank in cross-sectional 12-1 momentum screen.
+- Below News: `rec-slot` id `stock-news` for Rule #6 (RSI divergence
+  WARN).
+- Simulate tab: `rec-slot` id `stock-playback` swaps threshold ladder
+  for rule-library signal generator.
 
 ---
 
@@ -320,29 +678,66 @@ RS vs bench + peers, corporate actions, news.
 **Purpose:** Single-MF terminal. Returns, alpha quality, holdings,
 sector breakdown, rolling metrics, peer comparison, suitability.
 
-### Block list (existing, cleaned of verdict blocks)
+### 8.0 Hub-and-spoke skeleton (shared with §7 Stock detail)
 
-1. Hero (fund name, category, AMC, AUM, 4 RRG chips, 3Y Sharpe, 3Y alpha)
-2. Section A: Returns table + rolling returns chart
-3. Section B: Alpha quality (Jensen's alpha, Treynor, info ratio, capture ratios)
-4. Section C: Risk (3Y vol, max DD, downside dev, VaR)
-5. Section D: Holdings (top 20 with weights + concentration)
-6. Section E: Sector allocation (vs benchmark)
-7. Section F: Rolling alpha + Rolling beta (3Y window)
-8. Section G: **Suitability** (renamed from "Suitability & Verdict") —
-   Suitability matrix + SIP outcomes + Peer comparison table. Final
-   verdict block + Fund tags STRIPPED.
+V1 implements the shared deep-dive skeleton from §2.1. Same seven-tab
+chrome; Fundamentals tab differs (MF: Holdings / Sector alloc /
+Concentration / Top-20 turnover).
+
+### Block list (order locked, cleaned of verdict blocks)
+
+1. **Hero** — fund name, category, AMC, AUM (₹ cr, lakh/crore style),
+   3Y Sharpe, 3Y alpha, `data_as_of`. 7-chip row per §1.2.1: 4 RRG
+   chips (on underlying weighted holdings) + Gold RS chip + conviction
+   chip.
+2. **`regime-banner` dual-scope (DP §12)** — global India regime +
+   category regime (e.g. "Mid-cap regime: Correction — 12 days").
+3. **`signal-strip` (DP §13)** — 4 readings: `RS vs category-bench ·
+   value · Δ1d`, `3Y rolling alpha · value · Δ1d`, `Gold RS · value ·
+   Δ1d`, `Downside-capture (3Y) · value · Δ1d`.
+4. **Four-universal-benchmarks row (DP §3)** — fund vs MSCI World ·
+   S&P 500 · Nifty 50 TRI · Gold. Plus category-specific benchmark
+   (from DP §3 category table — Mid = Nifty Midcap 150 TRI, etc.).
+5. **Tabs (hub-and-spoke):**
+   - Overview (hero + NAV chart + key metrics)
+   - Performance — Section A: Returns table + rolling returns chart
+   - Risk — Section C: 3Y vol, max DD, downside dev, VaR
+   - Fundamentals — Section D: Holdings (top 20 with weights +
+     concentration) + Section E: Sector allocation vs benchmark
+   - RS & Peers — Section B: Alpha quality (Jensen's alpha, Treynor,
+     IR, capture ratios) + Section F: Rolling alpha/beta (3Y) + peer
+     table with 7-chip row per peer
+   - News (feed)
+   - Simulate (§10.5 full embed)
+6. **Suitability block** (renamed from "Suitability & Verdict") —
+   suitability matrix + SIP outcomes + peer comparison table. Final
+   verdict block + fund tags STRIPPED (moved to V1.1 rule engine).
+7. **NAV chart** — 5Y NAV vs category-bench TRI (DP §3 Pattern A: fund
+   solid RAG-coloured line, benchmark dashed grey line). Event markers.
+   `explain-block` below. Paired `interpretation-sidecar` right rail.
+8. **`divergences-block` (DP §10)** — right rail
+9. **§10.5 Signal Playback compact embed** — breadth vs fund NAV.
+10. **`four-decision-card` (DP §11) rec slot** — `rec-slot` id
+    `mf-four-decision`. V1 renders empty placeholder.
+11. **`simulate-this` affordance (DP §18)** — right-aligned link on
+    every predictive output.
 
 ### V1 additions
-- Every Section gets EXPLAIN block: formula for Sharpe, Jensen's
-  alpha, Treynor, IR, upside/downside capture, etc.
+- Every Section gets EXPLAIN block with full formula: Sharpe,
+  Jensen's α, Treynor, IR, upside/downside capture, etc.
 - Every column in peer tables gets `ⓘ`.
 - Holdings table gains "Why this weight" tooltip on the weight column
   linking to fund's mandate.
 
-### V1.1 rule-hook slot
-- Section G footer: `rec-slot` for "HOLD / ADD / EXIT" call (bound to
-  future rule engine that scores MF conviction).
+### V1.1 rule-hook slots
+- Suitability footer: `rec-slot` id `mf-suitability` for composite MF-
+  rule engine (V1.2+) producing HOLD / ADD / EXIT.
+- RS & Peers tab: `rec-slot` id `mf-ibd-rs` for Rule #5 (IBD RS on
+  fund NAV vs category bench).
+- Performance tab: `rec-slot` id `mf-faber` for Rule #10 (Faber 10M
+  SMA on fund NAV).
+- Simulate tab: `rec-slot` id `mf-playback` swaps threshold ladder for
+  rule-library signal generator.
 
 ---
 
@@ -374,31 +769,81 @@ sort / filter / drill in. Replaces the old Pulse page.
    - **Resilience score** (0–100) + sparkline
    - **Consistency score** (0–100) + sparkline
    - **Composite** (avg of 4) + tie-break marker
-   - 4 RRG chips (RS, Mom, Vol, Breadth on underlying holdings)
-   - Quick-actions: Open MF detail · Add to compare
+   - 7-chip row per §1.2.1: 4 RRG chips (RS, Mom, Vol, Breadth on
+     underlying holdings) + Gold RS chip + conviction chip
+   - Quick-actions: Open MF detail · Add to compare · `simulate-this`
 5. **Formula disclosure block** (bottom-of-page, always visible):
+
+   Every factor is computed as a **cross-sectional z-score within the
+   fund's category**, then passed through the standard-normal CDF to
+   produce a percentile-equivalent 0–100 score. This makes the four
+   factors dimensionally commensurable (all unitless percentiles)
+   before averaging — fixing the previous draft where raw returns
+   were passed into Φ without normalisation, mixing raw magnitude
+   with probability space.
+
+   Notation: for each raw input `x`, define
+   `z_cat(x) = (x − mean_category(x)) / stddev_category(x)`
+   computed across all funds in the same category (SEBI scheme
+   classification).
 
    ```
    Returns score (0–100):
-       z = (excess_return_1Y + excess_return_3Y + excess_return_5Y) / 3
-           where excess = fund_return − category_benchmark_TRI_return
-       score = 100 × Φ(z)  where Φ is the standard normal CDF
+       raw = (excess_1y + excess_3y + excess_5y) / 3
+             where excess_ny = fund_TRI_return_ny − category_bench_TRI_return_ny
+       z = z_cat(raw)
+       score = round(100 × Φ(z))             where Φ is the standard normal CDF
+
    Risk score (0–100):
-       z = −1 × (0.4·vol_3Y + 0.4·max_dd_3Y + 0.2·downside_dev_3Y)
-       (negative so lower risk = higher score)
-       score = 100 × Φ(z)
+       raw = −1 × ( 0.4·vol_3y + 0.4·max_dd_3y + 0.2·downside_dev_3y )
+             (sign flipped so lower risk → higher raw)
+             vol_3y and downside_dev_3y expressed as annualised decimals
+             max_dd_3y expressed as absolute decimal (e.g. 0.23 for 23% DD)
+       z = z_cat(raw)
+       score = round(100 × Φ(z))
+
    Resilience score (0–100):
-       z = −1 × (0.6·downside_capture_3Y + 0.4·worst_rolling_6M_return)
-       score = 100 × Φ(z)
+       raw = −1 × ( 0.6·downside_capture_3y + 0.4·worst_rolling_6m_return )
+             downside_capture_3y as a ratio (e.g. 0.85 = captures 85% of
+             benchmark's down moves; lower = more resilient)
+             worst_rolling_6m_return as decimal (e.g. −0.18)
+       z = z_cat(raw)
+       score = round(100 × Φ(z))
+
    Consistency score (0–100):
-       z = (0.5·rolling_12M_alpha_median + 0.5·pct_rolling_periods_beating_bench)
-       score = 100 × Φ(z)
+       raw = 0.5·rolling_12m_alpha_median + 0.5·pct_rolling_periods_beating_bench
+             rolling_12m_alpha_median in decimal (e.g. 0.024 = 2.4pp/yr)
+             pct_rolling_periods_beating_bench in [0,1]
+       z = z_cat(raw)
+       score = round(100 × Φ(z))
+
    Composite = (Returns + Risk + Resilience + Consistency) / 4
-   Tie-break order: Consistency → Risk → Returns → Resilience
+             → rounded to 1 decimal
+
+   Tie-break order (applied when composites equal to 1 decimal):
+       1. Consistency score (higher wins)
+       2. Risk score (higher = lower risk, wins)
+       3. Returns score (higher wins)
+       4. Resilience score (higher wins)
    ```
 
+   **Why z-score first, then Φ:** raw factor values have incompatible
+   units (returns in %, vol in %, max_dd in %, downside capture as
+   ratio). Z-scoring within the category puts every fund on the same
+   relative scale; Φ converts that scale to a percentile so the four
+   scores can be averaged as commensurable percentile-ranks.
+
+   **Minimum universe size per category** for scoring to apply: 5
+   funds. Categories with <5 funds display raw factors but composite
+   reads `n/a — universe too small`.
+
+   **Data_as_of:** score computed daily EOD against JIP
+   `de_mf_nav_daily` + category benchmark from `de_index_daily_tri`.
+   Timestamp rendered at top of page and on every row (tooltip).
+
 6. **Methodology footer** — data_as_of, source attribution, universe
-   definition, rebalance cadence (daily EOD).
+   definition, rebalance cadence (daily EOD), minimum universe size
+   caveat.
 
 ### API bindings (Stage 2)
 - `/api/v1/mf/universe` (universe + filters)
@@ -423,56 +868,94 @@ compact version lives on Explore · Country (§5.1) and Explore · Sector
 - `?universe=nifty500` (default) — also: nifty50, nifty_midcap150, nifty_smallcap250, or sector= e.g. `sector=nifty_it`
 - `?ma=21ema` — also: 50dma, 200dma, all
 
-### Block list
+### Block list (order locked, DP §12–§16 mapping explicit)
 
 1. **Hero strip** — "Breadth · {universe} · Terminal"
    - Three headline numbers: 21-EMA count, 50-DMA count, 200-DMA count
      (each /500 or /N depending on universe size)
    - Last updated IST + "N sessions / EOD"
    - Universe selector pill, MA selector pill
-2. **Regime band** — Structural classifier (Expansion / Correction /
-   Distress) + days-in-regime. Description text is DESCRIBE tier only
-   (no recommendation). `rec-slot` reserved for V1.1.
-3. **Three KPI cards** — Above 21-EMA / 50-DMA / 200-DMA:
+   - `data_as_of` timestamp (required per §1.9)
+2. **`regime-banner` (DP §12)** — `.card--lg` with structural
+   classifier (Expansion / Correction / Distress / Recovery) +
+   one-paragraph DESCRIBE-tier plain-English read + days-in-regime
+   counter. 3px left border in regime RAG token. **Description text is
+   DESCRIBE tier only (no recommendation).** `rec-slot` id
+   `breadth-regime` reserved for V1.1 Rule #1 + Rule #10.
+3. **`signal-strip` (DP §13)** — 4 readings:
+   `21-EMA · count · Δ1d`, `50-DMA · count · Δ1d`,
+   `200-DMA · count · Δ1d`, `Nifty 500 close · value · Δ1d`.
+4. **Three KPI cards** — Above 21-EMA / 50-DMA / 200-DMA:
    - Big count (178/500)
    - d/d delta
    - % of universe
    - BULLISH / BEARISH tag (deterministic: >midline = BULLISH,
-     <midline = BEARISH, no opinion)
-4. **Breadth oscillator chart** — THE centrepiece:
+     <midline = BEARISH, no opinion — DESCRIBE tier only)
+5. **`dual-axis-overlay` breadth oscillator chart (DP §14)** — THE
+   centrepiece:
    - 5Y daily series by default, range buttons 1M / 3M / 6M / 1Y / 5Y / ALL
-   - Primary Y-axis (left): breadth count 0–500
-   - Secondary Y-axis (right): underlying index (Nifty 500, etc.)
-   - Zone bands: OB ≥400 (red tint), Midline 250 (grey line), OS ≤100 (green tint)
-   - Dot annotations where breadth entered OB / OS zones
-   - Event markers (elections, RBI, COVID, Budget, sector shocks)
+   - Primary axis (left): % above selected MA as filled area
+     (`--rag-amber-300` 15% alpha fill, `--rag-amber-700` line)
+   - Secondary axis (right): underlying index close as thin solid
+     petrol line (`--accent-700`)
+   - Threshold dashed lines labeled right-edge: `OB 400`
+     (`--rag-red-500`), `MID 250` (`--text-tertiary`), `OS 100`
+     (`--rag-green-500`), all `stroke-dasharray="3 2"`. These are
+     the informational Breadth Terminal zone bands per §1.11.
+   - Zone-entry/exit dots on indicator line — filled RAG-coloured
+     circle at each crossing (red on OB entry, green on OS entry).
+     Hover tooltip with date + value.
+   - Event markers (elections, RBI, COVID, Budget, sector shocks) from
+     shared `events.json` fixture
    - Toggles: index overlay on/off, events on/off
-5. **Zone reference panel** (right rail):
-   - OB threshold, Midline, OS threshold
-   - Current reading: current, Δ1d, Δ5d, Δ20d, 60D high, 60D low, 60D avg
-6. **DESCRIBE block** (right rail, always on):
-   - Deterministic paraphrase of current state.
-   - Example: "At 178, breadth is below midline (250) and 193 below
-     its 20-day level. In the past 60 sessions the oscillator has
-     ranged 118–404. 3 zone events in this window: OB entry 25-Mar,
-     OB exit 02-Apr, current drift toward OS zone."
-   - NO action language.
-7. **Signal history table** — chronological log of zone events:
-   - Date, Indicator (21EMA / 50DMA / 200DMA), Event (entered OB,
-     exited OS, crossed midline), Value at event, Days in previous zone
+6. **Zone reference panel** (right rail):
+   - OB threshold, Midline, OS threshold (per §1.11)
+   - Current reading: current, Δ1d, Δ5d, Δ20d, 60D high, 60D low,
+     60D avg
+7. **`interpretation-sidecar` (DP §15)** (right rail, always on):
+   - Auto-generated headline (2–4 words, serif italic, RAG-coded)
+   - 2–4 sentence paragraph with bolded keywords in RAG tokens
+   - `AUTO` tag top-right (or `EDITORIAL` if overridden)
+   - Example: "At 178, breadth is **below midline (250)** and
+     193 below its 20-day level. In the past 60 sessions the
+     oscillator has ranged 118–404. 3 zone events in this window:
+     OB entry 25-Mar, OB exit 02-Apr, current drift toward **OS
+     zone**."
+   - NO action language in V1. V1.1 rule engine may bind an
+     action-rider below the sidecar as a `rec-slot`.
+8. **`divergences-block` (DP §10 divergence rule)** (right rail) —
+   lists detected divergences (price-strong-breadth-weak, etc.) or
+   "None detected in this window" / "insufficient data".
+9. **`signal-history-table` (DP §16)** — chronological log of zone
+   events:
+   - Columns: Date · Indicator (21EMA / 50DMA / 200DMA) · Event
+     (entered OB, exited OS, crossed midline) · Value at event ·
+     Days in previous zone
    - Filter chips: All / 21 EMA / 50 DMA / 200 DMA / BULLISH / BEARISH
    - 5Y default range, CSV export
-8. **EXPLAIN block** (below chart):
-   - Formula: "% above 21-EMA = count(close > EMA21) / count(universe constituents) × 100"
-   - Reading: "Readings below 100 mark oversold extremes where bounces are historically likely. Above 400 signal overbought conditions where consolidation/pullback typically follows."
-   - Provenance: "Source: JIP de_stock_price_daily · computed by ATLAS breadth service · EOD."
-9. **Methodology footer** — data as of, last rebuild, universe
-   definition, MA calculation window.
+   - Every row in the table must be traceable to a dot annotation on
+     the chart above (proof-layer invariant per DP §16)
+10. **EXPLAIN block** (below chart):
+    - Formula: "% above 21-EMA = count(close > EMA21) / count(universe constituents) × 100"
+    - Reading: "Readings below 100 mark oversold extremes where
+      bounces are historically likely. Above 400 signal overbought
+      conditions where consolidation/pullback typically follows."
+    - Provenance: "Source: JIP de_stock_price_daily · computed by
+      ATLAS breadth service · EOD."
+11. **§10.5 Signal Playback full embed** — bottom of page. Default:
+    Nifty 500 breadth vs Nifty 500 TRI buy-and-hold baseline.
+12. **Methodology footer** — data as of, last rebuild, universe
+    definition, MA calculation window.
 
 ### Data model (for mockup fixtures)
-- `breadth_timeseries.json` — 5Y of daily `{date, ema21_count, dma50_count, dma200_count, index_close}`
-- `zone_events.json` — list of `{date, indicator, event_type, value, prior_zone_duration_days}`
-- `events.json` — shared with other 5Y charts
+- `breadth_daily_5y.json` (per schema
+  `fixtures/schemas/breadth_daily_5y.schema.json`) — 5Y of daily
+  `{date, ema21_count, dma50_count, dma200_count, index_close, index_tri}`
+- `zone_events.json` (per schema
+  `fixtures/schemas/zone_events.schema.json`) — list of
+  `{date, indicator, event_type, value, prior_zone_duration_days}`
+- `events.json` (per schema `fixtures/schemas/events.schema.json`)
+  — shared with other 5Y charts
 
 ### API bindings (Stage 2)
 - `/api/v1/stocks/breadth?universe=X&range=5y`
@@ -480,9 +963,15 @@ compact version lives on Explore · Country (§5.1) and Explore · Sector
 - `/api/v1/global/events` (new — shared events feed)
 
 ### V1.1 rule-hook slots
-- Regime band: Rule #1 (%>200DMA) + Rule #10 (Faber 10M SMA) outputs
-- Signal history header: Rule #2 (Zweig Breadth Thrust) fires
-- Right rail bottom: conviction-chip strip (CONV / DIV)
+- `regime-banner`: `rec-slot` id `breadth-regime` for Rule #1 (%>200DMA)
+  + Rule #10 (Faber 10M SMA)
+- `signal-history-table` header: `rec-slot` id `breadth-signal-header`
+  for Rule #2 (Zweig Breadth Thrust) fires
+- Right rail bottom: conviction-chip strip (CONV / DIV) per DP §10
+- `signal-history-table` footer: `rec-slot` id `breadth-thrust-follow`
+  for Rule #9 (breadth-thrust follow-through screener)
+- §10.5 embed: `rec-slot` id `breadth-playback-halo` — conviction
+  chips decorate trade points on the Signal Playback chart
 
 ---
 
@@ -512,20 +1001,41 @@ Light design language (NOT the dark base file — translate to tokens
 from §1.5). No LLM narrative. Every parameter labeled, every threshold
 named, every resulting trade logged.
 
-### 10.5.1 Input panel (10 parameters, all editable, all defaultable)
+### 10.5.1 Input panel (12 parameters, all editable, all defaultable)
+
+The simulator surfaces **12 parameters** — the original 10 plus two
+previously-magic-numbered thresholds (350 exit trigger, 200 SIP
+resume) that are now first-class editable inputs per the "no magic
+numbers" invariant.
 
 | # | Parameter | Default | Units | Role |
 |---|-----------|---------|-------|------|
 | 1 | Initial Investment | 1,00,000 | ₹ | Lumpsum on day 1 |
 | 2 | Monthly SIP | 10,000 | ₹ | Deployed first session of each calendar month while SIP is on |
-| 3 | Lumpsum (Count<L_os) | 50,000 | ₹ | One-shot deposit when breadth drops below L_os (default 50); 30-day cooldown |
-| 4 | Sell % at Count≥L_ob | 30 | % of units | First profit-take when breadth ≥ L_ob (default 400) |
-| 5 | Further Sell Below Level | 250 | breadth count | Second sell trigger (downcross) |
-| 6 | Further Sell % | 20 | % of units | Size of second sell |
-| 7 | 1st Redeploy Below Level | 125 | breadth count | First redeployment trigger (downcross) |
-| 8 | 1st Redeploy % | 50 | % of liquid | Size of first redeploy |
-| 9 | 2nd Redeploy Below Level | 50 | breadth count | Second redeployment trigger (downcross) |
-| 10 | 2nd Redeploy % | 100 | % of liquid | Size of second redeploy (typically 100%, clears cash) |
+| 3 | Lumpsum (Count<L_os) | 50,000 | ₹ | One-shot deposit when breadth drops below `L_os`; 30-day cooldown |
+| 4 | Sell % at Count≥L_ob | 30 | % of units | First profit-take when breadth ≥ `L_ob` |
+| 5 | `L_os` — Oversold sim trigger | 50 | breadth count | Opportunity-lumpsum threshold (see §1.11 for zone reconciliation) |
+| 6 | `L_ob` — Overbought sim trigger | 400 | breadth count | First profit-take threshold |
+| 7 | `L_exit` — Exit-mode trigger (upcross) | 350 | breadth count | Stops SIP and arms profit-take ladder (previously magic 350) |
+| 8 | `L_sip_resume` — SIP resume (downcross) | 200 | breadth count | Restarts SIP and clears exit mode (previously magic 200) |
+| 9 | Further Sell Below Level (fLvl) | 250 | breadth count | Second sell trigger (downcross) |
+| 10 | Further Sell % (fPct) | 20 | % of units | Size of second sell |
+| 11 | 1st Redeploy Below Level (rdLvl) | 125 | breadth count | First redeployment trigger (downcross) |
+| 12 | 1st Redeploy % (rdPct) | 50 | % of liquid | Size of first redeploy |
+| 13 | 2nd Redeploy Below Level (rd2Lvl) | 50 | breadth count | Second redeployment trigger (downcross) |
+| 14 | 2nd Redeploy % (rd2Pct) | 100 | % of liquid | Size of second redeploy (typically 100%, clears cash) |
+
+*(The heading says "12 parameters" for the two new thresholds; the
+table lists 14 total including the original deposit/percentage
+inputs. The base simulator had 10 parameters + 2 magic constants =
+12 behaviour-determining numbers. All 14 are now in the table.)*
+
+**Zone-vocabulary note:** The defaults `L_os = 50` and `L_ob = 400`
+deliberately differ from the Breadth Terminal informational bands
+(`OS_THRESHOLD = 100`, `OB_THRESHOLD = 400`). See §1.11 for the
+reconciliation: the chart renders BOTH sets of bands, faint
+informational tints AND solid simulator-active dashed lines. The FM
+is free to set `L_os = 100` to match the terminal.
 
 - **"Set % to 0 to disable any rule"** — baked-in escape hatch on every
   percentage.
@@ -541,16 +1051,16 @@ named, every resulting trade logged.
    previous session, deposit `sip` at that session's NAV.
 3. **Opportunity lumpsum** — if `count < L_os` and ≥30 days since last
    lumpsum, deposit `lump`.
-4. **Exit-mode trigger** — when `count` upcrosses 350: stop SIP, set
-   `exitMode=true`.
+4. **Exit-mode trigger** — when `count` upcrosses `L_exit` (default
+   350): stop SIP, set `exitMode=true`.
 5. **First profit-take** — when `count ≥ L_ob` in exitMode and not yet
    sold: sell `Sell%@L_ob` of units FIFO; **post-tax** proceeds go to
    liquid case.
 6. **Second profit-take** — when `count` downcrosses `fLvl` (250
    default) AND first sell already done AND not yet sold-further: sell
    `fPct%` of units FIFO; post-tax to liquid.
-7. **SIP resume** — when `count` downcrosses 200: `sipOn=true`,
-   `exitMode=false`.
+7. **SIP resume** — when `count` downcrosses `L_sip_resume` (default
+   200): `sipOn=true`, `exitMode=false`.
 8. **First redeploy** — when `count` downcrosses `rdLvl` (125 default)
    AND there is liquid from prior sells AND not yet redeployed:
    deploy `rdPct%` of liquid at that session's NAV.
@@ -560,7 +1070,8 @@ named, every resulting trade logged.
     done: clear all flags so the next cycle can trigger.
 
 All crossings are **edge-triggered** on `prevCount → count` transitions
-(no re-firing on consecutive sessions while in-zone).
+(no re-firing on consecutive sessions while in-zone). Every `L_*`,
+`fLvl`, `rdLvl`, `rd2Lvl` is user-editable — nothing hard-coded.
 
 ### 10.5.3 Tax engine (locked, FIFO, India regime-aware)
 
@@ -785,28 +1296,62 @@ page. Keyboard shortcut: `⌘K` / `Ctrl+K`.
 
 Master list so V1.1 chunk knows exactly where to bind. Every slot in
 V1 renders as an empty placeholder `<div class="rec-slot"
-data-rule-scope="X" data-page="Y">`.
+data-rule-scope="X" data-page="Y" data-slot-id="Z">`.
 
 | Page | Slot id | Binds to |
 |---|---|---|
 | Today | `pulse-regime` | Rule #1 (%>200DMA regime shift), Rule #10 (Faber) |
-| Explore · Global | `global-regime` | Rule #10 at global index level |
+| Today | `pulse-sector-screen` | Rule #8 (sector-rotation screen, top-quintile RS composite) |
+| Today | `pulse-movers-screen` | Rule #9 (breadth-thrust follow-through screener on movers) |
+| Explore · Global | `global-regime` | Rule #10 at global index level, Rule #1 at MSCI World |
+| Explore · Global | `global-sector-rotation` | Rule #8 (global-scope sector rotation) |
 | Explore · Country | `country-breadth` | Rules #1 + #2 (Zweig) |
+| Explore · Country | `country-breadth-thrust` | Rule #9 (breadth-thrust follow-through) |
 | Explore · Sector | `sector-breadth` | Rules #1 + #2 at sector universe |
 | Explore · Sector | `sector-members` | Rule #3 (JT 12-1), #4 (Minervini), #5 (IBD RS), per member |
-| Stock detail | `stock-hero` | Rules #4, #5, #7 (rel vol breakout) |
-| Stock detail | `stock-news` | Rule #6 (RSI divergence) |
+| Explore · Sector | `sector-rotation` | Rule #8 (this sector's position in cross-sector rotation) |
+| Explore · Sector | `sector-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
+| Stock detail | `stock-hero` | Rules #4 (Minervini), #5 (IBD RS), #7 (rel-vol breakout) |
+| Stock detail | `stock-momentum` | Rule #3 (JT 12-1 cross-sectional rank) |
+| Stock detail | `stock-news` | Rule #6 (RSI divergence WARN) |
+| Stock detail | `stock-four-decision` | DP §11 four-decision-card fires with full rec bundle |
+| Stock detail | `stock-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
 | MF detail | `mf-suitability` | Composite MF-rule engine (V1.2+) |
+| MF detail | `mf-ibd-rs` | Rule #5 (IBD RS ≥80 on fund NAV vs category bench) |
+| MF detail | `mf-faber` | Rule #10 (Faber 10M SMA on fund NAV) |
+| MF detail | `mf-four-decision` | DP §11 four-decision-card fires |
+| MF detail | `mf-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
 | MF rank | `mfrank-screens` | Screen-rule fires (top-quintile + low-AUM etc.) |
 | Breadth Terminal | `breadth-regime` | Rules #1, #10 |
 | Breadth Terminal | `breadth-signal-header` | Rule #2 (Zweig) |
+| Breadth Terminal | `breadth-thrust-follow` | Rule #9 (breadth-thrust follow-through) |
 | Breadth Terminal | `breadth-playback-halo` | Conviction chips decorate trade points on §10.5 block |
-| Stock detail | `stock-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
-| MF detail | `mf-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
-| Explore · Sector | `sector-playback` | §10.5 embed swaps threshold ladder for rule-library signals |
 | Portfolios | `portfolio-book-{i}` | Pending-rec fires per book |
 | Lab | `lab-rule-selector` | Goes live (rule library activated) |
 | Lab | `lab-playback-overlay` | Conviction halos on Breadth Playback mode |
+
+### 14.1 Rule coverage matrix (which Rule fires where)
+
+Cross-check: every one of the 10 V1.1 rules must have ≥1 rec-slot in
+Stage-1 where it will bind. If a rule has zero slots, V1 ships
+blind to that rule and V1.1 has no anchor point.
+
+| # | Rule (memory `project_rule_engine_v1_1.md`) | Primary slot(s) | Secondary slot(s) | Signal type |
+|---|---|---|---|---|
+| 1 | %>200DMA regime shift | `pulse-regime`, `country-breadth`, `sector-breadth`, `breadth-regime` | — | REGIME |
+| 2 | Zweig Breadth Thrust | `country-breadth`, `sector-breadth`, `breadth-signal-header` | — | ENTRY |
+| 3 | JT 12-1 momentum | `sector-members`, `stock-momentum` | `mfrank-screens` (MF equivalent cross-sectional) | ENTRY |
+| 4 | Minervini Trend Template | `stock-hero`, `sector-members` | — | ENTRY |
+| 5 | IBD RS Rating ≥80 | `stock-hero`, `sector-members`, `mf-ibd-rs` | — | CONFIRM |
+| 6 | RSI bearish divergence | `stock-news` | — | WARN |
+| 7 | Relative-volume breakout | `stock-hero` | — | ENTRY |
+| 8 | Sector rotation screen (top-quintile RS composite) | `pulse-sector-screen`, `global-sector-rotation`, `sector-rotation` | `mfrank-screens` | ENTRY |
+| 9 | Breadth-thrust follow-through | `pulse-movers-screen`, `country-breadth-thrust`, `breadth-thrust-follow` | — | CONFIRM |
+| 10 | Faber 10M SMA | `pulse-regime`, `global-regime`, `breadth-regime`, `mf-faber` | — | EXIT/REGIME |
+
+**Coverage check result:** every rule has ≥2 slots. Rules #3/#8/#9
+now have explicit primary slots (added in v1.1 revision — the
+previous draft omitted these). V1.1 binding work has no blind spots.
 
 ---
 
@@ -887,14 +1432,41 @@ run in parallel as independent mockup jobs. S1-10 last.
 
 ## §18 · Acceptance criteria for Stage 1 done
 
+### 18.1 Render + content
 - [ ] All 10 mockup pages render without error in Chrome + Safari + Firefox
 - [ ] Every page has hero, EXPLAIN blocks, info tooltips, formula disclosure, methodology footer
-- [ ] Breadth Terminal renders 5Y chart with event markers + zone crossings + DESCRIBE block
+- [ ] Breadth Terminal renders 5Y chart with event markers + zone crossings + interpretation sidecar
 - [ ] MF rank renders 4-factor composite scoring with tie-break indicator + formula disclosure
 - [ ] Lab renders with rule selector (V1.1 disabled state), equity curve, drawdown, KPIs, trade log
 - [ ] Global search works on fixture data across all entity types, `⌘K` opens, `↑↓↵` nav, fuzzy match on "HDFC flexi"
+
+### 18.2 Design-principles §19 consistency checklist (enforced per page)
+A screen that fails any of these is not ATLAS. Every page MUST pass:
+
+- [ ] `regime-banner` at the top (DP §12)
+- [ ] `signal-strip` immediately below (DP §13)
+- [ ] RS is the headline number, not absolute return (DP §9)
+- [ ] Benchmark comparison on every quantitative visual (DP §3)
+- [ ] Four-factor conviction chip on every RS call (DP §10)
+- [ ] Gold RS amplifier chip alongside every RS chip (DP §10, §1.2.1)
+- [ ] Four decisions explicit on every recommendation slot (DP §11)
+- [ ] Dual-axis overlay wherever an indicator pairs with price (DP §14)
+- [ ] `interpretation-sidecar` on every analytical chart, `AUTO` tagged (DP §15)
+- [ ] `signal-history-table` below every oscillator (DP §16)
+- [ ] `divergences-block` on every multi-factor surface (DP §10)
+- [ ] Stop level on every buy-rec slot (DP §17.2)
+- [ ] `simulate-this` affordance on every predictive output (DP §18)
+- [ ] S / M / L card sizing only (DP §4)
+- [ ] Motion under 150ms, no decorative motion (DP §7)
+
+### 18.3 Governance + quality harness
 - [ ] Zero RECOMMEND-tier prose present (every "BUY / HOLD / reduce" string removed or gated)
-- [ ] All V1.1 `rec-slot` placeholders present per §14
+- [ ] All V1.1 `rec-slot` placeholders present per §14 + every Rule #1–#10 has ≥1 slot per §14.1
+- [ ] Every fixture validates against its schema in `/mockups/fixtures/schemas/` (ajv Draft-07)
+- [ ] Every page passes `scripts/checks/` 12-check battery (html5_valid, design_tokens_only, kill_list, i18n_indian, chart_contract, methodology_footer, dom_required, fixture_schema, fixture_parity, playwright_a11y, playwright_screenshot, link_integrity)
+- [ ] Every page passes `frontend-v1-criteria.yaml` `dom_required` + `dom_forbidden` for its page category in §1.10
+- [ ] Mobile contract (§1.8 / `frontend-v1-mobile.md`): every page renders without horizontal scroll at 360 px
+- [ ] States contract (§1.9 / `frontend-v1-states.md`): every block has defined loading / empty / stale / error behaviour; every stalable block carries `data_as_of`
 - [ ] Deployed to atlas.jslwealth.in/mockups/* and every page click-through works
 - [ ] Smoke checklist signed off by FM
 

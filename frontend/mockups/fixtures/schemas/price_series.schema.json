@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas.jslwealth.in/schemas/price_series.schema.json",
+  "title": "ATLAS · Stock OHLC price series",
+  "description": "Stock OHLCV + adjusted close + volume fixture (frontend-v1 spec §10.5.7 — `reliance_close_5y.json` sample). Consumed by Stock detail (§7) chart and the §10.5 Signal Playback embed when the instrument is a single stock. Stage 2 source: `/api/v1/stocks/{symbol}/prices?range=5y` or `/api/v1/stocks/{symbol}/chart-data`. Every number is Decimal-representable to 4 decimal places.",
+  "type": "object",
+  "required": ["symbol", "exchange", "isin", "data_as_of", "series"],
+  "additionalProperties": false,
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "pattern": "^[A-Z0-9&._-]+$",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "Exchange ticker symbol, uppercase (NSE convention).",
+      "examples": ["RELIANCE", "HDFCBANK", "M&M"]
+    },
+    "exchange": {
+      "type": "string",
+      "enum": ["NSE", "BSE"],
+      "description": "Primary listing venue for this price series. Most ATLAS flows prefer NSE; BSE included for completeness.",
+      "examples": ["NSE"]
+    },
+    "isin": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$",
+      "description": "ISO 6166 ISIN code. 12 chars: 2-letter country + 9 alphanumeric + 1 check digit.",
+      "examples": ["INE002A01018"]
+    },
+    "company_name": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Optional full company name for display (hero strip on Stock detail).",
+      "examples": ["Reliance Industries Limited"]
+    },
+    "sector": {
+      "type": "string",
+      "description": "Optional GICS/NSE sector label.",
+      "examples": ["Energy", "Financials"]
+    },
+    "data_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Most recent trading session in the fixture (ISO YYYY-MM-DD, IST). Matches the last `series[].date`.",
+      "examples": ["2026-04-17"]
+    },
+    "adjustment_as_of": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Optional date through which `adj_close` is adjusted for splits/bonuses. Corporate actions after this date have NOT been back-applied.",
+      "examples": ["2026-04-17"]
+    },
+    "series": {
+      "type": "array",
+      "description": "Daily OHLCV rows, ascending by `date`. Typical 5Y sample is approximately 1,250 rows (NSE trading days). Rows are present only for trading sessions — never fill forward for holidays.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["date", "open", "high", "low", "close", "adj_close", "volume"],
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "Trading session date (ISO YYYY-MM-DD, IST).",
+            "examples": ["2026-04-17"]
+          },
+          "open": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0001,
+            "description": "Session open in rupees, 4 decimal places.",
+            "examples": [2845.5000]
+          },
+          "high": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0001,
+            "description": "Session high in rupees, 4 decimal places. Must satisfy `high >= max(open, close, low)`.",
+            "examples": [2871.8500]
+          },
+          "low": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0001,
+            "description": "Session low in rupees, 4 decimal places. Must satisfy `low <= min(open, close, high)`.",
+            "examples": [2831.2000]
+          },
+          "close": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0001,
+            "description": "Session close in rupees, 4 decimal places (raw, NOT adjusted).",
+            "examples": [2863.4500]
+          },
+          "adj_close": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.0001,
+            "description": "Close adjusted for splits and bonuses through `adjustment_as_of`. Use this series — not `close` — for any return/backtest calculation. Dividends are NOT included (price-return basis).",
+            "examples": [2863.4500]
+          },
+          "volume": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Traded volume on `date` (shares). Integer, non-negative.",
+            "examples": [4820345]
+          },
+          "delivery_volume": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Optional delivery-based volume (shares that settled T+2, non-intraday). When present must satisfy `<= volume`.",
+            "examples": [1912800]
+          },
+          "turnover": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01,
+            "description": "Optional traded turnover on `date` in rupees (volume × VWAP), 2 decimal places.",
+            "examples": [13812456789.50]
+          }
+        }
+      }
+    }
+  }
+}
