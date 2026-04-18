@@ -42,18 +42,23 @@ router = APIRouter(prefix="/api/v1/simulate", tags=["simulation"])
 @router.post("/run", response_model=SimulationRunResponse)
 async def run_simulation(
     request: SimulationRunRequest,
+    engine: str = Query(default="vectorbt", pattern="^(legacy|vectorbt)$"),
     session: AsyncSession = Depends(get_db),
 ) -> SimulationRunResponse:
     """Execute a backtest simulation.
 
     Accepts a SimulationConfig and returns the full simulation result including
     daily portfolio values, transactions, analytics summary, and tax breakdown.
+
+    Query params:
+      engine: "vectorbt" (default) | "legacy" — selects the backtest engine.
+              Use ?engine=legacy for rollback if vectorbt produces unexpected results.
     """
     jip = JIPDataService(session)
     service = SimulationService(session)
 
     try:
-        sim_result = await service.run_backtest(config=request.config, jip=jip)
+        sim_result = await service.run_backtest(config=request.config, jip=jip, engine=engine)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except NotImplementedError as exc:

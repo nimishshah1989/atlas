@@ -23,7 +23,7 @@ import datetime
 from typing import Any, Optional
 
 import structlog
-from croniter import croniter, CroniterBadCronError  # type: ignore
+from croniter import croniter, CroniterBadCronError  # type: ignore[import-untyped]
 
 log = structlog.get_logger()
 

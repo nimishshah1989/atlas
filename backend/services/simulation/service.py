@@ -26,7 +26,7 @@ from backend.models.simulation import (
     TrialResult,
 )
 from backend.services.simulation.analytics import compute_analytics
-from backend.services.simulation.backtest_engine import BacktestEngine, BacktestResult
+from backend.services.simulation.backtest_engine import BacktestResult
 from backend.services.simulation.repo import SimulationRepo
 from backend.services.simulation.signal_adapters import (
     SignalSeries,
@@ -58,6 +58,7 @@ class SimulationService:
         price_data: Optional[list[dict[str, Any]]] = None,
         signal_data: Optional[list[dict[str, Any]]] = None,
         jip: Optional[Any] = None,  # JIPDataService — avoid circular import
+        engine: str = "vectorbt",
     ) -> SimulationResult:
         """Execute a backtest simulation.
 
@@ -65,7 +66,7 @@ class SimulationService:
           1. Obtain price data (from jip or price_data)
           2. Obtain signal source data (from jip or signal_data)
           3. Build SignalSeries via signal adapter
-          4. Run BacktestEngine
+          4. Run backtest engine (vectorbt or legacy)
           5. Compute analytics
           6. Compute tax summary
           7. Persist to atlas_simulations
@@ -76,6 +77,7 @@ class SimulationService:
             price_data: Optional pre-fetched price rows [{"date": date, "nav": ...}, ...]
             signal_data: Optional pre-fetched signal rows
             jip: Optional JIPDataService for live data fetching
+            engine: "vectorbt" (default) | "legacy" — selects the backtest engine.
 
         Raises:
             ValueError: If data cannot be obtained.
@@ -98,8 +100,14 @@ class SimulationService:
         signal_series = self._build_signal_series(config, raw_signal_data)
 
         # --- Step 4: Run backtest engine ---
-        engine = BacktestEngine()
-        bt_result: BacktestResult = engine.run(config, price_series, signal_series)
+        if engine == "legacy":
+            from backend.services.simulation.backtest_engine import BacktestEngine as _LegacyEngine
+
+            bt_result: BacktestResult = _LegacyEngine().run(config, price_series, signal_series)
+        else:
+            from backend.services.simulation.vectorbt_engine import VectorbtEngine as _VbtEngine
+
+            bt_result = _VbtEngine().run(config, price_series, signal_series)
 
         log.info(
             "simulation_backtest_complete",
