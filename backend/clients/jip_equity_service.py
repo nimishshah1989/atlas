@@ -356,6 +356,54 @@ class JIPEquityService:
             "losers": [row for row in rows if row.get("mover_type") == "loser"],
         }
 
+    async def symbol_exists(self, symbol: str) -> bool:
+        """Return True if an active instrument with this symbol exists.
+
+        Args:
+            symbol: Ticker symbol (e.g. "RELIANCE").
+        """
+        sql = text("""
+            SELECT 1 FROM de_instrument
+            WHERE current_symbol = :symbol AND is_active = true
+            LIMIT 1
+        """)
+        query_result = await self.session.execute(sql, {"symbol": symbol.upper()})
+        return query_result.fetchone() is not None
+
+    async def get_corporate_actions(
+        self,
+        symbol: str,
+    ) -> list[dict[str, Any]]:
+        """Fetch distinct corporate actions with non-null adj_factor for a symbol.
+
+        Uses DISTINCT ON (ex_date, action_type) to deduplicate JIP duplicates.
+        Filters to action_types that affect share price (split, bonus, rights).
+        Ordered by ex_date ASC.
+
+        Args:
+            symbol: Ticker symbol (e.g. "RELIANCE").
+
+        Returns:
+            List of dicts with: ex_date (date), action_type (str), adj_factor (Decimal).
+        """
+        sql = text("""
+            SELECT DISTINCT ON (ca.ex_date, ca.action_type)
+                ca.ex_date,
+                ca.action_type,
+                ca.adj_factor
+            FROM de_corporate_actions ca
+            JOIN de_instrument i ON i.id = ca.instrument_id
+            WHERE i.current_symbol = :symbol
+              AND i.is_active = true
+              AND ca.adj_factor IS NOT NULL
+              AND ca.adj_factor > 0
+              AND ca.action_type IN ('split', 'bonus', 'rights')
+            ORDER BY ca.ex_date ASC, ca.action_type ASC, ca.adj_factor ASC
+        """)
+        query_result = await self.session.execute(sql, {"symbol": symbol.upper()})
+        rows = query_result.mappings().all()
+        return [dict(r) for r in rows]
+
     async def get_chart_data(
         self,
         symbol: str,

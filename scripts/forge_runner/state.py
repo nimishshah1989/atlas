@@ -12,6 +12,7 @@ paths touch disjoint columns.
 Public API:
     get_chunk(chunk_id, db_path) -> ChunkRow | None
     mark_in_progress(chunk_id, pid, db_path) -> None
+    mark_done(chunk_id, db_path) -> None
     mark_failed(chunk_id, reason, db_path) -> None
     reset_to_pending(chunk_id, db_path) -> None
     list_in_progress(db_path) -> list[ChunkRow]
@@ -124,6 +125,36 @@ def mark_in_progress(chunk_id: str, pid: int, db_path: str) -> None:
             pid=pid,
             started_at=now,
         )
+    except sqlite3.Error:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+
+
+def mark_done(chunk_id: str, db_path: str) -> None:
+    """Transition *chunk_id* → DONE.
+
+    Sets: status=DONE, finished_at=now, runner_pid=NULL, updated_at=now.
+    Clears: failure_reason. Used when verifier confirms the commit landed
+    but state.db was never flipped (the needs_sync race).
+    """
+    now = to_iso(now_ist())
+    conn = _connect(db_path)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute(
+            """UPDATE chunks
+               SET status = 'DONE',
+                   finished_at = ?,
+                   runner_pid = NULL,
+                   failure_reason = NULL,
+                   updated_at = ?
+               WHERE id = ?""",
+            (now, now, chunk_id),
+        )
+        conn.execute("COMMIT")
+        logger.info("chunk_marked_done", chunk_id=chunk_id, finished_at=now)
     except sqlite3.Error:
         conn.execute("ROLLBACK")
         raise

@@ -101,14 +101,35 @@ async def run_loop(ctx: RunContext) -> int:
                 result = await stage.run(ctx)
 
                 if result.status == "needs_sync":
-                    # Commit landed but post-chunk sync missed — log and continue
+                    # Commit landed but state.db never flipped DONE (SDK
+                    # exit raced the runner timeout). Reconcile here so the
+                    # chunk doesn't loop forever as IN_PROGRESS.
                     logger.warning(
-                        "loop_needs_sync",
+                        "loop_needs_sync_reconciling",
                         chunk_id=result.chunk_id,
                         reason=result.reason,
                     )
-                    # Treat as continue — the sync will reconcile state.db
-                    continue
+                    chunk = ctx.current_chunk
+                    if chunk is not None:
+                        try:
+                            from scripts.forge_runner.state import mark_done
+
+                            mark_done(chunk.id, ctx.state_db_path)
+                            ctx.chunks_completed += 1
+                            logger.info(
+                                "loop_needs_sync_reconciled",
+                                chunk_id=chunk.id,
+                            )
+                        except Exception as exc:
+                            logger.error(
+                                "loop_needs_sync_reconcile_failed",
+                                chunk_id=chunk.id,
+                                error=str(exc),
+                            )
+                    # Skip remaining stages for this iteration; the chunk
+                    # already shipped and post-chunk sync ran on the prior
+                    # session. Move on to the next iteration.
+                    break
 
                 if result.status == "failed":
                     _mark_current_failed(ctx, result.reason)

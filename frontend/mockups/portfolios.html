@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Portfolios</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ══ Shell (same as explore-*.html — keep in sync) ═══════════════════════ */
+    .topbar { position: sticky; top: 0; z-index: 30; }
+    .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
+    .subbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-1); min-height: 40px; }
+    .subbar__link { font-size: 12px; font-weight: 500; color: var(--text-secondary); padding: 10px 14px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none; }
+    .subbar__link--active { color: var(--accent-700); font-weight: 600; border-bottom-color: var(--accent-700); }
+    .subbar__spacer { flex: 1; }
+    .subbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+
+    /* ── Page header ─────────────────────────────────────────────────────── */
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding: var(--space-5) 0 var(--space-4); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph-left { display: flex; flex-direction: column; gap: 4px; }
+    .ph-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+    .ph-title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+    .ph-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; max-width: 720px; line-height: 1.55; }
+    .ph-right { display: flex; align-items: center; gap: var(--space-3); }
+    .kpi-chip { display: inline-flex; flex-direction: column; gap: 2px; padding: 6px 12px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-variant-numeric: tabular-nums; min-width: 110px; }
+    .kpi-chip__l { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .kpi-chip__v { font-family: var(--font-serif); font-size: 17px; font-weight: 500; line-height: 1; color: var(--text-primary); }
+    .kpi-chip__m { font-size: 10px; color: var(--text-secondary); }
+    .kpi-chip__m .pos { color: var(--rag-green-700); font-weight: 600; }
+    .kpi-chip__m .neg { color: var(--rag-red-700); font-weight: 600; }
+
+    /* ══ Accountability banner — the one-line system vs FM alpha number ════ */
+    .acc-banner { display: grid; grid-template-columns: 1fr auto; gap: var(--space-5); background: linear-gradient(135deg, #134F5C 0%, #1A6776 60%, #247386 100%); color: #fff; border-radius: var(--radius-md); padding: var(--space-5) var(--space-6); margin-bottom: var(--space-6); box-shadow: 0 2px 6px rgba(19,79,92,0.18); }
+    .acc-banner__label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.78; }
+    .acc-banner__hed { font-family: var(--font-serif); font-size: 24px; font-weight: 400; line-height: 1.25; margin-top: 6px; }
+    .acc-banner__hed strong { color: #FFDDA7; font-weight: 600; }
+    .acc-banner__sub { font-size: 12px; margin-top: 8px; opacity: 0.88; line-height: 1.55; max-width: 680px; }
+    .acc-num { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+    .acc-num__l { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
+    .acc-num__v { font-family: var(--font-serif); font-size: 42px; font-weight: 500; line-height: 1; }
+    .acc-num__m { font-size: 10px; opacity: 0.78; }
+
+    /* ══ Book card grid ═══════════════════════════════════════════════════ */
+    .book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-5); margin-bottom: var(--space-6); }
+    .book { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 150ms; }
+    .book:hover { box-shadow: 0 2px 8px rgba(16,24,40,0.06); }
+    .book__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-4) var(--space-5) var(--space-3); border-bottom: 1px solid var(--border-subtle); }
+    .book__title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .book__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary); }
+    .book__title { font-family: var(--font-serif); font-size: 20px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
+    .book__meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .book__status { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0; }
+    .book__status--on { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .book__status--watch { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .book__status--drift { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .book__status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .book__body { padding: var(--space-4) var(--space-5); }
+    .book__kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-4); }
+    .book-kpi { display: flex; flex-direction: column; gap: 3px; font-variant-numeric: tabular-nums; }
+    .book-kpi__l { font-size: 9px; color: var(--text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .book-kpi__v { font-family: var(--font-serif); font-size: 18px; font-weight: 500; color: var(--text-primary); line-height: 1; }
+    .book-kpi__m { font-size: 10px; color: var(--text-secondary); }
+    .book-kpi__m .pos { color: var(--rag-green-700); font-weight: 600; }
+    .book-kpi__m .neg { color: var(--rag-red-700); font-weight: 600; }
+
+    /* Shadow-vs-actual mini spark row */
+    .book__spark { display: grid; grid-template-columns: 1fr 180px; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px dashed var(--border-subtle); border-bottom: 1px dashed var(--border-subtle); margin-bottom: var(--space-4); }
+    .book-spark__label { display: flex; flex-direction: column; gap: 4px; }
+    .book-spark__label-l { font-size: 9px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .book-spark__label-v { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
+    .book-spark__label-v strong { font-family: var(--font-serif); font-size: 16px; font-weight: 500; }
+    .book-spark__label-v .pos { color: var(--rag-green-700); }
+    .book-spark__label-v .neg { color: var(--rag-red-700); }
+    .book-spark__svg { width: 180px; height: 50px; }
+
+    .book__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: 11px; }
+    .book__holdings { display: flex; gap: var(--space-3); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .book__holdings strong { color: var(--text-primary); font-weight: 600; }
+    .book__recs { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+    .book__recs-n { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; font-size: 10px; font-weight: 700; border-radius: var(--radius-full); background: var(--rag-amber-500); color: #fff; font-variant-numeric: tabular-nums; }
+    .book__recs-n--ok { background: var(--rag-green-500); }
+    .book__cta { color: var(--accent-700); font-weight: 600; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+    .book__cta:hover { text-decoration: underline; }
+
+    /* ══ Reconciled ledger — cross-book pending recs ══════════════════════ */
+    .sect { margin-bottom: var(--space-8); }
+    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 2px solid var(--border-default); padding-bottom: var(--space-3); margin-bottom: var(--space-4); }
+    .sect__title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .sect__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
+    .sect__title { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
+    .sect__sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+    .ledger { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .ledger-row { display: grid; grid-template-columns: 100px 1.4fr 90px 90px 110px 120px 120px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .ledger-row:last-child { border-bottom: none; }
+    .ledger-row--head { background: var(--bg-inset); font-size: 9px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; padding-bottom: 8px; }
+    .ledger-row:hover:not(.ledger-row--head) { background: var(--bg-inset); cursor: pointer; }
+    .ledger__book { font-weight: 600; color: var(--text-primary); font-size: 11px; }
+    .ledger__book-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
+    .ledger__sym { font-family: var(--font-mono, monospace); font-weight: 600; color: var(--text-primary); font-size: 11px; }
+    .ledger__desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .rec-chip { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .rec-chip--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .rec-chip--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .rec-chip--exit { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .rec-chip--hedge { background: var(--accent-100); color: var(--accent-700); }
+    .wt-pair { display: flex; align-items: baseline; gap: 4px; font-weight: 600; }
+    .wt-pair__arrow { color: var(--text-tertiary); }
+    .age-pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full); background: var(--bg-inset); color: var(--text-secondary); }
+    .age-pill--stale { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .conv-chip { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 2px; letter-spacing: 0.03em; }
+    .conv-chip--petrol { background: var(--accent-100); color: var(--accent-700); }
+    .conv-chip--green { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .conv-chip--amber { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .act-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; font-family: var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; }
+    .act-btn--primary { background: var(--accent-700); color: #fff; }
+    .act-btn--primary:hover { background: var(--accent-800, #0e3d48); }
+    .act-btn--ghost { background: var(--bg-surface); color: var(--text-secondary); border-color: var(--border-default); }
+    .act-btn--ghost:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+
+    .bulk-bar { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--bg-inset); border-top: 1px solid var(--border-subtle); font-size: 12px; }
+    .bulk-bar__left { display: flex; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .bulk-bar__right { display: flex; gap: var(--space-2); }
+
+    /* ══ Footnote strip ═══════════════════════════════════════════════════ */
+    .footnote { font-size: 10px; color: var(--text-tertiary); border-top: 1px solid var(--border-subtle); padding-top: var(--space-3); margin-top: var(--space-6); line-height: 1.6; }
+    .footnote strong { color: var(--text-secondary); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     TOPBAR — shared 5-surface chrome (kept in sync with explore-*.html)
+     ════════════════════════════════════════════════════════════════════ -->
+<header class="topbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); box-shadow: 0 1px 2px rgba(16,24,40,0.03);">
+  <div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
+    <a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
+      <div style="display: flex; flex-direction: column; line-height: 1;">
+        <span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
+        <span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
+      </div>
+    </a>
+    <nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
+      <a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
+      <a href="explore-global.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
+      <a href="portfolios.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">5</span></a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
+    </nav>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span style="font-size: 12px; color: var(--text-tertiary);">Search portfolios, recs, holdings…</span>
+      <span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span class="sync-dot"></span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
+        <span style="font-size: 9px; color: var(--text-tertiary);">IBKR sync · 08:42 IST</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SUB-BAR — Decide surface anchors
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a href="portfolios.html" class="subbar__link subbar__link--active">All books</a>
+    <a href="#" class="subbar__link">Multi-Asset India</a>
+    <a href="#" class="subbar__link">IBKR Global</a>
+    <a href="#" class="subbar__link">Thematic IT</a>
+    <a href="#" class="subbar__link">Conservative Debt+</a>
+    <span class="subbar__spacer"></span>
+    <div class="subbar__actions">
+      <span style="font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums;">Broker: <strong style="color:var(--text-secondary);">IBKR / Kotak Neo</strong> · Last reconcile <strong style="color:var(--text-secondary);">08:42</strong></span>
+      <button class="act-btn act-btn--ghost" style="font-size: 10px;">⟳ Re-sync</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     PAGE
+     ════════════════════════════════════════════════════════════════════ -->
+<main class="page">
+
+  <header class="page-header">
+    <div class="ph-left">
+      <span class="ph-eyebrow">Decide · Portfolios</span>
+      <h1 class="ph-title">Books & system accountability</h1>
+      <p class="ph-sub">Four books tracked daily against IBKR / Kotak Neo positions. Each rec the system emits is logged. If you don't act, we compute the <strong>shadow NAV</strong> — what the book would have done if you'd followed every call — so alpha is always decomposed into <em>system</em> vs <em>discretion</em>.</p>
+    </div>
+    <div class="ph-right">
+      <div class="kpi-chip">
+        <span class="kpi-chip__l">Aggregate AUM</span>
+        <span class="kpi-chip__v">₹847.2 cr</span>
+        <span class="kpi-chip__m"><span class="pos">+2.14%</span> MTD</span>
+      </div>
+      <div class="kpi-chip">
+        <span class="kpi-chip__l">Pending recs</span>
+        <span class="kpi-chip__v" style="color: var(--rag-amber-700);">14</span>
+        <span class="kpi-chip__m">Across 4 books</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ Accountability banner — one-line system vs FM alpha ══════════════ -->
+  <div class="acc-banner">
+    <div>
+      <span class="acc-banner__label">System accountability · YTD through 18 Apr 2026</span>
+      <h2 class="acc-banner__hed">Following every ATLAS rec across all books would have added <strong>+68 bps</strong> vs your actual execution.</h2>
+      <p class="acc-banner__sub">Of 47 calls emitted YTD, you acted on 31 (66% follow-rate). The 16 skipped calls cumulatively cost −24 bps; the 11 discretionary adds contributed +8 bps. Net discretion drag <strong>−16 bps</strong>. Biggest miss: <em>Trim FMCG 24 Feb</em> (would have avoided −2.3% HUL drawdown).</p>
+    </div>
+    <div class="acc-num">
+      <span class="acc-num__l">Shadow minus actual</span>
+      <span class="acc-num__v">+68 bps</span>
+      <span class="acc-num__m">Over ₹847 cr = ₹5.76 cr forgone</span>
+    </div>
+  </div>
+
+  <!-- ══ Four book cards ══════════════════════════════════════════════════ -->
+  <div class="book-grid">
+
+    <!-- ─── Book 1: Multi-Asset India ─────────────────────────────────── -->
+    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+      <div class="book__head">
+        <div class="book__title-wrap">
+          <span class="book__eyebrow">Multi-Asset · India</span>
+          <h3 class="book__title">Multi-Asset India</h3>
+          <div class="book__meta">Bench: 60% Nifty500 TRI · 25% CRISIL Composite · 15% Gold · Inception 14 Jan 2021</div>
+        </div>
+        <span class="book__status book__status--watch"><span class="book__status-dot"></span>Watch</span>
+      </div>
+      <div class="book__body">
+        <div class="book__kpis">
+          <div class="book-kpi">
+            <span class="book-kpi__l">AUM</span>
+            <span class="book-kpi__v">₹412.8 cr</span>
+            <span class="book-kpi__m">142 unitholders</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">MTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-red-700);">−0.84%</span>
+            <span class="book-kpi__m"><span class="neg">−32 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">YTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+6.42%</span>
+            <span class="book-kpi__m"><span class="pos">+118 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">1Y · Sharpe</span>
+            <span class="book-kpi__v">+18.4%</span>
+            <span class="book-kpi__m">Sharpe 1.24 · MaxDD −8.2%</span>
+          </div>
+        </div>
+
+        <!-- Shadow vs Actual spark -->
+        <div class="book__spark">
+          <div class="book-spark__label">
+            <span class="book-spark__label-l">System vs FM · YTD</span>
+            <span class="book-spark__label-v">Shadow <strong class="pos">+7.34%</strong> vs Actual <strong>+6.42%</strong><br/>FM drag <span class="neg"><strong>−92 bps</strong></span> (2 skipped trims, 1 held-too-long IT)</span>
+          </div>
+          <svg class="book-spark__svg" viewBox="0 0 180 50" preserveAspectRatio="none">
+            <!-- Actual NAV path -->
+            <path d="M 4 38 L 18 36 L 32 34 L 46 35 L 60 31 L 74 28 L 88 29 L 102 26 L 116 22 L 130 23 L 144 20 L 158 18 L 172 17"
+                  stroke="#134F5C" stroke-width="1.6" fill="none" />
+            <!-- Shadow NAV path (always ≥ actual here) -->
+            <path d="M 4 38 L 18 35 L 32 32 L 46 31 L 60 27 L 74 23 L 88 22 L 102 18 L 116 14 L 130 13 L 144 10 L 158 8 L 172 6"
+                  stroke="#16A374" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
+            <!-- Fill: shadow > actual = red (FM drag) -->
+            <path d="M 4 38 L 18 35 L 32 32 L 46 31 L 60 27 L 74 23 L 88 22 L 102 18 L 116 14 L 130 13 L 144 10 L 158 8 L 172 6 L 172 17 L 158 18 L 144 20 L 130 23 L 116 22 L 102 26 L 88 29 L 74 28 L 60 31 L 46 35 L 32 34 L 18 36 L 4 38 Z"
+                  fill="#F59E0B" opacity="0.14" />
+            <!-- Rec dots on actual path -->
+            <circle cx="46" cy="35" r="2" fill="#16A374" />
+            <circle cx="88" cy="29" r="2" fill="#E11D48" />
+            <circle cx="116" cy="22" r="2" fill="#16A374" />
+            <circle cx="144" cy="20" r="2" fill="#F59E0B" />
+          </svg>
+        </div>
+
+        <div class="book__footer">
+          <div class="book__holdings">
+            <span><strong>24</strong> stocks</span>
+            <span><strong>9</strong> MFs</span>
+            <span><strong>4</strong> ETFs</span>
+          </div>
+          <span class="book__recs"><span class="book__recs-n">6</span> pending recs</span>
+          <span class="book__cta">Open book →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ─── Book 2: IBKR Global ───────────────────────────────────────── -->
+    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+      <div class="book__head">
+        <div class="book__title-wrap">
+          <span class="book__eyebrow">IBKR · Global</span>
+          <h3 class="book__title">IBKR Global Core</h3>
+          <div class="book__meta">Bench: 70% MSCI World · 20% S&P 500 · 10% Gold · Inception 08 Jul 2022</div>
+        </div>
+        <span class="book__status book__status--on"><span class="book__status-dot"></span>On-model</span>
+      </div>
+      <div class="book__body">
+        <div class="book__kpis">
+          <div class="book-kpi">
+            <span class="book-kpi__l">AUM</span>
+            <span class="book-kpi__v">$24.18 M</span>
+            <span class="book-kpi__m">₹201.6 cr · 38 clients</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">MTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+1.42%</span>
+            <span class="book-kpi__m"><span class="pos">+18 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">YTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+8.94%</span>
+            <span class="book-kpi__m"><span class="pos">+142 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">1Y · Sharpe</span>
+            <span class="book-kpi__v">+22.1%</span>
+            <span class="book-kpi__m">Sharpe 1.41 · MaxDD −6.8%</span>
+          </div>
+        </div>
+
+        <div class="book__spark">
+          <div class="book-spark__label">
+            <span class="book-spark__label-l">System vs FM · YTD</span>
+            <span class="book-spark__label-v">Shadow <strong class="pos">+9.08%</strong> vs Actual <strong>+8.94%</strong><br/>FM drag <span class="neg"><strong>−14 bps</strong></span> (closest-tracking book)</span>
+          </div>
+          <svg class="book-spark__svg" viewBox="0 0 180 50" preserveAspectRatio="none">
+            <path d="M 4 38 L 18 34 L 32 30 L 46 26 L 60 22 L 74 18 L 88 15 L 102 12 L 116 10 L 130 8 L 144 6 L 158 5 L 172 4"
+                  stroke="#134F5C" stroke-width="1.6" fill="none" />
+            <path d="M 4 38 L 18 34 L 32 30 L 46 25 L 60 21 L 74 17 L 88 14 L 102 11 L 116 9 L 130 7 L 144 5 L 158 4 L 172 3"
+                  stroke="#16A374" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
+            <path d="M 4 38 L 172 3 L 172 4 L 4 38 Z" fill="#16A374" opacity="0.08" />
+            <circle cx="60" cy="22" r="2" fill="#16A374" />
+            <circle cx="102" cy="12" r="2" fill="#16A374" />
+            <circle cx="144" cy="6" r="2" fill="#16A374" />
+          </svg>
+        </div>
+
+        <div class="book__footer">
+          <div class="book__holdings">
+            <span><strong>18</strong> stocks</span>
+            <span><strong>6</strong> ETFs</span>
+            <span><strong>2</strong> CEFs</span>
+          </div>
+          <span class="book__recs"><span class="book__recs-n book__recs-n--ok">3</span> pending recs</span>
+          <span class="book__cta">Open book →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ─── Book 3: Thematic IT ───────────────────────────────────────── -->
+    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+      <div class="book__head">
+        <div class="book__title-wrap">
+          <span class="book__eyebrow">Thematic · India IT</span>
+          <h3 class="book__title">Thematic IT Leaders</h3>
+          <div class="book__meta">Bench: Nifty IT TRI · Inception 22 Nov 2023 · Concentrated 8–12 names</div>
+        </div>
+        <span class="book__status book__status--on"><span class="book__status-dot"></span>On-model</span>
+      </div>
+      <div class="book__body">
+        <div class="book__kpis">
+          <div class="book-kpi">
+            <span class="book-kpi__l">AUM</span>
+            <span class="book-kpi__v">₹148.4 cr</span>
+            <span class="book-kpi__m">24 unitholders</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">MTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+4.82%</span>
+            <span class="book-kpi__m"><span class="pos">+64 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">YTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+12.18%</span>
+            <span class="book-kpi__m"><span class="pos">+208 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">1Y · Sharpe</span>
+            <span class="book-kpi__v">+31.4%</span>
+            <span class="book-kpi__m">Sharpe 1.68 · MaxDD −11.2%</span>
+          </div>
+        </div>
+
+        <div class="book__spark">
+          <div class="book-spark__label">
+            <span class="book-spark__label-l">System vs FM · YTD</span>
+            <span class="book-spark__label-v">Shadow <strong class="pos">+11.94%</strong> vs Actual <strong>+12.18%</strong><br/>FM <span class="pos"><strong>+24 bps</strong></span> — one discretionary TCS overweight paid off</span>
+          </div>
+          <svg class="book-spark__svg" viewBox="0 0 180 50" preserveAspectRatio="none">
+            <path d="M 4 40 L 18 36 L 32 32 L 46 28 L 60 24 L 74 20 L 88 16 L 102 13 L 116 10 L 130 8 L 144 6 L 158 4 L 172 2"
+                  stroke="#134F5C" stroke-width="1.6" fill="none" />
+            <path d="M 4 40 L 18 37 L 32 34 L 46 30 L 60 26 L 74 22 L 88 18 L 102 15 L 116 12 L 130 10 L 144 8 L 158 6 L 172 4"
+                  stroke="#16A374" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
+            <path d="M 4 40 L 172 2 L 172 4 L 4 40 Z" fill="#16A374" opacity="0.08" />
+            <circle cx="60" cy="24" r="2" fill="#16A374" />
+            <circle cx="116" cy="10" r="2" fill="#134F5C" />
+          </svg>
+        </div>
+
+        <div class="book__footer">
+          <div class="book__holdings">
+            <span><strong>9</strong> stocks</span>
+            <span><strong>1</strong> ETF</span>
+            <span style="color: var(--text-tertiary);">high-concentration</span>
+          </div>
+          <span class="book__recs"><span class="book__recs-n book__recs-n--ok">2</span> pending recs</span>
+          <span class="book__cta">Open book →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ─── Book 4: Conservative Debt+ ────────────────────────────────── -->
+    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+      <div class="book__head">
+        <div class="book__title-wrap">
+          <span class="book__eyebrow">Conservative · Debt+</span>
+          <h3 class="book__title">Conservative Debt+</h3>
+          <div class="book__meta">Bench: 80% CRISIL Comp Bond · 15% Nifty50 · 5% Gold · Inception 02 Feb 2022</div>
+        </div>
+        <span class="book__status book__status--drift"><span class="book__status-dot"></span>Drift · 2.4%</span>
+      </div>
+      <div class="book__body">
+        <div class="book__kpis">
+          <div class="book-kpi">
+            <span class="book-kpi__l">AUM</span>
+            <span class="book-kpi__v">₹85.4 cr</span>
+            <span class="book-kpi__m">31 unitholders</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">MTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-red-700);">−0.12%</span>
+            <span class="book-kpi__m"><span class="neg">−18 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">YTD</span>
+            <span class="book-kpi__v" style="color: var(--rag-green-700);">+2.84%</span>
+            <span class="book-kpi__m"><span class="neg">−42 bps</span> vs bench</span>
+          </div>
+          <div class="book-kpi">
+            <span class="book-kpi__l">1Y · Sharpe</span>
+            <span class="book-kpi__v">+7.12%</span>
+            <span class="book-kpi__m">Sharpe 0.84 · MaxDD −2.4%</span>
+          </div>
+        </div>
+
+        <div class="book__spark">
+          <div class="book-spark__label">
+            <span class="book-spark__label-l">System vs FM · YTD</span>
+            <span class="book-spark__label-v">Shadow <strong class="pos">+4.12%</strong> vs Actual <strong>+2.84%</strong><br/>FM drag <span class="neg"><strong>−128 bps</strong></span> (skipped 2 duration-cut recs)</span>
+          </div>
+          <svg class="book-spark__svg" viewBox="0 0 180 50" preserveAspectRatio="none">
+            <path d="M 4 38 L 18 37 L 32 36 L 46 36 L 60 34 L 74 33 L 88 34 L 102 32 L 116 30 L 130 29 L 144 28 L 158 27 L 172 26"
+                  stroke="#134F5C" stroke-width="1.6" fill="none" />
+            <path d="M 4 38 L 18 36 L 32 34 L 46 33 L 60 30 L 74 28 L 88 26 L 102 23 L 116 20 L 130 18 L 144 16 L 158 14 L 172 12"
+                  stroke="#16A374" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
+            <path d="M 4 38 L 18 36 L 32 34 L 46 33 L 60 30 L 74 28 L 88 26 L 102 23 L 116 20 L 130 18 L 144 16 L 158 14 L 172 12 L 172 26 L 158 27 L 144 28 L 130 29 L 116 30 L 102 32 L 88 34 L 74 33 L 60 34 L 46 36 L 32 36 L 18 37 L 4 38 Z"
+                  fill="#F59E0B" opacity="0.16" />
+            <circle cx="60" cy="34" r="2" fill="#E11D48" />
+            <circle cx="102" cy="32" r="2" fill="#E11D48" />
+            <circle cx="144" cy="28" r="2" fill="#F59E0B" />
+          </svg>
+        </div>
+
+        <div class="book__footer">
+          <div class="book__holdings">
+            <span><strong>0</strong> stocks</span>
+            <span><strong>11</strong> MFs</span>
+            <span><strong>2</strong> ETFs</span>
+          </div>
+          <span class="book__recs"><span class="book__recs-n">3</span> pending recs</span>
+          <span class="book__cta">Open book →</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- ══ Cross-book pending rec ledger ════════════════════════════════════ -->
+  <section class="sect">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <span class="sect__eyebrow">Pending · across all books</span>
+        <h2 class="sect__title">Open recommendations (14)</h2>
+        <span class="sect__sub">Every call ATLAS has emitted that is still unactioned. Age in trading-days since issued. Skipped calls roll into the shadow-NAV delta above.</span>
+      </div>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-row ledger-row--head">
+        <span>Book</span>
+        <span>Instrument · reason</span>
+        <span>Action</span>
+        <span>Weight</span>
+        <span>Age</span>
+        <span>Conviction</span>
+        <span style="text-align:right;">Decide</span>
+      </div>
+
+      <!-- Row 1 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">Equity sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">TCS · Tata Consultancy</div>
+          <div class="ledger__desc">IT LEADING 9d · 4/4 factor confluence · India reweight Overweight · see <em>Explore › Sector › IT</em></div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +0.8</span></div>
+        <div><span class="wt-pair">3.2% <span class="wt-pair__arrow">→</span> 4.0%</span></div>
+        <div><span class="age-pill">2d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">Equity sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">HUL · Hindustan Unilever</div>
+          <div class="ledger__desc">FMCG LAGGING 14d · vol accum neg · earnings rev −1.8% · rural demand weak</div>
+        </div>
+        <div><span class="rec-chip rec-chip--trim">Trim −0.6</span></div>
+        <div><span class="wt-pair">2.4% <span class="wt-pair__arrow">→</span> 1.8%</span></div>
+        <div><span class="age-pill age-pill--stale">9d</span></div>
+        <div><span class="conv-chip conv-chip--green">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">Hedge overlay</div>
+        </div>
+        <div>
+          <div class="ledger__sym">NIFTY 22400PE 30-Apr</div>
+          <div class="ledger__desc">Max pain 22,400 · spot 22,650 · PCR 0.87 · 25d put skew +4.2 · tactical hedge 0.35% NAV</div>
+        </div>
+        <div><span class="rec-chip rec-chip--hedge">Hedge</span></div>
+        <div><span class="wt-pair">— <span class="wt-pair__arrow">→</span> 0.35%</span></div>
+        <div><span class="age-pill">1d</span></div>
+        <div><span class="conv-chip conv-chip--amber">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">MF sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">HDFC Long-Duration Fund</div>
+          <div class="ledger__desc">10Y G-Sec 7.08% +14bps · 2s10s steepening +62bps · rotate to shorter-dur</div>
+        </div>
+        <div><span class="rec-chip rec-chip--exit">Exit</span></div>
+        <div><span class="wt-pair">2.8% <span class="wt-pair__arrow">→</span> 0.0%</span></div>
+        <div><span class="age-pill age-pill--stale">6d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 5 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">ETF sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">ITBEES · Nippon Nifty IT ETF</div>
+          <div class="ledger__desc">Sector LEADING · cheapest IT exposure · add ahead of Q4 FY26 print</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +1.0</span></div>
+        <div><span class="wt-pair">0.0% <span class="wt-pair__arrow">→</span> 1.0%</span></div>
+        <div><span class="age-pill">3d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 6 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Multi-Asset India</div>
+          <div class="ledger__book-sub">ETF sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">FMCGBEES · Nippon FMCG ETF</div>
+          <div class="ledger__desc">FMCG LAGGING · rural demand weak · exit ahead of rural check-ins</div>
+        </div>
+        <div><span class="rec-chip rec-chip--exit">Exit</span></div>
+        <div><span class="wt-pair">1.2% <span class="wt-pair__arrow">→</span> 0.0%</span></div>
+        <div><span class="age-pill age-pill--stale">11d</span></div>
+        <div><span class="conv-chip conv-chip--green">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 7 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">IBKR Global</div>
+          <div class="ledger__book-sub">Equity sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">MSFT · Microsoft</div>
+          <div class="ledger__desc">US ISM +0.64 beta · AI capex +46 pts RS · Azure 31% growth · RS LEADING 42d</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +0.5</span></div>
+        <div><span class="wt-pair">4.8% <span class="wt-pair__arrow">→</span> 5.3%</span></div>
+        <div><span class="age-pill">1d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 8 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">IBKR Global</div>
+          <div class="ledger__book-sub">ETF sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">EEM · iShares MSCI Emerging</div>
+          <div class="ledger__desc">EM IMPROVING · DXY rollover 104.2 · China stim signals · rotate from DM small-cap</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +0.8</span></div>
+        <div><span class="wt-pair">1.2% <span class="wt-pair__arrow">→</span> 2.0%</span></div>
+        <div><span class="age-pill">4d</span></div>
+        <div><span class="conv-chip conv-chip--green">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 9 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">IBKR Global</div>
+          <div class="ledger__book-sub">Commodity sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">GLD · SPDR Gold Shares</div>
+          <div class="ledger__desc">US real yields falling · CB gold demand strong · 30d RS +8.2 vs bench</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +0.5</span></div>
+        <div><span class="wt-pair">9.5% <span class="wt-pair__arrow">→</span> 10.0%</span></div>
+        <div><span class="age-pill">2d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 10 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Thematic IT</div>
+          <div class="ledger__book-sub">Core</div>
+        </div>
+        <div>
+          <div class="ledger__sym">PERSISTENT · Persistent Systems</div>
+          <div class="ledger__desc">Rev/emp $62k top quartile · AI book 18% · RS LEADING 26d · EPS rev +6.2%</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +1.5</span></div>
+        <div><span class="wt-pair">8.4% <span class="wt-pair__arrow">→</span> 9.9%</span></div>
+        <div><span class="age-pill">1d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 11 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Thematic IT</div>
+          <div class="ledger__book-sub">Core</div>
+        </div>
+        <div>
+          <div class="ledger__sym">TATAELXSI · Tata Elxsi</div>
+          <div class="ledger__desc">P/E 58× vs 10Y med 38× · earnings rev −2.4% · valuation stretched</div>
+        </div>
+        <div><span class="rec-chip rec-chip--exit">Exit</span></div>
+        <div><span class="wt-pair">4.2% <span class="wt-pair__arrow">→</span> 0.0%</span></div>
+        <div><span class="age-pill">3d</span></div>
+        <div><span class="conv-chip conv-chip--green">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 12 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Conservative Debt+</div>
+          <div class="ledger__book-sub">Duration sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">ICICI Pru Short Term Fund</div>
+          <div class="ledger__desc">Shift from long-dur HDFC · 2s10s steepening +62bps · modified dur target 2.4</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +3.0</span></div>
+        <div><span class="wt-pair">5.2% <span class="wt-pair__arrow">→</span> 8.2%</span></div>
+        <div><span class="age-pill age-pill--stale">7d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 13 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Conservative Debt+</div>
+          <div class="ledger__book-sub">Duration sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">SBI Long Term Debt Fund</div>
+          <div class="ledger__desc">Modified dur 6.8 · rate cuts pushed to FY27 · curve steepening hurts long-dur</div>
+        </div>
+        <div><span class="rec-chip rec-chip--exit">Exit</span></div>
+        <div><span class="wt-pair">6.4% <span class="wt-pair__arrow">→</span> 0.0%</span></div>
+        <div><span class="age-pill age-pill--stale">7d</span></div>
+        <div><span class="conv-chip conv-chip--petrol">CONV 4/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Row 14 -->
+      <div class="ledger-row">
+        <div>
+          <div class="ledger__book">Conservative Debt+</div>
+          <div class="ledger__book-sub">Gold sleeve</div>
+        </div>
+        <div>
+          <div class="ledger__sym">GOLDBEES · Nippon Gold ETF</div>
+          <div class="ledger__desc">Real yield falling · CB demand · hedge equity drift · bring to 5% target</div>
+        </div>
+        <div><span class="rec-chip rec-chip--add">Add +1.2</span></div>
+        <div><span class="wt-pair">3.8% <span class="wt-pair__arrow">→</span> 5.0%</span></div>
+        <div><span class="age-pill">2d</span></div>
+        <div><span class="conv-chip conv-chip--green">CONV 3/4</span></div>
+        <div style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+          <button class="act-btn act-btn--primary">Follow</button>
+          <button class="act-btn act-btn--ghost">Skip</button>
+        </div>
+      </div>
+
+      <!-- Bulk actions -->
+      <div class="bulk-bar">
+        <div class="bulk-bar__left">
+          <span>14 pending · 6 stale (&gt;5d) · projected shadow lift if all followed: <strong style="color: var(--rag-green-700); font-weight: 700;">+34 bps</strong></span>
+        </div>
+        <div class="bulk-bar__right">
+          <button class="act-btn act-btn--ghost">Export CSV</button>
+          <button class="act-btn act-btn--ghost">Dry-run impact</button>
+          <button class="act-btn act-btn--primary">Follow all 14</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="footnote">
+    <strong>Shadow NAV methodology:</strong> Same starting capital as actual book on 01 Jan 2026. Every rec emitted is assumed executed at close of rec day, net of standard brokerage + STT/stamp. Dividends reinvested same-day. No slippage assumption beyond 5 bps/side. Shadow has zero discretionary trades — only system calls. Actual NAV = FM's actual IBKR / Kotak Neo positions reconciled daily at 08:42 IST. Delta = shadow − actual, decomposed into <em>skipped-call drag</em> (recs not actioned that would have lifted NAV) and <em>discretion contribution</em> (FM trades not in the system's feed). <br/>
+    <strong>What the banner number really says:</strong> +68 bps YTD means if you had followed every rec blindly and done nothing else, the aggregate book would be 68 bps higher today. It's the <em>cost of discretion</em>, not the system's claimed alpha over bench. System's alpha over bench sits in each book's <em>YTD vs bench</em> tile.
+  </p>
+
+</main>
+
+<script>
+  // Hover-to-show expansion on book cards — purely visual in this mockup
+  document.querySelectorAll('.book').forEach(b => {
+    b.addEventListener('mouseenter', () => b.style.borderColor = 'var(--text-tertiary)');
+    b.addEventListener('mouseleave', () => b.style.borderColor = '');
+  });
+</script>
+
+</body>
+</html>

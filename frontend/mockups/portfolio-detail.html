@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Multi-Asset India</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ══ Shell ═══════════════════════════════════════════════════════════ */
+    .topbar { position: sticky; top: 0; z-index: 30; }
+    .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
+    .subbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-1); min-height: 40px; }
+    .subbar__link { font-size: 12px; font-weight: 500; color: var(--text-secondary); padding: 10px 14px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none; }
+    .subbar__link--active { color: var(--accent-700); font-weight: 600; border-bottom-color: var(--accent-700); }
+    .subbar__spacer { flex: 1; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+
+    /* ── Crumbs ───────────────────────────────────────────────────────── */
+    .crumbs { display: flex; align-items: center; gap: 6px; padding-top: var(--space-4); font-size: 11px; color: var(--text-tertiary); }
+    .crumbs a { color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+    .crumbs a:hover { color: var(--accent-700); }
+    .crumbs__sep { color: var(--border-default); }
+    .crumbs__current { color: var(--text-primary); font-weight: 600; }
+
+    /* ── Page header ──────────────────────────────────────────────────── */
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding: var(--space-4) 0 var(--space-5); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph-left { display: flex; flex-direction: column; gap: 4px; }
+    .ph-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+    .ph-title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+    .ph-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; max-width: 760px; line-height: 1.55; }
+    .ph-right { display: flex; align-items: center; gap: var(--space-3); }
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; padding: 6px 12px; background: var(--rag-amber-100); color: var(--rag-amber-700); border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.04em; }
+    .status-chip__dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .sect { margin-bottom: var(--space-8); scroll-margin-top: 110px; }
+    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 2px solid var(--border-default); padding-bottom: var(--space-3); margin-bottom: var(--space-4); }
+    .sect__title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .sect__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
+    .sect__title { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
+    .sect__sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* ══ KPI strip ═══════════════════════════════════════════════════════ */
+    .kpi-strip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-6); }
+    .kpi-cell { background: var(--bg-surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .kpi-cell__l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .kpi-cell__v { font-family: var(--font-serif); font-size: 19px; font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1; margin-top: 2px; }
+    .kpi-cell__v--pos { color: var(--rag-green-700); }
+    .kpi-cell__v--neg { color: var(--rag-red-700); }
+    .kpi-cell__m { font-size: 10px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+    /* ══ Shadow vs Actual NAV hero ═══════════════════════════════════════ */
+    .nav-hero { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-5); overflow: hidden; }
+    .nav-hero__top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4); gap: var(--space-4); }
+    .nav-hero__title { display: flex; flex-direction: column; gap: 3px; }
+    .nav-hero__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
+    .nav-hero__h { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
+    .nav-hero__sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; max-width: 560px; }
+    .nav-hero__tabs { display: flex; gap: 2px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 2px; }
+    .nav-hero__tab { font-size: 10px; font-weight: 600; padding: 5px 10px; border-radius: 3px; color: var(--text-secondary); cursor: pointer; font-variant-numeric: tabular-nums; }
+    .nav-hero__tab--active { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 1px 2px rgba(16,24,40,0.05); }
+
+    .nav-hero__legend { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-3); font-size: 11px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-line { display: inline-block; width: 18px; height: 2px; }
+    .legend-swatch { width: 12px; height: 10px; border-radius: 2px; }
+
+    .nav-hero__chart { width: 100%; height: 320px; }
+
+    /* chart deltas */
+    .nav-hero__deltas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border-subtle); margin-top: var(--space-4); border-radius: var(--radius-sm); overflow: hidden; }
+    .nav-delta { background: var(--bg-surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .nav-delta__l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .nav-delta__v { font-family: var(--font-serif); font-size: 22px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .nav-delta__v--pos { color: var(--rag-green-700); }
+    .nav-delta__v--neg { color: var(--rag-red-700); }
+    .nav-delta__m { font-size: 10px; color: var(--text-secondary); }
+
+    /* ══ Attribution card (small) ═══════════════════════════════════════ */
+    .attr-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-5); margin-top: var(--space-6); }
+    .attr-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); }
+    .attr-card__title { font-family: var(--font-serif); font-size: 15px; font-weight: 500; margin-bottom: var(--space-3); }
+    .attr-bar { display: flex; align-items: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .attr-bar__label { width: 170px; font-weight: 600; color: var(--text-primary); }
+    .attr-bar__track { flex: 1; display: flex; align-items: center; gap: 1px; height: 26px; position: relative; }
+    .attr-bar__fill { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+    .attr-bar__fill--sys { background: var(--accent-700); }
+    .attr-bar__fill--fm-pos { background: var(--rag-green-500); }
+    .attr-bar__fill--fm-neg { background: var(--rag-red-500); }
+    .attr-bar__fill--skip { background: var(--rag-amber-500); }
+    .attr-bar__num { width: 60px; text-align: right; font-weight: 700; color: var(--text-primary); }
+    .attr-summary { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed var(--border-subtle); font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+    .attr-summary strong { color: var(--text-primary); font-weight: 700; }
+
+    /* ══ Action bar ═══════════════════════════════════════════════════════ */
+    .action-bar { display: grid; grid-template-columns: 1fr; gap: var(--space-3); background: linear-gradient(135deg, #134F5C 0%, #1A6776 100%); color: #fff; border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); align-items: center; }
+    .action-bar__top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
+    .action-bar__text { display: flex; flex-direction: column; gap: 3px; }
+    .action-bar__label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.78; }
+    .action-bar__h { font-family: var(--font-serif); font-size: 18px; font-weight: 400; }
+    .action-bar__h strong { color: #FFDDA7; font-weight: 600; }
+    .action-bar__btns { display: flex; gap: var(--space-2); }
+    .act-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; font-family: var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; }
+    .act-btn--hero { background: #FFDDA7; color: #134F5C; }
+    .act-btn--hero:hover { background: #FFE7BE; }
+    .act-btn--ghost-light { background: transparent; color: #fff; border-color: rgba(255,255,255,0.4); }
+    .act-btn--ghost-light:hover { background: rgba(255,255,255,0.08); }
+    .act-btn--primary { background: var(--accent-700); color: #fff; }
+    .act-btn--ghost { background: var(--bg-surface); color: var(--text-secondary); border-color: var(--border-default); }
+    .act-btn--ghost:hover { color: var(--text-primary); }
+
+    /* ══ Holdings table ══════════════════════════════════════════════════ */
+    .hold-table { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .hold-row { display: grid; grid-template-columns: 40px 2fr 70px 80px 80px 90px 1.4fr 90px 90px; gap: var(--space-2); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .hold-row:last-child { border-bottom: none; }
+    .hold-row--head { background: var(--bg-inset); font-size: 9px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; padding-bottom: 8px; }
+    .hold-row--sleeve { background: #FAFBFC; font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px var(--space-4); grid-template-columns: 1fr; }
+    .hold-row:hover:not(.hold-row--head):not(.hold-row--sleeve) { background: var(--bg-inset); }
+    .hold-cb { width: 14px; height: 14px; border: 1px solid var(--border-default); border-radius: 3px; }
+    .hold-sym { font-weight: 700; color: var(--text-primary); font-size: 12px; }
+    .hold-sym-sub { font-size: 10px; color: var(--text-secondary); font-weight: 500; }
+    .hold-wt-curr { font-weight: 600; color: var(--text-primary); }
+    .hold-wt-tgt { font-weight: 600; color: var(--accent-700); }
+    .hold-drift { font-weight: 700; font-size: 11px; }
+    .hold-drift--pos { color: var(--rag-green-700); }
+    .hold-drift--neg { color: var(--rag-red-700); }
+    .hold-drift--neu { color: var(--text-tertiary); }
+    .hold-rec { display: flex; align-items: center; gap: 4px; font-size: 10px; flex-wrap: wrap; }
+    .hold-rec__chip { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .hold-rec__chip--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .hold-rec__chip--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .hold-rec__chip--hold { background: var(--bg-inset); color: var(--text-tertiary); }
+    .hold-rec__chip--exit { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .hold-rec__date { color: var(--text-tertiary); }
+    .hold-followed { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; }
+    .hold-followed--yes { color: var(--rag-green-700); }
+    .hold-followed--no { color: var(--rag-red-700); }
+    .hold-followed--pending { color: var(--rag-amber-700); }
+    .hold-followed-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .hold-pnl { font-weight: 700; }
+    .hold-pnl--pos { color: var(--rag-green-700); }
+    .hold-pnl--neg { color: var(--rag-red-700); }
+
+    /* ══ Rec ledger chronological ═══════════════════════════════════════ */
+    .recledger { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .rl-row { display: grid; grid-template-columns: 90px 80px 1.8fr 90px 90px 100px 110px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .rl-row--head { background: var(--bg-inset); font-size: 9px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; padding-bottom: 8px; }
+    .rl-row:last-child { border-bottom: none; }
+    .rl-date { font-weight: 600; color: var(--text-primary); }
+    .rl-date-sub { font-size: 9px; color: var(--text-tertiary); font-weight: 500; }
+    .rl-sym { font-weight: 700; color: var(--text-primary); font-size: 12px; }
+    .rl-why { font-size: 10px; color: var(--text-secondary); margin-top: 2px; line-height: 1.45; }
+    .rl-wt { font-weight: 600; color: var(--text-primary); font-size: 11px; }
+    .rl-wt__arrow { color: var(--text-tertiary); }
+    .rl-nav-delta { font-weight: 700; font-size: 12px; }
+    .rl-nav-delta--pos { color: var(--rag-green-700); }
+    .rl-nav-delta--neg { color: var(--rag-red-700); }
+    .rl-nav-delta__sub { font-size: 9px; color: var(--text-tertiary); font-weight: 500; }
+
+  </style>
+</head>
+<body>
+
+<!-- ════ TOPBAR ════ -->
+<header class="topbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); box-shadow: 0 1px 2px rgba(16,24,40,0.03);">
+  <div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
+    <a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
+      <div style="display: flex; flex-direction: column; line-height: 1;">
+        <span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
+        <span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
+      </div>
+    </a>
+    <nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
+      <a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
+      <a href="explore-global.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
+      <a href="portfolios.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">5</span></a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
+    </nav>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span style="font-size: 12px; color: var(--text-tertiary);">Search holdings, recs…</span>
+      <span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span class="sync-dot"></span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
+        <span style="font-size: 9px; color: var(--text-tertiary);">Reconciled 08:42</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ════ SUBBAR ════ -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a href="#sect-nav" class="subbar__link subbar__link--active">Shadow vs Actual</a>
+    <a href="#sect-attr" class="subbar__link">Attribution</a>
+    <a href="#sect-hold" class="subbar__link">Holdings</a>
+    <a href="#sect-rec" class="subbar__link">Rec ledger</a>
+    <span class="subbar__spacer"></span>
+    <div style="display: flex; align-items: center; gap: var(--space-3);">
+      <span style="font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums;">Book: <strong style="color:var(--text-secondary);">Multi-Asset India</strong> · AUM <strong style="color:var(--text-secondary);">₹412.8 cr</strong></span>
+      <button class="act-btn act-btn--ghost" style="font-size: 10px;">Export statement</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     PAGE
+     ════════════════════════════════════════════════════════════════════ -->
+<main class="page">
+
+  <nav class="crumbs">
+    <a href="portfolios.html">Decide</a>
+    <span class="crumbs__sep">›</span>
+    <a href="portfolios.html">Portfolios</a>
+    <span class="crumbs__sep">›</span>
+    <span class="crumbs__current">Multi-Asset India</span>
+  </nav>
+
+  <header class="page-header">
+    <div class="ph-left">
+      <span class="ph-eyebrow">Book · Multi-Asset India</span>
+      <h1 class="ph-title">Multi-Asset India</h1>
+      <p class="ph-sub">60% Nifty500 TRI · 25% CRISIL Composite Bond · 15% Gold · Inception <strong>14 Jan 2021</strong> · 142 unitholders · Daily IBKR / Kotak Neo reconcile. Drift 1.8% vs model — equity sleeve overweight +1.2, long-duration sleeve overweight +0.6.</p>
+    </div>
+    <div class="ph-right">
+      <span class="status-chip"><span class="status-chip__dot"></span>Watch · 6 pending</span>
+    </div>
+  </header>
+
+  <!-- ══ KPI strip ══ -->
+  <div class="kpi-strip">
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">MTD</span>
+      <span class="kpi-cell__v kpi-cell__v--neg">−0.84%</span>
+      <span class="kpi-cell__m">vs bench −0.52% · Δ <strong style="color:var(--rag-red-700);">−32 bps</strong></span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">YTD</span>
+      <span class="kpi-cell__v kpi-cell__v--pos">+6.42%</span>
+      <span class="kpi-cell__m">vs bench +5.24% · Δ <strong style="color:var(--rag-green-700);">+118 bps</strong></span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">1 Year</span>
+      <span class="kpi-cell__v kpi-cell__v--pos">+18.4%</span>
+      <span class="kpi-cell__m">vs bench +15.8% · Δ <strong style="color:var(--rag-green-700);">+260 bps</strong></span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">Since Inception</span>
+      <span class="kpi-cell__v">+14.2% p.a.</span>
+      <span class="kpi-cell__m">5.2y · bench 11.4% p.a.</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">Sharpe · 3Y</span>
+      <span class="kpi-cell__v">1.24</span>
+      <span class="kpi-cell__m">Sortino 1.82</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">Max DD · 3Y</span>
+      <span class="kpi-cell__v">−8.2%</span>
+      <span class="kpi-cell__m">vs bench −11.4%</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">Beta · 3Y</span>
+      <span class="kpi-cell__v">0.82</span>
+      <span class="kpi-cell__m">R² 0.91</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-cell__l">Alpha · Jensen</span>
+      <span class="kpi-cell__v kpi-cell__v--pos">+2.84% p.a.</span>
+      <span class="kpi-cell__m">t-stat 2.1 · net of costs</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       § Shadow vs Actual NAV — the hero
+       ════════════════════════════════════════════════════════════════════ -->
+  <section id="sect-nav" class="sect">
+    <div class="nav-hero">
+      <div class="nav-hero__top">
+        <div class="nav-hero__title">
+          <span class="nav-hero__eyebrow">Accountability hero</span>
+          <h2 class="nav-hero__h">Shadow NAV vs Actual NAV · YTD 2026</h2>
+          <p class="nav-hero__sub">Shadow NAV assumes every ATLAS rec was actioned at close of rec-day, no discretion. Actual NAV is your live IBKR / Kotak Neo book. The fill shows <span style="color:var(--rag-amber-700); font-weight:600;">skipped-rec drag</span> in amber and <span style="color:var(--rag-green-700); font-weight:600;">discretion lift</span> in green.</p>
+        </div>
+        <div class="nav-hero__tabs">
+          <button class="nav-hero__tab">1M</button>
+          <button class="nav-hero__tab">3M</button>
+          <button class="nav-hero__tab nav-hero__tab--active">YTD</button>
+          <button class="nav-hero__tab">1Y</button>
+          <button class="nav-hero__tab">SI</button>
+        </div>
+      </div>
+
+      <div class="nav-hero__legend">
+        <span class="legend-item"><span class="legend-line" style="background: #134F5C;"></span> Actual NAV (₹412.8 cr)</span>
+        <span class="legend-item"><span class="legend-line" style="background: #16A374; border-top: 2px dashed #16A374; height: 0;"></span> Shadow NAV (full-follow)</span>
+        <span class="legend-item"><span class="legend-swatch" style="background: rgba(245,158,11,0.22);"></span> Shadow &gt; Actual = FM drag</span>
+        <span class="legend-item"><span class="legend-swatch" style="background: rgba(22,163,116,0.22);"></span> Actual &gt; Shadow = FM lift</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #16A374;"></span> Followed rec</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #E11D48;"></span> Skipped rec</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #F59E0B;"></span> Pending</span>
+      </div>
+
+      <!-- NAV chart SVG (YTD: 15 weeks) -->
+      <svg class="nav-hero__chart" viewBox="0 0 1320 320" preserveAspectRatio="none">
+        <!-- Gridlines Y -->
+        <g stroke="#E5E7EB" stroke-width="1">
+          <line x1="40" y1="40" x2="1280" y2="40" />
+          <line x1="40" y1="96" x2="1280" y2="96" />
+          <line x1="40" y1="152" x2="1280" y2="152" />
+          <line x1="40" y1="208" x2="1280" y2="208" />
+          <line x1="40" y1="264" x2="1280" y2="264" />
+        </g>
+        <!-- Y labels -->
+        <g font-size="10" fill="#9CA3AF" font-family="Inter,sans-serif">
+          <text x="34" y="44" text-anchor="end">+10%</text>
+          <text x="34" y="100" text-anchor="end">+7.5%</text>
+          <text x="34" y="156" text-anchor="end">+5%</text>
+          <text x="34" y="212" text-anchor="end">+2.5%</text>
+          <text x="34" y="268" text-anchor="end">0%</text>
+        </g>
+        <!-- X labels (weekly) -->
+        <g font-size="9" fill="#9CA3AF" font-family="Inter,sans-serif">
+          <text x="80" y="290" text-anchor="middle">Jan 1</text>
+          <text x="260" y="290" text-anchor="middle">Jan 22</text>
+          <text x="440" y="290" text-anchor="middle">Feb 12</text>
+          <text x="620" y="290" text-anchor="middle">Mar 4</text>
+          <text x="800" y="290" text-anchor="middle">Mar 25</text>
+          <text x="980" y="290" text-anchor="middle">Apr 8</text>
+          <text x="1240" y="290" text-anchor="middle">Apr 18 (today)</text>
+        </g>
+
+        <!-- Shadow > Actual fill (amber drag) — covers most of the period -->
+        <path d="M 80 264
+                 L 160 258 L 240 250 L 320 238 L 400 222 L 480 210 L 560 196 L 640 188 L 720 170 L 800 150 L 880 128 L 960 106 L 1040 88 L 1120 78 L 1200 64 L 1280 50
+                 L 1280 72 L 1200 82 L 1120 92 L 1040 106 L 960 124 L 880 146 L 800 168 L 720 186 L 640 206 L 560 216 L 480 226 L 400 238 L 320 250 L 240 256 L 160 262 L 80 264 Z"
+              fill="#F59E0B" opacity="0.16" />
+
+        <!-- Brief FM-lift patch 500-600 where actual briefly outran shadow (discretionary TCS overweight) -->
+        <path d="M 480 226 L 560 216 L 640 206 L 720 186
+                 L 720 184 L 640 200 L 560 210 L 480 222 Z"
+              fill="#16A374" opacity="0.22" />
+
+        <!-- Shadow NAV path (dashed green) — always higher -->
+        <path d="M 80 264 L 160 258 L 240 250 L 320 238 L 400 222 L 480 210 L 560 196 L 640 188 L 720 170 L 800 150 L 880 128 L 960 106 L 1040 88 L 1120 78 L 1200 64 L 1280 50"
+              stroke="#16A374" stroke-width="2" stroke-dasharray="5 4" fill="none" />
+
+        <!-- Actual NAV path (solid petrol) -->
+        <path d="M 80 264 L 160 262 L 240 256 L 320 250 L 400 238 L 480 222 L 560 210 L 640 200 L 720 184 L 800 168 L 880 146 L 960 124 L 1040 106 L 1120 92 L 1200 82 L 1280 72"
+              stroke="#134F5C" stroke-width="2.5" fill="none" />
+
+        <!-- Rec dots on Actual NAV path -->
+        <!-- 12 Jan: Add NIFTYBEES (Followed) -->
+        <circle cx="160" cy="262" r="5" fill="#16A374" stroke="#fff" stroke-width="1.5" />
+        <!-- 28 Jan: Trim HUL (Skipped) -->
+        <circle cx="280" cy="254" r="5" fill="#E11D48" stroke="#fff" stroke-width="1.5" />
+        <!-- 10 Feb: Add TCS (Followed) -->
+        <circle cx="400" cy="238" r="5" fill="#16A374" stroke="#fff" stroke-width="1.5" />
+        <!-- 24 Feb: Trim FMCG (Skipped — big miss) -->
+        <circle cx="500" cy="220" r="5" fill="#E11D48" stroke="#fff" stroke-width="1.5" />
+        <!-- 11 Mar: Add INFY (Followed) -->
+        <circle cx="660" cy="198" r="5" fill="#16A374" stroke="#fff" stroke-width="1.5" />
+        <!-- 20 Mar: Exit SBI Long-Term Debt (Skipped) -->
+        <circle cx="780" cy="172" r="5" fill="#E11D48" stroke="#fff" stroke-width="1.5" />
+        <!-- 02 Apr: Add PERSISTENT (Followed) -->
+        <circle cx="960" cy="124" r="5" fill="#16A374" stroke="#fff" stroke-width="1.5" />
+        <!-- 11 Apr: Trim HUL (Followed) -->
+        <circle cx="1100" cy="96" r="5" fill="#16A374" stroke="#fff" stroke-width="1.5" />
+        <!-- 16 Apr: Pending TCS add -->
+        <circle cx="1220" cy="78" r="5" fill="#F59E0B" stroke="#fff" stroke-width="1.5" />
+
+        <!-- Callout annotations for the biggest miss -->
+        <g font-family="Inter,sans-serif">
+          <line x1="500" y1="220" x2="500" y2="135" stroke="#E11D48" stroke-width="1" stroke-dasharray="2 2" />
+          <rect x="455" y="115" width="160" height="30" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1" rx="3" />
+          <text x="535" y="128" text-anchor="middle" font-size="9" font-weight="700" fill="#B91C1C">24 Feb · Skipped Trim FMCG</text>
+          <text x="535" y="140" text-anchor="middle" font-size="9" fill="#991B1B">Cost: −23 bps (HUL −2.3% since)</text>
+        </g>
+
+        <!-- Final value labels -->
+        <g font-family="Inter,sans-serif" font-variant-numeric="tabular-nums">
+          <rect x="1244" y="42" width="56" height="20" fill="#16A374" rx="2" />
+          <text x="1272" y="56" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">+7.34%</text>
+          <rect x="1244" y="66" width="56" height="20" fill="#134F5C" rx="2" />
+          <text x="1272" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">+6.42%</text>
+        </g>
+      </svg>
+
+      <!-- Three-number decomposition -->
+      <div class="nav-hero__deltas">
+        <div class="nav-delta">
+          <span class="nav-delta__l">Shadow − Actual · YTD</span>
+          <span class="nav-delta__v nav-delta__v--neg">−92 bps</span>
+          <span class="nav-delta__m">Shadow +7.34% vs Actual +6.42% · ₹3.8 cr forgone</span>
+        </div>
+        <div class="nav-delta">
+          <span class="nav-delta__l">Skipped-call drag</span>
+          <span class="nav-delta__v nav-delta__v--neg">−116 bps</span>
+          <span class="nav-delta__m">2 skipped (24 Feb FMCG trim · 20 Mar duration cut)</span>
+        </div>
+        <div class="nav-delta">
+          <span class="nav-delta__l">Discretion lift</span>
+          <span class="nav-delta__v nav-delta__v--pos">+24 bps</span>
+          <span class="nav-delta__m">Held TCS 14–23 Feb (not in feed) paid off</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       § Attribution + action bar
+       ════════════════════════════════════════════════════════════════════ -->
+  <section id="sect-attr" class="sect">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <span class="sect__eyebrow">Decomposition</span>
+        <h2 class="sect__title">Alpha attribution · YTD</h2>
+        <span class="sect__sub">Alpha over 60/25/15 bench split into system contribution, discretion contribution, and drag.</span>
+      </div>
+    </div>
+
+    <div class="attr-row">
+      <!-- Left: bars -->
+      <div class="attr-card">
+        <h3 class="attr-card__title">Where the +118 bps vs bench came from</h3>
+
+        <div class="attr-bar" style="margin-bottom: 8px;">
+          <span class="attr-bar__label">System-followed calls</span>
+          <div class="attr-bar__track">
+            <div class="attr-bar__fill attr-bar__fill--sys" style="width: 68%;">+210 bps</div>
+          </div>
+          <span class="attr-bar__num" style="color: var(--accent-700);">+210</span>
+        </div>
+
+        <div class="attr-bar" style="margin-bottom: 8px;">
+          <span class="attr-bar__label">Discretion (non-system)</span>
+          <div class="attr-bar__track">
+            <div class="attr-bar__fill attr-bar__fill--fm-pos" style="width: 24%;">+72 bps</div>
+          </div>
+          <span class="attr-bar__num" style="color: var(--rag-green-700);">+72</span>
+        </div>
+
+        <div class="attr-bar" style="margin-bottom: 8px;">
+          <span class="attr-bar__label">Skipped-call drag</span>
+          <div class="attr-bar__track">
+            <div class="attr-bar__fill attr-bar__fill--skip" style="width: 38%;">−116 bps</div>
+          </div>
+          <span class="attr-bar__num" style="color: var(--rag-amber-700);">−116</span>
+        </div>
+
+        <div class="attr-bar" style="margin-bottom: 8px;">
+          <span class="attr-bar__label">Execution slippage</span>
+          <div class="attr-bar__track">
+            <div class="attr-bar__fill attr-bar__fill--fm-neg" style="width: 16%;">−48 bps</div>
+          </div>
+          <span class="attr-bar__num" style="color: var(--rag-red-700);">−48</span>
+        </div>
+
+        <div class="attr-bar" style="padding-top: 8px; border-top: 1px dashed var(--border-subtle); margin-top: 4px;">
+          <span class="attr-bar__label" style="font-weight: 700;">Net alpha vs bench</span>
+          <div class="attr-bar__track" style="background: var(--bg-inset); border-radius: 3px;">
+            <div style="width: 40%; background: var(--rag-green-500); height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700;">+118 bps</div>
+          </div>
+          <span class="attr-bar__num" style="color: var(--rag-green-700); font-size: 13px;">+118</span>
+        </div>
+
+        <div class="attr-summary">
+          System is <strong>3×</strong> the contributor of discretion. <strong>If the two skipped calls had been followed</strong>, net alpha would have been <strong>+234 bps</strong> instead of +118.
+        </div>
+      </div>
+
+      <!-- Right: action bar -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+        <div class="action-bar">
+          <div class="action-bar__top">
+            <div class="action-bar__text">
+              <span class="action-bar__label">Quickest wins · 6 pending</span>
+              <span class="action-bar__h">Follow all 6 · projected lift <strong>+34 bps</strong> · ₹1.4 cr notional</span>
+            </div>
+          </div>
+          <div class="action-bar__btns">
+            <button class="act-btn act-btn--hero">Follow all 6</button>
+            <button class="act-btn act-btn--ghost-light">Dry-run impact</button>
+            <button class="act-btn act-btn--ghost-light">Send to IBKR basket</button>
+          </div>
+        </div>
+
+        <div class="attr-card" style="padding: var(--space-4); font-size: 11px; color: var(--text-secondary); line-height: 1.55;">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 6px;">Follow-rate</div>
+          <div style="font-family: var(--font-serif); font-size: 26px; font-weight: 500; color: var(--text-primary); line-height: 1;">71% <span style="font-size: 12px; color: var(--text-tertiary); font-weight: 400;">· 22 of 31 YTD</span></div>
+          <div style="margin-top: 10px;">9 skipped · 6 pending · 22 acted on · 4 discretionary adds this year. Your peer average in the ATLAS cohort is <strong style="color:var(--text-primary);">58%</strong> — you act earlier than most.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       § Holdings table
+       ════════════════════════════════════════════════════════════════════ -->
+  <section id="sect-hold" class="sect">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <span class="sect__eyebrow">Current book</span>
+        <h2 class="sect__title">Holdings · 37 instruments</h2>
+        <span class="sect__sub">Current weight vs ATLAS target weight · last rec per instrument · followed Y/N · P&amp;L since rec. Drift shown where ≥0.3 pp.</span>
+      </div>
+      <div style="display: flex; gap: var(--space-2);">
+        <button class="act-btn act-btn--ghost">Sort: Drift</button>
+        <button class="act-btn act-btn--ghost">Filter: Pending</button>
+        <button class="act-btn act-btn--ghost">CSV</button>
+      </div>
+    </div>
+
+    <div class="hold-table">
+      <div class="hold-row hold-row--head">
+        <span></span>
+        <span>Instrument</span>
+        <span>Curr</span>
+        <span>Target</span>
+        <span>Drift</span>
+        <span>Last rec</span>
+        <span>Reason</span>
+        <span>Followed?</span>
+        <span style="text-align:right;">P&amp;L since rec</span>
+      </div>
+
+      <!-- ─── EQUITY SLEEVE ─── -->
+      <div class="hold-row hold-row--sleeve">Direct stocks · 24 names · 52.4% (target 50%, drift +2.4)</div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">TCS</div><div class="hold-sym-sub">Tata Consultancy</div></div>
+        <span class="hold-wt-curr">3.2%</span>
+        <span class="hold-wt-tgt">4.0%</span>
+        <span class="hold-drift hold-drift--neg">−0.8</span>
+        <span style="color:var(--text-secondary);">16 Apr · 2d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Add</span> IT LEAD 4/4</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">—</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">INFY</div><div class="hold-sym-sub">Infosys</div></div>
+        <span class="hold-wt-curr">2.8%</span>
+        <span class="hold-wt-tgt">2.8%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">11 Mar · 28d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Add</span> IT IMPROV</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>Followed 12 Mar</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+4.2%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">PERSISTENT</div><div class="hold-sym-sub">Persistent Systems</div></div>
+        <span class="hold-wt-curr">1.8%</span>
+        <span class="hold-wt-tgt">1.8%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">02 Apr · 14d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Add</span> AI book 18%</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>Followed 03 Apr</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+6.8%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">HDFCBANK</div><div class="hold-sym-sub">HDFC Bank</div></div>
+        <span class="hold-wt-curr">5.2%</span>
+        <span class="hold-wt-tgt">5.0%</span>
+        <span class="hold-drift hold-drift--neu">+0.2</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> core position</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+2.1%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">LT</div><div class="hold-sym-sub">Larsen &amp; Toubro</div></div>
+        <span class="hold-wt-curr">3.4%</span>
+        <span class="hold-wt-tgt">3.4%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">18 Feb · 59d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> CapGoods LEAD</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+8.4%</span>
+      </div>
+
+      <div class="hold-row" style="background: #FEFBF5;">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">HUL</div><div class="hold-sym-sub">Hindustan Unilever</div></div>
+        <span class="hold-wt-curr">2.4%</span>
+        <span class="hold-wt-tgt">1.8%</span>
+        <span class="hold-drift hold-drift--neg">+0.6</span>
+        <span style="color:var(--text-secondary);">09 Apr · 9d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--trim">Trim</span> FMCG LAG 14d</span>
+        <span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped (9d stale)</span>
+        <span class="hold-pnl hold-pnl--neg" style="text-align:right;">−1.8%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">DLF</div><div class="hold-sym-sub">DLF Ltd</div></div>
+        <span class="hold-wt-curr">0.9%</span>
+        <span class="hold-wt-tgt">0.0%</span>
+        <span class="hold-drift hold-drift--neg">+0.9</span>
+        <span style="color:var(--text-secondary);">14 Mar · 35d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--exit">Exit</span> Realty LAG</span>
+        <span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped (held)</span>
+        <span class="hold-pnl hold-pnl--neg" style="text-align:right;">−4.2%</span>
+      </div>
+
+      <div class="hold-row" style="background: #F3F8F5;">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">TITAN</div><div class="hold-sym-sub">Titan Co (discretionary)</div></div>
+        <span class="hold-wt-curr">1.8%</span>
+        <span class="hold-wt-tgt">0.0%</span>
+        <span class="hold-drift hold-drift--neg">+1.8</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">No system view</span></span>
+        <span class="hold-followed" style="color: var(--text-tertiary);"><span class="hold-followed-dot"></span>FM discretion</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+7.2%</span>
+      </div>
+
+      <!-- ─── MF SLEEVE ─── -->
+      <div class="hold-row hold-row--sleeve">Mutual funds · 9 names · 31.2% (target 32%, drift −0.8)</div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">PARAG PARIKH FLEXI</div><div class="hold-sym-sub">Parag Parikh Flexi Cap</div></div>
+        <span class="hold-wt-curr">6.8%</span>
+        <span class="hold-wt-tgt">6.8%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> 4-bench RS Leader</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+5.8%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">QUANT SMALL CAP</div><div class="hold-sym-sub">Quant Small Cap Fund</div></div>
+        <span class="hold-wt-curr">3.4%</span>
+        <span class="hold-wt-tgt">2.4%</span>
+        <span class="hold-drift hold-drift--neg">+1.0</span>
+        <span style="color:var(--text-secondary);">12 Apr · 6d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--trim">Trim</span> smallcap McC −74</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl hold-pnl--neg" style="text-align:right;">−3.2% since</span>
+      </div>
+
+      <div class="hold-row" style="background: #FEFBF5;">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">HDFC LONG DURATION</div><div class="hold-sym-sub">HDFC Long Duration Fund</div></div>
+        <span class="hold-wt-curr">2.8%</span>
+        <span class="hold-wt-tgt">0.0%</span>
+        <span class="hold-drift hold-drift--neg">+2.8</span>
+        <span style="color:var(--text-secondary);">12 Apr · 6d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--exit">Exit</span> Curve steep +62bps</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl hold-pnl--neg" style="text-align:right;">−1.4% since</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">ICICI PRU VALUE</div><div class="hold-sym-sub">ICICI Pru Value Discovery</div></div>
+        <span class="hold-wt-curr">5.4%</span>
+        <span class="hold-wt-tgt">5.4%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> 4-bench RS Leader</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+4.2%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">SBI DURATION</div><div class="hold-sym-sub">SBI Short-Term Debt</div></div>
+        <span class="hold-wt-curr">3.2%</span>
+        <span class="hold-wt-tgt">4.2%</span>
+        <span class="hold-drift hold-drift--pos">−1.0</span>
+        <span style="color:var(--text-secondary);">12 Apr · 6d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Add</span> rotate from long-dur</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">—</span>
+      </div>
+
+      <!-- ─── ETF SLEEVE ─── -->
+      <div class="hold-row hold-row--sleeve">ETFs · 4 names · 10.4% (target 12%, drift −1.6)</div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">NIFTYBEES</div><div class="hold-sym-sub">Nippon Nifty 50 ETF</div></div>
+        <span class="hold-wt-curr">4.8%</span>
+        <span class="hold-wt-tgt">5.0%</span>
+        <span class="hold-drift hold-drift--neu">−0.2</span>
+        <span style="color:var(--text-secondary);">12 Jan · 96d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> core bench</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>Followed 14 Jan</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+5.8%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">ITBEES</div><div class="hold-sym-sub">Nippon Nifty IT ETF</div></div>
+        <span class="hold-wt-curr">0.0%</span>
+        <span class="hold-wt-tgt">1.0%</span>
+        <span class="hold-drift hold-drift--pos">−1.0</span>
+        <span style="color:var(--text-secondary);">15 Apr · 3d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Add</span> IT LEAD cheapest</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl" style="text-align:right; color: var(--text-tertiary);">—</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">GOLDBEES</div><div class="hold-sym-sub">Nippon Gold ETF</div></div>
+        <span class="hold-wt-curr">4.4%</span>
+        <span class="hold-wt-tgt">4.4%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> real yield falling</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl hold-pnl--pos" style="text-align:right;">+12.4%</span>
+      </div>
+
+      <div class="hold-row" style="background: #FEFBF5;">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">FMCGBEES</div><div class="hold-sym-sub">Nippon FMCG ETF</div></div>
+        <span class="hold-wt-curr">1.2%</span>
+        <span class="hold-wt-tgt">0.0%</span>
+        <span class="hold-drift hold-drift--neg">+1.2</span>
+        <span style="color:var(--text-secondary);">07 Apr · 11d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--exit">Exit</span> FMCG LAG rural weak</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending (stale)</span>
+        <span class="hold-pnl hold-pnl--neg" style="text-align:right;">−2.1% since</span>
+      </div>
+
+      <!-- ─── HEDGE / CASH ─── -->
+      <div class="hold-row hold-row--sleeve">Hedge · cash · residual · 6.0% (target 6%, drift 0.0)</div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">CASH · LIQUID</div><div class="hold-sym-sub">Kotak Liquid / residual</div></div>
+        <span class="hold-wt-curr">6.0%</span>
+        <span class="hold-wt-tgt">6.0%</span>
+        <span class="hold-drift hold-drift--neu">0.0</span>
+        <span style="color:var(--text-secondary);">—</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--hold">Hold</span> buffer</span>
+        <span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>On-target</span>
+        <span class="hold-pnl" style="text-align:right; color: var(--text-tertiary);">+0.4%</span>
+      </div>
+
+      <div class="hold-row">
+        <span class="hold-cb"></span>
+        <div><div class="hold-sym">NIFTY 22400PE</div><div class="hold-sym-sub">30-Apr tactical hedge</div></div>
+        <span class="hold-wt-curr">0.0%</span>
+        <span class="hold-wt-tgt">0.35%</span>
+        <span class="hold-drift hold-drift--pos">−0.35</span>
+        <span style="color:var(--text-secondary);">17 Apr · 1d</span>
+        <span class="hold-rec"><span class="hold-rec__chip hold-rec__chip--add">Hedge</span> PCR 0.87 · max pain 22,400</span>
+        <span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span>
+        <span class="hold-pnl" style="text-align:right; color: var(--text-tertiary);">—</span>
+      </div>
+
+      <!-- footer summary -->
+      <div class="hold-row" style="background: var(--bg-inset); font-weight: 700; font-size: 11px;">
+        <span></span>
+        <span style="font-family: var(--font-serif); font-size: 13px;">Book total · 37 instruments</span>
+        <span>100.0%</span>
+        <span>100.0%</span>
+        <span>—</span>
+        <span></span>
+        <span style="color: var(--text-tertiary); font-weight: 500;">22 on-target · 6 pending · 5 skipped · 4 discretionary</span>
+        <span></span>
+        <span style="text-align:right; color: var(--rag-green-700); font-size: 12px;">+6.42% YTD</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       § Rec ledger chronological
+       ════════════════════════════════════════════════════════════════════ -->
+  <section id="sect-rec" class="sect">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <span class="sect__eyebrow">Audit trail</span>
+        <h2 class="sect__title">Rec ledger · 13 calls YTD</h2>
+        <span class="sect__sub">Every rec ATLAS has emitted for this book, in chronological order. NAV delta is the contribution to the <em>shadow-minus-actual</em> gap (negative = FM drag from skipping, zero = followed, positive = benefit from skipping).</span>
+      </div>
+      <div style="display: flex; gap: var(--space-2);">
+        <button class="act-btn act-btn--ghost">CSV</button>
+        <button class="act-btn act-btn--ghost">Filter: Skipped</button>
+      </div>
+    </div>
+
+    <div class="recledger">
+      <div class="rl-row rl-row--head">
+        <span>Date</span>
+        <span>Action</span>
+        <span>Instrument · reason</span>
+        <span>Weight shift</span>
+        <span>Conv.</span>
+        <span>Followed?</span>
+        <span style="text-align:right;">NAV delta YTD</span>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">12 Jan</div><div class="rl-date-sub">96d ago</div></div>
+        <div><span class="rec-chip rec-chip--add" style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-green-100);color:var(--rag-green-700);">Add</span></div>
+        <div><div class="rl-sym">NIFTYBEES</div><div class="rl-why">Bench rebalance · Pulse LEADING 22d · core bench exposure</div></div>
+        <div class="rl-wt">0.0% <span class="rl-wt__arrow">→</span> 5.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>14 Jan</span></div>
+        <div class="rl-nav-delta rl-nav-delta--pos" style="text-align:right;">+0 bps<div class="rl-nav-delta__sub">on target</div></div>
+      </div>
+
+      <div class="rl-row" style="background: #FEFBF5;">
+        <div><div class="rl-date">28 Jan</div><div class="rl-date-sub">80d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-amber-100);color:var(--rag-amber-700);">Trim</span></div>
+        <div><div class="rl-sym">HUL</div><div class="rl-why">FMCG WEAKENING · earnings rev −0.8% · rural demand deteriorating</div></div>
+        <div class="rl-wt">2.8% <span class="rl-wt__arrow">→</span> 2.4%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−12 bps<div class="rl-nav-delta__sub">HUL −2.8% since</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">10 Feb</div><div class="rl-date-sub">67d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-green-100);color:var(--rag-green-700);">Add</span></div>
+        <div><div class="rl-sym">TCS</div><div class="rl-why">IT IMPROVING · US BFSI pipeline · attrition fell to 11.2%</div></div>
+        <div class="rl-wt">2.4% <span class="rl-wt__arrow">→</span> 3.2%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>11 Feb</span></div>
+        <div class="rl-nav-delta rl-nav-delta--pos" style="text-align:right;">+42 bps<div class="rl-nav-delta__sub">TCS +10.2% since</div></div>
+      </div>
+
+      <div class="rl-row" style="background: #FEF2F2;">
+        <div><div class="rl-date">24 Feb</div><div class="rl-date-sub">53d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-amber-100);color:var(--rag-amber-700);">Trim</span></div>
+        <div><div class="rl-sym">FMCG sleeve (HUL + FMCGBEES)</div><div class="rl-why">FMCG LAGGING 4/4 · earnings rev −2.1% · rural demand confirmed weak</div></div>
+        <div class="rl-wt">3.6% <span class="rl-wt__arrow">→</span> 1.8%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−78 bps<div class="rl-nav-delta__sub">biggest miss YTD</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">11 Mar</div><div class="rl-date-sub">38d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-green-100);color:var(--rag-green-700);">Add</span></div>
+        <div><div class="rl-sym">INFY</div><div class="rl-why">IT upgrade to LEADING · margin expansion signal · AI book tracked</div></div>
+        <div class="rl-wt">2.0% <span class="rl-wt__arrow">→</span> 2.8%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>12 Mar</span></div>
+        <div class="rl-nav-delta rl-nav-delta--pos" style="text-align:right;">+24 bps<div class="rl-nav-delta__sub">INFY +6.8% since</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">14 Mar</div><div class="rl-date-sub">35d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-red-100);color:var(--rag-red-700);">Exit</span></div>
+        <div><div class="rl-sym">DLF</div><div class="rl-why">Realty LAGGING · rate cuts deferred · valuation P/E 52× stretched</div></div>
+        <div class="rl-wt">0.9% <span class="rl-wt__arrow">→</span> 0.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−8 bps<div class="rl-nav-delta__sub">DLF −4.2% since</div></div>
+      </div>
+
+      <div class="rl-row" style="background: #FEF2F2;">
+        <div><div class="rl-date">20 Mar</div><div class="rl-date-sub">29d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-red-100);color:var(--rag-red-700);">Exit</span></div>
+        <div><div class="rl-sym">SBI Long Term Debt</div><div class="rl-why">Curve steepening +62bps · rate cuts to FY27 · duration risk</div></div>
+        <div class="rl-wt">6.4% <span class="rl-wt__arrow">→</span> 0.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--no"><span class="hold-followed-dot"></span>Skipped</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−38 bps<div class="rl-nav-delta__sub">2nd biggest miss</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">02 Apr</div><div class="rl-date-sub">16d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-green-100);color:var(--rag-green-700);">Add</span></div>
+        <div><div class="rl-sym">PERSISTENT</div><div class="rl-why">Rev/emp $62k · AI book 18% · EPS rev +6.2% · RS LEADING 26d</div></div>
+        <div class="rl-wt">0.0% <span class="rl-wt__arrow">→</span> 1.8%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--yes"><span class="hold-followed-dot"></span>03 Apr</span></div>
+        <div class="rl-nav-delta rl-nav-delta--pos" style="text-align:right;">+14 bps<div class="rl-nav-delta__sub">PERSIS +6.8% since</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">07 Apr</div><div class="rl-date-sub">11d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-red-100);color:var(--rag-red-700);">Exit</span></div>
+        <div><div class="rl-sym">FMCGBEES</div><div class="rl-why">Second FMCG downgrade · rural demand still weak after channel-check</div></div>
+        <div class="rl-wt">1.2% <span class="rl-wt__arrow">→</span> 0.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−18 bps<div class="rl-nav-delta__sub">stale 11d</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">09 Apr</div><div class="rl-date-sub">9d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-amber-100);color:var(--rag-amber-700);">Trim</span></div>
+        <div><div class="rl-sym">HUL (re-issued)</div><div class="rl-why">HUL LAG continues · −2.8% since Jan trim call · re-issued at higher conv</div></div>
+        <div class="rl-wt">2.4% <span class="rl-wt__arrow">→</span> 1.8%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending (9d)</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−6 bps<div class="rl-nav-delta__sub">ongoing</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">12 Apr</div><div class="rl-date-sub">6d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-amber-100);color:var(--rag-amber-700);">Trim</span></div>
+        <div><div class="rl-sym">QUANT SMALL CAP</div><div class="rl-why">Smallcap McClellan −74 · breadth THIN · trim to target</div></div>
+        <div class="rl-wt">3.4% <span class="rl-wt__arrow">→</span> 2.4%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--rag-green-100);color:var(--rag-green-700);">3/4</span></div>
+        <div><span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−4 bps<div class="rl-nav-delta__sub">ongoing</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">12 Apr</div><div class="rl-date-sub">6d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-red-100);color:var(--rag-red-700);">Exit</span></div>
+        <div><div class="rl-sym">HDFC LONG DURATION</div><div class="rl-why">Curve steepening +62bps confirmed · modified dur 6.8 too long</div></div>
+        <div class="rl-wt">2.8% <span class="rl-wt__arrow">→</span> 0.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span></div>
+        <div class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−8 bps<div class="rl-nav-delta__sub">ongoing</div></div>
+      </div>
+
+      <div class="rl-row">
+        <div><div class="rl-date">16 Apr</div><div class="rl-date-sub">2d ago</div></div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;background:var(--rag-green-100);color:var(--rag-green-700);">Add</span></div>
+        <div><div class="rl-sym">TCS (second adds)</div><div class="rl-why">IT LEAD 9d · 4/4 factor confluence · continued momentum</div></div>
+        <div class="rl-wt">3.2% <span class="rl-wt__arrow">→</span> 4.0%</div>
+        <div><span style="display:inline-flex;font-size:9px;font-weight:700;padding:3px 7px;border-radius:2px;background:var(--accent-100);color:var(--accent-700);">4/4</span></div>
+        <div><span class="hold-followed hold-followed--pending"><span class="hold-followed-dot"></span>Pending</span></div>
+        <div class="rl-nav-delta" style="text-align:right; color: var(--text-tertiary);">—<div class="rl-nav-delta__sub">just issued</div></div>
+      </div>
+
+      <!-- Summary row -->
+      <div class="rl-row" style="background: var(--bg-inset); font-weight: 700; font-size: 11px; padding: 10px var(--space-4);">
+        <span>YTD</span>
+        <span>13 calls</span>
+        <span style="color: var(--text-secondary); font-weight: 500;">6 Add · 3 Trim · 3 Exit · 1 Hedge</span>
+        <span style="color: var(--text-tertiary); font-weight: 500;">7 followed · 4 skipped · 6 pending</span>
+        <span style="color: var(--text-tertiary); font-weight: 500;">9 × 4/4 · 4 × 3/4</span>
+        <span style="color: var(--text-tertiary); font-weight: 500;">54% follow-rate</span>
+        <span class="rl-nav-delta rl-nav-delta--neg" style="text-align:right;">−92 bps<div class="rl-nav-delta__sub">net YTD drag</div></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // scroll-spy for subbar
+  const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
+  const sections = [...document.querySelectorAll('section.sect[id]')];
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 140;
+    let active = sections[0]?.id;
+    for (const s of sections) { if (s.offsetTop <= y) active = s.id; }
+    anchors.forEach(a => a.classList.toggle('subbar__link--active', a.getAttribute('href') === '#' + active));
+  });
+</script>
+
+</body>
+</html>

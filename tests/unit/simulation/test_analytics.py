@@ -24,6 +24,9 @@ from backend.services.simulation.analytics import (
     _compute_xirr,
     compute_analytics,
 )
+
+# Note: _daily_returns, _mean, _stddev were deleted in V11-5 (empyrical adoption).
+# Risk metric parity tests live in test_analytics_parity.py.
 from backend.services.simulation.backtest_engine import BacktestResult
 
 # ---------------------------------------------------------------------------

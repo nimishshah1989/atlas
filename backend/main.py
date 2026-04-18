@@ -22,6 +22,7 @@ from backend.routes import (
     etf,
     global_intel,
     global_v7,
+    instruments,
     intelligence,
     mf,
     portfolio,
@@ -110,6 +111,7 @@ app.include_router(webhooks.router)
 app.include_router(sectors.router)
 app.include_router(sentiment.router)
 app.include_router(etf.router)
+app.include_router(instruments.router)
 
 
 @app.get("/", include_in_schema=False)
