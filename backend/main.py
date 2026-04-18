@@ -23,6 +23,7 @@ from backend.routes import (
     etf,
     global_intel,
     global_v7,
+    insider,
     instruments,
     intelligence,
     macros,
@@ -117,6 +118,7 @@ app.include_router(sentiment.router)
 app.include_router(etf.router)
 app.include_router(instruments.router)
 app.include_router(derivatives.router)
+app.include_router(insider.router)
 app.include_router(macros.router)
 
 
