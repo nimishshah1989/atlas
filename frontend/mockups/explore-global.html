@@ -442,6 +442,14 @@
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
   <span data-component="four-universal-benchmarks" data-benchmark="gold" />
   <!-- END DP COMPONENT SLOTS -->
+  <!-- REC-SLOT SENTINELS (V1FE-5) — fe-g-19 -->
+  <div class="rec-slot" data-rule-scope="global-regime" data-page="explore-global" data-slot-id="global-regime" aria-hidden="true" />
+  <!-- DATA-BLOCK SENTINELS (V1FE-5) — fe-p4-01 -->
+  <div data-block="macros" aria-hidden="true" />
+  <div data-block="rates" aria-hidden="true" />
+  <div data-block="fx" aria-hidden="true" />
+  <div data-block="commodities" aria-hidden="true" />
+  <div data-block="credit" aria-hidden="true" />
 
   <!-- Breadcrumb -->
   <nav class="crumbs">
@@ -556,7 +564,7 @@
   <!-- ════════════════════════════════════════════════════════════════════
        2 · MACROS — expanded signal strip + levels table
        ════════════════════════════════════════════════════════════════════ -->
-  <section class="sect" id="sect-macros">
+  <section class="sect" id="sect-macros" data-block="macros">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <div class="sect__eyebrow">2 · Macro levels</div>
@@ -581,12 +589,12 @@
       </div>
       <div class="ss-cell">
         <div class="ss-cell__l">Brent</div>
-        <div class="ss-cell__v">$88.4</div>
+        <div class="ss-cell__v">88.4</div>
         <div class="ss-cell__m"><span class="pos">+1.2%</span> · <span class="ss-zone ss-zone--ok">OK</span></div>
       </div>
       <div class="ss-cell">
         <div class="ss-cell__l">Gold</div>
-        <div class="ss-cell__v">$2,412</div>
+        <div class="ss-cell__v">2,412</div>
         <div class="ss-cell__m"><span class="pos">+0.6%</span> · <span class="ss-zone ss-zone--ok">ATH</span></div>
       </div>
       <div class="ss-cell">
@@ -596,7 +604,7 @@
       </div>
       <div class="ss-cell">
         <div class="ss-cell__l">Copper</div>
-        <div class="ss-cell__v">$4.32</div>
+        <div class="ss-cell__v">4.32</div>
         <div class="ss-cell__m"><span class="pos">+0.8%</span> · <span class="ss-zone ss-zone--ok">Cyclicals OK</span></div>
       </div>
     </div>
@@ -631,9 +639,9 @@
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 10Y</strong> · Treasury</td><td style="text-align:right;padding:8px 10px;">4.37%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+3 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+9 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+18 bps</td><td style="text-align:right;padding:8px 10px;">72%</td><td style="padding:8px 10px;">&lt; 4.25%</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Watch · breached</span></td></tr>
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 30Y</strong> · Treasury</td><td style="text-align:right;padding:8px 10px;">4.54%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+2 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+6 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+14 bps</td><td style="text-align:right;padding:8px 10px;">64%</td><td style="padding:8px 10px;">term premium</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK</span></td></tr>
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 2s10s spread</strong></td><td style="text-align:right;padding:8px 10px;">−48 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−1 bp</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−3 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−6 bps</td><td style="text-align:right;padding:8px 10px;">18%</td><td style="padding:8px 10px;">inversion signal</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Inverted 18mo</span></td></tr>
-            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Brent crude</strong> · $/bbl</td><td style="text-align:right;padding:8px 10px;">$88.4</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.2%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+6.8%</td><td style="text-align:right;padding:8px 10px;">58%</td><td style="padding:8px 10px;">&lt; $95 = tolerable</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK</span></td></tr>
-            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Gold</strong> · $/oz</td><td style="text-align:right;padding:8px 10px;">$2,412</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.6%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+4.8%</td><td style="text-align:right;padding:8px 10px;">96%</td><td style="padding:8px 10px;">regime signal</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">ATH · real-asset bid</span></td></tr>
-            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Copper</strong> · $/lb</td><td style="text-align:right;padding:8px 10px;">$4.32</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.1%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+5.4%</td><td style="text-align:right;padding:8px 10px;">74%</td><td style="padding:8px 10px;">growth proxy</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK · cyclicals</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Brent crude</strong> · USD/bbl</td><td style="text-align:right;padding:8px 10px;">88.4</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.2%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+6.8%</td><td style="text-align:right;padding:8px 10px;">58%</td><td style="padding:8px 10px;">&lt; 95 = tolerable</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Gold</strong> · USD/oz</td><td style="text-align:right;padding:8px 10px;">2,412</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.6%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+4.8%</td><td style="text-align:right;padding:8px 10px;">96%</td><td style="padding:8px 10px;">regime signal</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">ATH · real-asset bid</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Copper</strong> · USD/lb</td><td style="text-align:right;padding:8px 10px;">4.32</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.1%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+5.4%</td><td style="text-align:right;padding:8px 10px;">74%</td><td style="padding:8px 10px;">growth proxy</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK · cyclicals</span></td></tr>
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Gold/Copper ratio</strong></td><td style="text-align:right;padding:8px 10px;">559</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">−0.2</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">−0.3</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−0.6</td><td style="text-align:right;padding:8px 10px;">76%</td><td style="padding:8px 10px;">&lt; 600 = growth</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">Growth tilt</span></td></tr>
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>VIX</strong> · S&amp;P 500</td><td style="text-align:right;padding:8px 10px;">16.3</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">flat</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+0.8</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+1.2</td><td style="text-align:right;padding:8px 10px;">38%</td><td style="padding:8px 10px;">&lt; 20 = risk-on</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">Compressed</span></td></tr>
             <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>MOVE</strong> · bond vol</td><td style="text-align:right;padding:8px 10px;">102</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+3</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+8</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+14</td><td style="text-align:right;padding:8px 10px;">62%</td><td style="padding:8px 10px;">&lt; 110 = OK</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Elevated</span></td></tr>
@@ -647,7 +655,7 @@
   <!-- ════════════════════════════════════════════════════════════════════
        3 · YIELD CURVES — 4-country gallery
        ════════════════════════════════════════════════════════════════════ -->
-  <section class="sect" id="sect-yields">
+  <section class="sect" id="sect-yields" data-block="rates">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <div class="sect__eyebrow">3 · Yield curves</div>
@@ -850,7 +858,7 @@
   <!-- ════════════════════════════════════════════════════════════════════
        4 · FX MATRIX
        ════════════════════════════════════════════════════════════════════ -->
-  <section class="sect" id="sect-fx">
+  <section class="sect" id="sect-fx" data-block="fx">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <div class="sect__eyebrow">4 · Cross-currency</div>
@@ -965,8 +973,8 @@
       </div>
       <div class="card" style="padding:var(--space-4);">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:6px;">RBI FX reserve</div>
-        <div style="font-size:22px;font-weight:700;font-family:var(--font-serif);color:var(--text-primary);">$642.4 bn</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><span class="ret-pos">+$1.4 bn wk</span> · ≈ 11 months import cover · ATH</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--font-serif);color:var(--text-primary);">642.4 bn USD</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><span class="ret-pos">+1.4 bn USD wk</span> · ≈ 11 months import cover · ATH</div>
       </div>
     </div>
   </section>
@@ -974,7 +982,7 @@
   <!-- ════════════════════════════════════════════════════════════════════
        5 · COMMODITIES
        ════════════════════════════════════════════════════════════════════ -->
-  <section class="sect" id="sect-commod">
+  <section class="sect" id="sect-commod" data-block="commodities">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <div class="sect__eyebrow">5 · Commodities</div>
@@ -1000,8 +1008,8 @@
             <div>Div / Conv</div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Gold<span class="cm-name__sub">COMEX · $/oz · ref</span></div>
-            <div class="cm-num">$2,412</div>
+            <div class="cm-name">Gold<span class="cm-name__sub">COMEX · USD/oz · ref</span></div>
+            <div class="cm-num">2,412</div>
             <div class="cm-num pos">+0.6</div>
             <div class="cm-num pos">+4.8</div>
             <div class="fcell"><span class="fcell__v fcell__v--neu">ref</span><span class="flabel flabel--neut">REF</span></div>
@@ -1010,8 +1018,8 @@
             <div><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">reference bid</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Silver<span class="cm-name__sub">COMEX · $/oz</span></div>
-            <div class="cm-num">$28.4</div>
+            <div class="cm-name">Silver<span class="cm-name__sub">COMEX · USD/oz</span></div>
+            <div class="cm-num">28.4</div>
             <div class="cm-num pos">+1.4</div>
             <div class="cm-num pos">+6.2</div>
             <div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div>
@@ -1020,8 +1028,8 @@
             <div><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">silver &gt; gold</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Copper<span class="cm-name__sub">LME · $/lb</span></div>
-            <div class="cm-num">$4.32</div>
+            <div class="cm-name">Copper<span class="cm-name__sub">LME · USD/lb</span></div>
+            <div class="cm-num">4.32</div>
             <div class="cm-num pos">+0.8</div>
             <div class="cm-num pos">+5.4</div>
             <div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
@@ -1030,8 +1038,8 @@
             <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">growth signal</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Brent<span class="cm-name__sub">ICE · $/bbl</span></div>
-            <div class="cm-num">$88.4</div>
+            <div class="cm-name">Brent<span class="cm-name__sub">ICE · USD/bbl</span></div>
+            <div class="cm-num">88.4</div>
             <div class="cm-num pos">+1.2</div>
             <div class="cm-num pos">+6.8</div>
             <div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div>
@@ -1040,8 +1048,8 @@
             <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">geopolitical bid</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">WTI<span class="cm-name__sub">NYMEX · $/bbl</span></div>
-            <div class="cm-num">$83.8</div>
+            <div class="cm-name">WTI<span class="cm-name__sub">NYMEX · USD/bbl</span></div>
+            <div class="cm-num">83.8</div>
             <div class="cm-num pos">+1.0</div>
             <div class="cm-num pos">+5.6</div>
             <div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div>
@@ -1050,8 +1058,8 @@
             <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">backwardation</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Nat Gas<span class="cm-name__sub">HH · $/MMBtu</span></div>
-            <div class="cm-num">$1.84</div>
+            <div class="cm-name">Nat Gas<span class="cm-name__sub">HH · USD/MMBtu</span></div>
+            <div class="cm-num">1.84</div>
             <div class="cm-num neg">−1.8</div>
             <div class="cm-num neg">−12.4</div>
             <div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div>
@@ -1060,8 +1068,8 @@
             <div><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">oversupply</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Aluminium<span class="cm-name__sub">LME · $/tonne</span></div>
-            <div class="cm-num">$2,284</div>
+            <div class="cm-name">Aluminium<span class="cm-name__sub">LME · USD/tonne</span></div>
+            <div class="cm-num">2,284</div>
             <div class="cm-num pos">+0.4</div>
             <div class="cm-num pos">+3.8</div>
             <div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div>
@@ -1070,8 +1078,8 @@
             <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">industrial lift</span></div></div>
           </div>
           <div class="cm-row">
-            <div class="cm-name">Platinum<span class="cm-name__sub">NYMEX · $/oz</span></div>
-            <div class="cm-num">$918</div>
+            <div class="cm-name">Platinum<span class="cm-name__sub">NYMEX · USD/oz</span></div>
+            <div class="cm-num">918</div>
             <div class="cm-num neu">+0.2</div>
             <div class="cm-num neg">−1.4</div>
             <div class="fcell"><span class="fcell__v fcell__v--neg">−1.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
@@ -1125,7 +1133,7 @@
   <!-- ════════════════════════════════════════════════════════════════════
        6 · CREDIT SPREADS
        ════════════════════════════════════════════════════════════════════ -->
-  <section class="sect" id="sect-credit">
+  <section class="sect" id="sect-credit" data-block="credit">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <div class="sect__eyebrow">6 · Credit spreads</div>
@@ -1457,7 +1465,7 @@
               <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
               <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
               <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">REF</span><span class="dc__note">home base</span></div></td>
-              <td><span class="act act--hold">HOLD</span></td>
+              <td><span class="act act--neutral">—</span></td>
             </tr>
             <tr>
               <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">S&P 500</div><div class="ix-name__sub">US · SPX</div></div></div></td>
@@ -1469,7 +1477,7 @@
               <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--stall">STALL</span></div></td>
               <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
               <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
-              <td><span class="act act--hold">HOLD</span></td>
+              <td><span class="act act--neutral">—</span></td>
             </tr>
             <tr>
               <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">Hang Seng</div><div class="ix-name__sub">Hong Kong · HSI</div></div></div></td>
