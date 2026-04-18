@@ -1,17 +1,62 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T03:01:29.400608+05:30",
+  "generated_at": "2026-04-19T03:29:27.061115+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
-  "total": 2,
-  "passed": 2,
+  "total": 8,
+  "passed": 4,
   "failed": 0,
-  "skipped": 0,
+  "skipped": 4,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
     {
-      "id": "fe-p11-01",
-      "title": "portfolios.html: 4 book cards + holdings tables + benchmark comparison",
+      "id": "fe-p10_5-01",
+      "title": "signal-playback: all 14 input parameters present with declared ids",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "selector_file_pairs check passed",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p10_5-02",
+      "title": "signal-playback: 3-overlay benchmark (Strategy, Nifty 50 B&H, Nifty 500 B&H)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-03",
+      "title": "signal-playback: three tabs (Transaction Log, Cashflow, Tax Analysis)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-04",
+      "title": "signal-playback: light-token port (no dark-v8 palette residue)",
+      "severity": "critical",
+      "check_type": "grep_forbid",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-05",
+      "title": "signal-playback: FIFO tax regime split coded (2024-07-23 cutoff)",
+      "severity": "critical",
+      "check_type": "grep_require",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p12-01",
+      "title": "lab.html: 3 mode tabs (Breadth Playback, Rule Backtest V1.1 disabled, Compare)",
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
@@ -19,12 +64,21 @@
       "status": "RUN"
     },
     {
-      "id": "fe-p11-02",
-      "title": "portfolios.html: accountability banner + pending-rec ledger removed",
+      "id": "fe-p12-02",
+      "title": "lab.html: strategy config panel + run button + results area",
       "severity": "critical",
-      "check_type": "dom_forbidden",
+      "check_type": "dom_required",
       "passed": true,
-      "evidence": "No forbidden elements in 1 file(s)",
+      "evidence": "All selectors matched in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p12-03",
+      "title": "lab.html: full signal-playback embed in Breadth Playback mode",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'[data-component=signal-playback][data-mode=full]': 1 element(s) in 1 file(s)",
       "status": "RUN"
     }
   ]

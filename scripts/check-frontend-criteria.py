@@ -89,9 +89,11 @@ def _run_criteria(
     for criterion in criteria:
         cid = criterion.get("id", "unknown")
 
-        # Apply id filter (glob pattern)
-        if id_filter and not fnmatch.fnmatch(cid, id_filter):
-            continue
+        # Apply id filter (glob pattern, supports comma-separated)
+        if id_filter:
+            patterns = [p.strip() for p in id_filter.split(",")]
+            if not any(fnmatch.fnmatch(cid, p) for p in patterns):
+                continue
 
         title = criterion.get("title", "")
         severity = criterion.get("severity", "medium")
