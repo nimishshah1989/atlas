@@ -29,14 +29,25 @@ from backend.services.adjustment_service import (
     apply_adjustment,
     compute_adjustment_schedule,
 )
+from backend.services.denomination_service import apply_denomination
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/instruments", tags=["instruments"])
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DATA_HEALTH_PATH = _REPO_ROOT / "data-health.json"
-_HEALTH_CACHE: dict[str, tuple[list[str], Any]] = {}
+_HEALTH_CACHE: dict[str, tuple[list[str], float]] = {}
 _HEALTH_CACHE_TTL = 60.0
+
+# In-process TTL cache for denominator price series
+# Key: (ticker, from_date_str, to_date_str) -> (timestamp, series)
+_DENOM_CACHE: dict[tuple[str, str, str], tuple[float, list[tuple[date, Decimal]]]] = {}
+_DENOM_CACHE_TTL = 60.0  # seconds — same TTL as health cache
+
+_DENOM_TICKERS: dict[str, str] = {
+    "gold": "GOLDBEES",  # INR gold price (NSE ETF on de_global_price_daily)
+    "usd": "USDINR=X",  # USD/INR exchange rate
+}
 
 
 def _check_corporate_actions_health() -> list[str]:
@@ -71,10 +82,52 @@ def _check_corporate_actions_health() -> list[str]:
     return warning_list
 
 
+async def _get_denom_series(
+    denomination: str,
+    from_date: date,
+    to_date: date,
+) -> list[tuple[date, Decimal]]:
+    """Fetch denominator price series with in-process TTL cache.
+
+    Returns cached result if within TTL. Returns [] on any DB error.
+    """
+    ticker = _DENOM_TICKERS[denomination]
+    cache_key = (ticker, str(from_date), str(to_date))
+
+    cached = _DENOM_CACHE.get(cache_key)
+    if cached is not None:
+        ts, series = cached
+        if time.monotonic() - ts < _DENOM_CACHE_TTL:
+            log.debug("denom_cache_hit", denomination=denomination, ticker=ticker)
+            return series
+
+    try:
+        async with async_session_factory() as session:
+            svc = JIPEquityService(session)
+            series = await svc.get_global_price_series(ticker, from_date, to_date)
+        _DENOM_CACHE[cache_key] = (time.monotonic(), series)
+        log.debug(
+            "denom_series_fetched",
+            denomination=denomination,
+            ticker=ticker,
+            row_count=len(series),
+        )
+        return series
+    except Exception as exc:
+        log.error(
+            "denom_series_fetch_failed",
+            denomination=denomination,
+            ticker=ticker,
+            error=str(exc),
+        )
+        return []
+
+
 @router.get("/{symbol}/price", response_model=None)
 async def get_price(
     symbol: str,
     adjusted: bool = Query(True, description="Apply back-adjustment (default true)"),
+    denomination: str = Query("inr", description="Price denomination: inr (default), gold, usd"),
     from_date: Optional[date] = Query(None, description="Start date (inclusive)"),
     to_date: Optional[date] = Query(None, description="End date (inclusive)"),
 ) -> dict[str, Any]:
@@ -98,6 +151,18 @@ async def get_price(
                 "error": {
                     "code": "INVALID_DATE_RANGE",
                     "message": "from_date must be <= to_date",
+                    "details": {},
+                }
+            },
+        )
+
+    if denomination not in ("inr", "gold", "usd"):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "INVALID_DENOMINATION",
+                    "message": "denomination must be one of: inr, gold, usd",
                     "details": {},
                 }
             },
@@ -152,6 +217,20 @@ async def get_price(
                     health_warnings = [f"adjustment_computation_failed: {type(exc).__name__}"]
                     use_adjusted = False
 
+    # Apply denomination conversion for non-INR output
+    denom_data_as_of: Optional[date] = None
+    if denomination != "inr":
+        denom_series = await _get_denom_series(denomination, resolved_from, resolved_to)
+        if not denom_series:
+            log.warning(
+                "denomination_series_empty",
+                denomination=denomination,
+                symbol=sym,
+            )
+            health_warnings.append(f"denomination_series_unavailable: {denomination}")
+        else:
+            raw_prices, denom_data_as_of = apply_denomination(raw_prices, denom_series)
+
     # Build response
     price_points: list[PricePoint] = []
     data_as_of: Optional[date] = None
@@ -171,11 +250,17 @@ async def get_price(
             )
         )
 
+    # Propagate worst-of staleness: use the older of instrument and denominator dates
+    if denom_data_as_of is not None:
+        if data_as_of is None or denom_data_as_of < data_as_of:
+            data_as_of = denom_data_as_of
+
     meta = PriceMeta(
         symbol=sym,
         from_date=resolved_from,
         to_date=resolved_to,
         adjusted=use_adjusted,
+        denomination=denomination,
         data_as_of=data_as_of,
         warnings=health_warnings,
         point_count=len(price_points),

@@ -3,6 +3,7 @@
 import asyncio
 import time
 from datetime import date
+from decimal import Decimal
 from typing import Any, Optional
 
 import structlog
@@ -453,3 +454,42 @@ class JIPEquityService:
         )
         rows = query_result.mappings().all()
         return [dict(r) for r in rows]
+
+    async def get_global_price_series(
+        self,
+        ticker: str,
+        from_date: date,
+        to_date: date,
+    ) -> list[tuple[date, Decimal]]:
+        """Fetch daily close price series from de_global_price_daily.
+
+        Args:
+            ticker: The global price ticker (e.g. 'GOLDBEES', 'USDINR=X', 'GLD').
+            from_date: Start date (inclusive).
+            to_date: End date (inclusive).
+
+        Returns:
+            List of (date, Decimal(close)) sorted ascending. Rows with NULL close skipped.
+        """
+        sql = text("""
+            SELECT date, close
+            FROM de_global_price_daily
+            WHERE ticker = :ticker
+              AND date >= :from_date
+              AND date <= :to_date
+              AND close IS NOT NULL
+            ORDER BY date ASC
+        """)
+        query_result = await self.session.execute(
+            sql,
+            {"ticker": ticker, "from_date": from_date, "to_date": to_date},
+        )
+        rows = query_result.fetchall()
+        log.debug(
+            "global_price_series_fetched",
+            ticker=ticker,
+            from_date=str(from_date),
+            to_date=str(to_date),
+            row_count=len(rows),
+        )
+        return [(row[0], Decimal(str(row[1]))) for row in rows]

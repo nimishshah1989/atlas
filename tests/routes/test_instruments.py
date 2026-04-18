@@ -248,3 +248,213 @@ async def test_get_price_empty_corporate_actions(client: AsyncClient) -> None:
     body = resp.json()
     assert len(body["data"]) == 2
     assert body["_meta"]["point_count"] == 2
+
+
+# ---------------------------------------------------------------------------
+# V11-3 — Denomination lens tests
+# ---------------------------------------------------------------------------
+
+_GOLD_SERIES: list[tuple[date, Decimal]] = [
+    (date(2025, 1, 2), Decimal("100.0000")),
+    (date(2025, 6, 1), Decimal("120.0000")),
+]
+
+_USDINR_SERIES: list[tuple[date, Decimal]] = [
+    (date(2025, 1, 2), Decimal("84.5000")),
+    (date(2025, 6, 1), Decimal("85.0000")),
+]
+
+_GET_DENOM = f"{_ROUTE}._get_denom_series"
+_DENOM_CACHE_PATH = f"{_ROUTE}._DENOM_CACHE"
+
+
+@pytest.mark.asyncio
+async def test_denomination_gold_divides_by_goldbees(client: AsyncClient) -> None:
+    """denomination=gold returns close = inr_close / goldbees_close, 4dp."""
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch(_HEALTH_CHECK, return_value=[]),
+        patch(_GET_DENOM, new=AsyncMock(return_value=_GOLD_SERIES)),
+    ):
+        resp = await client.get("/api/instruments/RELIANCE/price?denomination=gold")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["_meta"]["denomination"] == "gold"
+    # close = 1020.0 / 100.0 = 10.2000
+    first_row = body["data"][0]
+    assert first_row["close"] == "10.2000"
+
+
+@pytest.mark.asyncio
+async def test_denomination_usd_divides_by_usdinr(client: AsyncClient) -> None:
+    """denomination=usd returns close = inr_close / usdinr_rate, 4dp."""
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch(_HEALTH_CHECK, return_value=[]),
+        patch(_GET_DENOM, new=AsyncMock(return_value=_USDINR_SERIES)),
+    ):
+        resp = await client.get("/api/instruments/RELIANCE/price?denomination=usd")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["_meta"]["denomination"] == "usd"
+    # close = 1020.0 / 84.5 = ...
+    first_row = body["data"][0]
+    expected = (Decimal("1020.0000") / Decimal("84.5000")).quantize(Decimal("0.0001"))
+    assert first_row["close"] == str(expected)
+
+
+@pytest.mark.asyncio
+async def test_denomination_inr_is_default(client: AsyncClient) -> None:
+    """No denomination param -> denomination='inr' in meta, INR prices returned."""
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch(_HEALTH_CHECK, return_value=[]),
+    ):
+        resp = await client.get("/api/instruments/RELIANCE/price")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["_meta"]["denomination"] == "inr"
+    # INR close preserved (no division)
+    assert body["data"][0]["close"] == "1020.0000"
+
+
+@pytest.mark.asyncio
+async def test_denomination_invalid_returns_400(client: AsyncClient) -> None:
+    """Unknown denomination -> HTTP 400 INVALID_DENOMINATION."""
+    resp = await client.get("/api/instruments/RELIANCE/price?denomination=bitcoin")
+    assert resp.status_code == 400
+    body = resp.json()
+    assert body["detail"]["error"]["code"] == "INVALID_DENOMINATION"
+
+
+@pytest.mark.asyncio
+async def test_denomination_data_as_of_worst_of_staleness(client: AsyncClient) -> None:
+    """data_as_of = min(instrument_max_date, denom_max_date) — worst-of staleness."""
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+    # Denom series ends earlier than instrument series
+    early_denom = [(date(2025, 1, 2), Decimal("100.0000"))]  # only one date (2025-01-02)
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch(_HEALTH_CHECK, return_value=[]),
+        patch(_GET_DENOM, new=AsyncMock(return_value=early_denom)),
+    ):
+        resp = await client.get("/api/instruments/RELIANCE/price?denomination=gold")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    # denom only has 2025-01-02, instrument has up to 2025-06-01
+    # data_as_of should be 2025-01-02 (denom is more stale)
+    assert body["_meta"]["data_as_of"] == "2025-01-02"
+
+
+@pytest.mark.asyncio
+async def test_denomination_common_intersection_only(client: AsyncClient) -> None:
+    """Only dates in BOTH series appear in output."""
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+    # Denom only has the second date (2025-06-01)
+    partial_denom = [(date(2025, 6, 1), Decimal("120.0000"))]
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch(_HEALTH_CHECK, return_value=[]),
+        patch(_GET_DENOM, new=AsyncMock(return_value=partial_denom)),
+    ):
+        resp = await client.get("/api/instruments/RELIANCE/price?denomination=gold")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    # Only 2025-06-01 is common; 2025-01-02 excluded
+    assert len(body["data"]) == 1
+    assert body["data"][0]["trade_date"] == "2025-06-01"
+
+
+@pytest.mark.asyncio
+async def test_denomination_cache_hit_skips_db(client: AsyncClient) -> None:
+    """Second call within TTL uses cache (denom fetch called only once)."""
+    import backend.routes.instruments as _instruments_module
+
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+
+    # Clear the cache before this test
+    _instruments_module._DENOM_CACHE.clear()
+
+    fetch_count = 0
+
+    async def _fake_get_global(self: Any, ticker: str, from_date: Any, to_date: Any) -> Any:
+        nonlocal fetch_count
+        fetch_count += 1
+        return _GOLD_SERIES
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch.object(_JIP_SVC, "get_global_price_series", new=_fake_get_global),
+        patch(_HEALTH_CHECK, return_value=[]),
+    ):
+        resp1 = await client.get(
+            "/api/instruments/RELIANCE/price?denomination=gold&from_date=2025-01-01&to_date=2025-12-31"
+        )
+        resp2 = await client.get(
+            "/api/instruments/RELIANCE/price?denomination=gold&from_date=2025-01-01&to_date=2025-12-31"
+        )
+
+    assert resp1.status_code == 200
+    assert resp2.status_code == 200
+    # DB fetch should only happen once; second call served from cache
+    assert fetch_count == 1, f"Expected 1 DB fetch, got {fetch_count}"
+
+
+@pytest.mark.asyncio
+async def test_denomination_cache_hit_timing(client: AsyncClient) -> None:
+    """Second call within TTL completes in < 200ms (cache bypass, no network call)."""
+    import time as _time
+
+    import backend.routes.instruments as _instruments_module
+
+    _instruments_module._DENOM_CACHE.clear()
+    mock_ctx, _ = _make_session_ctx(symbol_exists=True)
+
+    async def _fake_get_global(self: Any, ticker: str, from_date: Any, to_date: Any) -> Any:
+        return _GOLD_SERIES
+
+    with (
+        patch(_SESSION_FACTORY, return_value=mock_ctx),
+        patch.object(_JIP_SVC, "get_chart_data", new=AsyncMock(return_value=_SAMPLE_PRICES)),
+        patch.object(_JIP_SVC, "get_corporate_actions", new=AsyncMock(return_value=[])),
+        patch.object(_JIP_SVC, "get_global_price_series", new=_fake_get_global),
+        patch(_HEALTH_CHECK, return_value=[]),
+    ):
+        # First call (populates cache)
+        await client.get(
+            "/api/instruments/RELIANCE/price?denomination=gold&from_date=2025-01-01&to_date=2025-12-31"
+        )
+        # Second call (should hit cache)
+        t0 = _time.monotonic()
+        resp = await client.get(
+            "/api/instruments/RELIANCE/price?denomination=gold&from_date=2025-01-01&to_date=2025-12-31"
+        )
+        elapsed_ms = (_time.monotonic() - t0) * 1000
+
+    assert resp.status_code == 200
+    assert elapsed_ms < 200, f"Cache hit took {elapsed_ms:.1f}ms, expected < 200ms"

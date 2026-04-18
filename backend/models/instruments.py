@@ -28,6 +28,7 @@ class PriceMeta(BaseModel):
     from_date: date
     to_date: date
     adjusted: bool
+    denomination: str = "inr"
     data_as_of: Optional[date] = None
     warnings: list[str] = []
     point_count: int
