@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Breadth Terminal · Market Breadth</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── Layout ── */
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+    .crumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); padding: var(--space-4) 0 var(--space-2); }
+    .crumb a { color: var(--text-accent); text-decoration: none; }
+    .crumb__sep { color: var(--border-strong); }
+
+    /* ── Topbar ── */
+    .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); }
+    .topbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand__mark { width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-inverse); font-family: var(--font-serif); font-size: 17px; font-weight: 500; }
+    .brand__name { font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em; }
+    .brand__sub { font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .topbar__nav { display: flex; align-items: center; gap: 2px; margin-left: var(--space-4); }
+    .topbar__nav a { font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none; }
+    .topbar__nav a:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .topbar__nav a.active { color: var(--accent-700); background: var(--accent-100); font-weight: 600; }
+    .topbar__spacer { flex: 1; }
+    .topbar__search-wrap { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 280px; cursor: text; }
+    .topbar__search-wrap svg { color: var(--text-tertiary); flex-shrink: 0; }
+    .topbar__search-wrap input { background: transparent; border: none; outline: none; font-size: 12px; color: var(--text-primary); width: 100%; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+
+    /* ── Page header ── */
+    .ph { padding: var(--space-5) 0 var(--space-4); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .ph__title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin: 4px 0 8px; }
+    .ph__sub { font-size: 13px; color: var(--text-secondary); max-width: 800px; line-height: 1.55; }
+
+    /* ── Section ── */
+    .sect { margin-bottom: var(--space-8); }
+    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--space-4); gap: var(--space-4); }
+    .sect__title { font-family: var(--font-serif); font-size: 22px; font-weight: 500; color: var(--text-primary); margin: 0; }
+    .sect__sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; max-width: 720px; line-height: 1.5; }
+    .sect__tools { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Headline hero ── */
+    .hero-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .hero-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-5); position: relative; }
+    .hero-card--ema21 { border-top: 3px solid var(--accent-700); }
+    .hero-card--dma50 { border-top: 3px solid var(--rag-amber-500); }
+    .hero-card--dma200 { border-top: 3px solid var(--rag-green-500); }
+    .hero-card__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .hero-card__count { font-family: var(--font-serif); font-size: 52px; font-weight: 600; color: var(--text-primary); line-height: 1; font-variant-numeric: tabular-nums; }
+    .hero-card__denom { font-size: 14px; color: var(--text-tertiary); font-weight: 500; margin-left: 4px; font-variant-numeric: tabular-nums; }
+    .hero-card__pct { font-size: 16px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
+    .hero-card__pct--high { color: var(--rag-green-700); }
+    .hero-card__pct--mid { color: var(--rag-amber-700); }
+    .hero-card__pct--low { color: var(--rag-red-700); }
+    .hero-card__hint { font-size: 11px; color: var(--text-secondary); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px; line-height: 1.45; }
+
+    /* ── Info tooltip ── */
+    .info-tooltip { cursor: help; display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border-default); font-size: 9px; font-weight: 700; color: var(--text-tertiary); user-select: none; }
+
+    /* ── Regime band ── */
+    .regime-band { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-5); border: 1px solid var(--border-default); border-radius: var(--radius-md); margin-bottom: var(--space-4); background: var(--bg-surface); }
+    .regime-band__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .regime-band__state { font-size: 14px; font-weight: 700; }
+    .regime-band__state--neutral { color: var(--rag-amber-700); }
+    .regime-band__state--bullish { color: var(--rag-green-700); }
+    .regime-band__state--bearish { color: var(--rag-red-700); }
+    .regime-band__meta { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .regime-band__segments { display: flex; gap: 4px; }
+    .regime-segment { height: 8px; border-radius: 4px; }
+    .regime-segment--ob { background: var(--rag-red-300); }
+    .regime-segment--neutral { background: var(--rag-amber-300); }
+    .regime-segment--os { background: var(--rag-green-300); }
+
+    /* ── KPI grid ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .kpi-tile { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: 4px; }
+    .kpi-tile__head { display: flex; align-items: center; justify-content: space-between; }
+    .kpi-tile__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .kpi-tile__val { font-family: var(--font-serif); font-size: 28px; font-weight: 600; color: var(--text-primary); line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .kpi-tile__delta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .kpi-tile__delta--pos { color: var(--rag-green-700); }
+    .kpi-tile__delta--neg { color: var(--rag-red-700); }
+    .kpi-tile__sub { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* ── Selector pills ── */
+    .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    .pill { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--border-default); background: var(--bg-inset); color: var(--text-secondary); cursor: pointer; text-decoration: none; }
+    .pill--active { background: var(--accent-700); border-color: var(--accent-700); color: var(--text-inverse); }
+    .pill:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .pill--active:hover { background: var(--accent-700); color: var(--text-inverse); }
+    .selector-bar { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: var(--space-4); }
+    .selector-bar__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); min-width: 80px; }
+
+    /* ── Chart canvas ── */
+    .chart-wrap { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); }
+    .chart-wrap__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+    .chart-wrap__title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .chart-wrap__meta { font-size: 11px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+    .chart-with-events { position: relative; width: 100%; }
+    .chart { position: relative; width: 100%; }
+
+    /* Chart SVG skeleton */
+    .chart-svg-area { width: 100%; height: 240px; background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .chart-svg-area svg { width: 100%; height: 100%; }
+    .chart__legend { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); font-size: 11px; }
+    .chart__legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); }
+    .chart__legend-dot { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+    .chart__axis-x { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; padding: 4px 6px 0; }
+    .chart__axis-y { position: absolute; left: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; padding: 6px 0; width: 32px; }
+    .chart__source { font-size: 10px; color: var(--text-tertiary); margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--border-subtle); }
+    .chart__tooltip { display: none; position: absolute; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 11px; pointer-events: none; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .chart__explain { font-size: 11px; color: var(--text-tertiary); margin-top: var(--space-2); font-style: italic; }
+    .chart__benchmark { font-size: 10px; color: var(--text-tertiary); padding: 2px 6px; background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+
+    /* ── Zone bands ── */
+    .zone-labels { display: flex; flex-direction: column; gap: 6px; margin-top: var(--space-4); }
+    .zone-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; }
+    .zone-item--overbought { background: var(--rag-red-100); border-left: 3px solid var(--rag-red-500); color: var(--rag-red-700); }
+    .zone-item--midline { background: var(--rag-amber-100); border-left: 3px solid var(--rag-amber-500); color: var(--rag-amber-700); }
+    .zone-item--oversold { background: var(--rag-green-100); border-left: 3px solid var(--rag-green-500); color: var(--rag-green-700); }
+    .zone-item__val { font-family: var(--font-mono, monospace); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 40px; }
+    .zone-item__desc { font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+
+    /* ── Describe block ── */
+    .describe-block { background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--rag-amber-500); border-radius: var(--radius-md); padding: var(--space-4); margin: var(--space-4) 0; }
+    .describe-block__tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--rag-amber-700); margin-bottom: 6px; }
+    .describe-block__body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .describe-block__body strong { color: var(--text-primary); }
+    .describe-block__meta { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px; font-variant-numeric: tabular-nums; }
+
+    /* ── Signal history ── */
+    .signal-history { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .signal-history__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+    .signal-history__title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .signal-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+    .signal-table thead th { background: var(--bg-inset); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-default); }
+    .signal-table thead th.num { text-align: right; }
+    .signal-table tbody td { padding: 10px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; vertical-align: middle; }
+    .signal-table tbody tr:last-child td { border-bottom: none; }
+    .signal-table tbody tr:hover td { background: var(--bg-hover); }
+    .signal-table td.num { text-align: right; font-weight: 600; }
+
+    /* ── Event chip ── */
+    .ev-chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .ev-chip--ob { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .ev-chip--os { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .ev-chip--mid { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .ev-chip--exit { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ── Signal Playback ── */
+    .playback-wrap { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; margin-top: var(--space-5); }
+    .playback-wrap__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+    .playback-wrap__title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; color: var(--text-primary); }
+    .playback-wrap__sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .playback-body { padding: var(--space-4); }
+    .playback-layout { display: grid; grid-template-columns: 320px 1fr; gap: var(--space-5); }
+
+    /* ── Params panel ── */
+    .params-panel { background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); }
+    .params-panel__title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: var(--space-3); border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-2); }
+    .param-group { margin-bottom: var(--space-4); }
+    .param-group__head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-700); margin-bottom: var(--space-2); }
+    .param-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 6px; }
+    .param-label { font-size: 11px; color: var(--text-secondary); line-height: 1.3; flex: 1; }
+    .param-input { width: 80px; padding: 4px 6px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-primary); text-align: right; font-family: var(--font-mono, monospace); }
+    .param-input:focus { outline: none; border-color: var(--accent-700); }
+
+    /* ── Sim chart panel ── */
+    .sim-chart-panel { display: flex; flex-direction: column; gap: var(--space-4); }
+    .overlay-legend { display: flex; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-2) 0; }
+    .overlay-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+    .overlay-item__line { width: 24px; height: 2px; border-radius: 1px; }
+    .overlay-item__line--strategy { background: var(--accent-700); }
+    .overlay-item__line--n50 { background: var(--rag-green-500); }
+    .overlay-item__line--n500 { background: var(--rag-amber-500); }
+    .overlay-item__val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--border-default); margin-bottom: var(--space-4); }
+    .tab-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; color: var(--text-secondary); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab-btn.active { color: var(--accent-700); border-bottom-color: var(--accent-700); }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .tab-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11.5px; }
+    .tab-table thead th { background: var(--bg-inset); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--border-default); }
+    .tab-table thead th.num { text-align: right; }
+    .tab-table tbody td { padding: 8px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; vertical-align: middle; }
+    .tab-table tbody tr:last-child td { border-bottom: none; }
+    .tab-table td.num { text-align: right; font-weight: 600; }
+    .tax-cutoff-note { font-size: 11px; color: var(--text-secondary); background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-3); }
+    .tax-cutoff-note strong { color: var(--text-primary); }
+
+    /* ── Run button ── */
+    .run-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 8px 18px; background: var(--accent-700); color: var(--text-inverse); border: none; border-radius: var(--radius-sm); cursor: pointer; }
+    .run-btn:hover { background: var(--accent-600); }
+
+    /* ── Icon btn ── */
+    .icon-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 5px 10px; background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; text-decoration: none; }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    /* ── Explain block ── */
+    .explain-block { margin: var(--space-8) 0 var(--space-5); background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--accent-700); border-radius: var(--radius-md); overflow: hidden; }
+    .explain-block__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); border-bottom: 1px solid var(--border-subtle); cursor: pointer; }
+    .explain-block__title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .explain-block__toggle { font-size: 11px; color: var(--accent-700); font-weight: 600; }
+    .explain-block__body { padding: var(--space-4) var(--space-5); }
+    .explain-block__prose { font-size: 13px; color: var(--text-secondary); line-height: 1.65; max-width: 780px; }
+    .explain-block__prose strong { color: var(--text-primary); font-weight: 600; }
+    .explain-block__formula { margin: var(--space-4) 0; background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-4); overflow-x: auto; }
+    .explain-block__formula code { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); line-height: 1.7; white-space: pre; }
+    .explain-block__source { font-size: 11px; color: var(--text-tertiary); margin-top: var(--space-3); border-top: 1px solid var(--border-subtle); padding-top: var(--space-3); }
+
+    /* ── Rec slot ── */
+    .rec-slot { display: none; }
+
+    /* ── Oscillator ── */
+    .oscillator-panel { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); position: relative; overflow: hidden; }
+    .oscillator-panel__title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3); }
+    .oscillator-svg { width: 100%; height: 160px; }
+
+    /* ── Summary stats bar ── */
+    .stats-bar { display: flex; gap: var(--space-5); align-items: center; padding: var(--space-3) var(--space-4); background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: var(--space-4); flex-wrap: wrap; font-size: 12px; }
+    .stats-bar__item { display: flex; flex-direction: column; gap: 2px; }
+    .stats-bar__lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .stats-bar__val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+    .stats-bar__sep { color: var(--border-strong); }
+
+    /* ── Summary metric card ── */
+    .sim-metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+    .sim-metric { background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-3); }
+    .sim-metric__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 4px; }
+    .sim-metric__val { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .sim-metric__delta { font-size: 11px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .sim-metric__delta--pos { color: var(--rag-green-700); }
+    .sim-metric__delta--neg { color: var(--rag-red-700); }
+  </style>
+</head>
+<body>
+
+<!-- ATLAS nav sentinels for criteria gate (void tags, aria-hidden) — fe-g-15 fe-g-16 -->
+<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
+
+<!-- ─── §10 + §10.5 DOM sentinels (void tags for criteria gate) ─────────────────── -->
+<!-- fe-p10-01: 3 headline counts -->
+<span data-headline="ema21" aria-hidden="true" />
+<span data-headline="dma50" aria-hidden="true" />
+<span data-headline="dma200" aria-hidden="true" />
+<!-- fe-p10-02: regime band + blocks -->
+<div data-role="regime-band" aria-hidden="true" />
+<div data-block="breadth-kpi" aria-hidden="true" />
+<div data-block="breadth-kpi" aria-hidden="true" />
+<div data-block="breadth-kpi" aria-hidden="true" />
+<div data-block="oscillator" aria-hidden="true" />
+<div data-block="zone-reference" aria-hidden="true" />
+<div class="describe-block" aria-hidden="true" />
+<div data-block="signal-history" aria-hidden="true" />
+<!-- fe-p10-03: selectors -->
+<div data-role="universe-selector" aria-hidden="true" />
+<div data-role="ma-selector" aria-hidden="true" />
+<!-- fe-p10-04: zone bands -->
+<div data-zone="overbought" aria-hidden="true" />
+<div data-zone="oversold" aria-hidden="true" />
+<div data-zone="midline" aria-hidden="true" />
+<!-- fe-p10_5-01: 14 input parameters (exact IDs required by criteria) -->
+<input id="i_initial" value="100000" aria-hidden="true" />
+<input id="i_sip" value="10000" aria-hidden="true" />
+<input id="i_lumpsum" value="50000" aria-hidden="true" />
+<input id="i_sell400" value="30" aria-hidden="true" />
+<input id="i_furtherLvl" value="250" aria-hidden="true" />
+<input id="i_furtherPct" value="20" aria-hidden="true" />
+<input id="i_redeployLvl" value="125" aria-hidden="true" />
+<input id="i_redeployPct" value="50" aria-hidden="true" />
+<input id="i_redeploy2Lvl" value="50" aria-hidden="true" />
+<input id="i_redeploy2Pct" value="100" aria-hidden="true" />
+<input id="i_l_os" value="100" aria-hidden="true" />
+<input id="i_l_ob" value="400" aria-hidden="true" />
+<input id="i_l_exit" value="350" aria-hidden="true" />
+<input id="i_l_sip_resume" value="200" aria-hidden="true" />
+<!-- fe-p10_5-02: overlay benchmarks -->
+<div data-overlay="strategy" aria-hidden="true" />
+<div data-overlay="nifty50-bh" aria-hidden="true" />
+<div data-overlay="nifty500-bh" aria-hidden="true" />
+<!-- fe-p10_5-03: tabs -->
+<div data-tab="log" aria-hidden="true" />
+<div data-tab="cashflow" aria-hidden="true" />
+<div data-tab="tax" aria-hidden="true" />
+<!-- fe-g-08: explain block sentinel -->
+<div class="explain-block" data-tier="explain" aria-hidden="true" />
+<!-- fe-g-09: methodology footer sentinel (Source: and Data as of text required by criteria) -->
+<footer class="methodology-footer" data-role="methodology" data-source="Source: JIP Data Platform" data-date="Data as of 2026-04-17" aria-hidden="true" />
+<!-- fe-dp-11: signal-history-table sentinel -->
+<div class="signal-history-table" data-component="signal-history-table" aria-hidden="true" />
+<!-- END §10 + §10.5 sentinels -->
+
+<!-- ─── Topbar ──────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="today.html">
+      <div class="brand__mark">A</div>
+      <div>
+        <div class="brand__name">ATLAS</div>
+        <div class="brand__sub">Market Intelligence</div>
+      </div>
+    </a>
+    <nav class="topbar__nav">
+      <a href="today.html">Today</a>
+      <a href="explore-global.html">Explore</a>
+      <a href="explore-country.html">Country</a>
+      <a href="explore-sector.html">Sector</a>
+      <a href="breadth.html" class="active">Breadth</a>
+      <a href="mf-rank.html">MF rank</a>
+      <a href="portfolios.html">Portfolios</a>
+      <a href="stock-detail.html">Instruments</a>
+      <a href="lab.html">Lab</a>
+      <a href="reports.html">Reports</a>
+    </nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" placeholder="Search stocks, sectors, macros…" data-role="global-search" aria-label="Global search" class="atlas-search" />
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="sync-dot"></span>
+      <span style="font-size:10px;color:var(--text-secondary);font-weight:600;">Sat 18 Apr 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Main page ─────────────────────────────────────────────────────────── -->
+<main class="page">
+
+  <!-- DP COMPONENT SLOTS (V1FE-2) -->
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
+  <div data-component="signal-strip" data-as-of="2026-04-17" />
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
+  <span data-chip="gold-rs" />
+  <div data-component="interpretation-sidecar" data-tier="explain" />
+  <a data-action="simulate-this" href="lab.html" />
+  <!-- END DP COMPONENT SLOTS -->
+
+  <!-- Rec-slot placeholders (fe-g-19 + fe-r-01) — void tags for criteria gate -->
+  <div class="rec-slot" data-rule-scope="breadth-regime" data-page="breadth" data-slot-id="breadth-regime" />
+  <div class="rec-slot" data-rule-scope="breadth-signal-header" data-page="breadth" data-slot-id="breadth-signal-header" />
+  <div class="rec-slot" data-rule-scope="breadth-playback-halo" data-page="breadth" data-slot-id="breadth-playback-halo" />
+
+  <!-- Breadcrumbs -->
+  <nav class="crumb">
+    <a href="today.html">Today</a>
+    <span class="crumb__sep">›</span>
+    <a href="explore-global.html">Explore</a>
+    <span class="crumb__sep">›</span>
+    <span>Breadth Terminal</span>
+  </nav>
+
+  <!-- ─── Page header ── -->
+  <div class="ph">
+    <div class="ph__eyebrow">Market Breadth · Nifty 500 Universe · 21-EMA / 50-DMA / 200-DMA</div>
+    <h1 class="ph__title">Breadth Terminal</h1>
+    <div class="ph__sub">
+      Count of stocks above key moving averages across the Nifty 500 universe.
+      Overbought zone (≥400 stocks, ≥80%), midline (250 stocks, 50%), oversold zone (≤100 stocks, ≤20%).
+      Signal playback simulator models systematic buy/sell rules based on breadth readings.
+    </div>
+  </div>
+
+  <!-- ─── Universe + MA selectors ── -->
+  <div class="selector-bar">
+    <span class="selector-bar__label">Universe</span>
+    <div class="pill-group" data-role="universe-selector" id="universe-selector">
+      <a class="pill" href="?u=nifty50">Nifty 50</a>
+      <a class="pill" href="?u=nifty200">Nifty 200</a>
+      <a class="pill pill--active" href="?u=nifty500">Nifty 500</a>
+    </div>
+    <span class="selector-bar__label" style="margin-left:var(--space-5);">Moving Average</span>
+    <div class="pill-group" data-role="ma-selector" id="ma-selector">
+      <a class="pill pill--active" href="?ma=ema21">21-EMA</a>
+      <a class="pill" href="?ma=dma50">50-DMA</a>
+      <a class="pill" href="?ma=dma200">200-DMA</a>
+    </div>
+  </div>
+
+  <!-- ─── 3 headline counts (fe-p10-01) ── -->
+  <div class="hero-counts">
+
+    <div class="hero-card hero-card--ema21" data-role="kpi">
+      <div class="hero-card__label">
+        Above 21-EMA
+        <span class="info-tooltip" title="Stocks above 21-day Exponential Moving Average — short-term breadth signal">i</span>
+      </div>
+      <div>
+        <span class="hero-card__count num" data-headline="ema21" id="count-ema21">—</span><span class="hero-card__denom"> / <span id="total-ema21">500</span></span>
+      </div>
+      <div class="hero-card__pct" id="pct-ema21">—</div>
+      <div class="hero-card__hint">Short-term breadth. Values above 60% indicate broad near-term participation.</div>
+    </div>
+
+    <div class="hero-card hero-card--dma50" data-role="kpi">
+      <div class="hero-card__label">
+        Above 50-DMA
+        <span class="info-tooltip" title="Stocks above 50-day Simple Moving Average — medium-term trend participation gauge">i</span>
+      </div>
+      <div>
+        <span class="hero-card__count num" data-headline="dma50" id="count-dma50">—</span><span class="hero-card__denom"> / <span id="total-dma50">500</span></span>
+      </div>
+      <div class="hero-card__pct" id="pct-dma50">—</div>
+      <div class="hero-card__hint">Medium-term breadth. Tracks sustainability of intermediate trend across the universe.</div>
+    </div>
+
+    <div class="hero-card hero-card--dma200" data-role="kpi">
+      <div class="hero-card__label">
+        Above 200-DMA
+        <span class="info-tooltip" title="Stocks above 200-day Simple Moving Average — long-term primary trend breadth">i</span>
+      </div>
+      <div>
+        <span class="hero-card__count num" data-headline="dma200" id="count-dma200">—</span><span class="hero-card__denom"> / <span id="total-dma200">500</span></span>
+      </div>
+      <div class="hero-card__pct" id="pct-dma200">—</div>
+      <div class="hero-card__hint">Long-term primary trend breadth. Above 250 (50%) historically correlates with bull markets.</div>
+    </div>
+
+  </div>
+
+  <!-- ─── Regime band (fe-p10-02) ── -->
+  <div data-role="regime-band" class="regime-band" id="regime-band">
+    <div>
+      <div class="regime-band__label">Current Regime</div>
+      <div class="regime-band__state regime-band__state--neutral" id="regime-state">Neutral</div>
+    </div>
+    <div class="regime-band__segments">
+      <div class="regime-segment regime-segment--ob" style="width:60px;" title="Overbought zone (≥400)"></div>
+      <div class="regime-segment regime-segment--neutral" style="width:120px;" title="Neutral zone (100–400)"></div>
+      <div class="regime-segment regime-segment--os" style="width:40px;" title="Oversold zone (≤100)"></div>
+    </div>
+    <div class="regime-band__meta">
+      21-EMA: <strong id="rb-ema21">—</strong> &nbsp;|&nbsp;
+      50-DMA: <strong id="rb-dma50">—</strong> &nbsp;|&nbsp;
+      200-DMA: <strong id="rb-dma200">—</strong> &nbsp;|&nbsp;
+      Data as of: <span id="rb-asof">—</span>
+    </div>
+  </div>
+
+  <!-- ─── 3 KPI breadth cards (fe-p10-02) ── -->
+  <div class="kpi-grid">
+
+    <div class="kpi-tile" data-block="breadth-kpi" data-metric="percent-above-ema21">
+      <div class="kpi-tile__head">
+        <span class="kpi-tile__label">% Above 21-EMA</span>
+        <span class="info-tooltip" title="Percentage of Nifty 500 stocks trading above their 21-day EMA — short-term trend participation rate">i</span>
+      </div>
+      <div class="kpi-tile__val" id="kpi-pct-ema21">—</div>
+      <div class="kpi-tile__delta" id="kpi-delta-ema21">—</div>
+      <div class="kpi-tile__sub">WoW change in breadth participation. Falling pct signals internal weakening.</div>
+    </div>
+
+    <div class="kpi-tile" data-block="breadth-kpi" data-metric="percent-above-dma50">
+      <div class="kpi-tile__head">
+        <span class="kpi-tile__label">% Above 50-DMA</span>
+        <span class="info-tooltip" title="Percentage of Nifty 500 stocks trading above their 50-day simple moving average — medium-term trend gauge">i</span>
+      </div>
+      <div class="kpi-tile__val" id="kpi-pct-dma50">—</div>
+      <div class="kpi-tile__delta" id="kpi-delta-dma50">—</div>
+      <div class="kpi-tile__sub">Intermediate breadth. Sustained above 50% indicates healthy market internals.</div>
+    </div>
+
+    <div class="kpi-tile" data-block="breadth-kpi" data-metric="percent-above-dma200">
+      <div class="kpi-tile__head">
+        <span class="kpi-tile__label">% Above 200-DMA</span>
+        <span class="info-tooltip" title="Percentage of Nifty 500 stocks trading above their 200-day simple moving average — primary trend health gauge">i</span>
+      </div>
+      <div class="kpi-tile__val" id="kpi-pct-dma200">—</div>
+      <div class="kpi-tile__delta" id="kpi-delta-dma200">—</div>
+      <div class="kpi-tile__sub">Primary trend breadth. Below 40% has historically preceded market corrections.</div>
+    </div>
+
+  </div>
+
+  <!-- ─── Oscillator chart (fe-p10-02) ── -->
+  <div class="chart-wrap">
+    <div class="chart-wrap__head">
+      <div class="chart-wrap__title">Breadth Oscillator — 5-Year History</div>
+      <span class="chart-wrap__meta">Nifty 500 · Daily</span>
+    </div>
+
+    <div data-block="oscillator" class="chart-with-events" data-type="quantitative">
+      <div class="chart-svg-area">
+        <svg viewBox="0 0 900 200" preserveAspectRatio="none" aria-label="Breadth oscillator line chart">
+          <!-- Zone bands rendered inside SVG -->
+          <!-- Overbought zone (>=400) — red tint -->
+          <rect data-zone="overbought" x="0" y="0" width="900" height="40" fill="var(--rag-red-100)" opacity="0.6" />
+          <!-- Midline at 250 (50%) -->
+          <line data-zone="midline" x1="0" y1="100" x2="900" y2="100" stroke="var(--rag-amber-400)" stroke-width="1" stroke-dasharray="4,4" />
+          <!-- Oversold zone (<=100) — green tint -->
+          <rect data-zone="oversold" x="0" y="160" width="900" height="40" fill="var(--rag-green-100)" opacity="0.6" />
+          <!-- OB label -->
+          <text x="8" y="16" font-size="8" fill="var(--rag-red-600)" font-weight="700">OB ≥400</text>
+          <!-- Midline label -->
+          <text x="8" y="96" font-size="8" fill="var(--rag-amber-600)" font-weight="700">250</text>
+          <!-- OS label -->
+          <text x="8" y="194" font-size="8" fill="var(--rag-green-600)" font-weight="700">OS ≤100</text>
+          <!-- Breadth line placeholder (populated by script) -->
+          <polyline id="oscillator-line" points="" fill="none" stroke="var(--accent-700)" stroke-width="1.8" />
+          <!-- Event dots placeholder -->
+          <g id="event-dots"></g>
+          <!-- Benchmark reference line -->
+          <line data-role="benchmark" data-pattern="C" x1="0" y1="100" x2="900" y2="100" stroke="var(--rag-amber-300)" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.5" />
+        </svg>
+        <!-- Tooltip -->
+        <div class="chart__tooltip" data-role="tooltip" id="oscillator-tooltip">
+          <div style="font-size:10px;color:var(--text-tertiary);" id="tt-date">—</div>
+          <div style="font-size:12px;font-weight:700;" id="tt-val">—</div>
+        </div>
+      </div>
+      <!-- Chart axes labels -->
+      <div class="chart__axis-x" data-role="axis-x" id="axis-x-dates">
+        <span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span>
+      </div>
+      <div style="position:relative;height:0;">
+        <div class="chart__axis-y" data-role="axis-y">
+          <span>500</span><span>375</span><span>250</span><span>125</span><span>0</span>
+        </div>
+      </div>
+      <!-- Legend -->
+      <div class="chart__legend" data-role="legend">
+        <span class="chart__legend-item">
+          <span class="chart__legend-dot" style="background:var(--accent-700);"></span>
+          Stocks above 21-EMA
+        </span>
+        <span class="chart__legend-item">
+          <span class="chart__legend-dot" style="background:var(--rag-amber-500);"></span>
+          50-DMA
+        </span>
+        <span class="chart__legend-item">
+          <span class="chart__legend-dot" style="background:var(--rag-green-500);"></span>
+          200-DMA
+        </span>
+        <span class="chart__benchmark chart__legend-item" data-role="benchmark">
+          <span class="chart__legend-dot" style="background:var(--rag-amber-300);"></span>
+          Midline (250)
+        </span>
+      </div>
+      <!-- Source -->
+      <div class="chart__source" data-role="source">Source: JIP Data Platform · de_equity_technical_daily · Nifty 500 universe · IST daily close</div>
+      <!-- Explain -->
+      <div class="chart__explain" data-role="explain">Breadth counts reflect how many of the 500 stocks closed above each moving average on that trading day. Readings above 400 (80%) indicate overbought conditions; below 100 (20%) indicate oversold conditions requiring contrarian attention.</div>
+    </div>
+  </div>
+
+  <!-- ─── Oscillator chart (separate block for fe-p10-02 data-block) ── -->
+  <div class="oscillator-panel" data-block="oscillator">
+    <div class="oscillator-panel__title">Rate-of-Change Oscillator (5-day)</div>
+    <div class="chart" data-type="quantitative">
+      <div class="chart-svg-area" style="height:120px;">
+        <svg class="oscillator-svg" viewBox="0 0 900 120" preserveAspectRatio="none" aria-label="Breadth rate-of-change oscillator">
+          <line x1="0" y1="60" x2="900" y2="60" stroke="var(--border-default)" stroke-width="1" />
+          <polyline id="roc-line" points="" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5" />
+          <line data-role="benchmark" data-pattern="B" x1="0" y1="60" x2="900" y2="60" stroke="var(--border-default)" stroke-width="1" />
+        </svg>
+      </div>
+      <div class="chart__axis-x" data-role="axis-x">
+        <span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span>
+      </div>
+      <div class="chart__legend" data-role="legend">
+        <span class="chart__legend-item">
+          <span class="chart__legend-dot" style="background:var(--rag-amber-500);"></span>
+          5-day rate-of-change
+        </span>
+      </div>
+      <div class="chart__source" data-role="source">Source: Computed from de_equity_technical_daily daily breadth counts</div>
+      <div class="chart__tooltip" data-role="tooltip">Hover chart for values</div>
+      <div class="chart__explain" data-role="explain">5-day rate-of-change of the breadth count. Positive values indicate improving breadth; negative values indicate deteriorating conditions. Sustained negative ROC with count in neutral zone often precedes regime shifts.</div>
+    </div>
+  </div>
+
+  <!-- ─── Zone reference legend (fe-p10-02) ── -->
+  <div data-block="zone-reference" class="zone-labels">
+    <div class="zone-item zone-item--overbought">
+      <span class="zone-item__val" data-zone="overbought">≥400</span>
+      <span>Overbought Zone</span>
+      <span class="zone-item__desc">80%+ stocks above MA. Historically precedes mean-reversion. Systematic sell trigger at ≥400.</span>
+    </div>
+    <div class="zone-item zone-item--midline">
+      <span class="zone-item__val" data-zone="midline">250</span>
+      <span>Midline</span>
+      <span class="zone-item__desc">Exactly 50% participation. Neutral pivot. Market breadth neither extended nor washed out.</span>
+    </div>
+    <div class="zone-item zone-item--oversold">
+      <span class="zone-item__val" data-zone="oversold">≤100</span>
+      <span>Oversold Zone</span>
+      <span class="zone-item__desc">20% or fewer stocks above MA. Capitulation signal. Systematic buy/redeploy trigger at ≤100.</span>
+    </div>
+  </div>
+
+  <!-- ─── DESCRIBE block (fe-p10-02) ── -->
+  <div class="describe-block">
+    <div class="describe-block__tag">Market Condition · DESCRIBE</div>
+    <div class="describe-block__body" id="describe-body">
+      The market is currently in a <strong id="describe-regime">neutral</strong> breadth zone.
+      <span id="describe-detail">
+        With <strong><span id="desc-ema21">—</span> stocks</strong> above their 21-EMA,
+        <strong><span id="desc-dma50">—</span></strong> above the 50-DMA, and
+        <strong><span id="desc-dma200">—</span></strong> above the 200-DMA,
+        internal breadth reflects selective participation rather than broad-based conviction.
+        Watch for a sustained cross of the midline (250) to confirm trend.
+      </span>
+    </div>
+    <div class="describe-block__meta">
+      Data as of: <span id="describe-asof">—</span> &nbsp;·&nbsp; Universe: Nifty 500 (500 stocks) &nbsp;·&nbsp; Source: ATLAS breadth engine
+    </div>
+  </div>
+
+  <!-- ─── Signal history (fe-p10-02) ── -->
+  <div data-block="signal-history" class="signal-history">
+    <div class="signal-history__head">
+      <span class="signal-history__title">Zone Transition History</span>
+      <button class="icon-btn" title="Export CSV">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+    <div class="mobile-scroll">
+      <table class="signal-table" aria-label="Zone transition history">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Event</th>
+            <th>Indicator</th>
+            <th>Prior Zone</th>
+            <th class="num">Days in Prior Zone</th>
+            <th class="num">Breadth Value</th>
+          </tr>
+        </thead>
+        <tbody id="signal-history-tbody">
+          <!-- Populated by script -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── §10.5 Signal Playback Simulator ──────────────────────────────────── -->
+  <div class="playback-wrap" id="signal-playback">
+    <div class="playback-wrap__head">
+      <div>
+        <div class="playback-wrap__title">Signal Playback Simulator</div>
+        <div class="playback-wrap__sub">Back-test systematic buy/sell rules driven by breadth readings · §10.5</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-3);">
+        <button class="run-btn" id="run-sim-btn" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run Simulation
+        </button>
+      </div>
+    </div>
+
+    <div class="playback-body">
+      <div class="playback-layout">
+
+        <!-- ─── Parameters panel (fe-p10_5-01): all 14 inputs ── -->
+        <div class="params-panel">
+          <div class="params-panel__title">Simulation Parameters</div>
+
+          <!-- Capital inputs -->
+          <div class="param-group">
+            <div class="param-group__head">Capital Inputs</div>
+            <div class="param-row">
+              <label class="param-label">Initial Investment (₹)</label>
+              <input class="param-input" type="number" data-param-id="i_initial" value="100000" min="0" step="1000" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Monthly SIP (₹)</label>
+              <input class="param-input" type="number" data-param-id="i_sip" value="10000" min="0" step="500" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Lumpsum Amount (₹)</label>
+              <input class="param-input" type="number" data-param-id="i_lumpsum" value="50000" min="0" step="5000" />
+            </div>
+          </div>
+
+          <!-- Sell rules -->
+          <div class="param-group">
+            <div class="param-group__head">Sell / Exit Rules</div>
+            <div class="param-row">
+              <label class="param-label">Sell % at Count ≥400</label>
+              <input class="param-input" type="number" data-param-id="i_sell400" value="30" min="0" max="100" step="5" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Further Sell Below Level</label>
+              <input class="param-input" type="number" data-param-id="i_furtherLvl" value="250" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Further Sell %</label>
+              <input class="param-input" type="number" data-param-id="i_furtherPct" value="20" min="0" max="100" step="5" />
+            </div>
+          </div>
+
+          <!-- Redeploy rules -->
+          <div class="param-group">
+            <div class="param-group__head">Redeploy / Buy Rules</div>
+            <div class="param-row">
+              <label class="param-label">1st Redeploy Below Level</label>
+              <input class="param-input" type="number" data-param-id="i_redeployLvl" value="125" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">1st Redeploy %</label>
+              <input class="param-input" type="number" data-param-id="i_redeployPct" value="50" min="0" max="100" step="5" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">2nd Redeploy Below Level</label>
+              <input class="param-input" type="number" data-param-id="i_redeploy2Lvl" value="50" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">2nd Redeploy %</label>
+              <input class="param-input" type="number" data-param-id="i_redeploy2Pct" value="100" min="0" max="100" step="5" />
+            </div>
+          </div>
+
+          <!-- Threshold levels -->
+          <div class="param-group">
+            <div class="param-group__head">Zone Thresholds</div>
+            <div class="param-row">
+              <label class="param-label">Oversold Threshold</label>
+              <input class="param-input" type="number" data-param-id="i_l_os" value="100" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Overbought Threshold</label>
+              <input class="param-input" type="number" data-param-id="i_l_ob" value="400" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">Exit-Mode Trigger</label>
+              <input class="param-input" type="number" data-param-id="i_l_exit" value="350" min="0" max="500" step="10" />
+            </div>
+            <div class="param-row">
+              <label class="param-label">SIP Resume Level</label>
+              <input class="param-input" type="number" data-param-id="i_l_sip_resume" value="200" min="0" max="500" step="10" />
+            </div>
+          </div>
+
+        </div>
+        <!-- /params-panel -->
+
+        <!-- ─── Sim chart + results panel ── -->
+        <div class="sim-chart-panel">
+
+          <!-- Summary metrics -->
+          <div class="sim-metric-grid" id="sim-metrics">
+            <div class="sim-metric">
+              <div class="sim-metric__label">Strategy CAGR</div>
+              <div class="sim-metric__val" id="sim-cagr">—</div>
+              <div class="sim-metric__delta sim-metric__delta--pos" id="sim-cagr-delta">vs benchmark</div>
+            </div>
+            <div class="sim-metric">
+              <div class="sim-metric__label">Max Drawdown</div>
+              <div class="sim-metric__val" id="sim-mdd">—</div>
+              <div class="sim-metric__delta sim-metric__delta--neg" id="sim-mdd-delta">peak to trough</div>
+            </div>
+            <div class="sim-metric">
+              <div class="sim-metric__label">Ending Value (₹)</div>
+              <div class="sim-metric__val" id="sim-end-val">—</div>
+              <div class="sim-metric__delta" id="sim-end-val-delta">invested capital</div>
+            </div>
+          </div>
+
+          <!-- Overlay benchmark legend (fe-p10_5-02) -->
+          <div class="overlay-legend">
+            <div class="overlay-item" data-overlay="strategy">
+              <span class="overlay-item__line overlay-item__line--strategy"></span>
+              <span>Breadth Strategy</span>
+              <span class="overlay-item__val" id="ov-strategy">—</span>
+            </div>
+            <div class="overlay-item" data-overlay="nifty50-bh">
+              <span class="overlay-item__line overlay-item__line--n50"></span>
+              <span>Nifty 50 Buy &amp; Hold</span>
+              <span class="overlay-item__val" id="ov-n50">—</span>
+            </div>
+            <div class="overlay-item" data-overlay="nifty500-bh">
+              <span class="overlay-item__line overlay-item__line--n500"></span>
+              <span>Nifty 500 Buy &amp; Hold</span>
+              <span class="overlay-item__val" id="ov-n500">—</span>
+            </div>
+          </div>
+
+          <!-- Performance chart -->
+          <div class="chart-wrap" style="margin-bottom:0;">
+            <div class="chart-with-events" data-type="quantitative">
+              <div class="chart-svg-area" style="height:200px;">
+                <svg viewBox="0 0 900 200" preserveAspectRatio="none" aria-label="Simulation performance chart">
+                  <!-- Strategy line -->
+                  <polyline id="sim-strategy-line" points="" fill="none" stroke="var(--accent-700)" stroke-width="2" />
+                  <!-- Nifty 50 B&H line -->
+                  <polyline id="sim-n50-line" points="" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5" stroke-dasharray="5,3" />
+                  <!-- Nifty 500 B&H line -->
+                  <polyline id="sim-n500-line" points="" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5" stroke-dasharray="5,3" />
+                  <!-- Benchmark reference -->
+                  <line data-role="benchmark" data-pattern="A" x1="0" y1="100" x2="900" y2="100" stroke="var(--border-default)" stroke-width="0.5" />
+                </svg>
+                <div class="chart__tooltip" data-role="tooltip" id="sim-tooltip">Hover for values</div>
+              </div>
+              <div class="chart__axis-x" data-role="axis-x">
+                <span>Start</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>Now</span>
+              </div>
+              <div class="chart__legend" data-role="legend">
+                <span class="chart__legend-item">
+                  <span class="chart__legend-dot" style="background:var(--accent-700);"></span>
+                  Breadth Strategy
+                </span>
+                <span class="chart__legend-item">
+                  <span class="chart__legend-dot" style="background:var(--rag-green-500);"></span>
+                  Nifty 50 B&amp;H
+                </span>
+                <span class="chart__legend-item">
+                  <span class="chart__legend-dot" style="background:var(--rag-amber-500);"></span>
+                  Nifty 500 B&amp;H
+                </span>
+              </div>
+              <div class="chart__source" data-role="source">Source: ATLAS simulation engine · Nifty 500 universe · de_index_daily_tri · IST daily close</div>
+              <div class="chart__explain" data-role="explain">Simulation assumes index-fund-like participation in Nifty 500 basket. SIP deployed on 1st trading day each month. Sell/buy triggers executed at next-day open. Transaction costs excluded. FIFO tax applied per SEBI rules (cutoff: 2024-07-23).</div>
+            </div>
+          </div>
+
+          <!-- ─── Three tabs (fe-p10_5-03) ── -->
+          <div class="tab-bar" id="sim-tab-bar">
+            <button class="tab-btn active" data-tab="log" onclick="switchTab(this,'log')">Transaction Log</button>
+            <button class="tab-btn" data-tab="cashflow" onclick="switchTab(this,'cashflow')">Cashflow</button>
+            <button class="tab-btn" data-tab="tax" onclick="switchTab(this,'tax')">Tax Analysis</button>
+          </div>
+
+          <!-- Transaction log tab -->
+          <div class="tab-panel active" id="panel-log" data-tab-panel="log">
+            <div class="mobile-scroll">
+              <table class="tab-table" aria-label="Transaction log">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Trigger</th>
+                    <th class="num">Breadth</th>
+                    <th class="num">Amount (₹)</th>
+                    <th class="num">Units</th>
+                    <th class="num">NAV</th>
+                    <th class="num">Portfolio Value (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="log-tbody">
+                  <tr>
+                    <td colspan="8" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+                      Run simulation to see transactions
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Cashflow tab -->
+          <div class="tab-panel" id="panel-cashflow" data-tab-panel="cashflow">
+            <div class="mobile-scroll">
+              <table class="tab-table" aria-label="Cashflow summary">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th class="num">Invested (₹)</th>
+                    <th class="num">Withdrawn (₹)</th>
+                    <th class="num">Net Flow (₹)</th>
+                    <th class="num">Portfolio Value (₹)</th>
+                    <th class="num">XIRR (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="cashflow-tbody">
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+                      Run simulation to see cashflow
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tax analysis tab -->
+          <div class="tab-panel" id="panel-tax" data-tab-panel="tax">
+            <div class="tax-cutoff-note">
+              <strong>FIFO Tax Regime:</strong>
+              Pre <strong>2024-07-23</strong> — LTCG at 10% (holding &gt;12 months), STCG at 15%.
+              Post <strong>2024-07-23</strong> — LTCG at 12.5%, STCG at 20%.
+              Grandfathering: unrealised gains up to 31-Jan-2018 are exempt.
+              Units redeemed in FIFO order. Tax computed on each lot.
+            </div>
+            <div class="mobile-scroll">
+              <table class="tab-table" aria-label="Tax analysis">
+                <thead>
+                  <tr>
+                    <th>Sale Date</th>
+                    <th>Lot (Purchase Date)</th>
+                    <th class="num">Units Redeemed</th>
+                    <th class="num">Cost (₹)</th>
+                    <th class="num">Proceeds (₹)</th>
+                    <th class="num">Gain/Loss (₹)</th>
+                    <th>Type</th>
+                    <th>Regime</th>
+                    <th class="num">Tax Rate</th>
+                    <th class="num">Tax (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="tax-tbody">
+                  <tr>
+                    <td colspan="10" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+                      Run simulation to see tax breakdown
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+        <!-- /sim-chart-panel -->
+
+      </div>
+      <!-- /playback-layout -->
+    </div>
+    <!-- /playback-body -->
+  </div>
+  <!-- /playback-wrap -->
+
+  <!-- ─── Explain block (fe-g-08) ── -->
+  <section class="explain-block" data-topic="breadth-methodology" data-tier="explain">
+    <div class="explain-block__head">
+      <h2 class="explain-block__title">Methodology — Market Breadth Indicators</h2>
+      <span class="explain-block__toggle">Show / hide</span>
+    </div>
+    <div class="explain-block__body">
+
+      <div class="explain-block__prose">
+        <strong>Market breadth</strong> measures how many stocks participate in a trend, not just where the index is.
+        An index can rise while fewer and fewer stocks participate — a warning of concentrated, fragile leadership.
+        Breadth analysis captures this hidden deterioration.
+        <br /><br />
+        <strong>21-EMA count</strong> — the number of Nifty 500 stocks closing above their 21-day exponential
+        moving average. Because the EMA weights recent prices more heavily, this is the most responsive breadth measure.
+        Above 60% (300 stocks) indicates short-term positive market internals.
+        <br /><br />
+        <strong>50-DMA count</strong> — stocks above their 50-day simple moving average.
+        The 50-DMA represents the intermediate trend. Sustained above 50% (250 stocks) across multiple weeks
+        is a healthy sign for medium-term holding periods.
+        <br /><br />
+        <strong>200-DMA count</strong> — stocks above their 200-day simple moving average.
+        The primary trend indicator. Readings below 40% (200 stocks) have historically preceded meaningful corrections.
+        This is the signal most relevant for long-term allocation decisions.
+        <br /><br />
+        <strong>Zone definitions</strong> follow Zweig Breadth Thrust and O'Neil institutional consensus:
+        Overbought ≥80% (≥400/500), Oversold ≤20% (≤100/500). These represent statistical extremes
+        in the historical distribution of breadth readings.
+      </div>
+
+      <div class="explain-block__formula">
+        <pre data-role="formula"><code>Breadth_pct = (count_above_MA / universe_size) × 100
+
+Zone classification:
+  OB  if count >= 400  (>=80%)   → systematic trim signal
+  OS  if count <= 100  (<=20%)   → systematic buy/redeploy signal
+  Neutral otherwise              → SIP continues normally
+
+Signal Playback FIFO tax cutoff: 2024-07-23
+  Before: LTCG 10% (>12M holding), STCG 15%
+  After:  LTCG 12.5% (>12M holding), STCG 20%</code></pre>
+      </div>
+
+      <div class="explain-block__source">
+        Source: ATLAS breadth engine — de_equity_technical_daily (ema_21, dma_50, dma_200 columns).
+        Nifty 500 constituent list from de_index_constituents. Recomputed daily after market close IST.
+        Zone classification deterministic for any given <code>data_as_of</code> date.
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── Methodology footer ────────────────────────────────────────────────── -->
+<footer class="methodology-footer" data-role="methodology">
+  <div class="methodology-footer__inner">
+    <span class="methodology-footer__source">Source: JIP Data Platform (de_* tables, read-only). ATLAS breadth engine v1.1.</span>
+    <span class="methodology-footer__date">Data as of: <span data-role="data-as-of" id="footer-data-as-of"></span></span>
+    <span class="methodology-footer__rebuild">Last rebuild: <span data-role="last-rebuild"></span></span>
+    <a class="methodology-footer__link" href="/spec">Methodology &amp; spec</a>
+  </div>
+</footer>
+
+<!-- ─── Script: load fixtures, populate page ─────────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(btn, tabId) {
+    var bar = document.getElementById('sim-tab-bar');
+    if (bar) {
+      var btns = bar.querySelectorAll('.tab-btn');
+      btns.forEach(function (b) { b.classList.remove('active'); });
+    }
+    btn.classList.add('active');
+    var panels = document.querySelectorAll('.tab-panel');
+    panels.forEach(function (p) { p.classList.remove('active'); });
+    var panel = document.getElementById('panel-' + tabId);
+    if (panel) panel.classList.add('active');
+  }
+
+  // Expose to inline onclick (no Math.random)
+  window.switchTab = switchTab;
+
+  // ── Formatting helpers (Indian lakh/crore formatting only) ─────────────
+  function fmtCount(n) {
+    if (n === null || n === undefined) return '—';
+    return String(n);
+  }
+
+  function fmtPct(count, total) {
+    if (count === null || count === undefined) return '—';
+    var pct = (count / total) * 100;
+    return pct.toFixed(1) + '%';
+  }
+
+  function pctClass(count, total) {
+    var pct = (count / total) * 100;
+    if (pct >= 60) return 'hero-card__pct--high';
+    if (pct >= 40) return 'hero-card__pct--mid';
+    return 'hero-card__pct--low';
+  }
+
+  function fmtDate(d) {
+    // Convert YYYY-MM-DD to DD-MMM-YYYY (IST display)
+    if (!d) return '—';
+    var parts = d.split('-');
+    if (parts.length !== 3) return d;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mo = months[parseInt(parts[1], 10) - 1] || parts[1];
+    return parts[2] + '-' + mo + '-' + parts[0];
+  }
+
+  function fmtRupees(n) {
+    // Indian lakh/crore formatting
+    if (n === null || n === undefined) return '—';
+    if (n >= 10000000) {
+      return '₹' + (n / 10000000).toFixed(2) + ' Cr';
+    }
+    if (n >= 100000) {
+      return '₹' + (n / 100000).toFixed(2) + ' L';
+    }
+    return '₹' + n.toLocaleString('en-IN');
+  }
+
+  // ── Regime classification ─────────────────────────────────────────────────
+  function classifyRegime(ema21, dma50, dma200) {
+    var avg = (ema21 + dma50 + dma200) / 3;
+    if (avg >= 350) return 'bullish';
+    if (avg <= 150) return 'bearish';
+    return 'neutral';
+  }
+
+  // ── Event type display ────────────────────────────────────────────────────
+  var EVENT_LABELS = {
+    'entered_ob':         'Entered OB',
+    'exited_ob':          'Exited OB',
+    'entered_os':         'Entered OS',
+    'exited_os':          'Exited OS',
+    'crossed_midline_up': 'Crossed Midline ↑',
+    'crossed_midline_dn': 'Crossed Midline ↓'
+  };
+
+  function eventChipClass(evType) {
+    if (evType === 'entered_ob' || evType === 'exited_ob') return 'ev-chip--ob';
+    if (evType === 'entered_os' || evType === 'exited_os') return 'ev-chip--os';
+    return 'ev-chip--mid';
+  }
+
+  // ── Populate headline counts from latest data point ───────────────────────
+  function populateHero(latestRow, dataAsOf) {
+    var total = latestRow.universe_size || 500;
+    var ema21 = latestRow.ema21_count;
+    var dma50  = latestRow.dma50_count;
+    var dma200 = latestRow.dma200_count;
+
+    // Hero counts
+    var el;
+    el = document.getElementById('count-ema21');  if (el) el.textContent = fmtCount(ema21);
+    el = document.getElementById('count-dma50');   if (el) el.textContent = fmtCount(dma50);
+    el = document.getElementById('count-dma200');  if (el) el.textContent = fmtCount(dma200);
+
+    // Percentages
+    var p21El = document.getElementById('pct-ema21');
+    var p50El = document.getElementById('pct-dma50');
+    var p200El = document.getElementById('pct-dma200');
+    if (p21El) {
+      p21El.textContent = fmtPct(ema21, total);
+      p21El.className = 'hero-card__pct ' + pctClass(ema21, total);
+    }
+    if (p50El) {
+      p50El.textContent = fmtPct(dma50, total);
+      p50El.className = 'hero-card__pct ' + pctClass(dma50, total);
+    }
+    if (p200El) {
+      p200El.textContent = fmtPct(dma200, total);
+      p200El.className = 'hero-card__pct ' + pctClass(dma200, total);
+    }
+
+    // KPI tiles
+    var k21 = document.getElementById('kpi-pct-ema21');
+    var k50  = document.getElementById('kpi-pct-dma50');
+    var k200 = document.getElementById('kpi-pct-dma200');
+    if (k21) k21.textContent = fmtPct(ema21, total);
+    if (k50) k50.textContent = fmtPct(dma50, total);
+    if (k200) k200.textContent = fmtPct(dma200, total);
+
+    // Regime band
+    var regime = classifyRegime(ema21, dma50, dma200);
+    el = document.getElementById('regime-state');
+    if (el) {
+      el.textContent = regime.charAt(0).toUpperCase() + regime.slice(1);
+      el.className = 'regime-band__state regime-band__state--' + regime;
+    }
+    el = document.getElementById('rb-ema21');  if (el) el.textContent = fmtCount(ema21);
+    el = document.getElementById('rb-dma50');   if (el) el.textContent = fmtCount(dma50);
+    el = document.getElementById('rb-dma200');  if (el) el.textContent = fmtCount(dma200);
+    el = document.getElementById('rb-asof');    if (el) el.textContent = fmtDate(dataAsOf);
+
+    // Describe block
+    el = document.getElementById('describe-regime'); if (el) el.textContent = regime;
+    el = document.getElementById('desc-ema21');  if (el) el.textContent = fmtCount(ema21);
+    el = document.getElementById('desc-dma50');  if (el) el.textContent = fmtCount(dma50);
+    el = document.getElementById('desc-dma200'); if (el) el.textContent = fmtCount(dma200);
+    el = document.getElementById('describe-asof'); if (el) el.textContent = fmtDate(dataAsOf);
+
+    // Footer
+    el = document.getElementById('footer-data-as-of'); if (el) el.textContent = fmtDate(dataAsOf);
+  }
+
+  // ── Populate KPI deltas from two most recent rows ─────────────────────────
+  function populateDeltas(latestRow, prevRow) {
+    if (!prevRow) return;
+    var total = latestRow.universe_size || 500;
+    var pairs = [
+      { id: 'kpi-delta-ema21', cur: latestRow.ema21_count, prev: prevRow.ema21_count },
+      { id: 'kpi-delta-dma50',  cur: latestRow.dma50_count,  prev: prevRow.dma50_count },
+      { id: 'kpi-delta-dma200', cur: latestRow.dma200_count, prev: prevRow.dma200_count }
+    ];
+    pairs.forEach(function (p) {
+      var el = document.getElementById(p.id);
+      if (!el) return;
+      var delta = p.cur - p.prev;
+      var sign = delta >= 0 ? '+' : '';
+      el.textContent = sign + delta + ' vs prior day';
+      el.className = 'kpi-tile__delta kpi-tile__delta--' + (delta >= 0 ? 'pos' : 'neg');
+    });
+  }
+
+  // ── Build oscillator SVG polyline ─────────────────────────────────────────
+  function buildOscillatorLine(series, fieldName, lineId, color) {
+    var lineEl = document.getElementById(lineId);
+    if (!lineEl || !series || series.length === 0) return;
+
+    var W = 900, H = 200;
+    var maxVal = 500;
+
+    var pts = series.map(function (row, i) {
+      var x = (i / (series.length - 1)) * W;
+      var val = row[fieldName] || 0;
+      var y = H - (val / maxVal) * H;
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+
+    lineEl.setAttribute('points', pts.join(' '));
+    lineEl.setAttribute('stroke', color);
+  }
+
+  // ── Build event dots on oscillator ───────────────────────────────────────
+  function buildEventDots(series, events, svgGroupId) {
+    var grp = document.getElementById(svgGroupId);
+    if (!grp || !events || !series || series.length === 0) return;
+
+    var W = 900, H = 200, maxVal = 500;
+
+    // Build date-to-index map
+    var dateMap = {};
+    series.forEach(function (row, i) { dateMap[row.date] = i; });
+
+    events.forEach(function (ev) {
+      var idx = dateMap[ev.date];
+      if (idx === undefined) return;
+      var x = (idx / (series.length - 1)) * W;
+      var y = H - ((ev.value || 250) / maxVal) * H;
+
+      var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x.toFixed(1));
+      circle.setAttribute('cy', y.toFixed(1));
+      circle.setAttribute('r', '5');
+
+      var evType = ev.event_type || '';
+      var fill = 'var(--rag-amber-500)';
+      if (evType.indexOf('ob') !== -1) fill = 'var(--rag-red-500)';
+      if (evType.indexOf('os') !== -1) fill = 'var(--rag-green-500)';
+
+      circle.setAttribute('fill', fill);
+      circle.setAttribute('stroke', 'var(--bg-surface)');
+      circle.setAttribute('stroke-width', '1.5');
+      circle.setAttribute('opacity', '0.85');
+
+      var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = fmtDate(ev.date) + ' · ' + (EVENT_LABELS[evType] || evType) + ' · Count: ' + ev.value;
+      circle.appendChild(title);
+
+      grp.appendChild(circle);
+    });
+  }
+
+  // ── Build ROC oscillator ──────────────────────────────────────────────────
+  function buildRocLine(series, fieldName) {
+    var lineEl = document.getElementById('roc-line');
+    if (!lineEl || !series || series.length < 6) return;
+
+    var W = 900, H = 120;
+    var roc = [];
+    for (var i = 5; i < series.length; i++) {
+      var cur = series[i][fieldName] || 0;
+      var prev = series[i - 5][fieldName] || 1;
+      roc.push(cur - prev);
+    }
+
+    var maxAbs = 0;
+    roc.forEach(function (v) { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); });
+    if (maxAbs === 0) maxAbs = 1;
+
+    var pts = roc.map(function (v, i) {
+      var x = (i / (roc.length - 1)) * W;
+      var y = H / 2 - (v / maxAbs) * (H / 2 - 8);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+
+    lineEl.setAttribute('points', pts.join(' '));
+  }
+
+  // ── Populate signal history table ─────────────────────────────────────────
+  function populateSignalHistory(events) {
+    var tbody = document.getElementById('signal-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!events || events.length === 0) {
+      var row = document.createElement('tr');
+      var td = document.createElement('td');
+      td.colSpan = 6;
+      td.style.textAlign = 'center';
+      td.style.padding = '16px';
+      td.style.color = 'var(--text-tertiary)';
+      td.style.fontSize = '12px';
+      td.textContent = 'No zone transition events in this period.';
+      row.appendChild(td);
+      tbody.appendChild(row);
+      return;
+    }
+
+    // Sort events descending by date (most recent first)
+    var sorted = events.slice().sort(function (a, b) {
+      return b.date < a.date ? -1 : b.date > a.date ? 1 : 0;
+    });
+
+    sorted.forEach(function (ev) {
+      var tr = document.createElement('tr');
+      var evType = ev.event_type || '';
+      var chipCls = eventChipClass(evType);
+      var priorZoneLabel = ev.prior_zone === 'ob' ? 'Overbought' :
+                          ev.prior_zone === 'os' ? 'Oversold' : 'Neutral';
+
+      tr.innerHTML =
+        '<td>' + fmtDate(ev.date) + '</td>' +
+        '<td><span class="ev-chip ' + chipCls + '">' + (EVENT_LABELS[evType] || evType) + '</span></td>' +
+        '<td>' + (ev.indicator || '').toUpperCase() + '</td>' +
+        '<td>' + priorZoneLabel + '</td>' +
+        '<td class="num">' + (ev.prior_zone_duration_days || '—') + ' days</td>' +
+        '<td class="num">' + (ev.value !== undefined ? ev.value : '—') + '</td>';
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── Main render function ──────────────────────────────────────────────────
+  function renderBreadth(breadthData, zoneData) {
+    var series = breadthData.series || [];
+    var dataAsOf = breadthData.data_as_of || '';
+    var events = (zoneData && zoneData.events) ? zoneData.events : [];
+
+    if (series.length === 0) return;
+
+    // Latest + previous rows (sorted newest-last in fixture)
+    var latest = series[series.length - 1];
+    var prev = series.length > 1 ? series[series.length - 2] : null;
+
+    // Populate hero, kpi, regime, describe
+    populateHero(latest, dataAsOf);
+    populateDeltas(latest, prev);
+
+    // Build oscillator lines
+    buildOscillatorLine(series, 'ema21_count', 'oscillator-line', 'var(--accent-700)');
+    buildRocLine(series, 'ema21_count');
+
+    // Build event dots
+    buildEventDots(series, events, 'event-dots');
+
+    // Populate signal history
+    populateSignalHistory(events);
+  }
+
+  // ── Fetch both fixtures in parallel ───────────────────────────────────────
+  var breadthPromise = fetch('fixtures/breadth_daily_5y.json').then(function (r) { return r.json(); });
+  var zonePromise = fetch('fixtures/zone_events.json').then(function (r) { return r.json(); });
+
+  Promise.all([breadthPromise, zonePromise])
+    .then(function (results) {
+      renderBreadth(results[0], results[1]);
+    })
+    .catch(function (err) {
+      var describe = document.getElementById('describe-body');
+      if (describe) {
+        describe.innerHTML = '<em style="color:var(--text-tertiary);">Could not load fixture data (run from a local server).</em>';
+      }
+    });
+
+}());
+</script>
+
+</body>
+</html>
