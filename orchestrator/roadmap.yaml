@@ -55,6 +55,34 @@ versions:
       - id: V1-7
       - id: V1-8
       - id: V1-9
+      - id: V1FE-1
+        title: "Gate runner: check-frontend-criteria.py + fe_checks lib + .quality dim"
+      - id: V1FE-2
+        title: "Component library: components.html + tokens.css v1.1 + 4 new fixtures"
+      - id: V1FE-3
+        title: "index-landing.html — 10-tile nav grid + Today redirect"
+      - id: V1FE-4
+        title: "today.html — pulse hero + regime band + 3 strips + full §10.5"
+      - id: V1FE-5
+        title: "explore-global.html — macros/rates/FX strip + sentinel stripped"
+      - id: V1FE-6
+        title: "explore-country.html — breadth compact + signal-playback compact + RRG"
+      - id: V1FE-7
+        title: "explore-sector.html — full breadth + signal-playback full + members"
+      - id: V1FE-8
+        title: "stock-detail.html — hero + chart-with-events + signal-playback compact"
+      - id: V1FE-9
+        title: "mf-detail.html — hub-and-spoke hero + 7 tabs + suitability stripped + §10.5"
+      - id: V1FE-10
+        title: "mf-rank.html — 4-factor composite ranking with dimensional-fix v1.1"
+      - id: V1FE-11
+        title: "breadth.html — canonical Breadth Terminal with full §10.5 embed"
+      - id: V1FE-12
+        title: "portfolios.html — 4 books, accountability banner stripped, per-book rec-slots"
+      - id: V1FE-13
+        title: "lab.html — 3 mode tabs, full §10.5 Breadth Playback, greyed V1.1 rule backtest"
+      - id: V1FE-14
+        title: "QA sweep — Playwright baselines + a11y + full gate + smoke probe"
 
   - id: V2
     title: "MF slice"

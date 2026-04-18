@@ -2066,3 +2066,203 @@ chunks:
       - "CI strict-coverage workflow is gating PRs"
       - "7-dim gate ≥80 with determinism/standards watch-points"
 
+
+  # --- V1FE -------------------------------------------------
+
+  - id: V1FE-1
+    title: "Gate runner: scripts/check-frontend-criteria.py + fe_checks lib + .quality dim"
+    status: PENDING
+    quality_targets:
+      code: 80
+      devops: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --list-types lists 28 types"
+      - "runner preflight rejects unknown check types"
+      - ".forge/frontend-report.json matches contracts/runner-report-format.md schema"
+      - "results[] sorted by id"
+      - "two consecutive runs byte-identical (modulo generated_at in --report-only)"
+      - "exit code follows critical==0 AND high==0-or-exempted contract"
+      - ".quality/checks.py --dim frontend returns numeric score"
+      - "≥19 unit tests green covering every check type"
+
+  - id: V1FE-2
+    title: "Component library: components.html + tokens.css v1.1 + 4 new fixtures"
+    status: PENDING
+    depends_on: [V1FE-1]
+    quality_targets:
+      code: 80
+      devops: 80
+      docs: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-dp-*,fe-f-03,fe-f-04,fe-f-05,fe-f-06,fe-f-07,fe-f-08,fe-f-09,fe-f-10' exits 0"
+      - "html5validator frontend/mockups/components.html exits 0"
+      - "tokens.css additive diff only (no removed keys)"
+      - "4 new fixtures validate against Draft-07 schemas"
+      - "mf_rank composite matches round((r+k+s+c)/4, 1) to 0.1 precision on 3 sampled rows"
+      - "re-running each seed script with same --as-of produces byte-identical JSON"
+      - "sector_rrg tail length ≥8 per sector"
+      - "≥8 unit tests green"
+
+  - id: V1FE-3
+    title: "index.html landing + link audit"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-l-01,fe-l-02,fe-g-*,fe-mob-*' exits 0"
+      - "every <a href> resolves to a file under frontend/mockups/"
+      - "zero external links"
+      - "test_index_structure.py ≥3 cases green"
+
+  - id: V1FE-4
+    title: "today.html Pulse — regime banner + 4-decision grid + universal benchmarks"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p1-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "every instrument row has exactly 7 chips in canonical order"
+      - "rec-slot pulse-regime present"
+      - "kill-list clean"
+      - "Indian formatting everywhere"
+      - "360px no hscroll"
+
+  - id: V1FE-5
+    title: "explore-global.html — macros/rates/FX/commodities/credit/risk + global sector RRG"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p4-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "kill-list forbids 'risk-on verdict'/'risk-off verdict'"
+      - "rec-slot global-regime present"
+
+  - id: V1FE-6
+    title: "explore-country.html — India regime + breadth panel + FII/DII + compact §10.5"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p5-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "breadth panel renders three fixed zone bands per §1.11"
+      - "rec-slot country-breadth present"
+
+  - id: V1FE-7
+    title: "explore-sector.html — dual-scope regime + members grid + full §10.5 + RRG"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p6-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "3 rec-slots present"
+      - "every member row has 7 chips in canonical order"
+
+  - id: V1FE-8
+    title: "stock-detail.html — hub-and-spoke hero + 7 tabs + divergences + §10.5 compact"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p7-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "3 rec-slots present"
+      - "7 tabs present"
+      - "kill-list clean"
+      - "simulate-this component present"
+
+  - id: V1FE-9
+    title: "mf-detail.html — hub-and-spoke hero + 7 tabs + suitability stripped + §10.5"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p8-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "suitability block contains zero kill-list tokens including 'HOLD / ADD ON DIPS', 'ADD ON DIPS', 'Atlas Verdict'"
+      - "2 rec-slots present"
+      - "NAV chart vs category-bench TRI overlay present"
+
+  - id: V1FE-10
+    title: "mf-rank.html — 4-factor composite ranking with dimensional-fix v1.1"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p9-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "composite recomputed from *_cdf fields matches display to 0.1 on 3 sampled rows"
+      - "tie-break ordering applied correctly when composites match"
+      - "rec-slot mfrank-screens present"
+      - "formula disclosure block present with plain-English + mathematical + source citation"
+
+  - id: V1FE-11
+    title: "breadth.html — canonical Breadth Terminal with full §10.5 embed"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p10-*,fe-p10_5-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "all 14 §10.5 DOM ids present (#i_initial..#i_l_sip_resume)"
+      - "zone classification matches fixture zone field 100%"
+      - "3 rec-slots present"
+      - "zone-event dots at every zone transition in fixture"
+
+  - id: V1FE-12
+    title: "portfolios.html — 4 books, accountability banner stripped, per-book rec-slots"
+    status: PENDING
+    depends_on: [V1FE-2]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p11-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "accountability-banner + pending-rec ledger DOM selectors absent"
+      - "4 rec-slots present (portfolio-book-1..4)"
+      - "each slot carries all 3 data-* attributes"
+
+  - id: V1FE-13
+    title: "lab.html — 3 mode tabs, full §10.5 Breadth Playback, greyed V1.1 rule backtest"
+    status: PENDING
+    depends_on: [V1FE-11]
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py --only 'fe-p12-*,fe-p10_5-*,fe-g-*,fe-dp-*,fe-mob-*,fe-state-*,fe-c-*' exits 0"
+      - "all 3 mode tabs present"
+      - "rule-backtest tab aria-disabled=true"
+      - "14 §10.5 DOM ids present in breadth-playback mode"
+      - "2 rec-slots present"
+
+  - id: V1FE-14
+    title: "QA sweep — Playwright baselines + a11y + full gate + smoke probe"
+    status: PENDING
+    depends_on: [V1FE-1, V1FE-2, V1FE-3, V1FE-4, V1FE-5, V1FE-6, V1FE-7, V1FE-8, V1FE-9, V1FE-10, V1FE-11, V1FE-12, V1FE-13]
+    quality_targets:
+      code: 80
+      devops: 80
+      frontend: 80
+    punch_list:
+      - "python scripts/check-frontend-criteria.py exits 0 with critical_fail_count==0 across all ~106 criteria"
+      - "python scripts/check-fe-a11y.py exits 0"
+      - "pytest tests/e2e/fe_pages/ -v green"
+      - "50 baseline PNGs committed + bit-identical on rerun"
+      - ".quality/checks.py --dim frontend ≥ 95"
+      - "curl -sf https://atlas.jslwealth.in/mockups/<page> | grep -q ATLAS green for every page"
+

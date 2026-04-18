@@ -374,6 +374,19 @@ SKIP — requires DOM inspection of currency/percentage/date strings.
 
 SKIP — requires visual diff against the JIP design tokens.
 
+### 5.10 Frontend criteria gate
+
+Reads `.forge/frontend-report.json` (produced by
+`scripts/check-frontend-criteria.py`). Computes pass rate from the
+`results[]` array and applies penalties: −5 per critical failure, −2 per
+high failure. `round(pass_rate × 40) − penalty`, clamped to [0, 40].
+SKIP when no mockup HTML files exist (V1FE-2+ creates them) or when the
+report is absent. **Plain English:** "Does the frontend meet the V1
+acceptance criteria defined in `docs/specs/frontend-v1-criteria.yaml`?"
+**Fix:** `python scripts/check-frontend-criteria.py` to see failures.
+**Severity:** critical if any critical failure, high if any high failure,
+info otherwise.
+
 ---
 
 ## Dimension 6 — Backend  *(informational until V1.6)*

@@ -1289,6 +1289,8 @@ def dim_api() -> DimensionResult:
 # DIMENSION 5 — FRONTEND HEALTH (weight 10%)
 # ══════════════════════════════════════════════════════════════════════════
 
+FE_REPORT_PATH = ROOT / ".forge" / "frontend-report.json"
+
 
 def dim_frontend() -> DimensionResult:
     checks: list[CheckResult] = []
@@ -1347,6 +1349,92 @@ def dim_frontend() -> DimensionResult:
             "medium" if over_200 else "info",
         )
     )
+
+    # 5.10 Frontend criteria gate (reads .forge/frontend-report.json if exists)
+    # Pre-condition: mockup HTML files must exist for the criteria to be meaningful.
+    # If no mockup HTMLs exist (V1FE-2+ creates them), SKIP this check entirely.
+    mockups_dir = frontend / "mockups"
+    has_mockup_html = mockups_dir.exists() and any(mockups_dir.glob("*.html"))
+    if FE_REPORT_PATH.exists() and has_mockup_html:
+        try:
+            import json as _json
+
+            fe_report = _json.loads(FE_REPORT_PATH.read_text(encoding="utf-8"))
+            total = fe_report.get("total", 0)
+            passed = fe_report.get("passed", 0)
+            failed = fe_report.get("failed", 0)
+            critical_fail = fe_report.get("critical_fail_count", 0)
+            high_fail = fe_report.get("high_fail_count", 0)
+            if total > 0:
+                run_total = passed + failed
+                if run_total > 0:
+                    pass_rate = passed / run_total
+                else:
+                    pass_rate = 1.0
+                # Weight critical/high failures more heavily
+                penalty = critical_fail * 5 + high_fail * 2
+                raw_score = max(0, round(pass_rate * 40) - penalty)
+                fe_score = max(0, min(40, raw_score))
+            else:
+                fe_score = 0
+            evidence = (
+                f"fe-criteria: {passed}/{passed + failed} passed "
+                f"(critical_fail={critical_fail}, high_fail={high_fail})"
+            )
+            checks.append(
+                CheckResult(
+                    "5.10",
+                    "Frontend criteria gate",
+                    fe_score,
+                    40,
+                    evidence,
+                    "Does the frontend meet V1 acceptance criteria?",
+                    "Run python scripts/check-frontend-criteria.py to see failures.",
+                    "critical" if critical_fail > 0 else "high" if high_fail > 0 else "info",
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            checks.append(
+                CheckResult(
+                    "5.10",
+                    "Frontend criteria gate",
+                    0,
+                    40,
+                    f"error reading report: {exc}",
+                    "Does the frontend meet V1 acceptance criteria?",
+                    "Run python scripts/check-frontend-criteria.py.",
+                    "high",
+                    status="ERROR",
+                )
+            )
+    elif not has_mockup_html:
+        checks.append(
+            CheckResult(
+                "5.10",
+                "Frontend criteria gate",
+                0,
+                40,
+                "no mockup HTML files yet (V1FE-2+ creates them)",
+                "Does the frontend meet V1 acceptance criteria?",
+                "Create mockup pages in frontend/mockups/ then run check-frontend-criteria.py.",
+                "info",
+                status="SKIP",
+            )
+        )
+    else:
+        checks.append(
+            CheckResult(
+                "5.10",
+                "Frontend criteria gate",
+                0,
+                40,
+                "no .forge/frontend-report.json — run check-frontend-criteria.py",
+                "Does the frontend meet V1 acceptance criteria?",
+                "Run python scripts/check-frontend-criteria.py.",
+                "info",
+                status="SKIP",
+            )
+        )
 
     # Remaining checks require headless browser/live service
     for cid, name, pts in [
