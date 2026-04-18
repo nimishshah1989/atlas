@@ -54,6 +54,18 @@ mkdir -p .forge
 
 log() { printf "[forge-ship:%s] %s\n" "$CHUNK" "$*"; }
 
+# --- Commit-serialisation flock (whole-ship) --------------------------
+# Parallel forge-runners (e.g. V11 Fork A + Fork B) share pytest fixtures, the
+# Postgres test DB, .forge/baseline/, .forge/last-run.json, the git index, and the
+# deployed atlas-backend.service. Only one fork at a time may proceed through ship.
+# Hold an exclusive lock on /tmp/atlas-commit.lock; the lock is released when the
+# script exits (FD 9 closes).
+LOCK_FILE="/tmp/atlas-commit.lock"
+exec 9>"$LOCK_FILE"
+log "waiting on commit lock at ${LOCK_FILE}"
+flock -x 9
+log "commit lock acquired"
+
 # --- 1. Tests ---------------------------------------------------------
 log "step 1/5 — pytest"
 if [ -x "./venv/bin/pytest" ]; then

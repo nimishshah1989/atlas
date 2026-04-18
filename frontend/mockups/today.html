@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Today</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════
+       SHELL (matches _nav-shell.html — keep in sync)
+       ══════════════════════════════════════════════════════════════════════ */
+    .topbar { position: sticky; top: 0; z-index: 30; }
+    .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
+    .subbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-1); min-height: 40px; }
+    .subbar__link { font-size: 12px; font-weight: 500; color: var(--text-secondary); padding: 10px 14px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+    .subbar__link--active { color: var(--accent-700); font-weight: 600; border-bottom-color: var(--accent-700); }
+    .subbar__spacer { flex: 1; }
+    .subbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+    .uni-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-primary); padding: 4px 10px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-full); cursor: pointer; }
+    .uni-pill__chev { font-size: 9px; color: var(--text-tertiary); }
+    .sync-meta { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+    .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+
+    /* ── Page header */
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph-left { display: flex; flex-direction: column; gap: 4px; }
+    .ph-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+    .ph-title { font-family: var(--font-serif); font-size: 36px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+    .ph-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; max-width: 780px; line-height: 1.55; }
+    .ph-right { display: flex; align-items: center; gap: var(--space-3); }
+    .regime-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 6px 10px; background: var(--bg-surface); border: 1px solid var(--border-default); border-left-width: 3px; border-radius: var(--radius-sm); font-variant-numeric: tabular-nums; cursor: pointer; }
+    .regime-chip__label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .regime-chip__val { font-family: var(--font-serif); font-size: 15px; font-weight: 500; line-height: 1; }
+    .regime-chip__days { font-size: 10px; color: var(--text-tertiary); }
+    .regime-chip--expansion { border-left-color: var(--rag-green-500); }
+    .regime-chip--expansion .regime-chip__val { color: var(--rag-green-700); }
+    .regime-chip--correction { border-left-color: var(--rag-amber-500); }
+    .regime-chip--correction .regime-chip__val { color: var(--rag-amber-700); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       GLANCE STRIP — the 3-second answer, sticky while scrolling bands
+       ══════════════════════════════════════════════════════════════════════ */
+    .glance {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: var(--space-6);
+    }
+    .glance__cell { background: var(--bg-surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .glance__label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .glance__val { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--text-primary); display: flex; align-items: baseline; gap: 6px; }
+    .glance__val .unit { font-size: 11px; font-weight: 400; color: var(--text-tertiary); }
+    .glance__meta { font-size: 10px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .glance__meta .pos { color: var(--rag-green-700); font-weight: 600; }
+    .glance__meta .neg { color: var(--rag-red-700); font-weight: 600; }
+    .glance__pill { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: var(--radius-full); }
+    .glance__pill--g { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .glance__pill--a { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .glance__pill--r { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       BAND — shared container for global / india briefings
+       ══════════════════════════════════════════════════════════════════════ */
+    .band { padding-top: var(--space-2); margin-bottom: var(--space-12); scroll-margin-top: 100px; }
+    .band__head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--space-4); border-bottom: 2px solid var(--border-default); padding-bottom: var(--space-3); }
+    .band__title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .band__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
+    .band__title { font-family: var(--font-serif); font-size: 26px; font-weight: 400; color: var(--text-primary); line-height: 1.1; }
+    .band__sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .band__actions { display: flex; gap: var(--space-2); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       REGIME BANNER — reused from pulse-breadth.html
+       ══════════════════════════════════════════════════════════════════════ */
+    .regime-banner { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-5); align-items: center; padding: var(--space-4) var(--space-5); border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface); border-left-width: 4px; margin-bottom: var(--space-4); }
+    .regime-banner--correction { border-left-color: var(--rag-amber-500); }
+    .regime-banner--expansion { border-left-color: var(--rag-green-500); }
+    .regime-banner--contraction { border-left-color: var(--rag-red-500); }
+    .regime-banner--recovery { border-left-color: var(--accent-500); }
+    .rb-left { display: flex; flex-direction: column; gap: 2px; }
+    .rb-label { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .rb-name { font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1; }
+    .regime-banner--correction .rb-name { color: var(--rag-amber-700); }
+    .regime-banner--expansion .rb-name { color: var(--rag-green-700); }
+    .rb-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+    .rb-text .hl-amber { color: var(--rag-amber-700); font-weight: 600; }
+    .rb-text .hl-green { color: var(--rag-green-700); font-weight: 600; }
+    .rb-text .hl-red { color: var(--rag-red-700); font-weight: 600; }
+    .rb-days { text-align: right; }
+    .rb-days .rb-count { font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1; }
+    .rb-days .rb-unit { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SIGNAL STRIP — one row of KPI cards (6 for global, 5 for india)
+       ══════════════════════════════════════════════════════════════════════ */
+    .sig-strip { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .sig-strip--6 { grid-template-columns: repeat(6, 1fr); }
+    .sig-strip--5 { grid-template-columns: repeat(5, 1fr); }
+    .sig-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 12px 14px; position: relative; border-top: 3px solid var(--text-tertiary); }
+    .sig-card--g { border-top-color: var(--rag-green-500); }
+    .sig-card--a { border-top-color: var(--rag-amber-500); }
+    .sig-card--r { border-top-color: var(--rag-red-500); }
+    .sig-card--p { border-top-color: var(--accent-500); }
+    .sig-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .sig-lbl { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .sig-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: var(--radius-full); }
+    .sig-tag--g { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .sig-tag--a { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .sig-tag--r { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .sig-tag--p { background: var(--accent-100); color: var(--accent-700); }
+    .sig-val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--text-primary); }
+    .sig-meta { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; margin-top: 4px; }
+    .sig-meta .pos { color: var(--rag-green-700); font-weight: 600; }
+    .sig-meta .neg { color: var(--rag-red-700); font-weight: 600; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CARD — shared body container
+       ══════════════════════════════════════════════════════════════════════ */
+    .card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); }
+    .card__head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); }
+    .card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .card__sub { font-size: 11px; color: var(--text-tertiary); }
+    .card__body { padding: var(--space-4); }
+
+    /* Section grid patterns used inside bands */
+    .grid-rrg-table { display: grid; grid-template-columns: 560px 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
+    .grid-macro-overnight { display: grid; grid-template-columns: 1fr 400px; gap: var(--space-4); margin-bottom: var(--space-5); }
+    .grid-india-lower { display: grid; grid-template-columns: 1fr 400px; gap: var(--space-4); margin-bottom: var(--space-5); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       RRG — Relative Rotation Graph
+       ══════════════════════════════════════════════════════════════════════ */
+    .rrg-wrap { position: relative; padding: var(--space-3) var(--space-4) var(--space-4); }
+    .rrg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+    .rrg-toggle { display: inline-flex; background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 2px; }
+    .rrg-toggle button { font-size: 10px; font-weight: 600; color: var(--text-secondary); background: transparent; border: 0; padding: 5px 9px; border-radius: var(--radius-sm); cursor: pointer; font-variant-numeric: tabular-nums; }
+    .rrg-toggle button.active { background: var(--bg-surface); color: var(--accent-700); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .rrg-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); font-size: 10px; color: var(--text-secondary); }
+    .rrg-legend__item { display: inline-flex; align-items: center; gap: 5px; }
+    .rrg-legend__dot { width: 9px; height: 9px; border-radius: 50%; }
+
+    /* RRG dot colours by region */
+    .rgn-dm-am { fill: #1d6fb8; }    /* DM Americas — blue */
+    .rgn-dm-eu { fill: #5b3a8a; }    /* DM Europe — violet */
+    .rgn-dm-ap { fill: #0d8a7a; }    /* DM Asia-Pac — teal */
+    .rgn-em-as { fill: #0b7a4e; }    /* EM Asia — green */
+    .rgn-em-la { fill: #9a6410; }    /* EM LatAm — ochre */
+    .rgn-em-em { fill: #a84a4a; }    /* EM EMEA — clay */
+    .rgn-home { fill: #8a909c; }     /* Home (Nifty) — grey, reference */
+
+    .lg-dm-am { background: #1d6fb8; }
+    .lg-dm-eu { background: #5b3a8a; }
+    .lg-dm-ap { background: #0d8a7a; }
+    .lg-em-as { background: #0b7a4e; }
+    .lg-em-la { background: #9a6410; }
+    .lg-em-em { background: #a84a4a; }
+    .lg-home { background: #8a909c; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       INDICES TABLE — matches RRG, 18 rows + reference
+       ══════════════════════════════════════════════════════════════════════ */
+    .ix-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ix-table th { padding: 8px 7px; text-align: right; font-size: 9.5px; font-weight: 600; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; position: sticky; top: 0; background: var(--bg-surface); }
+    .ix-table th:first-child { text-align: left; padding-left: 12px; }
+    .ix-table th.group-sep { border-left: 1px solid var(--border-subtle); }
+    .ix-table td { padding: 7px 7px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; text-align: right; vertical-align: middle; white-space: nowrap; }
+    .ix-table td:first-child { padding-left: 12px; }
+    .ix-table td:first-child { text-align: left; }
+    .ix-table td.group-sep { border-left: 1px solid var(--border-subtle); }
+    .ix-table tbody tr { cursor: pointer; }
+    .ix-table tbody tr:hover td { background: var(--bg-hover); }
+    .ix-table tbody tr.ref td { background: var(--bg-inset); }
+    .ix-table tbody tr.ref td { color: var(--text-secondary); }
+
+    .ix-name { display: flex; align-items: center; gap: 8px; }
+    .ix-rgn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .ix-name__main { font-weight: 600; color: var(--text-primary); }
+    .ix-name__sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+
+    .ret-pos { color: var(--rag-green-700); font-weight: 600; }
+    .ret-neg { color: var(--rag-red-700); font-weight: 600; }
+    .ret-neu { color: var(--text-tertiary); }
+
+    /* RS bar cell — inline mini-bar + number */
+    .rs-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .rs-num { min-width: 30px; text-align: right; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .rs-num--pos { color: var(--rag-green-700); }
+    .rs-num--neg { color: var(--rag-red-700); }
+    .rs-num--neu { color: var(--text-tertiary); }
+
+    /* Conviction chip — 4-factor convergence */
+    .conv { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.04em; }
+    .conv--high-plus { background: var(--accent-700); color: #fff; border: 1px solid var(--accent-900); }
+    .conv--high { background: var(--rag-green-700); color: #fff; }
+    .conv--high-r { background: var(--rag-red-700); color: #fff; }
+    .conv--med { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .conv--med-r { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .conv--div { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .conv--none { background: var(--bg-inset); color: var(--text-tertiary); }
+
+    /* Action chip */
+    .act { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.03em; }
+    .act--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .act--hold { background: var(--bg-inset); color: var(--text-secondary); }
+    .act--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .act--avoid { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .act--watch { background: var(--accent-100); color: var(--accent-700); }
+
+    /* ─── Factor-label micro-chip — one vocabulary across all RRG tables
+       Used for RS / Momentum / Volume / Breadth cells. The NUMBER is the
+       primary value; the label below it names the state in one word. */
+    .fcell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; line-height: 1; }
+    .fcell__v { font-size: 11px; font-weight: 600; }
+    .fcell__v--pos { color: var(--rag-green-700); }
+    .fcell__v--neg { color: var(--rag-red-700); }
+    .fcell__v--neu { color: var(--text-tertiary); }
+    .flabel { display: inline-block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 4px; border-radius: 2px; line-height: 1.1; }
+    /* RS states */
+    .flabel--leading    { background: var(--accent-700);       color: #fff; }
+    .flabel--improving  { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--weakening  { background: var(--rag-amber-100);    color: var(--rag-amber-700); }
+    .flabel--lagging    { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    /* Momentum states */
+    .flabel--accel      { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--stall      { background: var(--bg-inset);         color: var(--text-secondary); }
+    .flabel--decel      { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    /* Volume states */
+    .flabel--accum      { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--neut       { background: var(--bg-inset);         color: var(--text-tertiary); }
+    .flabel--distrib    { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    /* Breadth states */
+    .flabel--expanding  { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--narrow     { background: var(--rag-amber-100);    color: var(--rag-amber-700); }
+    .flabel--thin       { background: var(--rag-red-100);      color: var(--rag-red-700); }
+
+    /* ─── Divergence / Convergence chip — names the dissenter loudly.
+       Replaces the older "Conv" chip. 4/4 convergent = petrol; partial =
+       green; divergent = amber with the dissenting factor named inline. */
+    .dc { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; font-size: 9.5px; font-weight: 700; padding: 3px 6px; border-radius: var(--radius-sm); letter-spacing: 0.04em; line-height: 1.15; text-transform: uppercase; white-space: nowrap; }
+    .dc__lbl { font-size: 9px; font-weight: 700; }
+    .dc__note { font-size: 8.5px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.88; text-transform: none; }
+    .dc--conv4  { background: var(--accent-700);      color: #fff; }
+    .dc--conv3  { background: var(--rag-green-100);   color: var(--rag-green-700); }
+    .dc--conv4r { background: var(--rag-red-700);     color: #fff; }
+    .dc--conv3r { background: var(--rag-red-100);     color: var(--rag-red-700); }
+    .dc--div    { background: var(--rag-amber-100);   color: var(--rag-amber-700); }
+    .dc--none   { background: var(--bg-inset);        color: var(--text-tertiary); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       MACRO LEVELS TABLE
+       ══════════════════════════════════════════════════════════════════════ */
+    .macro-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .macro-tbl th { padding: 7px 10px; text-align: right; font-size: 10px; font-weight: 600; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); text-transform: uppercase; letter-spacing: 0.04em; }
+    .macro-tbl th:first-child { text-align: left; }
+    .macro-tbl td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; text-align: right; }
+    .macro-tbl td:first-child { text-align: left; }
+    .macro-zone { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full); }
+    .macro-zone--ok { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .macro-zone--watch { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .macro-zone--breach { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       OVERNIGHT MOVERS
+       ══════════════════════════════════════════════════════════════════════ */
+    .mover-list { display: flex; flex-direction: column; }
+    .mover-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+    .mover-row:last-child { border-bottom: none; }
+    .mover-row:hover { background: var(--bg-hover); cursor: pointer; }
+    .mover-name { display: flex; flex-direction: column; gap: 2px; }
+    .mover-name__a { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .mover-name__b { font-size: 10px; color: var(--text-tertiary); }
+    .mover-ret { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .mover-note { font-size: 10px; color: var(--text-tertiary); max-width: 120px; text-align: right; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       INDIA READ — auto-generated interpretation (bridge)
+       ══════════════════════════════════════════════════════════════════════ */
+    .india-read {
+      background: linear-gradient(0deg, var(--bg-surface), var(--bg-surface)) padding-box,
+                  linear-gradient(90deg, var(--accent-500), var(--rag-green-500), var(--rag-amber-500)) border-box;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      position: relative;
+    }
+    .india-read__tag { position: absolute; top: -10px; left: 16px; background: var(--bg-app); padding: 0 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-700); }
+    .india-read__tag::after { content: ' · AUTO'; color: var(--text-tertiary); font-weight: 600; }
+    .india-read__headline { font-family: var(--font-serif); font-style: italic; font-size: 20px; line-height: 1.3; color: var(--rag-amber-700); margin-bottom: var(--space-3); }
+    .india-read__body { font-size: 13px; line-height: 1.7; color: var(--text-primary); max-width: 980px; }
+    .india-read__body .hl-g { color: var(--rag-green-700); font-weight: 600; }
+    .india-read__body .hl-r { color: var(--rag-red-700); font-weight: 600; }
+    .india-read__body .hl-a { color: var(--rag-amber-700); font-weight: 600; }
+    .india-read__body .hl-p { color: var(--accent-700); font-weight: 600; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       INDIA SECTOR RRG — reuse RRG component, scaled for 10 sectors
+       ══════════════════════════════════════════════════════════════════════ */
+    .sector-scoreboard { display: flex; flex-direction: column; }
+    /* 10-col sector grammar: Sector | Ret | RS-N50 | RS-N500 | RS-Gold | Breadth | Mom | Vol | Div/Conv | Action */
+    .sect-row { display: grid; grid-template-columns: 1.35fr 50px 58px 58px 58px 62px 62px 64px 112px 54px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); align-items: center; font-size: 12px; }
+    .sect-row:last-child { border-bottom: none; }
+    .sect-row:hover { background: var(--bg-hover); cursor: pointer; }
+    .sect-head { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); background: var(--bg-inset); border-bottom: 1px solid var(--border-default); }
+    .sect-head > div { text-align: right; }
+    .sect-head > div:first-child { text-align: left; }
+    .sect-name { font-weight: 600; font-size: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 7px; }
+    .sect-bar-cell { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 11px; }
+    .sect-conv-cell { display: flex; justify-content: flex-start; }
+    .sect-fcell { align-items: flex-end; }
+    .sect-act-cell { display: flex; justify-content: flex-end; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ALERTS QUEUE — top 3 4-decision cards
+       ══════════════════════════════════════════════════════════════════════ */
+    .alert-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .alert-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-left-width: 3px; border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+    .alert-card--buy { border-left-color: var(--rag-green-500); }
+    .alert-card--sell { border-left-color: var(--rag-red-500); }
+    .alert-card--watch { border-left-color: var(--accent-500); }
+    .ac-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .ac-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: var(--text-primary); }
+    .ac-source { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .ac-decisions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 14px; font-size: 11px; margin-bottom: 8px; }
+    .ac-dec { display: flex; flex-direction: column; gap: 2px; }
+    .ac-dec__lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
+    .ac-dec__val { font-size: 12px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .ac-reason { font-size: 11px; color: var(--text-secondary); line-height: 1.55; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+    .ac-actions { display: flex; gap: var(--space-2); margin-top: 10px; }
+    .btn-pri { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--accent-700); background: var(--accent-700); color: #fff; cursor: pointer; }
+    .btn-sec { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; }
+    .btn-danger { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--rag-red-300); background: var(--bg-surface); color: var(--rag-red-700); cursor: pointer; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCORECARD + PLAYBOOK — lower india
+       ══════════════════════════════════════════════════════════════════════ */
+    .sc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+    .sc-cell { background: var(--bg-surface); padding: 12px 14px; }
+    .sc-cell__l { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .sc-cell__v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1.1; margin-top: 4px; }
+    .sc-cell__m { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .sc-rows { display: flex; flex-direction: column; margin-top: var(--space-3); }
+    .sc-row { display: grid; grid-template-columns: 60px 1fr auto auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-subtle); font-size: 12px; align-items: center; }
+    .sc-row:last-child { border-bottom: none; }
+    .sc-row__tag { font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 5px; border-radius: var(--radius-sm); letter-spacing: 0.05em; text-align: center; }
+    .sc-row__name { font-weight: 600; color: var(--text-primary); }
+    .sc-row__meta { font-size: 10px; color: var(--text-tertiary); }
+    .sc-row__pnl { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    .playbook { border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); background: linear-gradient(0deg, var(--accent-100) 0%, var(--bg-surface) 80%); }
+    .playbook__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-700); }
+    .playbook__title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; color: var(--text-primary); margin-top: 4px; line-height: 1.3; }
+    .playbook__body { font-size: 12px; color: var(--text-secondary); line-height: 1.65; margin-top: 8px; }
+    .playbook__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin: 12px 0; padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+    .playbook__stat { display: flex; flex-direction: column; }
+    .playbook__stat-l { font-size: 9px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 0.05em; }
+    .playbook__stat-v { font-size: 18px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-top: 3px; }
+    .playbook__actions { display: flex; gap: var(--space-2); margin-top: 10px; }
+
+    /* Sub-head row within a band */
+    .sub-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); margin-top: var(--space-2); }
+    .sub-head h3 { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .sub-head .hint { font-size: 11px; color: var(--text-tertiary); }
+
+    /* "Simulate this" affordance */
+    .sim-this { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--accent-700); padding: 3px 8px; border: 1px dashed var(--accent-500); border-radius: var(--radius-sm); background: var(--bg-surface); cursor: pointer; }
+    .sim-this:hover { background: var(--accent-100); }
+    .sim-this svg { width: 12px; height: 12px; }
+
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     TOP BAR — 5-surface IA
+     ════════════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link topnav__link--active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explore
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Decide
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2v7.3L4 20a1 1 0 0 0 .9 1.5h14.2A1 1 0 0 0 20 20l-6-10.7V2"/><path d="M8 2h8"/></svg>Lab
+    </a>
+    <a class="topnav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>Report
+    </a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input placeholder="Search any instrument, sector, index…" />
+  </div>
+  <div class="topbar__meta">
+    <span class="sync-meta"><span class="sync-dot"></span>LIVE · 04 APR 2026 · 09:14 IST</span>
+    <div class="topbar__avatar">N</div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SUB-BAR — Today anchors
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a href="#band-global" class="subbar__link subbar__link--active">Global briefing</a>
+    <a href="#band-india" class="subbar__link">India briefing</a>
+    <a href="#band-alerts" class="subbar__link">Alerts <span style="color:var(--rag-amber-700);font-weight:700;">· 3</span></a>
+    <a href="#band-playbook" class="subbar__link">Today's playbook</a>
+    <div class="subbar__spacer"></div>
+    <div class="subbar__actions">
+      <div class="uni-pill"><span style="font-size:13px;line-height:1;">🇮🇳</span><span>India</span><span class="uni-pill__chev">▾</span></div>
+      <span class="sync-meta">synced 3m ago · 04 Apr 2026 09:11 IST</span>
+      <button class="icon-btn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="page-header">
+    <div class="ph-left">
+      <div class="ph-eyebrow">Today · Monday 04 Apr 2026</div>
+      <h1 class="ph-title">Good morning, Nimish.</h1>
+      <div class="ph-sub">
+        Overnight: <strong>US closed +0.4%</strong> led by tech, <strong>Asia opening mixed</strong>, <strong>Nifty 50 SGX +0.2%</strong>.
+        FII net buyers 5 of last 8 sessions. India breadth still below 250 — the correction regime isn't done yet.
+      </div>
+    </div>
+    <div class="ph-right">
+      <a class="t1-pill" href="#" title="Yesterday's call ledger — see full breakdown in Report"
+         style="display:inline-flex;align-items:center;gap:8px;padding:5px 10px;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-sm);font-size:11px;font-variant-numeric:tabular-nums;color:var(--text-secondary);text-decoration:none;">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);font-weight:600;">T-1</span>
+        <span style="font-weight:700;color:var(--text-primary);">7 / 10</span>
+        <span style="color:var(--rag-green-700);font-weight:700;">+2.1%</span>
+        <span style="color:var(--text-tertiary);">· 2 stops</span>
+        <span style="color:var(--accent-700);">→ Report</span>
+      </a>
+      <div class="regime-chip regime-chip--expansion">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="regime-chip__label">Global</span>
+          <span class="regime-chip__val">Expansion</span>
+        </div>
+        <span class="regime-chip__days">· 34 d</span>
+      </div>
+      <div class="regime-chip regime-chip--correction">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="regime-chip__label">India</span>
+          <span class="regime-chip__val">Correction</span>
+        </div>
+        <span class="regime-chip__days">· 17 d</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       GLANCE STRIP — the 3-second answer
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="glance">
+    <div class="glance__cell">
+      <div class="glance__label">Global regime</div>
+      <div class="glance__val"><span class="glance__pill glance__pill--g">Expansion</span></div>
+      <div class="glance__meta">34 days in · breadth 62% above 200-DMA</div>
+    </div>
+    <div class="glance__cell">
+      <div class="glance__label">India regime</div>
+      <div class="glance__val"><span class="glance__pill glance__pill--a">Correction</span></div>
+      <div class="glance__meta">17 days in · breadth 245/500</div>
+    </div>
+    <div class="glance__cell">
+      <div class="glance__label">Nifty · 4-bench RS</div>
+      <div class="glance__val">2 / 4 <span class="unit">beating</span></div>
+      <div class="glance__meta">MSCI <span class="pos">+</span> · SPX <span class="neg">−</span> · Gold <span class="pos">+</span> · Self</div>
+    </div>
+    <div class="glance__cell">
+      <div class="glance__label">Alerts today</div>
+      <div class="glance__val">3 <span class="unit">pending</span></div>
+      <div class="glance__meta">2 buy · 1 trim · auto-stops ready</div>
+    </div>
+    <div class="glance__cell">
+      <div class="glance__label">Factor divergence</div>
+      <div class="glance__val">4 <span class="unit">loud today</span></div>
+      <div class="glance__meta">Nasdaq · SPX · FMCG · Infra — RS↑ but Vol↓</div>
+    </div>
+    <div class="glance__cell">
+      <div class="glance__label">Active positions</div>
+      <div class="glance__val">34 <span class="unit">open</span></div>
+      <div class="glance__meta">5 near stop · 2 near target · ₹142 Cr</div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════════════
+       BAND 1 — GLOBAL BRIEFING
+       ════════════════════════════════════════════════════════════════════════════════ -->
+  <section class="band" id="band-global">
+    <div class="band__head">
+      <div class="band__title-wrap">
+        <div class="band__eyebrow">Band 1 · Global briefing</div>
+        <div class="band__title">World markets · overnight to this morning</div>
+        <div class="band__sub">Every index benchmarked against MSCI World · S&P 500 · Nifty 50 TRI · Gold (USD). RRG rotates to whichever benchmark you pick.</div>
+      </div>
+      <div class="band__actions">
+        <button class="btn-sec">Expand all</button>
+        <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate global basket</button>
+      </div>
+    </div>
+
+    <!-- Global regime banner -->
+    <div class="regime-banner regime-banner--expansion">
+      <div class="rb-left">
+        <div class="rb-label">Global regime</div>
+        <div class="rb-name">Expansion</div>
+      </div>
+      <div class="rb-text">
+        Global breadth holding at <span class="hl-green">62% above 200-DMA</span> with MSCI World making new 90-day highs.
+        <strong>Leadership has broadened</strong> from US tech into EM and commodities (Brazil, Saudi, gold miners outperforming).
+        Caveat: <span class="hl-amber">DXY weakness is doing a lot of the work</span> — if DXY reclaims 105, tighten size on EM exposures.
+      </div>
+      <div class="rb-days">
+        <div class="rb-count">34</div>
+        <div class="rb-unit">Days in Regime</div>
+      </div>
+    </div>
+
+    <!-- Global signal strip -->
+    <div class="sig-strip sig-strip--6">
+      <div class="sig-card sig-card--r">
+        <div class="sig-top"><span class="sig-lbl">DXY</span><span class="sig-tag sig-tag--r">Weakening</span></div>
+        <div class="sig-val">101.8</div>
+        <div class="sig-meta"><span class="neg">−0.42</span> · <span class="neg">−3.1% 1m</span></div>
+      </div>
+      <div class="sig-card sig-card--a">
+        <div class="sig-top"><span class="sig-lbl">US 10Y</span><span class="sig-tag sig-tag--a">Elevated</span></div>
+        <div class="sig-val">4.37%</div>
+        <div class="sig-meta"><span class="neg">+3 bps</span> · above 4.25 threshold</div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">Brent</span><span class="sig-tag sig-tag--g">Bid</span></div>
+        <div class="sig-val">$88.4</div>
+        <div class="sig-meta"><span class="pos">+1.2%</span> · <span class="pos">+6.8% 1m</span></div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">Gold · USD</span><span class="sig-tag sig-tag--g">Strong</span></div>
+        <div class="sig-val">$2,412</div>
+        <div class="sig-meta"><span class="pos">+0.6%</span> · ATH · <span class="pos">+11% 3m</span></div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">VIX</span><span class="sig-tag sig-tag--g">Calm</span></div>
+        <div class="sig-val">14.2</div>
+        <div class="sig-meta"><span class="neg">−0.8</span> · below 15, risk-on</div>
+      </div>
+      <div class="sig-card sig-card--p">
+        <div class="sig-top"><span class="sig-lbl">SGX Nifty</span><span class="sig-tag sig-tag--p">Pre-open</span></div>
+        <div class="sig-val">22,486</div>
+        <div class="sig-meta"><span class="pos">+42</span> · implies <span class="pos">+0.19%</span> open</div>
+      </div>
+    </div>
+
+    <!-- RRG + Global indices table -->
+    <div class="sub-head">
+      <h3>Global indices · relative rotation</h3>
+      <div class="hint">18 indices · dot size = 1-month absolute return · grey dot = Nifty 50 reference</div>
+    </div>
+
+    <div class="grid-rrg-table">
+      <!-- RRG card -->
+      <div class="card">
+        <div class="rrg-head" style="padding:12px 16px 0;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Relative Rotation Graph</div>
+            <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">x = relative strength · y = momentum (Δ of RS)</div>
+          </div>
+          <div class="rrg-toggle">
+            <button class="active" data-bench="msci">vs MSCI World</button>
+            <button data-bench="gold">vs Gold</button>
+            <button data-bench="spx">vs S&P</button>
+            <button data-bench="nifty">vs Nifty 50</button>
+          </div>
+        </div>
+        <div class="rrg-wrap">
+          <svg viewBox="0 0 680 480" class="rrg-svg" style="width:100%;display:block;">
+            <!-- Quadrant fills -->
+            <rect x="40" y="40" width="300" height="180" fill="#10A368" opacity="0.04"/>
+            <rect x="340" y="40" width="300" height="180" fill="#10A368" opacity="0.08"/>
+            <rect x="340" y="220" width="300" height="180" fill="#D9871A" opacity="0.06"/>
+            <rect x="40" y="220" width="300" height="180" fill="#DB4343" opacity="0.05"/>
+
+            <!-- Quadrant labels -->
+            <text x="56" y="60" font-size="10" font-weight="700" fill="#0B7A4E" letter-spacing="1.5">IMPROVING</text>
+            <text x="618" y="60" font-size="10" font-weight="700" fill="#0B7A4E" letter-spacing="1.5" text-anchor="end">LEADING</text>
+            <text x="618" y="395" font-size="10" font-weight="700" fill="#9A6410" letter-spacing="1.5" text-anchor="end">WEAKENING</text>
+            <text x="56" y="395" font-size="10" font-weight="700" fill="#B63030" letter-spacing="1.5">LAGGING</text>
+
+            <!-- Gridlines -->
+            <g stroke="#EEF0F3" stroke-width="1">
+              <line x1="40" y1="100" x2="640" y2="100"/>
+              <line x1="40" y1="160" x2="640" y2="160"/>
+              <line x1="40" y1="280" x2="640" y2="280"/>
+              <line x1="40" y1="340" x2="640" y2="340"/>
+              <line x1="140" y1="40" x2="140" y2="400"/>
+              <line x1="240" y1="40" x2="240" y2="400"/>
+              <line x1="440" y1="40" x2="440" y2="400"/>
+              <line x1="540" y1="40" x2="540" y2="400"/>
+            </g>
+
+            <!-- Axes -->
+            <line x1="40" y1="220" x2="640" y2="220" stroke="#CDD2DA" stroke-width="1.5"/>
+            <line x1="340" y1="40" x2="340" y2="400" stroke="#CDD2DA" stroke-width="1.5"/>
+
+            <!-- Axis labels -->
+            <text x="650" y="224" font-size="10" font-weight="600" fill="#565E6E">RS →</text>
+            <text x="340" y="32" font-size="10" font-weight="600" fill="#565E6E" text-anchor="middle">↑ Momentum</text>
+            <text x="340" y="420" font-size="10" font-weight="600" fill="#8A909C" text-anchor="middle">benchmark: MSCI World · 3-month RS</text>
+
+            <!-- DOTS -->
+            <!-- LEADING quadrant (top-right) -->
+            <g><circle cx="550" cy="88"  r="12" class="rgn-em-la"/><text x="550" y="92" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">BR</text><text x="550" y="112" font-size="10" font-weight="600" fill="#9A6410" text-anchor="middle">Bovespa</text></g>
+            <g><circle cx="500" cy="128" r="10" class="rgn-dm-ap"/><text x="500" y="131" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">JP</text><text x="500" y="150" font-size="10" font-weight="600" fill="#0d8a7a" text-anchor="middle">Nikkei</text></g>
+            <g><circle cx="470" cy="180" r="8" class="rgn-em-em"/><text x="470" y="183" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">SA</text><text x="470" y="200" font-size="10" font-weight="600" fill="#a84a4a" text-anchor="middle">Tadawul</text></g>
+            <g><circle cx="408" cy="106" r="9" class="rgn-dm-am"/><text x="408" y="109" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">US</text><text x="408" y="128" font-size="10" font-weight="600" fill="#1d6fb8" text-anchor="middle">S&P 500</text></g>
+
+            <!-- IMPROVING quadrant (top-left) -->
+            <g><circle cx="260" cy="116" r="11" class="rgn-em-as"/><text x="260" y="119" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">CN</text><text x="260" y="138" font-size="10" font-weight="600" fill="#0b7a4e" text-anchor="middle">CSI 300</text></g>
+            <g><circle cx="285" cy="132" r="8" class="rgn-em-as"/><text x="285" y="135" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">KR</text><text x="245" y="165" font-size="10" font-weight="600" fill="#0b7a4e">KOSPI</text></g>
+            <g><circle cx="300" cy="156" r="7" class="rgn-em-as"/><text x="300" y="159" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">TW</text><text x="310" y="172" font-size="10" font-weight="600" fill="#0b7a4e">TAIEX</text></g>
+            <g><circle cx="318" cy="188" r="6" class="rgn-em-as"/><text x="318" y="191" font-size="7" font-weight="700" fill="#fff" text-anchor="middle">VN</text><text x="330" y="196" font-size="10" font-weight="600" fill="#0b7a4e">VN Index</text></g>
+
+            <!-- HOME reference -->
+            <g><circle cx="340" cy="220" r="9" class="rgn-home" stroke="#fff" stroke-width="2"/><text x="340" y="223" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">IN</text><text x="360" y="237" font-size="10" font-weight="600" fill="#565E6E">Nifty 50 · reference</text></g>
+
+            <!-- WEAKENING quadrant (bottom-right) -->
+            <g><circle cx="490" cy="286" r="10" class="rgn-dm-am"/><text x="490" y="289" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">NQ</text><text x="490" y="308" font-size="10" font-weight="600" fill="#1d6fb8" text-anchor="middle">Nasdaq 100</text></g>
+            <g><circle cx="400" cy="260" r="7" class="rgn-dm-eu"/><text x="400" y="263" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">EU</text><text x="400" y="280" font-size="10" font-weight="600" fill="#5b3a8a" text-anchor="middle">STOXX 600</text></g>
+            <g><circle cx="440" cy="280" r="7" class="rgn-dm-am"/><text x="440" y="283" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">CA</text><text x="444" y="296" font-size="10" font-weight="600" fill="#1d6fb8">TSX</text></g>
+
+            <!-- LAGGING quadrant (bottom-left) -->
+            <g><circle cx="270" cy="256" r="7" class="rgn-dm-ap"/><text x="270" y="259" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">AU</text><text x="270" y="274" font-size="10" font-weight="600" fill="#0d8a7a" text-anchor="middle">ASX 200</text></g>
+            <g><circle cx="226" cy="318" r="7" class="rgn-em-la"/><text x="226" y="321" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">MX</text><text x="226" y="335" font-size="10" font-weight="600" fill="#9A6410" text-anchor="middle">IPC</text></g>
+            <g><circle cx="196" cy="344" r="7" class="rgn-em-em"/><text x="196" y="347" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">ZA</text><text x="196" y="361" font-size="10" font-weight="600" fill="#a84a4a" text-anchor="middle">JSE</text></g>
+            <g><circle cx="308" cy="300" r="7" class="rgn-dm-eu"/><text x="308" y="303" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">DE</text><text x="308" y="316" font-size="10" font-weight="600" fill="#5b3a8a">DAX</text></g>
+            <g><circle cx="260" cy="282" r="6" class="rgn-dm-eu"/><text x="260" y="285" font-size="7" font-weight="700" fill="#fff" text-anchor="middle">UK</text><text x="262" y="298" font-size="10" font-weight="600" fill="#5b3a8a">FTSE</text></g>
+            <g><circle cx="270" cy="340" r="7" class="rgn-em-as"/><text x="270" y="343" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">HK</text><text x="270" y="357" font-size="10" font-weight="600" fill="#0b7a4e" text-anchor="middle">Hang Seng</text></g>
+            <g><circle cx="110" cy="378" r="9" class="rgn-em-em"/><text x="110" y="381" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">TR</text><text x="110" y="395" font-size="10" font-weight="600" fill="#a84a4a" text-anchor="middle">BIST 100</text></g>
+          </svg>
+
+          <div class="rrg-legend">
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-am"></span>DM Americas</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-eu"></span>DM Europe</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-ap"></span>DM Asia-Pac</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-as"></span>EM Asia</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-la"></span>EM LatAm</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-em"></span>EM EMEA</span>
+            <span class="rrg-legend__item"><span class="rrg-legend__dot lg-home"></span>Home (ref)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indices table -->
+      <div class="card" style="overflow:hidden;">
+        <div class="card__head">
+          <div>
+            <div class="card__title">Global indices · 4-benchmark RS</div>
+            <div class="card__sub">RS scores standardised. + = beats benchmark over 3m.</div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="btn-sec" style="padding:3px 9px;font-size:10px;">1M</button>
+            <button class="btn-sec" style="padding:3px 9px;font-size:10px;border-color:var(--accent-500);color:var(--accent-700);background:var(--accent-100);">3M</button>
+            <button class="btn-sec" style="padding:3px 9px;font-size:10px;">6M</button>
+            <button class="btn-sec" style="padding:3px 9px;font-size:10px;">12M</button>
+          </div>
+        </div>
+        <div style="max-height:480px;overflow-y:auto;">
+          <table class="ix-table">
+            <thead>
+              <tr>
+                <th>Index</th>
+                <th>Last</th>
+                <th>1m %</th>
+                <th class="group-sep">vs MSCI</th>
+                <th>vs SPX</th>
+                <th>vs Nifty</th>
+                <th>vs Gold</th>
+                <th class="group-sep">Mom</th>
+                <th>Vol</th>
+                <th class="group-sep">Div / Conv</th>
+                <th>Act</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-la"></span><div><div class="ix-name__main">Bovespa</div><div class="ix-name__sub">Brazil · IBOV</div></div></div></td>
+                <td>132,410</td><td class="ret-pos">+6.4</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.6</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.8</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.8</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.4×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+                <td><span class="act act--add">ADD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-ap"></span><div><div class="ix-name__main">Nikkei 225</div><div class="ix-name__sub">Japan · N225</div></div></div></td>
+                <td>39,824</td><td class="ret-pos">+4.1</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.3</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+                <td><span class="act act--add">ADD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">Tadawul</div><div class="ix-name__sub">Saudi · TASI</div></div></div></td>
+                <td>12,488</td><td class="ret-pos">+3.2</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.1</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
+                <td><span class="act act--watch">WATCH</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">S&P 500</div><div class="ix-name__sub">US · SPX</div></div></div></td>
+                <td>5,224</td><td class="ret-pos">+2.9</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">CSI 300</div><div class="ix-name__sub">China · CSI</div></div></div></td>
+                <td>3,842</td><td class="ret-pos">+5.8</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">stimulus lift</span></div></td>
+                <td><span class="act act--watch">WATCH</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">KOSPI</div><div class="ix-name__sub">S. Korea · KS11</div></div></div></td>
+                <td>2,798</td><td class="ret-pos">+4.2</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.5</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
+                <td><span class="act act--watch">WATCH</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">TAIEX</div><div class="ix-name__sub">Taiwan · TWII</div></div></div></td>
+                <td>20,168</td><td class="ret-pos">+3.0</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.1</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">VN Index</div><div class="ix-name__sub">Vietnam · VNI</div></div></div></td>
+                <td>1,268</td><td class="ret-pos">+1.4</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.1</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.2</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">+0.2</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.7×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">1/4 only</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr class="ref">
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-home"></span><div><div class="ix-name__main">Nifty 50</div><div class="ix-name__sub">India · NIFTY · reference</div></div></div></td>
+                <td>22,462</td><td class="ret-neg">−0.8</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.2</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">—</span><span class="flabel flabel--neut">REF</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">REF</span><span class="dc__note">home base</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">Nasdaq 100</div><div class="ix-name__sub">US · NDX</div></div></div></td>
+                <td>18,106</td><td class="ret-pos">+3.8</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.0</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.8×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
+                <td><span class="act act--trim">TRIM</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">STOXX 600</div><div class="ix-name__sub">Europe · SXXP</div></div></div></td>
+                <td>508</td><td class="ret-pos">+0.8</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">TSX</div><div class="ix-name__sub">Canada · GSPTSE</div></div></div></td>
+                <td>21,810</td><td class="ret-pos">+1.1</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.4</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.5</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
+                <td><span class="act act--hold">HOLD</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-ap"></span><div><div class="ix-name__main">ASX 200</div><div class="ix-name__sub">Australia · AXJO</div></div></div></td>
+                <td>7,922</td><td class="ret-neg">−0.6</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-la"></span><div><div class="ix-name__main">IPC</div><div class="ix-name__sub">Mexico · MXX</div></div></div></td>
+                <td>56,480</td><td class="ret-neg">−1.9</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.3×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">JSE All-Share</div><div class="ix-name__sub">South Africa · JSE</div></div></div></td>
+                <td>76,240</td><td class="ret-neg">−2.4</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.5</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.2×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">DAX</div><div class="ix-name__sub">Germany · GDAXI</div></div></div></td>
+                <td>17,980</td><td class="ret-pos">+0.4</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">ex-DAX drift</span></div></td>
+                <td><span class="act act--trim">TRIM</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">FTSE 100</div><div class="ix-name__sub">UK · FTSE</div></div></div></td>
+                <td>8,124</td><td class="ret-neg">−0.2</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.1</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">Hang Seng</div><div class="ix-name__sub">Hong Kong · HSI</div></div></div></td>
+                <td>16,842</td><td class="ret-pos">+2.1</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.8×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV · Ret↑</span><span class="dc__note">bounce, RS still ↓</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+              <tr>
+                <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">BIST 100</div><div class="ix-name__sub">Turkey · BIST</div></div></div></td>
+                <td>9,424</td><td class="ret-neg">−3.8</td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.4×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">capitulation</span></div></td>
+                <td><span class="act act--avoid">AVOID</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Macro levels + Overnight movers -->
+    <div class="grid-macro-overnight">
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <div class="card__title">Macro levels · 10 watches</div>
+            <div class="card__sub">Current · day Δ · 20-day Δ · zone vs threshold</div>
+          </div>
+          <button class="btn-sec" style="padding:3px 9px;font-size:10px;">Manage thresholds</button>
+        </div>
+        <table class="macro-tbl">
+          <thead>
+            <tr><th>Macro</th><th>Value</th><th>1d Δ</th><th>20d Δ</th><th>Threshold</th><th>Zone</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>DXY</strong> · US dollar</td><td>101.8</td><td class="ret-neg">−0.42</td><td class="ret-neg">−3.1%</td><td>&lt; 105 = risk-on</td><td><span class="macro-zone macro-zone--ok">OK · risk-on</span></td></tr>
+            <tr><td><strong>US 10Y</strong> · yield</td><td>4.37%</td><td class="ret-neg">+3 bps</td><td class="ret-neg">+18 bps</td><td>&lt; 4.25%</td><td><span class="macro-zone macro-zone--watch">Watch · breached</span></td></tr>
+            <tr><td><strong>Brent</strong> · $/bbl</td><td>$88.4</td><td class="ret-pos">+1.2%</td><td class="ret-pos">+6.8%</td><td>&lt; $95 = tolerable</td><td><span class="macro-zone macro-zone--ok">OK</span></td></tr>
+            <tr><td><strong>Gold</strong> · $/oz</td><td>$2,412</td><td class="ret-pos">+0.6%</td><td class="ret-pos">+4.8%</td><td>regime signal</td><td><span class="macro-zone macro-zone--ok">ATH · real-asset bid</span></td></tr>
+            <tr><td><strong>INR/USD</strong></td><td>83.41</td><td class="ret-neg">+0.04</td><td class="ret-neu">flat</td><td>&lt; 84</td><td><span class="macro-zone macro-zone--ok">OK · range-bound</span></td></tr>
+            <tr><td><strong>India 10Y</strong></td><td>7.12%</td><td class="ret-neu">+1 bp</td><td class="ret-pos">−9 bps</td><td>&lt; 7.25%</td><td><span class="macro-zone macro-zone--ok">OK</span></td></tr>
+            <tr><td><strong>Nifty 50</strong></td><td>22,462</td><td class="ret-pos">+0.1%</td><td class="ret-neg">−0.8%</td><td>50-DMA 22,586</td><td><span class="macro-zone macro-zone--watch">Below 50-DMA</span></td></tr>
+            <tr><td><strong>India VIX</strong></td><td>14.8</td><td class="ret-pos">−0.3</td><td class="ret-pos">−1.6</td><td>&lt; 18</td><td><span class="macro-zone macro-zone--ok">OK · calm</span></td></tr>
+            <tr><td><strong>FII flow</strong> · 5d ₹Cr</td><td>+4,210</td><td>+812</td><td class="ret-pos">+9,840</td><td>net positive</td><td><span class="macro-zone macro-zone--ok">Net buyer</span></td></tr>
+            <tr><td><strong>DII flow</strong> · 5d ₹Cr</td><td>+2,860</td><td>+540</td><td class="ret-pos">+6,120</td><td>net positive</td><td><span class="macro-zone macro-zone--ok">Net buyer</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <div class="card__title">Overnight movers</div>
+            <div class="card__sub">US close · Asia open · pre-open flags</div>
+          </div>
+        </div>
+        <div class="mover-list">
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">NVDA</div><div class="mover-name__b">NVIDIA · semis · mkt cap $2.1T</div></div>
+            <div class="mover-ret ret-pos">+3.4%</div>
+            <div class="mover-note">upgrade · $1,100 PT</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">TSMC · ADR</div><div class="mover-name__b">Semi foundry · Taiwan</div></div>
+            <div class="mover-ret ret-pos">+2.1%</div>
+            <div class="mover-note">AI capex spill-over</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">Gold miners · GDX</div><div class="mover-name__b">ETF · gold producers</div></div>
+            <div class="mover-ret ret-pos">+1.8%</div>
+            <div class="mover-note">gold ATH tailwind</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">Samsung Electronics</div><div class="mover-name__b">KOSPI open · semis</div></div>
+            <div class="mover-ret ret-pos">+1.4%</div>
+            <div class="mover-note">AI-memory bid</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">BYD</div><div class="mover-name__b">HK · EV</div></div>
+            <div class="mover-ret ret-neg">−2.2%</div>
+            <div class="mover-note">China stimulus fade</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">Crude WTI</div><div class="mover-name__b">US futures</div></div>
+            <div class="mover-ret ret-pos">+0.9%</div>
+            <div class="mover-note">OPEC+ extend cuts</div>
+          </div>
+          <div class="mover-row">
+            <div class="mover-name"><div class="mover-name__a">Copper · HG</div><div class="mover-name__b">LME · base metal</div></div>
+            <div class="mover-ret ret-pos">+1.1%</div>
+            <div class="mover-note">China PMI beat</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- India Read — the bridge -->
+    <div class="india-read">
+      <div class="india-read__tag">India read</div>
+      <div class="india-read__headline">"Global tailwind, India still in repair — lean into exporters, fade the domestic cyclicals."</div>
+      <div class="india-read__body">
+        Overnight behaviour is a classic <span class="hl-g">weak-dollar / soft-yields / strong-commodities</span> combination — broadly supportive for EM but <span class="hl-r">not uniformly</span>.
+        The <span class="hl-g">S&amp;P 500 reclaimed its 20-DMA</span>, <span class="hl-p">SGX Nifty implies a +0.2% open</span>, and <span class="hl-g">gold at ATH</span> continues to validate the real-asset bid.
+        For India specifically: FII flows have turned <span class="hl-g">net positive 5 of last 8 sessions</span>, but <span class="hl-a">breadth at 245/500 is still below the 270 threshold</span> required to turn the regime to Recovery — which means
+        <strong>favour the export-themed pockets</strong> (IT, pharma, auto ancillaries benefiting from strong-dollar-denominated earnings) and <strong>trim the pure domestic cyclicals</strong> (PSU banks, infra) where breadth has thinned.
+        Commodity producers (metals, energy) get a <span class="hl-g">tactical overweight</span> on the back of the Brent/copper bid.
+        <span class="hl-a">Stops stay tight until India breadth reclaims 270.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════════════
+       BAND 2 — INDIA BRIEFING
+       ════════════════════════════════════════════════════════════════════════════════ -->
+  <section class="band" id="band-india">
+    <div class="band__head">
+      <div class="band__title-wrap">
+        <div class="band__eyebrow">Band 2 · India briefing</div>
+        <div class="band__title">India · regime, sectors, alerts, playbook</div>
+        <div class="band__sub">Everything you need before the open. Click anything to drill into Explore.</div>
+      </div>
+      <div class="band__actions">
+        <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate today's playbook</button>
+      </div>
+    </div>
+
+    <!-- India regime banner -->
+    <div class="regime-banner regime-banner--correction">
+      <div class="rb-left">
+        <div class="rb-label">India regime</div>
+        <div class="rb-name">Correction</div>
+      </div>
+      <div class="rb-text">
+        Structural breadth is <span class="hl-amber">245/500 above 200-DMA</span> — below the 270 Recovery threshold.
+        <strong>Narrow leadership</strong> (IT + pharma doing heavy lifting) while mid/small caps roll over.
+        <strong>Reduce size on new buys, tighten stops,</strong> wait for breadth above 270 or accumulation divergence before turning aggressive.
+      </div>
+      <div class="rb-days">
+        <div class="rb-count">17</div>
+        <div class="rb-unit">Days in Regime</div>
+      </div>
+    </div>
+
+    <!-- India signal strip -->
+    <div class="sig-strip sig-strip--5">
+      <div class="sig-card sig-card--a">
+        <div class="sig-top"><span class="sig-lbl">Nifty 50</span><span class="sig-tag sig-tag--a">Below 50-DMA</span></div>
+        <div class="sig-val">22,462</div>
+        <div class="sig-meta"><span class="pos">+0.1% 1d</span> · <span class="neg">−0.8% 20d</span></div>
+      </div>
+      <div class="sig-card sig-card--a">
+        <div class="sig-top"><span class="sig-lbl">Breadth · 200-DMA</span><span class="sig-tag sig-tag--a">Weak</span></div>
+        <div class="sig-val">245<span style="font-size:12px;color:var(--text-tertiary);font-weight:400;"> / 500</span></div>
+        <div class="sig-meta">need <strong>270</strong> for Recovery · <span class="neg">−21 m/m</span></div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">FII flow · 5d</span><span class="sig-tag sig-tag--g">Net buyer</span></div>
+        <div class="sig-val">+₹4,210 Cr</div>
+        <div class="sig-meta"><span class="pos">+₹812 Cr 1d</span> · 5-of-8 sessions positive</div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">INR/USD</span><span class="sig-tag sig-tag--g">Stable</span></div>
+        <div class="sig-val">83.41</div>
+        <div class="sig-meta"><span class="neg">+0.04 1d</span> · <span style="color:var(--text-tertiary)">flat 20d</span></div>
+      </div>
+      <div class="sig-card sig-card--g">
+        <div class="sig-top"><span class="sig-lbl">India VIX</span><span class="sig-tag sig-tag--g">Calm</span></div>
+        <div class="sig-val">14.8</div>
+        <div class="sig-meta"><span class="pos">−0.3 1d</span> · <span class="pos">−1.6 20d</span> · below 18</div>
+      </div>
+    </div>
+
+    <!-- Sector RRG + sector scoreboard -->
+    <div class="sub-head">
+      <h3>India sectors · relative rotation</h3>
+      <div class="hint">11 NSE sectors · benchmarked vs Nifty 500 TRI</div>
+    </div>
+
+    <div class="grid-rrg-table">
+      <!-- Sector RRG -->
+      <div class="card">
+        <div class="rrg-head" style="padding:12px 16px 0;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">India sector RRG</div>
+            <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">x = RS vs Nifty 500 · y = 4-week momentum</div>
+          </div>
+          <div class="rrg-toggle">
+            <button class="active">vs Nifty 500</button>
+            <button>vs Gold</button>
+            <button>vs MSCI</button>
+          </div>
+        </div>
+        <div class="rrg-wrap">
+          <svg viewBox="0 0 680 440" style="width:100%;display:block;">
+            <rect x="40" y="40" width="300" height="160" fill="#10A368" opacity="0.04"/>
+            <rect x="340" y="40" width="300" height="160" fill="#10A368" opacity="0.08"/>
+            <rect x="340" y="200" width="300" height="160" fill="#D9871A" opacity="0.06"/>
+            <rect x="40" y="200" width="300" height="160" fill="#DB4343" opacity="0.05"/>
+
+            <text x="56" y="60" font-size="10" font-weight="700" fill="#0B7A4E" letter-spacing="1.5">IMPROVING</text>
+            <text x="618" y="60" font-size="10" font-weight="700" fill="#0B7A4E" letter-spacing="1.5" text-anchor="end">LEADING</text>
+            <text x="618" y="355" font-size="10" font-weight="700" fill="#9A6410" letter-spacing="1.5" text-anchor="end">WEAKENING</text>
+            <text x="56" y="355" font-size="10" font-weight="700" fill="#B63030" letter-spacing="1.5">LAGGING</text>
+
+            <g stroke="#EEF0F3" stroke-width="1">
+              <line x1="40" y1="100" x2="640" y2="100"/>
+              <line x1="40" y1="150" x2="640" y2="150"/>
+              <line x1="40" y1="250" x2="640" y2="250"/>
+              <line x1="40" y1="300" x2="640" y2="300"/>
+              <line x1="140" y1="40" x2="140" y2="360"/>
+              <line x1="240" y1="40" x2="240" y2="360"/>
+              <line x1="440" y1="40" x2="440" y2="360"/>
+              <line x1="540" y1="40" x2="540" y2="360"/>
+            </g>
+
+            <line x1="40" y1="200" x2="640" y2="200" stroke="#CDD2DA" stroke-width="1.5"/>
+            <line x1="340" y1="40" x2="340" y2="360" stroke="#CDD2DA" stroke-width="1.5"/>
+
+            <text x="650" y="204" font-size="10" font-weight="600" fill="#565E6E">RS →</text>
+            <text x="340" y="32" font-size="10" font-weight="600" fill="#565E6E" text-anchor="middle">↑ Momentum</text>
+
+            <!-- IT — LEADING -->
+            <g><circle cx="550" cy="100" r="14" fill="#0B7A4E"/><text x="550" y="104" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">IT</text><text x="550" y="128" font-size="11" font-weight="600" fill="#0B7A4E" text-anchor="middle">Info Tech</text></g>
+            <!-- Pharma — LEADING -->
+            <g><circle cx="490" cy="140" r="12" fill="#0B7A4E"/><text x="490" y="144" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">PH</text><text x="490" y="165" font-size="11" font-weight="600" fill="#0B7A4E" text-anchor="middle">Pharma</text></g>
+            <!-- Auto — IMPROVING -->
+            <g><circle cx="290" cy="140" r="11" fill="#0B7A4E"/><text x="290" y="144" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">AU</text><text x="290" y="165" font-size="11" font-weight="600" fill="#0B7A4E" text-anchor="middle">Auto</text></g>
+            <!-- Metals — IMPROVING -->
+            <g><circle cx="250" cy="120" r="12" fill="#0B7A4E"/><text x="250" y="124" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">ME</text><text x="230" y="155" font-size="11" font-weight="600" fill="#0B7A4E" text-anchor="middle">Metals</text></g>
+            <!-- Energy — IMPROVING -->
+            <g><circle cx="310" cy="168" r="10" fill="#0B7A4E"/><text x="310" y="172" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">EN</text><text x="350" y="180" font-size="11" font-weight="600" fill="#0B7A4E">Energy</text></g>
+            <!-- FMCG — WEAKENING -->
+            <g><circle cx="440" cy="246" r="10" fill="#9A6410"/><text x="440" y="250" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">FM</text><text x="440" y="268" font-size="11" font-weight="600" fill="#9A6410" text-anchor="middle">FMCG</text></g>
+            <!-- Financials — WEAKENING -->
+            <g><circle cx="400" cy="268" r="13" fill="#9A6410"/><text x="400" y="272" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">FN</text><text x="400" y="292" font-size="11" font-weight="600" fill="#9A6410" text-anchor="middle">Financials</text></g>
+            <!-- Realty — LAGGING -->
+            <g><circle cx="228" cy="278" r="9" fill="#B63030"/><text x="228" y="282" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">RE</text><text x="228" y="297" font-size="11" font-weight="600" fill="#B63030" text-anchor="middle">Realty</text></g>
+            <!-- PSU Bank — LAGGING -->
+            <g><circle cx="180" cy="310" r="11" fill="#B63030"/><text x="180" y="314" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">PB</text><text x="180" y="330" font-size="11" font-weight="600" fill="#B63030" text-anchor="middle">PSU Bank</text></g>
+            <!-- Infra — LAGGING -->
+            <g><circle cx="118" cy="330" r="9" fill="#B63030"/><text x="118" y="334" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">IN</text><text x="118" y="349" font-size="11" font-weight="600" fill="#B63030" text-anchor="middle">Infra</text></g>
+            <!-- Consumer Dur — LAGGING -->
+            <g><circle cx="285" cy="245" r="8" fill="#B63030"/><text x="285" y="248" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">CD</text><text x="280" y="265" font-size="10" font-weight="600" fill="#B63030" text-anchor="middle">Cons. Dur</text></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Sector scoreboard -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <div class="card__title">Sector scoreboard · 4-factor conviction</div>
+            <div class="card__sub">Returns · Momentum · Breadth · Volume — convergence score</div>
+          </div>
+          <a style="font-size:11px;color:var(--accent-700);font-weight:600;cursor:pointer;">→ Explore sectors</a>
+        </div>
+        <div class="sector-scoreboard">
+          <div class="sect-row sect-head">
+            <div>Sector</div><div class="num">Ret 1m</div><div class="num">RS</div><div class="num">Mom</div><div class="num" style="text-align:center;">Conviction</div>
+          </div>
+          <div class="sect-row"><div class="sect-name">Info Tech</div><div class="sect-bar-cell ret-pos">+6.4</div><div class="sect-bar-cell ret-pos">+2.1</div><div class="sect-bar-cell ret-pos">+0.9</div><div class="sect-conv-cell"><span class="conv conv--high-plus">4/4 HIGH+</span></div></div>
+          <div class="sect-row"><div class="sect-name">Pharma</div><div class="sect-bar-cell ret-pos">+4.8</div><div class="sect-bar-cell ret-pos">+1.6</div><div class="sect-bar-cell ret-pos">+0.6</div><div class="sect-conv-cell"><span class="conv conv--high">4/4 HIGH</span></div></div>
+          <div class="sect-row"><div class="sect-name">Metals</div><div class="sect-bar-cell ret-pos">+3.8</div><div class="sect-bar-cell ret-pos">+0.9</div><div class="sect-bar-cell ret-pos">+1.1</div><div class="sect-conv-cell"><span class="conv conv--med">3/4 MED</span></div></div>
+          <div class="sect-row"><div class="sect-name">Auto</div><div class="sect-bar-cell ret-pos">+2.4</div><div class="sect-bar-cell ret-pos">+0.6</div><div class="sect-bar-cell ret-pos">+0.8</div><div class="sect-conv-cell"><span class="conv conv--med">3/4 MED</span></div></div>
+          <div class="sect-row"><div class="sect-name">Energy</div><div class="sect-bar-cell ret-pos">+1.8</div><div class="sect-bar-cell ret-pos">+0.4</div><div class="sect-bar-cell ret-pos">+0.3</div><div class="sect-conv-cell"><span class="conv conv--div">2/4 DIV</span></div></div>
+          <div class="sect-row"><div class="sect-name">FMCG</div><div class="sect-bar-cell ret-neg">−1.4</div><div class="sect-bar-cell ret-neg">−0.5</div><div class="sect-bar-cell ret-neg">−0.3</div><div class="sect-conv-cell"><span class="conv conv--div">2/4 DIV</span></div></div>
+          <div class="sect-row"><div class="sect-name">Financials</div><div class="sect-bar-cell ret-neg">−2.1</div><div class="sect-bar-cell ret-neg">−0.7</div><div class="sect-bar-cell ret-neg">−0.4</div><div class="sect-conv-cell"><span class="conv conv--med-r">3/4 MED-R</span></div></div>
+          <div class="sect-row"><div class="sect-name">Consumer Durables</div><div class="sect-bar-cell ret-neg">−2.8</div><div class="sect-bar-cell ret-neg">−0.9</div><div class="sect-bar-cell ret-neg">−0.5</div><div class="sect-conv-cell"><span class="conv conv--med-r">3/4 MED-R</span></div></div>
+          <div class="sect-row"><div class="sect-name">Realty</div><div class="sect-bar-cell ret-neg">−3.4</div><div class="sect-bar-cell ret-neg">−1.1</div><div class="sect-bar-cell ret-neg">−0.6</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
+          <div class="sect-row"><div class="sect-name">PSU Bank</div><div class="sect-bar-cell ret-neg">−4.2</div><div class="sect-bar-cell ret-neg">−1.6</div><div class="sect-bar-cell ret-neg">−1.0</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
+          <div class="sect-row"><div class="sect-name">Infrastructure</div><div class="sect-bar-cell ret-neg">−4.8</div><div class="sect-bar-cell ret-neg">−1.9</div><div class="sect-bar-cell ret-neg">−1.2</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts + Scorecard+Playbook -->
+    <div class="grid-india-lower" id="band-alerts">
+      <div>
+        <div class="sub-head">
+          <h3>Today's alerts queue · 3 pending</h3>
+          <a style="font-size:11px;color:var(--accent-700);font-weight:600;cursor:pointer;">→ See all in Decide</a>
+        </div>
+        <div class="alert-list">
+          <!-- Alert 1 -->
+          <div class="alert-card alert-card--buy">
+            <div class="ac-head">
+              <div class="ac-title">
+                <span class="act act--add">ADD</span>
+                <span>INFY · Infosys</span>
+                <span class="conv conv--high-plus">4/4 High+</span>
+              </div>
+              <span class="ac-source">TradingView · 08:42 IST · IT · Cap ₹6,84,200 Cr</span>
+            </div>
+            <div class="ac-decisions">
+              <div class="ac-dec"><span class="ac-dec__lbl">Nature</span><span class="ac-dec__val">Long · add to core</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Size</span><span class="ac-dec__val">Standard · ₹1.2 Cr</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Timing</span><span class="ac-dec__val">On breadth confirm above 50-DMA</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Stop</span><span class="ac-dec__val">₹1,528 · −4.2% · ATR-based</span></div>
+            </div>
+            <div class="ac-reason">
+              RS <strong>+2.4 vs Nifty</strong>, +1.1 vs MSCI, +0.8 vs Gold — all 4 lenses agree. Volume <strong>accumulation</strong> last 6 sessions.
+              Pharma & IT are the two leading sectors in an otherwise weak tape — narrow leadership favors staying with the leaders until breadth turns.
+            </div>
+            <div class="ac-actions">
+              <button class="btn-pri">Approve</button>
+              <button class="btn-sec">Modify stop</button>
+              <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate</button>
+              <button class="btn-danger">Deny</button>
+            </div>
+          </div>
+
+          <!-- Alert 2 -->
+          <div class="alert-card alert-card--sell">
+            <div class="ac-head">
+              <div class="ac-title">
+                <span class="act act--trim">TRIM</span>
+                <span>SBIN · State Bank of India</span>
+                <span class="conv conv--med-r">3/4 Med</span>
+              </div>
+              <span class="ac-source">Breadth-rule · PSU Bank entered HIGH-R conviction · 09:02 IST</span>
+            </div>
+            <div class="ac-decisions">
+              <div class="ac-dec"><span class="ac-dec__lbl">Nature</span><span class="ac-dec__val">Trim 50% · protect gains</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Size</span><span class="ac-dec__val">Half of current 2.4% wgt</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Timing</span><span class="ac-dec__val">NOW · into pre-open strength</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Stop</span><span class="ac-dec__val">Trail remainder to ₹758</span></div>
+            </div>
+            <div class="ac-reason">
+              PSU Bank flipped to <strong>4/4 HIGH-R</strong> conviction this morning — Returns, Momentum, Breadth, Volume all aligned bearish.
+              SBIN still has relative strength vs peers but sector-conviction override kicks in. Protect 28% gain booked since Nov.
+            </div>
+            <div class="ac-actions">
+              <button class="btn-pri">Approve</button>
+              <button class="btn-sec">Trim all</button>
+              <button class="btn-sec">Hold</button>
+              <button class="btn-danger">Deny</button>
+            </div>
+          </div>
+
+          <!-- Alert 3 -->
+          <div class="alert-card alert-card--watch">
+            <div class="ac-head">
+              <div class="ac-title">
+                <span class="act act--watch">WATCH</span>
+                <span>TATAMOTORS · Tata Motors</span>
+                <span class="conv conv--med">3/4 Med</span>
+              </div>
+              <span class="ac-source">RS inflection · 08:55 IST · Auto · Cap ₹3,24,100 Cr</span>
+            </div>
+            <div class="ac-decisions">
+              <div class="ac-dec"><span class="ac-dec__lbl">Nature</span><span class="ac-dec__val">Probe long · small</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Size</span><span class="ac-dec__val">Small · ₹40 L probe</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Timing</span><span class="ac-dec__val">Wait for auto sector breadth ≥ 60%</span></div>
+              <div class="ac-dec"><span class="ac-dec__lbl">Stop</span><span class="ac-dec__val">₹912 · swing low</span></div>
+            </div>
+            <div class="ac-reason">
+              RS inflected <strong>+0.6 → +1.1</strong> last 2 weeks. Auto sector momentum improving, but sector breadth at 52% still below confirm threshold.
+              Volume flat — missing 4th factor. Probe size only until breadth confirms.
+            </div>
+            <div class="ac-actions">
+              <button class="btn-pri">Approve probe</button>
+              <button class="btn-sec">Watchlist only</button>
+              <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate</button>
+              <button class="btn-danger">Deny</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playbook -->
+      <div style="display:flex;flex-direction:column;gap:var(--space-4);" id="band-playbook">
+        <div class="playbook">
+          <div class="playbook__eyebrow">Today's playbook · from Lab</div>
+          <div class="playbook__title">Breadth-divergence bulk-entry setup · 18 candidates</div>
+          <div class="playbook__body">
+            India breadth at <strong>245</strong> with <strong>volume accumulation on 34% of Nifty 500</strong> — matches the historical "breadth-low + volume-divergence" pattern.
+            Bulk-entry simulation identifies <strong>18 candidates</strong> with ≥3-factor RS alignment.
+          </div>
+          <div class="playbook__stats">
+            <div class="playbook__stat"><span class="playbook__stat-l">Historical hit rate</span><span class="playbook__stat-v">74%</span></div>
+            <div class="playbook__stat"><span class="playbook__stat-l">Median 90d alpha</span><span class="playbook__stat-v ret-pos">+8.2%</span></div>
+            <div class="playbook__stat"><span class="playbook__stat-l">Last 4 occurrences</span><span class="playbook__stat-v">4 / 4 win</span></div>
+          </div>
+          <div class="playbook__actions">
+            <button class="btn-pri">Review 18 candidates</button>
+            <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate in Lab</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Sub-bar active state follows scroll position
+  const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
+  const bands = ['band-global','band-india','band-alerts','band-playbook'];
+  const spy = () => {
+    let active = 'band-global';
+    for (const id of bands) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < 120) active = id;
+    }
+    anchors.forEach(a => a.classList.toggle('subbar__link--active', a.getAttribute('href') === '#' + active));
+  };
+  window.addEventListener('scroll', spy, { passive: true });
+
+  // RRG benchmark toggle — mockup only, no data recompute
+  document.querySelectorAll('.rrg-toggle').forEach(g => {
+    g.addEventListener('click', e => {
+      if (e.target.tagName !== 'BUTTON') return;
+      g.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

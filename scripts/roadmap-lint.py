@@ -37,7 +37,7 @@ PLAN_YAML = _REPO_ROOT / "orchestrator" / "plan.yaml"
 ROADMAP_YAML = _REPO_ROOT / "orchestrator" / "roadmap.yaml"
 
 PLAN_CHUNK_ID_RE = re.compile(r"^\s*-\s*id:\s*(\S+)")
-VALID_VERSIONS = {f"V{n}" for n in range(0, 11)}
+VALID_VERSIONS = {f"V{n}" for n in range(0, 12)}
 
 
 def load_plan_chunk_ids(plan_path: Path) -> set[str]:

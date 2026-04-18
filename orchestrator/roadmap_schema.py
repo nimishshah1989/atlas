@@ -234,8 +234,8 @@ class RoadmapFile(BaseModel):
     def validate_version_ids_v0_to_v10(self) -> "RoadmapFile":
         # V0 is the infra/retrofit bucket (C1–C11, S-blocks, L-blocks) that
         # pre-date the V1 product slice. V1–V10 are the product slices.
-        valid = {f"V{n}" for n in range(0, 11)}
+        valid = {f"V{n}" for n in range(0, 12)}
         for v in self.versions:
             if v.id not in valid:
-                raise ValueError(f"Version id {v.id!r} is out of range V0–V10")
+                raise ValueError(f"Version id {v.id!r} is out of range V0–V11")
         return self

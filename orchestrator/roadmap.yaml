@@ -268,3 +268,23 @@ versions:
       - id: V10-7
       - id: V10-8
       - id: V10-9
+
+  - id: V11
+    title: "Backend + Data Sanitization"
+    goal: >
+      Atlas-side backend hardening before frontend ships: routine visibility,
+      manifest-driven 6-dim health gate, adjustment-factor consumption, gold/USD
+      denomination lens, derivatives + India VIX, empyrical + vectorbt + OpenBB
+      adoption, macro routes, insider/bulk-block surfaces, strict coverage gate.
+    chunks:
+      - id: V11-0
+      - id: V11-1
+      - id: V11-2
+      - id: V11-3
+      - id: V11-4
+      - id: V11-5
+      - id: V11-6
+      - id: V11-7
+      - id: V11-8
+      - id: V11-9
+      - id: V11-10

@@ -1898,3 +1898,171 @@ chunks:
       - "Decimal-only grep clean in gold_rs_service / etf_service / global_service"
       - "post-chunk.sh final sync green"
 
+
+  # --- v11-sanitization -------------------------------------------------
+
+  - id: V11-0
+    title: "Routine visibility — /api/system/routines + /forge/routines page"
+    status: PENDING
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+      frontend: 80
+    punch_list:
+      - "GET /api/system/routines returns one entry per routine declared in jip-source-manifest.yaml, with status and sla_breached fields"
+      - "killing a routine on jsl-wealth surfaces it red on /forge/routines within 60s of refresh"
+      - "structured log on every status transition"
+      - "7-dim gate ≥80 with code/api/observability watch-points"
+
+  - id: V11-1
+    title: "Manifest + health-check wiring + scoring calibration"
+    status: PENDING
+    depends_on: [V11-0]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+      devops: 80
+      docs: 80
+      frontend: 80
+    punch_list:
+      - "scripts/check-data-coverage.py --strict --mandatory-only runs in CI and exits non-zero on any failing mandatory domain"
+      - "/forge/data-health renders one card per domain with six dimension badges"
+      - "deleting the latest partition row of one domain drops only its freshness dimension below floor on the next run"
+      - "year-partitioned tables score correctly against the latest live partition"
+      - "integrity sampling completes in <5s on tables ≥1M rows"
+      - "health_gate('domain') dependency raises 503 with structured detail when domain failing"
+      - "7-dim gate ≥80 with correctness/determinism/tests watch-points"
+
+  - id: V11-2
+    title: "Adjustment-factor consumption — ?adjusted=true on price routes"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/instruments/RELIANCE/price returns adjusted series by default that is continuous across known bonus dates"
+      - "?adjusted=false returns raw with the artificial jump preserved"
+      - "comparison matches manual computation from de_corporate_actions"
+      - "when adjustment-factor health fails, route returns raw + meta.warnings naming the failing dimension"
+      - "no float in adjustment math"
+      - "7-dim gate ≥80 with correctness/standards watch-points"
+
+  - id: V11-3
+    title: "Gold/USD denomination lens — ?denomination=inr|gold|usd"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "GET /api/instruments/NIFTY50/price?denomination=gold returns series equal to inr-series divided by gold-rupee series indexed to common base"
+      - "matches manual computation to 4 decimals"
+      - "second call within TTL hits cache and returns within 50ms p50 (benchmark in test)"
+      - "meta.data_as_of propagates worst-of staleness"
+      - "7-dim gate ≥80 with correctness/tests watch-points"
+
+  - id: V11-4
+    title: "Derivatives + India VIX consumption routes (gated on JIP)"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "When de_fo_bhavcopy_daily and de_fo_participant_oi_daily are healthy: GET /api/derivatives/pcr/NIFTY returns a value matching the NSE-published PCR for the same date to 2 decimals"
+      - "GET /api/derivatives/{symbol}/oi returns OI buildup chart payload"
+      - "GET /api/macros/vix returns the VIX time series"
+      - "When any underlying JIP table is unhealthy: routes return 503 with detail.reason naming failing dimension and structured warn log emitted"
+      - "7-dim gate ≥80 with correctness/observability watch-points"
+
+  - id: V11-5
+    title: "empyrical adoption — replace hand-rolled risk metrics"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "test_analytics_parity passes — 5 fixture series × 8 metrics = 40 assertions all agree to 4 decimals between legacy and empyrical"
+      - "hand-rolled risk math is deleted from analytics.py"
+      - "all simulation endpoints return identical numbers vs pre-migration baseline on a smoke run"
+      - "no float leaks past the service boundary (mypy + custom ruff check)"
+      - "7-dim gate ≥80 with correctness/tests watch-points"
+
+  - id: V11-6
+    title: "vectorbt port of backtest engine"
+    status: PENDING
+    depends_on: [V11-5]
+    quality_targets:
+      architecture: 85
+      code: 80
+    punch_list:
+      - "test_backtest_parity passes — 5 reference simulations × 12 output metrics = 60 assertions agree to 4 decimals between legacy and vectorbt"
+      - "test_backtest_perf shows wall-clock for a 100-config parameter sweep on vectorbt is ≤1/10 of legacy"
+      - "?engine=legacy still works one chunk for rollback safety"
+      - "7-dim gate ≥80 with correctness/performance/tests watch-points"
+
+  - id: V11-7
+    title: "Macro routes — yield curve + FX + RBI policy events (gated on JIP)"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "When de_in_gsec_yields_daily, de_fx_rates_daily, de_rbi_policy_rates are healthy: yield-curve points match CCIL-published values for one known date to 0.01bp"
+      - "FX rates match RBI reference rates"
+      - "policy events list matches RBI press releases"
+      - "When any JIP table fails: 503 with detail.reason"
+      - "7-dim gate ≥80 with correctness/api/observability watch-points"
+
+  - id: V11-8
+    title: "Insider + bulk/block deal surfaces on stock detail (gated on JIP)"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "When de_insider_trades, de_bulk_deals, de_block_deals are healthy: GET /api/stocks/{symbol}/insider returns rows matching SEBI PIT disclosure for one known event"
+      - "bulk-deals and block-deals match NSE archive for one known date"
+      - "When any JIP table fails: 503 with detail.reason"
+      - "7-dim gate ≥80 with correctness/api watch-points"
+
+  - id: V11-9
+    title: "OpenBB + FinanceToolkit pilot on /api/stocks/{symbol}/analysis"
+    status: PENDING
+    depends_on: [V11-1]
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+    punch_list:
+      - "?engine=openbb returns a strict superset of the legacy structured-signal keys (schema-diff test)"
+      - "on a 100-call sequential benchmark p95 of openbb is ≤1.5x p95 of legacy"
+      - "pilot disabled by default (legacy still default)"
+      - "7-dim gate ≥80 with correctness/performance/api watch-points"
+
+  - id: V11-10
+    title: "Coverage close-out — strict gate green across every domain"
+    status: PENDING
+    depends_on: [V11-0, V11-1, V11-2, V11-3, V11-4, V11-5, V11-6, V11-7, V11-8, V11-9]
+    quality_targets:
+      code: 80
+      devops: 80
+      docs: 80
+    punch_list:
+      - "scripts/check-data-coverage.py --strict --mandatory-only exits 0"
+      - "report shows every mandatory domain at ≥85 weighted overall and every dimension at ≥80"
+      - "three consecutive runs produce identical scores (determinism)"
+      - "CI strict-coverage workflow is gating PRs"
+      - "7-dim gate ≥80 with determinism/standards watch-points"
+

@@ -462,3 +462,4 @@ async def logs_tail(
 # Register /api/v1/system/roadmap by importing the split module after the
 # router is defined. Import is at the bottom to avoid circular imports.
 from backend.routes import system_roadmap  # noqa: E402, F401
+from backend.routes import system_routines  # noqa: E402, F401

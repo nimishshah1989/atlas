@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Navigation shell</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* Shell-specific layout rules — top bar, sub-bar, page-header, breadcrumb. */
+
+    .topbar { position: sticky; top: 0; z-index: 30; }
+
+    /* ── Surface sub-bar (under the 5-surface top-nav) ─────────────────────
+       A thin row that holds:
+       - surface-level sub-nav (e.g. Today's anchor links to each band)
+       - global actions (universe pill, refresh, date/time)
+       Every page has one; content varies per surface. */
+    .subbar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-default);
+      position: sticky;
+      top: 57px; /* height of topbar */
+      z-index: 20;
+    }
+    .subbar__inner {
+      max-width: var(--maxw-page);
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      min-height: 40px;
+    }
+    .subbar__link {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      padding: 10px 14px;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .subbar__link--active {
+      color: var(--accent-700);
+      font-weight: 600;
+      border-bottom-color: var(--accent-700);
+    }
+    .subbar__spacer { flex: 1; }
+    .subbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+
+    /* Universe pill — appears on surfaces that need a universe selector */
+    .uni-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--text-primary);
+      padding: 4px 10px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+    }
+    .uni-pill .uni-pill__flag { font-size: 13px; line-height: 1; }
+    .uni-pill .uni-pill__chev { font-size: 9px; color: var(--text-tertiary); }
+
+    .sync-meta { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+
+    .icon-btn {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    /* ── Page header ────────────────────────────────────────────────────── */
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: var(--space-6) 0 var(--space-5);
+      border-bottom: 1px solid var(--border-default);
+      margin-bottom: var(--space-6);
+    }
+    .ph-left { display: flex; flex-direction: column; gap: 6px; }
+    .ph-eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+    .ph-title { font-family: var(--font-serif); font-size: 36px; line-height: 1.1; color: var(--text-primary); font-weight: 400; }
+    .ph-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; max-width: 700px; }
+
+    .ph-right { display: flex; align-items: center; gap: var(--space-3); }
+    .regime-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 600;
+      padding: 6px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-left-width: 3px;
+      border-radius: var(--radius-sm);
+      font-variant-numeric: tabular-nums;
+    }
+    .regime-chip__label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .regime-chip__val { font-family: var(--font-serif); font-size: 15px; font-weight: 500; line-height: 1; }
+    .regime-chip__days { font-size: 10px; color: var(--text-tertiary); }
+    .regime-chip--expansion { border-left-color: var(--rag-green-500); }
+    .regime-chip--expansion .regime-chip__val { color: var(--rag-green-700); }
+    .regime-chip--correction { border-left-color: var(--rag-amber-500); }
+    .regime-chip--correction .regime-chip__val { color: var(--rag-amber-700); }
+    .regime-chip--contraction { border-left-color: var(--rag-red-500); }
+    .regime-chip--contraction .regime-chip__val { color: var(--rag-red-700); }
+    .regime-chip--recovery { border-left-color: var(--accent-500); }
+    .regime-chip--recovery .regime-chip__val { color: var(--accent-700); }
+
+    /* ── Breadcrumb (used on drill surfaces, not on top-level ones) ───── */
+    .crumb { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); padding: var(--space-3) 0 var(--space-3); }
+    .crumb a { color: var(--text-accent); cursor: pointer; border-bottom: 1px solid transparent; }
+    .crumb a:hover { border-bottom-color: var(--text-accent); }
+    .crumb__sep { color: var(--border-strong); }
+    .crumb__cur { color: var(--text-primary); font-weight: 600; }
+
+    /* ── Annotation panel (docs only, not production) ─────────────────── */
+    .anno-wrap { max-width: 860px; margin: 0 auto var(--space-8); padding: 0 var(--space-6); }
+    .anno {
+      background: var(--bg-inset);
+      border-left: 3px solid var(--accent-500);
+      padding: var(--space-4) var(--space-5);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-top: var(--space-6);
+    }
+    .anno h4 { font-family: var(--font-sans); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-700); margin-bottom: var(--space-2); }
+    .anno p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+    .anno code { font-size: 11px; }
+
+    .surface-demo {
+      min-height: 160px;
+      border: 1px dashed var(--border-strong);
+      background: repeating-linear-gradient(135deg, var(--bg-surface), var(--bg-surface) 10px, var(--bg-surface-alt) 10px, var(--bg-surface-alt) 20px);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-tertiary);
+      font-size: 13px;
+      padding: var(--space-6);
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     TOP BAR — 5-surface IA spine, present on every page
+     ══════════════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar__brand">atlas<strong>.</strong></div>
+  <nav class="topnav">
+    <a class="topnav__link topnav__link--active" title="WATCH — global + India briefing, alerts queue, yesterday's scorecard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Today
+    </a>
+    <a class="topnav__link" title="SCAN + DRILL — Global → Country → Sector → Instrument, RRG at every level">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      Explore
+    </a>
+    <a class="topnav__link" title="DECIDE + EXECUTE — FM queue, model portfolios, microbasket builder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Decide
+    </a>
+    <a class="topnav__link" title="EVIDENCE — simulation, backtests, playbooks, decision accuracy ledger">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2v7.3L4 20a1 1 0 0 0 .9 1.5h14.2A1 1 0 0 0 20 20l-6-10.7V2"/><path d="M8 2h8"/></svg>
+      Lab
+    </a>
+    <a class="topnav__link" title="TRACK + REPORT — call scorecard, attribution, client reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      Report
+    </a>
+  </nav>
+  <div style="flex:1"></div>
+  <div class="topbar__search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input placeholder="Search any instrument, sector, index…" />
+  </div>
+  <div class="topbar__meta">
+    <span class="sync-meta"><span class="sync-dot"></span>LIVE · 04 APR 2026 · 09:14 IST</span>
+    <div class="topbar__avatar">N</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SUB-BAR — surface anchors + global actions
+     Every surface has a sub-bar. Content differs; the shape stays.
+     On TODAY this row is anchor-links to the two bands + refresh.
+     On EXPLORE it is the drill-level tabs (Global / Country / Sector / Instrument).
+     On DECIDE / LAB / REPORT it is the sub-page router.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a class="subbar__link subbar__link--active">Global briefing</a>
+    <a class="subbar__link">India briefing</a>
+    <a class="subbar__link">Alerts</a>
+    <a class="subbar__link">Yesterday's scorecard</a>
+
+    <div class="subbar__spacer"></div>
+
+    <div class="subbar__actions">
+      <div class="uni-pill" title="Universe — Today is always India-first with a Global briefing on top. Change via Explore.">
+        <span class="uni-pill__flag">🇮🇳</span><span>India</span><span class="uni-pill__chev">▾</span>
+      </div>
+      <span class="sync-meta">synced 3m ago</span>
+      <button class="icon-btn" title="Refresh data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PAGE — header + breadcrumb + surface body
+     ══════════════════════════════════════════════════════════════════════ -->
+<main class="page">
+
+  <!-- Breadcrumb lives only on drill surfaces. Today does not render one. -->
+  <div class="crumb" style="opacity:0.5;">
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);font-weight:600;">breadcrumb — only on drill pages</span>
+    <span class="crumb__sep">·</span>
+    <a>Explore</a><span class="crumb__sep">›</span>
+    <a>India</a><span class="crumb__sep">›</span>
+    <a>Financials</a><span class="crumb__sep">›</span>
+    <span class="crumb__cur">HDFCBANK</span>
+  </div>
+
+  <!-- Page header — title left, regime chips + actions right -->
+  <section class="page-header">
+    <div class="ph-left">
+      <div class="ph-eyebrow">Today · Monday 04 Apr 2026</div>
+      <h1 class="ph-title">Good morning, Nimish.</h1>
+      <div class="ph-sub">Overnight: US closed +0.4% · Asia opening mixed · Nifty 50 pre-open +0.2% · FII net buyers 5 of last 8 sessions.</div>
+    </div>
+    <div class="ph-right">
+      <div class="regime-chip regime-chip--expansion">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="regime-chip__label">Global</span>
+          <span class="regime-chip__val">Expansion</span>
+        </div>
+        <span class="regime-chip__days">· 34 d</span>
+      </div>
+      <div class="regime-chip regime-chip--correction">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="regime-chip__label">India</span>
+          <span class="regime-chip__val">Correction</span>
+        </div>
+        <span class="regime-chip__days">· 17 d</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Surface body placeholder -->
+  <div class="surface-demo">
+    Surface body — Today / Explore / Decide / Lab / Report content renders here.<br/>
+    See <code>today.html</code> for the first real surface.
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     ANNOTATIONS — doc-only, strip in production
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="anno-wrap">
+
+  <div class="anno">
+    <h4>The 5-surface IA</h4>
+    <p>Top nav is the primary navigation on every page and every shell. Five items, in FM-workflow order: <strong>Today</strong> (watch) → <strong>Explore</strong> (scan + drill) → <strong>Decide</strong> (execute) → <strong>Lab</strong> (evidence) → <strong>Report</strong> (track). No second-level menu in the top bar — second level lives in the sub-bar below, scoped to the active surface.</p>
+  </div>
+
+  <div class="anno">
+    <h4>The sub-bar pattern</h4>
+    <p>Every surface has a sub-bar at the top that does two things: (1) anchors or sub-pages within the surface on the left, (2) universe + sync + refresh on the right. On <strong>Today</strong> it is anchor-links to the bands (Global briefing, India briefing, Alerts, Yesterday's scorecard). On <strong>Explore</strong> it is the drill-level router (Global / Country / Sector / Instrument). On <strong>Decide / Lab / Report</strong> it is the sub-page list. Sub-bar is sticky below the top-bar so navigation stays in view while you scroll the dense body.</p>
+  </div>
+
+  <div class="anno">
+    <h4>The page-header pattern</h4>
+    <p>Page header is always: eyebrow · serif title · one-sentence sub · <em>global + India regime chips on the right</em>. The two regime chips are present on <em>every</em> page, not just Today — because every analytical read is conditional on the regime. Clicking a chip opens that regime's explainer drawer. This is the §12 pattern made global.</p>
+  </div>
+
+  <div class="anno">
+    <h4>Breadcrumb rule</h4>
+    <p>Breadcrumb renders <strong>only on drill pages</strong> — Explore country / sector / instrument, Decide portfolio-detail, Lab run-detail. Top-level surfaces (Today, Explore-global landing, Decide home, Lab home, Report home) have no breadcrumb; the top-nav active state is the location indicator. Rule of thumb: if the URL has more than one meaningful segment past the surface name, render a breadcrumb.</p>
+  </div>
+
+  <div class="anno">
+    <h4>Universe pill</h4>
+    <p>Today is India-first always — the global band exists to contextualise India, not to compete with it. Changing universe (to US, China, etc.) routes you into <strong>Explore</strong> at the country level, where the country itself is the subject. Keeping Today locked to India prevents the page from becoming "global dashboard for nothing in particular."</p>
+  </div>
+
+</div>
+
+</body>
+</html>

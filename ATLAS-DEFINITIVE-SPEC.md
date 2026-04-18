@@ -3901,6 +3901,39 @@ V10: QLIB + ADVANCED
   Add: Factor validation (alphalens)
   Add: Parameter optimization (Optuna)
   Add: Event system (WebSocket push)
+
+V11: SANITIZATION SLICE (backend + data-layer hardening before frontend ships)
+  Add: Routine visibility — systemd units + de_routine_runs table + /forge/routines page
+  Add: Manifest-driven data-coverage health check (docs/specs/data-coverage.yaml + scripts/check-data-coverage.py) wired into CI + /forge/data-health page
+  Add: Adjustment-factors consumption — atlas exposes ?adjusted=true on price routes once de_adjustment_factors_daily is populated by JIP
+  Add: Gold lens — ?denomination=inr|gold|usd query param + atlas_gold_rs_cache populate via existing gold_view_service
+  Add: Derivatives + VIX consumption routes (gated on JIP-side de_fo_bhavcopy_daily / de_fo_participant_oi_daily / de_india_vix_daily passing health-check)
+  Add: empyrical adoption — replace hand-rolled Sharpe/Sortino/Calmar/MDD/VaR/CVaR in backend/services/simulation/analytics.py
+  Add: vectorbt port of backtest_engine.py with side-by-side parity gate
+  Add: Macro routes (yield curve, FX, RBI policy) gated on JIP-side de_in_gsec_yields_daily / de_fx_rates_daily / de_rbi_policy_rates
+  Add: Insider + bulk/block deal surfaces gated on JIP-side de_insider_trades / de_bulk_deals / de_block_deals
+  Add: OpenBB + FinanceToolkit pilot on one stock-detail route
+  Add: Final coverage sweep — all domains in data-coverage.yaml score ≥85 weighted overall
+
+  Non-negotiable principles preserved across every V11-* chunk:
+    1. Agile — each chunk ≤3 days, ships independently, reversible
+    2. Responsive — every routine + table emits status to /forge/routines + /forge/data-health
+    3. Non-hardcoded — table names, SLAs, source URLs in YAML manifests; never in code
+    4. Scalable — adding a data source = manifest edit + routine restart
+    5. Failure-localised — 6-dim health rubric (coverage, freshness, completeness, continuity, integrity, provenance), score per dimension per table
+
+  Atlas-only chunks (JIP-side ingestion is owned by JIP Data Core team per docs/specs/jip-data-core-ingestion-note.md):
+    V11-0  Routine visibility foundation
+    V11-1  Manifest + health-check wiring + scoring calibration
+    V11-2  Adjustment-factor consumption (Atlas-side)
+    V11-3  Gold lens
+    V11-4  Derivatives + VIX consumption (gated on JIP)
+    V11-5  empyrical adoption (FOSS migration #1)
+    V11-6  vectorbt port (FOSS migration #2)
+    V11-7  Macro routes (gated on JIP)
+    V11-8  Insider + bulk/block deal surfaces (gated on JIP)
+    V11-9  OpenBB + FinanceToolkit pilot (FOSS migration #3)
+    V11-10 Backfill + coverage close-out
 ```
 
 ### 24.5 Build Instruction for Claude
@@ -3916,6 +3949,47 @@ CRITICAL: When building ATLAS autonomously, follow this exact sequence:
 
 This is the single most important build discipline in this document.
 Violating this order is a HARD STOP condition.
+```
+
+### 24.6 V11 Completion Criteria
+
+```
+V11 is DONE when ALL of the following are true:
+
+  □ /forge/routines page renders every JIP routine with last-run status,
+    duration, rows fetched/inserted, error message; killing any routine
+    surfaces red within 60s
+  □ de_routine_runs table exists, populated by every JIP routine
+  □ docs/specs/data-coverage.yaml is the only source of truth for which
+    tables Atlas requires; no hardcoded table-name lists in any script
+  □ scripts/check-data-coverage.py --strict runs in CI; failing health
+    blocks merge
+  □ /forge/data-health page renders 6-dim score per domain (coverage,
+    freshness, completeness, continuity, integrity, provenance)
+  □ Adjustment-factor consumption: ?adjusted=true on price routes returns
+    split/bonus-adjusted series matching manual computation for a known
+    split (e.g. RELIANCE bonus history)
+  □ Gold lens: ?denomination=inr|gold|usd works on instrument + index
+    routes; atlas_gold_rs_cache populated; cache hit < 50ms
+  □ Derivatives routes (/api/derivatives/{symbol}/oi, /api/derivatives/pcr/
+    {symbol}, /api/macros/vix) live and gated on JIP-side health-check
+    pass; PCR for NIFTY matches NSE-published value
+  □ empyrical adopted: hand-rolled Sharpe/Sortino/Calmar/MDD/VaR/CVaR
+    deleted from analytics.py; side-by-side parity to 4 decimals on
+    fixture set; all simulation endpoints return identical numbers
+  □ vectorbt port live: parity vs legacy on 5 reference simulations;
+    ≥10x speedup on a parameter sweep; legacy engine removed (or behind
+    ?engine=legacy for one chunk only)
+  □ Macro routes (/api/macros/yield-curve, /api/macros/fx,
+    /api/macros/policy-events) live and gated on JIP-side health pass
+  □ Insider + bulk/block-deal routes live and gated on JIP-side
+    health pass
+  □ OpenBB + FinanceToolkit pilot on /api/stocks/{symbol}/analysis shows
+    richer structured signals at ≤1.5x latency vs current
+  □ Final coverage gate: scripts/check-data-coverage.py --strict green
+    across every domain with weighted overall ≥85
+  □ All five non-negotiable principles preserved (agile, responsive,
+    non-hardcoded, scalable, failure-localised)
 ```
 
 ---

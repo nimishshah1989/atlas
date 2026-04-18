@@ -1,0 +1,279 @@
+# JIP Data Core → Atlas Contract
+# ────────────────────────────────
+# What JIP Data Core owes Atlas, and the SLA on each.
+# This is the producer-side mirror of data-coverage.yaml.
+#
+# Owned by: jip-data-engine team
+# Read by:  Atlas backend (consumer); JIP routine scheduler
+#
+# Adding a new source:
+#   1. Add the entry below.
+#   2. Add the corresponding table entry in atlas/docs/specs/data-coverage.yaml.
+#   3. Implement the ingestion routine in jip-data-engine/routines/.
+#   4. Wire the routine into the systemd unit catalog.
+#   5. Health-check passes → ship.
+
+version: 1
+data_as_of: 2026-04-18
+
+# ─── Routine status keys ──────────────────────────────────────────────
+# live    = routine running on schedule, table healthy
+# partial = routine running but coverage/freshness gaps
+# missing = routine does not exist; table empty or absent
+# planned = scoped, not built
+
+# ─── Existing routines (LIVE) ─────────────────────────────────────────
+existing:
+
+  - id: equity_ohlcv_daily
+    table: de_equity_ohlcv_y{YEAR}
+    cadence: daily
+    schedule: "0 19 * * 1-5"   # 7pm IST after market close
+    source: NSE bhavcopy + JIP enrichment
+    status: live
+    sla_freshness_hours: 18
+
+  - id: mf_nav_daily
+    table: de_mf_nav_daily_y{YEAR}
+    cadence: daily
+    schedule: "0 23 * * *"
+    source: AMFI NAVAll.txt
+    status: live
+    sla_freshness_hours: 30
+
+  - id: equity_technicals_daily
+    table: de_equity_technical_daily
+    cadence: daily
+    schedule: "30 19 * * 1-5"
+    source: TA-Lib (computed in JIP) over de_equity_ohlcv
+    status: live
+    notes: 140+ indicators per stock per day
+
+  - id: indices_daily
+    table: de_index_prices, de_index_technical_daily
+    cadence: daily
+    status: live
+
+  - id: rs_scores_daily
+    table: de_rs_scores, de_rs_daily_summary
+    cadence: daily
+    status: live
+
+  - id: market_breadth_daily
+    table: de_breadth_daily, de_sector_breadth_daily
+    cadence: daily
+    status: live
+
+  - id: corporate_actions
+    table: de_corporate_actions
+    cadence: daily
+    status: live
+    consumer_gap: de_adjustment_factors_daily not computed downstream
+
+  - id: institutional_flows
+    table: de_institutional_flows
+    cadence: daily
+    status: partial
+    issue: only 5 rows (2026-04-07 onwards); needs 10y backfill
+
+  - id: mf_category_flows
+    table: de_mf_category_flows
+    cadence: monthly
+    schedule: "0 6 8 * *"   # 8th of each month
+    source: AMFI category-wise data
+    status: live
+
+  - id: macros_daily
+    table: de_macro_values
+    cadence: daily
+    status: live
+    coverage_gap: confirm presence of US2Y, US10Y, DXY, MOVE, gold, silver, crude, copper
+
+# ─── New routines required (BUILD ORDER for JIP team) ─────────────────
+new_routines:
+
+  # ─── PRIORITY 1: derivatives + VIX (unlocks options analytics) ─────
+  - id: fo_bhavcopy_daily
+    priority: P1
+    target_table: de_fo_bhavcopy_daily
+    cadence: daily
+    schedule: "30 19 * * 1-5"
+    source_url: https://nsearchives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{YYYYMMDD}_F_0000.csv.zip
+    columns:
+      - {name: trade_date, type: date, nullable: false}
+      - {name: symbol, type: text, nullable: false}
+      - {name: instrument, type: text}                # FUTSTK / OPTSTK / FUTIDX / OPTIDX
+      - {name: expiry_date, type: date, nullable: false}
+      - {name: strike_price, type: numeric(20,4)}
+      - {name: option_type, type: text}               # CE / PE / null for futures
+      - {name: open, type: numeric(20,4)}
+      - {name: high, type: numeric(20,4)}
+      - {name: low, type: numeric(20,4)}
+      - {name: close, type: numeric(20,4)}
+      - {name: settle_price, type: numeric(20,4)}
+      - {name: contracts_traded, type: bigint}
+      - {name: turnover_lacs, type: numeric(20,4)}
+      - {name: open_int, type: bigint}
+      - {name: change_in_oi, type: bigint}
+      - {name: underlying_value, type: numeric(20,4)}
+    natural_key: [trade_date, symbol, expiry_date, strike_price, option_type]
+    indexes: [(trade_date), (symbol, trade_date), (symbol, expiry_date)]
+    history_backfill: 10y
+    notes: |
+      File naming changed Feb-2024 — old format `fo{DDMMYYYY}bhav.csv.zip` for legacy backfill.
+      Source contains both options and futures rows; do NOT split into separate tables.
+
+  - id: fo_participant_oi_daily
+    priority: P1
+    target_table: de_fo_participant_oi_daily
+    cadence: daily
+    schedule: "0 20 * * 1-5"
+    source_url: https://nsearchives.nseindia.com/content/nsccl/fao_participant_oi_{DDMMYYYY}.csv
+    columns:
+      - {name: trade_date, type: date}
+      - {name: client_type, type: text}                # FII / DII / Pro / Client
+      - {name: instrument, type: text}                 # IndexFut / StockFut / IndexOpt / StockOpt
+      - {name: position_type, type: text}              # long / short
+      - {name: contracts, type: bigint}
+      - {name: turnover_cr, type: numeric(20,4)}
+    natural_key: [trade_date, client_type, instrument, position_type]
+    history_backfill: 5y
+    notes: Use this for FII derivative positioning (long/short ratios drive sentiment).
+
+  - id: fo_securities_in_ban
+    priority: P2
+    target_table: de_fo_securities_in_ban
+    cadence: daily
+    source_url: https://nsearchives.nseindia.com/content/fo/fo_secban_{DDMMYYYY}.csv
+    columns: [{name: trade_date, type: date}, {name: symbol, type: text}]
+    history_backfill: 3y
+
+  - id: india_vix_daily
+    priority: P1
+    target_table: de_india_vix_daily
+    cadence: daily
+    schedule: "30 19 * * 1-5"
+    source_url: https://www.nseindia.com/api/historical/vixhistory?from={DDMMYYYY}&to={DDMMYYYY}
+    columns:
+      - {name: trade_date, type: date, nullable: false}
+      - {name: open, type: numeric(20,4)}
+      - {name: high, type: numeric(20,4)}
+      - {name: low, type: numeric(20,4)}
+      - {name: close, type: numeric(20,4)}
+      - {name: prev_close, type: numeric(20,4)}
+      - {name: change, type: numeric(20,4)}
+      - {name: pct_change, type: numeric(20,4)}
+    natural_key: [trade_date]
+    history_backfill: 10y
+    notes: VIX is foundational for fear/greed regime + Atlas market commentary.
+
+  # ─── PRIORITY 2: corporate adjustments + insider/block deals ───────
+  - id: adjustment_factors_daily
+    priority: P1
+    target_table: de_adjustment_factors_daily
+    cadence: daily
+    schedule: "0 21 * * 1-5"   # after corporate_actions ingestion
+    source: derived from de_corporate_actions
+    columns:
+      - {name: symbol, type: text}
+      - {name: trade_date, type: date}
+      - {name: cum_split_factor, type: numeric(20,8)}
+      - {name: cum_bonus_factor, type: numeric(20,8)}
+      - {name: cum_dividend_factor, type: numeric(20,8)}
+      - {name: cum_total_factor, type: numeric(20,8)}
+    natural_key: [symbol, trade_date]
+    notes: |
+      For each stock × trade_date, cumulative factor that converts raw historical
+      price into adjusted price. Atlas applies on read (or JIP can materialize an
+      adjusted OHLCV view).
+
+  - id: insider_trades
+    priority: P2
+    target_table: de_insider_trades
+    cadence: daily
+    source_url: https://www.nseindia.com/api/corporates-pit
+    columns:
+      - {name: symbol, type: text}
+      - {name: filing_date, type: date}
+      - {name: txn_date, type: date}
+      - {name: person_name, type: text}
+      - {name: person_category, type: text}      # Promoter / Director / KMP / etc.
+      - {name: txn_type, type: text}             # Buy / Sell / Pledge / Release
+      - {name: qty, type: bigint}
+      - {name: value_inr, type: numeric(20,4)}
+      - {name: post_holding_pct, type: numeric(20,4)}
+    history_backfill: 3y
+
+  - id: bulk_deals
+    priority: P2
+    target_table: de_bulk_deals
+    cadence: daily
+    source_url: https://nsearchives.nseindia.com/content/equities/bulk.csv
+    columns: [trade_date, symbol, client_name, txn_type, qty, avg_price]
+    history_backfill: 3y
+
+  - id: block_deals
+    priority: P2
+    target_table: de_block_deals
+    cadence: daily
+    source_url: https://nsearchives.nseindia.com/content/equities/block.csv
+    columns: [trade_date, symbol, client_name, txn_type, qty, trade_price]
+    history_backfill: 3y
+
+  # ─── PRIORITY 2: macros + rates + FX ───────────────────────────────
+  - id: india_gsec_yields_daily
+    priority: P2
+    target_table: de_in_gsec_yields_daily
+    cadence: daily
+    source_url: https://www.ccilindia.com/Research/Statistics/Pages/MarketStats.aspx
+    columns: [{name: trade_date, type: date}, {name: tenor_label, type: text}, {name: yield_pct, type: numeric(10,4)}]
+    tenors: [3M, 6M, 1Y, 2Y, 5Y, 10Y, 15Y, 30Y]
+    history_backfill: 10y
+
+  - id: rbi_policy_rates
+    priority: P3
+    target_table: de_rbi_policy_rates
+    cadence: event-driven (RBI policy meets)
+    source: RBI press releases / database
+    columns: [effective_date, repo_rate, reverse_repo, crr, slr, msf, bank_rate]
+
+  - id: fx_rates_daily
+    priority: P2
+    target_table: de_fx_rates_daily
+    cadence: daily
+    source_url: https://www.rbi.org.in/Scripts/ReferenceRateArchive.aspx
+    columns: [trade_date, currency_code, rate_inr]
+    currencies: [USD, EUR, GBP, JPY, CNY, AED]
+    history_backfill: 10y
+
+  # ─── PRIORITY 3: shareholding patterns ─────────────────────────────
+  - id: shareholding_pattern_quarterly
+    priority: P3
+    target_table: de_shareholding_pattern
+    cadence: quarterly
+    source: BSE corporate filings (XBRL)
+    columns:
+      - {name: symbol, type: text}
+      - {name: period_end, type: date}
+      - {name: promoter_pct, type: numeric(10,4)}
+      - {name: promoter_pledged_pct, type: numeric(10,4)}
+      - {name: fii_pct, type: numeric(10,4)}
+      - {name: dii_pct, type: numeric(10,4)}
+      - {name: mf_pct, type: numeric(10,4)}
+      - {name: insurance_pct, type: numeric(10,4)}
+      - {name: public_pct, type: numeric(10,4)}
+    history_backfill: 5y
+
+# ─── Routine observability (every routine MUST emit) ──────────────────
+observability:
+  required_per_routine:
+    - run_id (uuid)
+    - source_url
+    - rows_fetched
+    - rows_inserted
+    - rows_updated
+    - duration_ms
+    - status: success | partial | failed
+    - error_message (nullable)
+  storage_table: de_routine_runs
+  status_endpoint_in_atlas: /api/system/routines   # Atlas surfaces this

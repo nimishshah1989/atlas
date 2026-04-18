@@ -1,0 +1,297 @@
+# Atlas — Data Coverage Manifest
+# ─────────────────────────────────
+# Single source of truth for what data Atlas requires, where it comes from,
+# and what "healthy" means for each table.
+#
+# Consumed by: scripts/check-data-coverage.py
+# Owned by:    Atlas (consumer); JIP Data Core (producer for `de_*` tables)
+#
+# Design principles (do not violate):
+#   1. NO hardcoded table names anywhere except this file. All scripts/services
+#      that need to know about a table MUST read it from here.
+#   2. Adding a new data source = add a row here + restart the routine.
+#      Never code-edit + re-deploy.
+#   3. Every entry is independently scoreable on the 6-dim health rubric.
+#   4. SLAs are declared, not assumed. If a table misses its SLA, it pages.
+
+version: 1
+data_as_of: 2026-04-18
+
+# ─── Health rubric (used by check-data-coverage.py) ────────────────────────
+rubric:
+  dimensions:
+    - coverage       # actual_universe / expected_universe
+    - freshness      # max(date_col) lag vs sla_freshness_days
+    - completeness   # (1 - null_rate) on business-critical columns
+    - continuity     # (1 - gap_rate) on date series for trading days
+    - integrity      # FK validity + dedupe on natural keys
+    - provenance     # ingestion_run_id present + source attributable
+  scoring:
+    pass_threshold: 80     # per-dimension floor
+    overall_threshold: 85  # weighted mean across dimensions
+    weights: {coverage: 25, freshness: 25, completeness: 15, continuity: 15, integrity: 10, provenance: 10}
+
+# ─── Domains ──────────────────────────────────────────────────────────────
+# Each domain groups related tables. A domain's status = min(table.status).
+
+domains:
+
+  equity_ohlcv:
+    description: Daily OHLCV for Indian equities (Nifty universe + extended)
+    owner: jip-data-engine
+    expected_universe: 2000
+    history_years: 10
+    sla_freshness_days: 1
+    natural_key: [symbol, trade_date]
+    tables:
+      - name: de_equity_ohlcv_y{YEAR}
+        partitioned_by: year
+        years: [2007, 2026]
+        business_columns: [symbol, trade_date, open, high, low, close, volume]
+        notes: Year-partitioned. Unpartitioned `de_equity_ohlcv` is empty by design.
+
+  equity_technicals:
+    description: Daily/weekly/monthly technical indicators (TA-Lib computed in JIP)
+    owner: jip-data-engine
+    expected_universe: 2000
+    history_years: 10
+    sla_freshness_days: 1
+    natural_key: [symbol, trade_date]
+    tables:
+      - name: de_equity_technical_daily
+        business_columns: [symbol, trade_date, rsi_14, macd, macd_signal, adx_14, atr_14]
+      - name: de_oscillator_weekly
+        sla_freshness_days: 7
+      - name: de_oscillator_monthly
+        sla_freshness_days: 31
+
+  equity_fundamentals:
+    description: Quarterly fundamentals + history
+    owner: jip-data-engine
+    expected_universe: 2000
+    sla_freshness_days: 95   # quarterly cadence + buffer
+    natural_key: [symbol, period_end]
+    tables:
+      - name: de_equity_fundamentals
+        business_columns: [symbol, pe, pb, roe, debt_to_equity, eps]
+      - name: de_equity_fundamentals_history
+        history_years: 10
+
+  mf:
+    description: Mutual fund NAV + technicals + meta
+    owner: jip-data-engine
+    expected_universe: 800
+    history_years: 10
+    sla_freshness_days: 1
+    natural_key: [scheme_code, nav_date]
+    tables:
+      - name: de_mf_nav_daily_y{YEAR}
+        partitioned_by: year
+        years: [2006, 2026]
+      - name: de_mf_technical_daily
+      - name: de_mf_master
+      - name: de_mf_lifecycle
+      - name: de_mf_holdings
+      - name: de_mf_sector_exposure
+
+  mf_flows:
+    description: Monthly mutual fund flows (AMFI)
+    owner: jip-data-engine
+    expected_universe: null   # category-level
+    sla_freshness_days: 35    # monthly + buffer
+    status: existing
+    tables:
+      - name: de_mf_category_flows
+        business_columns: [category, month, net_inflow_cr, aum_cr]
+
+  indices:
+    description: Indian indices + global top-10 indices
+    owner: jip-data-engine
+    expected_universe: 85    # 75 IN + 10 global
+    history_years: 10
+    sla_freshness_days: 1
+    tables:
+      - name: de_index_master
+      - name: de_index_prices
+      - name: de_index_constituents
+      - name: de_index_technical_daily
+
+  etfs:
+    description: Indian + global ETFs
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    tables:
+      - name: de_etf_master
+      - name: de_etf_ohlcv
+      - name: de_etf_technical_daily
+
+  global_macros:
+    description: Yields, DXY, commodities, VIX, currencies
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    tables:
+      - name: de_macro_master
+      - name: de_macro_values
+      - name: de_global_instrument_master
+      - name: de_global_prices
+      - name: de_global_technical_daily
+
+  relative_strength:
+    description: RS scores per instrument vs benchmark across periods
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    natural_key: [symbol, asof_date, period]
+    tables:
+      - name: de_rs_scores
+        business_columns: [symbol, asof_date, period, rs_score, rs_rank]
+      - name: de_rs_daily_summary
+
+  market_breadth:
+    description: A/D, % above MAs, new highs/lows, sector breadth
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    tables:
+      - name: de_breadth_daily
+      - name: de_sector_breadth_daily
+
+  rrg_quadrants:
+    description: RRG / Goldilocks quadrant classifications
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    tables:
+      - name: de_goldilocks_market_view
+      - name: de_goldilocks_sector_view
+      - name: de_goldilocks_stock_ideas
+
+  corporate_actions:
+    description: Splits, bonus, dividends, mergers + cumulative adjustment factors
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    tables:
+      - name: de_corporate_actions
+        business_columns: [symbol, ex_date, action_type, ratio, dividend_amt]
+      - name: de_adjustment_factors_daily
+        status: gap   # currently empty — must be populated
+        business_columns: [symbol, trade_date, cum_split_factor, cum_dividend_factor]
+
+  institutional_flows:
+    description: FII / DII cash market flows daily
+    owner: jip-data-engine
+    sla_freshness_days: 1
+    history_years: 10
+    natural_key: [flow_date, participant]
+    tables:
+      - name: de_institutional_flows
+        status: gap   # only 5 rows exist; needs historical backfill
+
+  # ─── NEW DOMAINS (to be built in JIP Data Core) ───────────────────────
+
+  derivatives_eod:
+    description: NSE F&O bhavcopy — OI, change-in-OI, volume per contract
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 1
+    history_years: 10
+    natural_key: [symbol, expiry_date, strike, option_type, trade_date]
+    proposed_tables:
+      - name: de_fo_bhavcopy_daily
+        business_columns:
+          [symbol, expiry_date, strike_price, option_type, trade_date,
+           open_int, change_in_oi, volume, settle_price, underlying_value]
+        source: https://nsearchives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{YYYYMMDD}_F_0000.csv.zip
+      - name: de_fo_participant_oi_daily
+        business_columns: [trade_date, participant, instrument, position_type, contracts, value_cr]
+        source: https://nsearchives.nseindia.com/content/nsccl/fao_participant_oi_{DDMMYYYY}.csv
+      - name: de_fo_securities_in_ban
+        business_columns: [trade_date, symbol]
+        source: https://nsearchives.nseindia.com/content/fo/fo_secban_{DDMMYYYY}.csv
+
+  india_vix:
+    description: India VIX historical daily series
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 1
+    history_years: 10
+    proposed_tables:
+      - name: de_india_vix_daily
+        business_columns: [trade_date, open, high, low, close, prev_close]
+        source: https://www.nseindia.com/api/historical/vixhistory
+
+  insider_trading:
+    description: SEBI PIT disclosures (insider + promoter trades)
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 2
+    proposed_tables:
+      - name: de_insider_trades
+        business_columns: [symbol, trade_date, person, person_category, txn_type, qty, value, post_holding_pct]
+        source: https://www.nseindia.com/api/corporates-pit
+
+  block_bulk_deals:
+    description: NSE bulk + block deals daily
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 1
+    proposed_tables:
+      - name: de_bulk_deals
+        source: https://nsearchives.nseindia.com/content/equities/bulk.csv
+      - name: de_block_deals
+        source: https://nsearchives.nseindia.com/content/equities/block.csv
+
+  shareholding_patterns:
+    description: Quarterly shareholding pattern (promoter, FII, DII, public)
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 95
+    proposed_tables:
+      - name: de_shareholding_pattern
+        business_columns: [symbol, period_end, promoter_pct, fii_pct, dii_pct, public_pct, pledged_pct]
+        source: BSE corporate filings (XBRL)
+
+  yield_curve:
+    description: Indian G-Sec yield curve (1y/5y/10y) + RBI policy rates
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 1
+    proposed_tables:
+      - name: de_in_gsec_yields_daily
+        business_columns: [trade_date, tenor_label, yield_pct]
+        source: https://www.ccilindia.com/Research/Statistics/Pages/MarketStats.aspx
+      - name: de_rbi_policy_rates
+        business_columns: [effective_date, repo_rate, reverse_repo, crr, slr]
+        source: RBI press releases
+
+  fx_rates:
+    description: INR cross-rates (USD, EUR, GBP, JPY, CNY)
+    owner: jip-data-engine
+    status: missing
+    sla_freshness_days: 1
+    proposed_tables:
+      - name: de_fx_rates_daily
+        source: https://www.rbi.org.in/Scripts/ReferenceRateArchive.aspx
+
+  global_rates:
+    description: US Treasury 2y/10y, DXY (already partially in de_macro_*)
+    owner: jip-data-engine
+    status: existing
+    note: Verify de_macro_values has all of {US2Y, US10Y, DXY, MOVE}; backfill if missing
+
+  # ─── Atlas-owned derived layers ───────────────────────────────────────
+
+  gold_lens:
+    description: Gold-denominated price + RS view (computed by Atlas, not stored OHLCV)
+    owner: atlas
+    status: gap
+    tables:
+      - name: atlas_gold_rs_cache
+        business_columns: [symbol, asof_date, period, rs_vs_gold]
+        notes: 6 backend refs but 0 rows. V7-7 / V8-2 must populate.
+
+  derived_signals:
+    description: Atlas-derived composite signals (conviction, regime, decisions)
+    owner: atlas
+    status: existing
+    tables:
+      - name: atlas_decisions
+      - name: atlas_intelligence
+      - name: atlas_tv_cache

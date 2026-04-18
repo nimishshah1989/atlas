@@ -11,6 +11,7 @@ Public API:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -111,6 +112,21 @@ def scan_on_startup(ctx: Any) -> DeadmanResult:
     from scripts.forge_runner.state import list_in_progress, reset_to_pending
 
     in_progress = list_in_progress(ctx.state_db_path)
+
+    # When parallel forge-runners share the same state.db (e.g. V11 Fork A + Fork B
+    # partitioned via --filter), each runner must ignore IN_PROGRESS rows that fall
+    # outside its own filter — those rows belong to the *other* fork and that fork's
+    # ownership should not block this one. Without this scoping, the second runner's
+    # deadman scan exits 6 the moment the first runner picks any chunk.
+    filter_regex = getattr(ctx, "filter_regex", None) or getattr(
+        getattr(ctx, "config", None), "filter_regex", None
+    )
+    if filter_regex and filter_regex != ".*":
+        try:
+            pat = re.compile(filter_regex)
+            in_progress = [row for row in in_progress if pat.fullmatch(row.id)]
+        except re.error:
+            pass
 
     if not in_progress:
         return DeadmanResult(action="clean", message="no IN_PROGRESS rows found")
