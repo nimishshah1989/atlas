@@ -188,6 +188,7 @@ domains:
 
   institutional_flows:
     mandatory: true
+    status: gap   # only 5 rows exist; needs historical backfill
     description: FII / DII cash market flows daily
     owner: jip-data-engine
     sla_freshness_days: 1

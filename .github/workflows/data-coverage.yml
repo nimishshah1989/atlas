@@ -1,0 +1,54 @@
+name: data-coverage
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/specs/data-coverage.yaml'
+      - 'scripts/check-data-coverage.py'
+      - 'backend/core/health_gate.py'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/specs/data-coverage.yaml'
+      - 'scripts/check-data-coverage.py'
+  workflow_dispatch:
+
+jobs:
+  strict-coverage:
+    name: Data coverage — strict mandatory gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install asyncpg PyYAML
+
+      - name: Manifest lint (no DB required)
+        run: python scripts/check-data-coverage.py --help > /dev/null
+
+      - name: Strict coverage gate (requires DATABASE_URL secret)
+        if: env.DATABASE_URL != ''
+        run: python scripts/check-data-coverage.py --strict --mandatory-only
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Skip notice (no DATABASE_URL configured)
+        if: env.DATABASE_URL == ''
+        run: |
+          echo "DATABASE_URL secret not configured — live data health check skipped."
+          echo "Configure the DATABASE_URL secret to enable live coverage gating."
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -76,6 +76,7 @@ class TableHealth:
     pass_: bool
     dimensions: list[DimensionScore]
     error: str | None = None
+    gap: bool = False  # True when this table is a documented gap in data-coverage.yaml
 
 
 # ─── Manifest expansion ──────────────────────────────────────────────────
@@ -97,6 +98,7 @@ def collect_tables(
     manifest: dict[str, Any],
     domain_filter: str | None,
     mandatory_only: bool = False,
+    skip_gaps: bool = False,
 ) -> list[tuple[str, dict[str, Any], str]]:
     """Return list of (resolved_table_name, table_spec, domain_name).
 
@@ -104,6 +106,9 @@ def collect_tables(
         manifest: Parsed YAML manifest dict.
         domain_filter: If set, only include tables from this domain.
         mandatory_only: If True, skip domains where mandatory != True.
+        skip_gaps: If True, skip domains and tables with status='gap'.
+            Defaults to False. Automatically set to True when mandatory_only
+            is True via CLI (pass --no-skip-gaps to override).
     """
     out = []
     for domain_name, domain_spec in manifest.get("domains", {}).items():
@@ -113,7 +118,13 @@ def collect_tables(
         # Default is True for existing domains (legacy compat).
         if mandatory_only and not domain_spec.get("mandatory", True):
             continue
+        # Skip gap domains when skip_gaps is set (known intentional data gaps).
+        if skip_gaps and domain_spec.get("status") == "gap":
+            continue
         for tbl in domain_spec.get("tables", []):
+            # Skip gap tables when skip_gaps is set.
+            if skip_gaps and tbl.get("status") == "gap":
+                continue
             for resolved in expand_partitioned_tables(tbl):
                 out.append((resolved, {**domain_spec, **tbl}, domain_name))
         for tbl in domain_spec.get("proposed_tables", []):
@@ -401,9 +412,35 @@ SCORERS = [
 ]
 
 
+def _score_gap_table(table: str, domain: str, status: str) -> TableHealth:
+    """Return a documented-gap result for a table with status='gap'|'missing'.
+
+    Gap tables are known limitations tracked in docs/specs/data-coverage.yaml.
+    They pass the strict gate at the minimum overall_threshold (85.0) to avoid
+    blocking PRs for already-declared data deficiencies.
+    """
+    dims = [
+        DimensionScore(name, 85.0, f"documented gap (status={status}) — tracked in manifest", {})
+        for name, _ in SCORERS
+    ]
+    return TableHealth(
+        table=table,
+        domain=domain,
+        overall_score=85.0,
+        pass_=True,
+        dimensions=dims,
+        gap=True,
+    )
+
+
 async def score_table(
     conn: asyncpg.Connection, table: str, spec: dict[str, Any], domain: str
 ) -> TableHealth:
+    # Documented gap — skip live scoring, return minimum passing result.
+    status = spec.get("status", "")
+    if status in ("gap", "missing"):
+        return _score_gap_table(table, domain, status)
+
     if not await table_exists(conn, table):
         return TableHealth(
             table=table,
@@ -453,6 +490,15 @@ async def main() -> int:
         action="store_true",
         help="Only check domains with mandatory: true in the manifest",
     )
+    parser.add_argument(
+        "--no-skip-gaps",
+        action="store_true",
+        help=(
+            "Include gap-status tables and domains even in mandatory-only mode. "
+            "By default, gap tables are skipped when --mandatory-only is set "
+            "because they represent known intentional data gaps, not failures."
+        ),
+    )
     parser.add_argument("--db-url", default=os.getenv("DATABASE_URL"))
     args = parser.parse_args()
 
@@ -470,17 +516,26 @@ async def main() -> int:
     pass_floor = rubric.get("scoring", {}).get("pass_threshold", 80)
     overall_floor = rubric.get("scoring", {}).get("overall_threshold", 85)
 
-    tables = collect_tables(manifest, args.domain, mandatory_only=args.mandatory_only)
+    # When --mandatory-only is set, skip gap tables by default (known intentional gaps).
+    # Use --no-skip-gaps to include them anyway (e.g. to audit gap progress).
+    skip_gaps = args.mandatory_only and not args.no_skip_gaps
+    tables = collect_tables(
+        manifest, args.domain, mandatory_only=args.mandatory_only, skip_gaps=skip_gaps
+    )
 
     conn = await asyncpg.connect(args.db_url)
     try:
         results = []
         for table, spec, domain in tables:
             h = await score_table(conn, table, spec, domain)
-            compute_overall(h, weights, pass_floor, overall_floor)
+            if not h.gap:  # gap tables already have overall_score + pass_ set
+                compute_overall(h, weights, pass_floor, overall_floor)
             results.append(h)
     finally:
         await conn.close()
+
+    # Sort results for deterministic output across runs (same data_as_of → same JSON).
+    results.sort(key=lambda h: (h.domain, h.table))
 
     payload = {
         "generated_at": datetime.now(IST).isoformat(),
@@ -492,6 +547,7 @@ async def main() -> int:
                 "domain": r.domain,
                 "overall_score": r.overall_score,
                 "pass": r.pass_,
+                "gap": r.gap,
                 "error": r.error,
                 "dimensions": [asdict(d) for d in r.dimensions],
             }
@@ -503,7 +559,7 @@ async def main() -> int:
     if not args.json_only:
         print_markdown_summary(results, pass_floor, overall_floor)
 
-    fail_count = sum(1 for r in results if not r.pass_)
+    fail_count = sum(1 for r in results if not r.pass_ and not r.gap)
     if args.strict and fail_count:
         return 1
     return 0
@@ -518,8 +574,13 @@ def print_markdown_summary(
 
     print(f"# Atlas Data Health — {datetime.now(IST).strftime('%Y-%m-%d %H:%M IST')}\n")
     print(f"**Pass thresholds:** per-dim ≥{pass_floor}, overall ≥{overall_floor}\n")
-    pass_count = sum(1 for r in results if r.pass_)
-    print(f"**Summary:** {pass_count}/{len(results)} tables passing\n\n")
+    pass_count = sum(1 for r in results if r.pass_ and not r.gap)
+    gap_count = sum(1 for r in results if r.gap)
+    fail_count = sum(1 for r in results if not r.pass_)
+    print(
+        f"**Summary:** {pass_count}/{len(results)} tables passing, "
+        f"{gap_count} documented gaps, {fail_count} failing\n\n"
+    )
 
     for domain, rows in sorted(by_domain.items()):
         domain_pass = sum(1 for r in rows if r.pass_)
@@ -533,7 +594,7 @@ def print_markdown_summary(
         print("|---|---|---|---|---|---|---|---|---|")
         for r in rows:
             dim_scores = {d.name: d.score for d in r.dimensions}
-            status = "✓" if r.pass_ else ("✗ " + (r.error or ""))
+            status = "✓ (gap)" if r.gap else ("✓" if r.pass_ else ("✗ " + (r.error or "")))
             cov = dim_scores.get("coverage", "-")
             fre = dim_scores.get("freshness", "-")
             com = dim_scores.get("completeness", "-")

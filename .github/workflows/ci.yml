@@ -48,11 +48,11 @@ jobs:
 
       - name: Data coverage check (mandatory domains)
         run: |
-          if [ -n "${{ env.DATABASE_URL }}" ]; then
-            python scripts/check-data-coverage.py --strict --mandatory-only
-          else
-            echo "DATABASE_URL not set — skipping live data health check"
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "::warning::DATABASE_URL not set — data coverage gate skipped (configure secrets.DATABASE_URL to gate)"
+            exit 0
           fi
+          python scripts/check-data-coverage.py --strict --mandatory-only
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
