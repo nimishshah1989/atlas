@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-18T09:44:46.729818+05:30",
+  "generated_at": "2026-04-18T19:59:20.204108+05:30",
   "manifest_version": 1,
   "rubric": {
     "dimensions": [
@@ -25,10 +25,652 @@
   },
   "tables": [
     {
+      "table": "de_block_deals",
+      "domain": "block_bulk_deals",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_bulk_deals",
+      "domain": "block_bulk_deals",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_adjustment_factors_daily",
+      "domain": "corporate_actions",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_corporate_actions",
+      "domain": "corporate_actions",
+      "overall_score": 81.1,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "14,964 rows (no universe expectation)",
+          "raw": {
+            "rows": 14964
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(ex_date)=2026-04-30, lag=-12d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-30",
+            "lag_days": -12,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 40.0,
+          "detail": "avg null rate 60.00% across 5 cols",
+          "raw": {
+            "null_rates": {
+              "symbol": 1.0,
+              "ex_date": 0.0,
+              "action_type": 0.0,
+              "ratio": 1.0,
+              "dividend_amt": 1.0
+            }
+          }
+        },
+        {
+          "name": "continuity",
+          "score": 74.2,
+          "detail": "1241 distinct dates over 2341d span (expected ~1672 trading days)",
+          "raw": {
+            "distinct_dates": 1241,
+            "span_days": 2341
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_fo_bhavcopy_daily",
+      "domain": "derivatives_eod",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_fo_participant_oi_daily",
+      "domain": "derivatives_eod",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_fo_securities_in_ban",
+      "domain": "derivatives_eod",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "atlas_decisions",
+      "domain": "derived_signals",
+      "overall_score": 79.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "418 rows (no universe expectation)",
+          "raw": {
+            "rows": 418
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 40.0,
+          "detail": "max(created_at)=2026-04-14, lag=4d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-14",
+            "lag_days": 4,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "2 distinct dates over 1d span (expected ~0 trading days)",
+          "raw": {
+            "distinct_dates": 2,
+            "span_days": 1
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "atlas_intelligence",
+      "domain": "derived_signals",
+      "overall_score": 79.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "688 rows (no universe expectation)",
+          "raw": {
+            "rows": 688
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 40.0,
+          "detail": "max(created_at)=2026-04-14, lag=4d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-14",
+            "lag_days": 4,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "688 distinct dates over 1d span (expected ~0 trading days)",
+          "raw": {
+            "distinct_dates": 688,
+            "span_days": 1
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "atlas_tv_cache",
+      "domain": "derived_signals",
+      "overall_score": 65.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "3 rows (no universe expectation)",
+          "raw": {
+            "rows": 3
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "no date column found",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "no date col \u2014 skipped",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 0.0,
+          "detail": "provenance markers present: []",
+          "raw": {
+            "present": []
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_equity_fundamentals",
+      "domain": "equity_fundamentals",
+      "overall_score": 48.4,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 0.5,
+          "detail": "2,272 / 500,000 expected (0.5%)",
+          "raw": {
+            "rows": 2272,
+            "expected": 500000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(as_of_date)=2026-04-15, lag=3d, sla=95d",
+          "raw": {
+            "max_date": "2026-04-15",
+            "lag_days": 3,
+            "sla_days": 95
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 15.0,
+          "detail": "avg null rate 84.98% across 6 cols",
+          "raw": {
+            "null_rates": {
+              "symbol": 1.0,
+              "pe": 1.0,
+              "pb": 1.0,
+              "roe": 1.0,
+              "debt_to_equity": 0.09859154929577464,
+              "eps": 1.0
+            }
+          }
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "non-daily \u2014 skipped",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"symbol\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 60.0,
+          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "source",
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_equity_fundamentals_history",
+      "domain": "equity_fundamentals",
+      "overall_score": 61.3,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 1.1,
+          "detail": "55,140 / 5,000,000 expected (1.1%)",
+          "raw": {
+            "rows": 55140,
+            "expected": 5000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(created_at)=2026-04-15, lag=3d, sla=95d",
+          "raw": {
+            "max_date": "2026-04-15",
+            "lag_days": 3,
+            "sla_days": 95
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "non-daily \u2014 skipped",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"symbol\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 60.0,
+          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "source",
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "table": "de_equity_ohlcv_y2007",
       "domain": "equity_ohlcv",
-      "overall_score": 30.2,
+      "overall_score": 55.2,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -42,12 +684,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2007-12-31, lag=6683d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2007) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2007-12-31",
-            "lag_days": 6683,
-            "sla_days": 1
+            "table_year": 2007,
+            "archived": true
           }
         },
         {
@@ -97,8 +738,9 @@
     {
       "table": "de_equity_ohlcv_y2008",
       "domain": "equity_ohlcv",
-      "overall_score": 30.2,
+      "overall_score": 55.2,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -112,12 +754,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2008-12-31, lag=6317d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2008) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2008-12-31",
-            "lag_days": 6317,
-            "sla_days": 1
+            "table_year": 2008,
+            "archived": true
           }
         },
         {
@@ -167,8 +808,9 @@
     {
       "table": "de_equity_ohlcv_y2009",
       "domain": "equity_ohlcv",
-      "overall_score": 30.4,
+      "overall_score": 55.4,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -182,12 +824,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2009-12-30, lag=5953d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2009) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2009-12-30",
-            "lag_days": 5953,
-            "sla_days": 1
+            "table_year": 2009,
+            "archived": true
           }
         },
         {
@@ -237,8 +878,9 @@
     {
       "table": "de_equity_ohlcv_y2010",
       "domain": "equity_ohlcv",
-      "overall_score": 30.9,
+      "overall_score": 55.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -252,12 +894,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2010-12-30, lag=5588d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2010) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2010-12-30",
-            "lag_days": 5588,
-            "sla_days": 1
+            "table_year": 2010,
+            "archived": true
           }
         },
         {
@@ -307,8 +948,9 @@
     {
       "table": "de_equity_ohlcv_y2011",
       "domain": "equity_ohlcv",
-      "overall_score": 30.7,
+      "overall_score": 55.7,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -322,12 +964,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2011-12-29, lag=5224d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2011) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2011-12-29",
-            "lag_days": 5224,
-            "sla_days": 1
+            "table_year": 2011,
+            "archived": true
           }
         },
         {
@@ -377,8 +1018,9 @@
     {
       "table": "de_equity_ohlcv_y2012",
       "domain": "equity_ohlcv",
-      "overall_score": 30.9,
+      "overall_score": 55.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -392,12 +1034,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2012-12-31, lag=4856d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2012) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2012-12-31",
-            "lag_days": 4856,
-            "sla_days": 1
+            "table_year": 2012,
+            "archived": true
           }
         },
         {
@@ -447,8 +1088,9 @@
     {
       "table": "de_equity_ohlcv_y2013",
       "domain": "equity_ohlcv",
-      "overall_score": 30.8,
+      "overall_score": 55.8,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -462,12 +1104,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2013-12-31, lag=4491d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2013) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2013-12-31",
-            "lag_days": 4491,
-            "sla_days": 1
+            "table_year": 2013,
+            "archived": true
           }
         },
         {
@@ -517,8 +1158,9 @@
     {
       "table": "de_equity_ohlcv_y2014",
       "domain": "equity_ohlcv",
-      "overall_score": 30.5,
+      "overall_score": 55.5,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -532,12 +1174,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2014-12-31, lag=4126d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2014) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2014-12-31",
-            "lag_days": 4126,
-            "sla_days": 1
+            "table_year": 2014,
+            "archived": true
           }
         },
         {
@@ -587,8 +1228,9 @@
     {
       "table": "de_equity_ohlcv_y2015",
       "domain": "equity_ohlcv",
-      "overall_score": 30.7,
+      "overall_score": 55.7,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -602,12 +1244,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2015-12-31, lag=3761d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2015) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2015-12-31",
-            "lag_days": 3761,
-            "sla_days": 1
+            "table_year": 2015,
+            "archived": true
           }
         },
         {
@@ -657,27 +1298,27 @@
     {
       "table": "de_equity_ohlcv_y2016",
       "domain": "equity_ohlcv",
-      "overall_score": 41.7,
+      "overall_score": 66.7,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 43.1,
-          "detail": "215,406 / 500,000 expected (43.1%)",
+          "score": 43.3,
+          "detail": "216,513 / 500,000 expected (43.3%)",
           "raw": {
-            "rows": 215406,
+            "rows": 216513,
             "expected": 500000
           }
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2016-12-30, lag=3396d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2016) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2016-12-30",
-            "lag_days": 3396,
-            "sla_days": 1
+            "table_year": 2016,
+            "archived": true
           }
         },
         {
@@ -727,8 +1368,9 @@
     {
       "table": "de_equity_ohlcv_y2017",
       "domain": "equity_ohlcv",
-      "overall_score": 46.5,
+      "overall_score": 71.5,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -742,12 +1384,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2017-12-29, lag=3032d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2017) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2017-12-29",
-            "lag_days": 3032,
-            "sla_days": 1
+            "table_year": 2017,
+            "archived": true
           }
         },
         {
@@ -797,8 +1438,9 @@
     {
       "table": "de_equity_ohlcv_y2018",
       "domain": "equity_ohlcv",
-      "overall_score": 47.6,
+      "overall_score": 72.6,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -812,12 +1454,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2018-12-31, lag=2665d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2018) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2018-12-31",
-            "lag_days": 2665,
-            "sla_days": 1
+            "table_year": 2018,
+            "archived": true
           }
         },
         {
@@ -867,8 +1508,9 @@
     {
       "table": "de_equity_ohlcv_y2019",
       "domain": "equity_ohlcv",
-      "overall_score": 46.6,
+      "overall_score": 71.6,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -882,12 +1524,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2019-12-31, lag=2300d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2019) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2019-12-31",
-            "lag_days": 2300,
-            "sla_days": 1
+            "table_year": 2019,
+            "archived": true
           }
         },
         {
@@ -937,27 +1578,27 @@
     {
       "table": "de_equity_ohlcv_y2020",
       "domain": "equity_ohlcv",
-      "overall_score": 53.8,
+      "overall_score": 71.1,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 88.5,
-          "detail": "442,608 / 500,000 expected (88.5%)",
+          "score": 57.6,
+          "detail": "288,150 / 500,000 expected (57.6%)",
           "raw": {
-            "rows": 442608,
+            "rows": 288150,
             "expected": 500000
           }
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2020-12-31, lag=1934d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2020) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2020-12-31",
-            "lag_days": 1934,
-            "sla_days": 1
+            "table_year": 2020,
+            "archived": true
           }
         },
         {
@@ -1007,8 +1648,9 @@
     {
       "table": "de_equity_ohlcv_y2021",
       "domain": "equity_ohlcv",
-      "overall_score": 50.3,
+      "overall_score": 75.3,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1022,12 +1664,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2021-12-31, lag=1569d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2021) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2021-12-31",
-            "lag_days": 1569,
-            "sla_days": 1
+            "table_year": 2021,
+            "archived": true
           }
         },
         {
@@ -1077,8 +1718,9 @@
     {
       "table": "de_equity_ohlcv_y2022",
       "domain": "equity_ohlcv",
-      "overall_score": 52.3,
+      "overall_score": 77.3,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1092,12 +1734,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2022-12-30, lag=1205d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2022) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2022-12-30",
-            "lag_days": 1205,
-            "sla_days": 1
+            "table_year": 2022,
+            "archived": true
           }
         },
         {
@@ -1147,8 +1788,9 @@
     {
       "table": "de_equity_ohlcv_y2023",
       "domain": "equity_ohlcv",
-      "overall_score": 53.7,
+      "overall_score": 78.7,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1162,12 +1804,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2023-12-29, lag=841d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2023) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2023-12-29",
-            "lag_days": 841,
-            "sla_days": 1
+            "table_year": 2023,
+            "archived": true
           }
         },
         {
@@ -1217,8 +1858,9 @@
     {
       "table": "de_equity_ohlcv_y2024",
       "domain": "equity_ohlcv",
-      "overall_score": 43.5,
+      "overall_score": 68.5,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1232,12 +1874,11 @@
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "max(date)=2024-12-31, lag=473d, sla=1d",
+          "score": 100.0,
+          "detail": "archived partition (year=2024) \u2014 SLA not applicable",
           "raw": {
-            "max_date": "2024-12-31",
-            "lag_days": 473,
-            "sla_days": 1
+            "table_year": 2024,
+            "archived": true
           }
         },
         {
@@ -1289,6 +1930,7 @@
       "domain": "equity_ohlcv",
       "overall_score": 56.7,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1357,26 +1999,27 @@
     {
       "table": "de_equity_ohlcv_y2026",
       "domain": "equity_ohlcv",
-      "overall_score": 44.5,
+      "overall_score": 64.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 31.8,
-          "detail": "159,241 / 500,000 expected (31.8%)",
+          "score": 33.2,
+          "detail": "166,003 / 500,000 expected (33.2%)",
           "raw": {
-            "rows": 159241,
+            "rows": 166003,
             "expected": 500000
           }
         },
         {
           "name": "freshness",
-          "score": 20.0,
-          "detail": "max(date)=2026-04-13, lag=5d, sla=1d",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-17, lag=1d, sla=1d",
           "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
+            "max_date": "2026-04-17",
+            "lag_days": 1,
             "sla_days": 1
           }
         },
@@ -1398,11 +2041,11 @@
         },
         {
           "name": "continuity",
-          "score": 97.9,
-          "detail": "72 distinct dates over 103d span (expected ~73 trading days)",
+          "score": 98.1,
+          "detail": "75 distinct dates over 107d span (expected ~76 trading days)",
           "raw": {
-            "distinct_dates": 72,
-            "span_days": 103
+            "distinct_dates": 75,
+            "span_days": 107
           }
         },
         {
@@ -1427,16 +2070,17 @@
     {
       "table": "de_equity_technical_daily",
       "domain": "equity_technicals",
-      "overall_score": 47.9,
+      "overall_score": 49.0,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 69.2,
-          "detail": "3,461,004 / 5,000,000 expected (69.2%)",
+          "score": 73.9,
+          "detail": "3,693,512 / 5,000,000 expected (73.9%)",
           "raw": {
-            "rows": 3461004,
+            "rows": 3693512,
             "expected": 5000000
           }
         },
@@ -1453,16 +2097,16 @@
         {
           "name": "completeness",
           "score": 56.7,
-          "detail": "avg null rate 43.27% across 7 cols",
+          "detail": "avg null rate 43.28% across 7 cols",
           "raw": {
             "null_rates": {
               "symbol": 1.0,
               "trade_date": 1.0,
-              "rsi_14": 0.00506,
+              "rsi_14": 0.00556,
               "macd": 1.0,
-              "macd_signal": 0.01332,
-              "adx_14": 0.005,
-              "atr_14": 0.00526
+              "macd_signal": 0.01468,
+              "adx_14": 0.00472,
+              "atr_14": 0.00448
             }
           }
         },
@@ -1495,10 +2139,68 @@
       ]
     },
     {
+      "table": "de_oscillator_monthly",
+      "domain": "equity_technicals",
+      "overall_score": 57.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 0.1,
+          "detail": "4,497 / 5,000,000 expected (0.1%)",
+          "raw": {
+            "rows": 4497,
+            "expected": 5000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-13, lag=5d, sla=31d",
+          "raw": {
+            "max_date": "2026-04-13",
+            "lag_days": 5,
+            "sla_days": 31
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "non-daily \u2014 skipped",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"symbol\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 20.0,
+          "detail": "provenance markers present: ['created_at']",
+          "raw": {
+            "present": [
+              "created_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "table": "de_oscillator_weekly",
       "domain": "equity_technicals",
       "overall_score": 50.4,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -1554,2052 +2256,11 @@
       ]
     },
     {
-      "table": "de_oscillator_monthly",
-      "domain": "equity_technicals",
-      "overall_score": 57.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.1,
-          "detail": "4,497 / 5,000,000 expected (0.1%)",
-          "raw": {
-            "rows": 4497,
-            "expected": 5000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 100.0,
-          "detail": "max(date)=2026-04-13, lag=5d, sla=31d",
-          "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
-            "sla_days": 31
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "non-daily \u2014 skipped",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"symbol\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 20.0,
-          "detail": "provenance markers present: ['created_at']",
-          "raw": {
-            "present": [
-              "created_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_equity_fundamentals",
-      "domain": "equity_fundamentals",
-      "overall_score": 48.4,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.5,
-          "detail": "2,272 / 500,000 expected (0.5%)",
-          "raw": {
-            "rows": 2272,
-            "expected": 500000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 100.0,
-          "detail": "max(as_of_date)=2026-04-15, lag=3d, sla=95d",
-          "raw": {
-            "max_date": "2026-04-15",
-            "lag_days": 3,
-            "sla_days": 95
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 15.0,
-          "detail": "avg null rate 84.98% across 6 cols",
-          "raw": {
-            "null_rates": {
-              "symbol": 1.0,
-              "pe": 1.0,
-              "pb": 1.0,
-              "roe": 1.0,
-              "debt_to_equity": 0.09859154929577464,
-              "eps": 1.0
-            }
-          }
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "non-daily \u2014 skipped",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"symbol\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 60.0,
-          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "source",
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_equity_fundamentals_history",
-      "domain": "equity_fundamentals",
-      "overall_score": 61.3,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 1.1,
-          "detail": "55,140 / 5,000,000 expected (1.1%)",
-          "raw": {
-            "rows": 55140,
-            "expected": 5000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 100.0,
-          "detail": "max(created_at)=2026-04-15, lag=3d, sla=95d",
-          "raw": {
-            "max_date": "2026-04-15",
-            "lag_days": 3,
-            "sla_days": 95
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "non-daily \u2014 skipped",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"symbol\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 60.0,
-          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "source",
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2006",
-      "domain": "mf",
-      "overall_score": 36.5,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 11.3,
-          "detail": "22,697 / 200,000 expected (11.3%)",
-          "raw": {
-            "rows": 22697,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2006-12-29, lag=7050d, sla=1d",
-          "raw": {
-            "max_date": "2006-12-29",
-            "lag_days": 7050,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 97.9,
-          "detail": "191 distinct dates over 273d span (expected ~195 trading days)",
-          "raw": {
-            "distinct_dates": 191,
-            "span_days": 273
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2007",
-      "domain": "mf",
-      "overall_score": 37.9,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 17.6,
-          "detail": "35,141 / 200,000 expected (17.6%)",
-          "raw": {
-            "rows": 35141,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2007-12-31, lag=6683d, sla=1d",
-          "raw": {
-            "max_date": "2007-12-31",
-            "lag_days": 6683,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 96.9,
-          "detail": "252 distinct dates over 364d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 252,
-            "span_days": 364
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2008",
-      "domain": "mf",
-      "overall_score": 38.6,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 21.8,
-          "detail": "43,512 / 200,000 expected (21.8%)",
-          "raw": {
-            "rows": 43512,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2008-12-31, lag=6317d, sla=1d",
-          "raw": {
-            "max_date": "2008-12-31",
-            "lag_days": 6317,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 94.5,
-          "detail": "247 distinct dates over 366d span (expected ~261 trading days)",
-          "raw": {
-            "distinct_dates": 247,
-            "span_days": 366
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2009",
-      "domain": "mf",
-      "overall_score": 39.3,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 25.1,
-          "detail": "50,230 / 200,000 expected (25.1%)",
-          "raw": {
-            "rows": 50230,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2009-12-31, lag=5952d, sla=1d",
-          "raw": {
-            "max_date": "2009-12-31",
-            "lag_days": 5952,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 93.2,
-          "detail": "243 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 243,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2010",
-      "domain": "mf",
-      "overall_score": 40.8,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 29.0,
-          "detail": "57,910 / 200,000 expected (29.0%)",
-          "raw": {
-            "rows": 57910,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2010-12-31, lag=5587d, sla=1d",
-          "raw": {
-            "max_date": "2010-12-31",
-            "lag_days": 5587,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 96.7,
-          "detail": "250 distinct dates over 362d span (expected ~258 trading days)",
-          "raw": {
-            "distinct_dates": 250,
-            "span_days": 362
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2011",
-      "domain": "mf",
-      "overall_score": 40.8,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 30.2,
-          "detail": "60,352 / 200,000 expected (30.2%)",
-          "raw": {
-            "rows": 60352,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2011-12-30, lag=5223d, sla=1d",
-          "raw": {
-            "max_date": "2011-12-30",
-            "lag_days": 5223,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.1,
-          "detail": "246 distinct dates over 362d span (expected ~258 trading days)",
-          "raw": {
-            "distinct_dates": 246,
-            "span_days": 362
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2012",
-      "domain": "mf",
-      "overall_score": 41.2,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 31.1,
-          "detail": "62,111 / 200,000 expected (31.1%)",
-          "raw": {
-            "rows": 62111,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2012-12-31, lag=4856d, sla=1d",
-          "raw": {
-            "max_date": "2012-12-31",
-            "lag_days": 4856,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 96.3,
-          "detail": "251 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 251,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2013",
-      "domain": "mf",
-      "overall_score": 41.4,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 30.6,
-          "detail": "61,123 / 200,000 expected (30.6%)",
-          "raw": {
-            "rows": 61123,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2013-12-31, lag=4491d, sla=1d",
-          "raw": {
-            "max_date": "2013-12-31",
-            "lag_days": 4491,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 98.2,
-          "detail": "256 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 256,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2014",
-      "domain": "mf",
-      "overall_score": 41.1,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 32.9,
-          "detail": "65,848 / 200,000 expected (32.9%)",
-          "raw": {
-            "rows": 65848,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2014-12-31, lag=4126d, sla=1d",
-          "raw": {
-            "max_date": "2014-12-31",
-            "lag_days": 4126,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 92.8,
-          "detail": "242 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 242,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2015",
-      "domain": "mf",
-      "overall_score": 42.1,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 35.4,
-          "detail": "70,835 / 200,000 expected (35.4%)",
-          "raw": {
-            "rows": 70835,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2015-12-31, lag=3761d, sla=1d",
-          "raw": {
-            "max_date": "2015-12-31",
-            "lag_days": 3761,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.1,
-          "detail": "248 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 248,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2016",
-      "domain": "mf",
-      "overall_score": 42.6,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 37.6,
-          "detail": "75,184 / 200,000 expected (37.6%)",
-          "raw": {
-            "rows": 75184,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2016-12-31, lag=3395d, sla=1d",
-          "raw": {
-            "max_date": "2016-12-31",
-            "lag_days": 3395,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 94.9,
-          "detail": "248 distinct dates over 366d span (expected ~261 trading days)",
-          "raw": {
-            "distinct_dates": 248,
-            "span_days": 366
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2017",
-      "domain": "mf",
-      "overall_score": 43.5,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 39.3,
-          "detail": "78,577 / 200,000 expected (39.3%)",
-          "raw": {
-            "rows": 78577,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2017-12-30, lag=3031d, sla=1d",
-          "raw": {
-            "max_date": "2017-12-30",
-            "lag_days": 3031,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 97.6,
-          "detail": "253 distinct dates over 363d span (expected ~259 trading days)",
-          "raw": {
-            "distinct_dates": 253,
-            "span_days": 363
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2018",
-      "domain": "mf",
-      "overall_score": 43.2,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 40.1,
-          "detail": "80,280 / 200,000 expected (40.1%)",
-          "raw": {
-            "rows": 80280,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2018-12-31, lag=2665d, sla=1d",
-          "raw": {
-            "max_date": "2018-12-31",
-            "lag_days": 2665,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 94.7,
-          "detail": "247 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 247,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2019",
-      "domain": "mf",
-      "overall_score": 43.7,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 41.5,
-          "detail": "82,959 / 200,000 expected (41.5%)",
-          "raw": {
-            "rows": 82959,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2019-12-31, lag=2300d, sla=1d",
-          "raw": {
-            "max_date": "2019-12-31",
-            "lag_days": 2300,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.5,
-          "detail": "249 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 249,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2020",
-      "domain": "mf",
-      "overall_score": 45.5,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 48.0,
-          "detail": "95,919 / 200,000 expected (48.0%)",
-          "raw": {
-            "rows": 95919,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2020-12-31, lag=1934d, sla=1d",
-          "raw": {
-            "max_date": "2020-12-31",
-            "lag_days": 1934,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 96.4,
-          "detail": "252 distinct dates over 366d span (expected ~261 trading days)",
-          "raw": {
-            "distinct_dates": 252,
-            "span_days": 366
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2021",
-      "domain": "mf",
-      "overall_score": 46.7,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 54.0,
-          "detail": "108,067 / 200,000 expected (54.0%)",
-          "raw": {
-            "rows": 108067,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2021-12-31, lag=1569d, sla=1d",
-          "raw": {
-            "max_date": "2021-12-31",
-            "lag_days": 1569,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 94.7,
-          "detail": "247 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 247,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2022",
-      "domain": "mf",
-      "overall_score": 49.4,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 64.0,
-          "detail": "128,036 / 200,000 expected (64.0%)",
-          "raw": {
-            "rows": 128036,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2022-12-30, lag=1205d, sla=1d",
-          "raw": {
-            "max_date": "2022-12-30",
-            "lag_days": 1205,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.9,
-          "detail": "248 distinct dates over 362d span (expected ~258 trading days)",
-          "raw": {
-            "distinct_dates": 248,
-            "span_days": 362
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2023",
-      "domain": "mf",
-      "overall_score": 51.5,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 73.0,
-          "detail": "145,993 / 200,000 expected (73.0%)",
-          "raw": {
-            "rows": 145993,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2023-12-29, lag=841d, sla=1d",
-          "raw": {
-            "max_date": "2023-12-29",
-            "lag_days": 841,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 94.8,
-          "detail": "245 distinct dates over 362d span (expected ~258 trading days)",
-          "raw": {
-            "distinct_dates": 245,
-            "span_days": 362
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2024",
-      "domain": "mf",
-      "overall_score": 55.2,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 87.5,
-          "detail": "175,052 / 200,000 expected (87.5%)",
-          "raw": {
-            "rows": 175052,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2024-12-31, lag=473d, sla=1d",
-          "raw": {
-            "max_date": "2024-12-31",
-            "lag_days": 473,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.6,
-          "detail": "250 distinct dates over 366d span (expected ~261 trading days)",
-          "raw": {
-            "distinct_dates": 250,
-            "span_days": 366
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2025",
-      "domain": "mf",
-      "overall_score": 58.6,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "215,304 / 200,000 expected (100.0%)",
-          "raw": {
-            "rows": 215304,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(nav_date)=2025-12-31, lag=108d, sla=1d",
-          "raw": {
-            "max_date": "2025-12-31",
-            "lag_days": 108,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 97.4,
-          "detail": "254 distinct dates over 365d span (expected ~260 trading days)",
-          "raw": {
-            "distinct_dates": 254,
-            "span_days": 365
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_nav_daily_y2026",
-      "domain": "mf",
-      "overall_score": 45.7,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 29.9,
-          "detail": "59,807 / 200,000 expected (29.9%)",
-          "raw": {
-            "rows": 59807,
-            "expected": 200000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 20.0,
-          "detail": "max(nav_date)=2026-04-13, lag=5d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.1,
-          "detail": "70 distinct dates over 103d span (expected ~73 trading days)",
-          "raw": {
-            "distinct_dates": 70,
-            "span_days": 103
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_technical_daily",
-      "domain": "mf",
-      "overall_score": 55.9,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 70.3,
-          "detail": "1,406,112 / 2,000,000 expected (70.3%)",
-          "raw": {
-            "rows": 1406112,
-            "expected": 2000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 20.0,
-          "detail": "max(nav_date)=2026-04-13, lag=5d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 95.4,
-          "detail": "4989 distinct dates over 7318d span (expected ~5227 trading days)",
-          "raw": {
-            "distinct_dates": 4989,
-            "span_days": 7318
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_master",
-      "domain": "mf",
-      "overall_score": 34.2,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.7,
-          "detail": "13,380 / 2,000,000 expected (0.7%)",
-          "raw": {
-            "rows": 13380,
-            "expected": 2000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(created_at)=2026-04-06, lag=12d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-06",
-            "lag_days": 12,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "1 distinct dates over 1d span (expected ~0 trading days)",
-          "raw": {
-            "distinct_dates": 1,
-            "span_days": 1
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_lifecycle",
-      "domain": "mf",
-      "overall_score": 34.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.0,
-          "detail": "469 / 2,000,000 expected (0.0%)",
-          "raw": {
-            "rows": 469,
-            "expected": 2000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(created_at)=2026-04-10, lag=8d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-10",
-            "lag_days": 8,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "1 distinct dates over 1d span (expected ~0 trading days)",
-          "raw": {
-            "distinct_dates": 1,
-            "span_days": 1
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_holdings",
-      "domain": "mf",
-      "overall_score": 20.7,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 11.5,
-          "detail": "230,254 / 2,000,000 expected (11.5%)",
-          "raw": {
-            "rows": 230254,
-            "expected": 2000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(as_of_date)=2026-04-06, lag=12d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-06",
-            "lag_days": 12,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 5.2,
-          "detail": "7 distinct dates over 189d span (expected ~135 trading days)",
-          "raw": {
-            "distinct_dates": 7,
-            "span_days": 189
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 20.0,
-          "detail": "provenance markers present: ['created_at']",
-          "raw": {
-            "present": [
-              "created_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_sector_exposure",
-      "domain": "mf",
-      "overall_score": 21.8,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.7,
-          "detail": "13,211 / 2,000,000 expected (0.7%)",
-          "raw": {
-            "rows": 13211,
-            "expected": 2000000
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(as_of_date)=2026-04-06, lag=12d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-06",
-            "lag_days": 12,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 31.1,
-          "detail": "2 distinct dates over 9d span (expected ~6 trading days)",
-          "raw": {
-            "distinct_dates": 2,
-            "span_days": 9
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 20.0,
-          "detail": "provenance markers present: ['created_at']",
-          "raw": {
-            "present": [
-              "created_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_mf_category_flows",
-      "domain": "mf_flows",
-      "overall_score": 86.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "3,177 rows (no universe expectation)",
-          "raw": {
-            "rows": 3177
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 100.0,
-          "detail": "max(created_at)=2026-04-13, lag=5d, sla=35d",
-          "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
-            "sla_days": 35
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 46.5,
-          "detail": "avg null rate 53.47% across 4 cols",
-          "raw": {
-            "null_rates": {
-              "category": 0.0,
-              "month": 1.0,
-              "net_inflow_cr": 1.0,
-              "aum_cr": 0.1388101983002833
-            }
-          }
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "non-daily \u2014 skipped",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_index_master",
-      "domain": "indices",
-      "overall_score": 37.4,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.1,
-          "detail": "135 / 212,500 expected (0.1%)",
-          "raw": {
-            "rows": 135,
-            "expected": 212500
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(created_at)=2026-04-10, lag=8d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-10",
-            "lag_days": 8,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 56.0,
-          "detail": "2 distinct dates over 5d span (expected ~3 trading days)",
-          "raw": {
-            "distinct_dates": 2,
-            "span_days": 5
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_index_prices",
-      "domain": "indices",
-      "overall_score": 76.9,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "262,957 / 212,500 expected (100.0%)",
-          "raw": {
-            "rows": 262957,
-            "expected": 212500
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 86.3,
-          "detail": "2672 distinct dates over 4335d span (expected ~3096 trading days)",
-          "raw": {
-            "distinct_dates": 2672,
-            "span_days": 4335
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_index_constituents",
-      "domain": "indices",
-      "overall_score": 44.3,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 1.3,
-          "detail": "2,660 / 212,500 expected (1.3%)",
-          "raw": {
-            "rows": 2660,
-            "expected": 212500
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "max(created_at)=2026-04-06, lag=12d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-06",
-            "lag_days": 12,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "3 distinct dates over 1d span (expected ~0 trading days)",
-          "raw": {
-            "distinct_dates": 3,
-            "span_days": 1
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_index_technical_daily",
-      "domain": "indices",
-      "overall_score": 76.9,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "239,130 / 212,500 expected (100.0%)",
-          "raw": {
-            "rows": 239130,
-            "expected": 212500
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 86.3,
-          "detail": "2672 distinct dates over 4335d span (expected ~3096 trading days)",
-          "raw": {
-            "distinct_dates": 2672,
-            "span_days": 4335
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "table": "de_etf_master",
       "domain": "etfs",
       "overall_score": 71.0,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -3658,25 +2319,26 @@
     {
       "table": "de_etf_ohlcv",
       "domain": "etfs",
-      "overall_score": 78.9,
+      "overall_score": 93.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "436,119 rows (no universe expectation)",
+          "detail": "436,879 rows (no universe expectation)",
           "raw": {
-            "rows": 436119
+            "rows": 436879
           }
         },
         {
           "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-18, lag=0d, sla=1d",
           "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
+            "max_date": "2026-04-18",
+            "lag_days": 0,
             "sla_days": 1
           }
         },
@@ -3688,11 +2350,11 @@
         },
         {
           "name": "continuity",
-          "score": 99.3,
-          "detail": "2601 distinct dates over 3666d span (expected ~2618 trading days)",
+          "score": 99.4,
+          "detail": "2605 distinct dates over 3670d span (expected ~2621 trading days)",
           "raw": {
-            "distinct_dates": 2601,
-            "span_days": 3666
+            "distinct_dates": 2605,
+            "span_days": 3670
           }
         },
         {
@@ -3719,14 +2381,15 @@
       "domain": "etfs",
       "overall_score": 78.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "435,421 rows (no universe expectation)",
+          "detail": "434,069 rows (no universe expectation)",
           "raw": {
-            "rows": 435421
+            "rows": 434069
           }
         },
         {
@@ -3774,10 +2437,238 @@
       ]
     },
     {
+      "table": "de_fx_rates_daily",
+      "domain": "fx_rates",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_global_instrument_master",
+      "domain": "global_macros",
+      "overall_score": 86.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "162 rows (no universe expectation)",
+          "raw": {
+            "rows": 162
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 60.0,
+          "detail": "max(created_at)=2026-04-15, lag=3d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-15",
+            "lag_days": 3,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "12 distinct dates over 10d span (expected ~7 trading days)",
+          "raw": {
+            "distinct_dates": 12,
+            "span_days": 10
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 60.0,
+          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "source",
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_global_prices",
+      "domain": "global_macros",
+      "overall_score": 94.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "261,024 rows (no universe expectation)",
+          "raw": {
+            "rows": 261024
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-18, lag=0d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-18",
+            "lag_days": 0,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "4679 distinct dates over 5950d span (expected ~4250 trading days)",
+          "raw": {
+            "distinct_dates": 4679,
+            "span_days": 5950
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_global_technical_daily",
+      "domain": "global_macros",
+      "overall_score": 79.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "260,903 rows (no universe expectation)",
+          "raw": {
+            "rows": 260903
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 40.0,
+          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-14",
+            "lag_days": 4,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "4678 distinct dates over 5946d span (expected ~4247 trading days)",
+          "raw": {
+            "distinct_dates": 4678,
+            "span_days": 5946
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "table": "de_macro_master",
       "domain": "global_macros",
       "overall_score": 71.5,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -3838,14 +2729,15 @@
       "domain": "global_macros",
       "overall_score": 81.3,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "115,481 rows (no universe expectation)",
+          "detail": "115,508 rows (no universe expectation)",
           "raw": {
-            "rows": 115481
+            "rows": 115508
           }
         },
         {
@@ -3867,9 +2759,9 @@
         {
           "name": "continuity",
           "score": 15.4,
-          "detail": "8979 distinct dates over 81846d span (expected ~58461 trading days)",
+          "detail": "8983 distinct dates over 81846d span (expected ~58461 trading days)",
           "raw": {
-            "distinct_dates": 8979,
+            "distinct_dates": 8983,
             "span_days": 81846
           }
         },
@@ -3893,146 +2785,121 @@
       ]
     },
     {
-      "table": "de_global_instrument_master",
-      "domain": "global_macros",
-      "overall_score": 86.0,
-      "pass": false,
+      "table": "atlas_gold_rs_cache",
+      "domain": "gold_lens",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 100.0,
-          "detail": "162 rows (no universe expectation)",
-          "raw": {
-            "rows": 162
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "freshness",
-          "score": 60.0,
-          "detail": "max(created_at)=2026-04-15, lag=3d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-15",
-            "lag_days": 3,
-            "sla_days": 1
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "continuity",
-          "score": 100.0,
-          "detail": "12 distinct dates over 10d span (expected ~7 trading days)",
-          "raw": {
-            "distinct_dates": 12,
-            "span_days": 10
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "provenance",
-          "score": 60.0,
-          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "source",
-              "created_at",
-              "updated_at"
-            ]
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
         }
       ]
     },
     {
-      "table": "de_global_prices",
-      "domain": "global_macros",
-      "overall_score": 79.0,
-      "pass": false,
+      "table": "de_india_vix_daily",
+      "domain": "india_vix",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 100.0,
-          "detail": "261,018 rows (no universe expectation)",
-          "raw": {
-            "rows": 261018
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "continuity",
-          "score": 100.0,
-          "detail": "4678 distinct dates over 5946d span (expected ~4247 trading days)",
-          "raw": {
-            "distinct_dates": 4678,
-            "span_days": 5946
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         }
       ]
     },
     {
-      "table": "de_global_technical_daily",
-      "domain": "global_macros",
-      "overall_score": 79.0,
+      "table": "de_index_constituents",
+      "domain": "indices",
+      "overall_score": 44.3,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 100.0,
-          "detail": "261,296 rows (no universe expectation)",
+          "score": 1.3,
+          "detail": "2,660 / 212,500 expected (1.3%)",
           "raw": {
-            "rows": 261296
+            "rows": 2660,
+            "expected": 212500
           }
         },
         {
           "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "score": 0.0,
+          "detail": "max(created_at)=2026-04-06, lag=12d, sla=1d",
           "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
+            "max_date": "2026-04-06",
+            "lag_days": 12,
             "sla_days": 1
           }
         },
@@ -4045,10 +2912,10 @@
         {
           "name": "continuity",
           "score": 100.0,
-          "detail": "4678 distinct dates over 5946d span (expected ~4247 trading days)",
+          "detail": "3 distinct dates over 1d span (expected ~0 trading days)",
           "raw": {
-            "distinct_dates": 4678,
-            "span_days": 5946
+            "distinct_dates": 3,
+            "span_days": 1
           }
         },
         {
@@ -4071,57 +2938,51 @@
       ]
     },
     {
-      "table": "de_rs_scores",
-      "domain": "relative_strength",
-      "overall_score": 53.9,
+      "table": "de_index_master",
+      "domain": "indices",
+      "overall_score": 37.4,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 100.0,
-          "detail": "14,779,609 rows (no universe expectation)",
+          "score": 0.1,
+          "detail": "135 / 212,500 expected (0.1%)",
           "raw": {
-            "rows": 14779609
+            "rows": 135,
+            "expected": 212500
           }
         },
         {
           "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "score": 0.0,
+          "detail": "max(created_at)=2026-04-10, lag=8d, sla=1d",
           "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
+            "max_date": "2026-04-10",
+            "lag_days": 8,
             "sla_days": 1
           }
         },
         {
           "name": "completeness",
-          "score": 0.0,
-          "detail": "avg null rate 100.00% across 5 cols",
-          "raw": {
-            "null_rates": {
-              "symbol": 1.0,
-              "asof_date": 1.0,
-              "period": 1.0,
-              "rs_score": 1.0,
-              "rs_rank": 1.0
-            }
-          }
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
         },
         {
           "name": "continuity",
-          "score": 99.1,
-          "detail": "2591 distinct dates over 3659d span (expected ~2613 trading days)",
+          "score": 56.0,
+          "detail": "2 distinct dates over 5d span (expected ~3 trading days)",
           "raw": {
-            "distinct_dates": 2591,
-            "span_days": 3659
+            "distinct_dates": 2,
+            "span_days": 5
           }
         },
         {
           "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"symbol\" does not exist",
+          "score": 100.0,
+          "detail": "no natural key declared",
           "raw": {}
         },
         {
@@ -4138,18 +2999,81 @@
       ]
     },
     {
-      "table": "de_rs_daily_summary",
-      "domain": "relative_strength",
-      "overall_score": 68.0,
+      "table": "de_index_prices",
+      "domain": "indices",
+      "overall_score": 91.9,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "10,539,988 rows (no universe expectation)",
+          "detail": "263,362 / 212,500 expected (100.0%)",
           "raw": {
-            "rows": 10539988
+            "rows": 263362,
+            "expected": 212500
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-17, lag=1d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-17",
+            "lag_days": 1,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 86.3,
+          "detail": "2675 distinct dates over 4338d span (expected ~3098 trading days)",
+          "raw": {
+            "distinct_dates": 2675,
+            "span_days": 4338
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_index_technical_daily",
+      "domain": "indices",
+      "overall_score": 76.9,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "262,957 / 212,500 expected (100.0%)",
+          "raw": {
+            "rows": 262957,
+            "expected": 212500
           }
         },
         {
@@ -4170,17 +3094,17 @@
         },
         {
           "name": "continuity",
-          "score": 93.3,
-          "detail": "2433 distinct dates over 3649d span (expected ~2606 trading days)",
+          "score": 86.3,
+          "detail": "2672 distinct dates over 4335d span (expected ~3096 trading days)",
           "raw": {
-            "distinct_dates": 2433,
-            "span_days": 3649
+            "distinct_dates": 2672,
+            "span_days": 4335
           }
         },
         {
           "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"asof_date\" does not exist",
+          "score": 100.0,
+          "detail": "no natural key declared",
           "raw": {}
         },
         {
@@ -4193,6 +3117,98 @@
               "updated_at"
             ]
           }
+        }
+      ]
+    },
+    {
+      "table": "de_insider_trades",
+      "domain": "insider_trading",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
+    },
+    {
+      "table": "de_institutional_flows",
+      "domain": "institutional_flows",
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
+          "raw": {}
         }
       ]
     },
@@ -4201,6 +3217,7 @@
       "domain": "market_breadth",
       "overall_score": 72.1,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -4260,6 +3277,7 @@
       "domain": "market_breadth",
       "overall_score": 72.1,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -4315,10 +3333,1768 @@
       ]
     },
     {
+      "table": "de_mf_holdings",
+      "domain": "mf",
+      "overall_score": 20.7,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 11.5,
+          "detail": "230,254 / 2,000,000 expected (11.5%)",
+          "raw": {
+            "rows": 230254,
+            "expected": 2000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "max(as_of_date)=2026-04-06, lag=12d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-06",
+            "lag_days": 12,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 5.2,
+          "detail": "7 distinct dates over 189d span (expected ~135 trading days)",
+          "raw": {
+            "distinct_dates": 7,
+            "span_days": 189
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 20.0,
+          "detail": "provenance markers present: ['created_at']",
+          "raw": {
+            "present": [
+              "created_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_lifecycle",
+      "domain": "mf",
+      "overall_score": 34.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 0.0,
+          "detail": "469 / 2,000,000 expected (0.0%)",
+          "raw": {
+            "rows": 469,
+            "expected": 2000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "max(created_at)=2026-04-10, lag=8d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-10",
+            "lag_days": 8,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "1 distinct dates over 1d span (expected ~0 trading days)",
+          "raw": {
+            "distinct_dates": 1,
+            "span_days": 1
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_master",
+      "domain": "mf",
+      "overall_score": 34.2,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 0.7,
+          "detail": "13,380 / 2,000,000 expected (0.7%)",
+          "raw": {
+            "rows": 13380,
+            "expected": 2000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "max(created_at)=2026-04-06, lag=12d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-06",
+            "lag_days": 12,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "1 distinct dates over 1d span (expected ~0 trading days)",
+          "raw": {
+            "distinct_dates": 1,
+            "span_days": 1
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2006",
+      "domain": "mf",
+      "overall_score": 61.5,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 11.3,
+          "detail": "22,697 / 200,000 expected (11.3%)",
+          "raw": {
+            "rows": 22697,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2006) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2006,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 97.9,
+          "detail": "191 distinct dates over 273d span (expected ~195 trading days)",
+          "raw": {
+            "distinct_dates": 191,
+            "span_days": 273
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2007",
+      "domain": "mf",
+      "overall_score": 62.9,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 17.6,
+          "detail": "35,141 / 200,000 expected (17.6%)",
+          "raw": {
+            "rows": 35141,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2007) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2007,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 96.9,
+          "detail": "252 distinct dates over 364d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 252,
+            "span_days": 364
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2008",
+      "domain": "mf",
+      "overall_score": 63.6,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 21.8,
+          "detail": "43,512 / 200,000 expected (21.8%)",
+          "raw": {
+            "rows": 43512,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2008) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2008,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.5,
+          "detail": "247 distinct dates over 366d span (expected ~261 trading days)",
+          "raw": {
+            "distinct_dates": 247,
+            "span_days": 366
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2009",
+      "domain": "mf",
+      "overall_score": 64.3,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 25.1,
+          "detail": "50,230 / 200,000 expected (25.1%)",
+          "raw": {
+            "rows": 50230,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2009) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2009,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 93.2,
+          "detail": "243 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 243,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2010",
+      "domain": "mf",
+      "overall_score": 65.8,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 29.0,
+          "detail": "57,910 / 200,000 expected (29.0%)",
+          "raw": {
+            "rows": 57910,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2010) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2010,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 96.7,
+          "detail": "250 distinct dates over 362d span (expected ~258 trading days)",
+          "raw": {
+            "distinct_dates": 250,
+            "span_days": 362
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2011",
+      "domain": "mf",
+      "overall_score": 65.8,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 30.2,
+          "detail": "60,352 / 200,000 expected (30.2%)",
+          "raw": {
+            "rows": 60352,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2011) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2011,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.1,
+          "detail": "246 distinct dates over 362d span (expected ~258 trading days)",
+          "raw": {
+            "distinct_dates": 246,
+            "span_days": 362
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2012",
+      "domain": "mf",
+      "overall_score": 66.2,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 31.1,
+          "detail": "62,111 / 200,000 expected (31.1%)",
+          "raw": {
+            "rows": 62111,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2012) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2012,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 96.3,
+          "detail": "251 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 251,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2013",
+      "domain": "mf",
+      "overall_score": 66.8,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 32.2,
+          "detail": "64,325 / 200,000 expected (32.2%)",
+          "raw": {
+            "rows": 64325,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2013) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2013,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 98.2,
+          "detail": "256 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 256,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2014",
+      "domain": "mf",
+      "overall_score": 66.1,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 32.9,
+          "detail": "65,848 / 200,000 expected (32.9%)",
+          "raw": {
+            "rows": 65848,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2014) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2014,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 92.8,
+          "detail": "242 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 242,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2015",
+      "domain": "mf",
+      "overall_score": 67.1,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 35.4,
+          "detail": "70,835 / 200,000 expected (35.4%)",
+          "raw": {
+            "rows": 70835,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2015) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2015,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.1,
+          "detail": "248 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 248,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2016",
+      "domain": "mf",
+      "overall_score": 67.6,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 37.6,
+          "detail": "75,184 / 200,000 expected (37.6%)",
+          "raw": {
+            "rows": 75184,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2016) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2016,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.9,
+          "detail": "248 distinct dates over 366d span (expected ~261 trading days)",
+          "raw": {
+            "distinct_dates": 248,
+            "span_days": 366
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2017",
+      "domain": "mf",
+      "overall_score": 68.5,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 39.3,
+          "detail": "78,577 / 200,000 expected (39.3%)",
+          "raw": {
+            "rows": 78577,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2017) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2017,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 97.6,
+          "detail": "253 distinct dates over 363d span (expected ~259 trading days)",
+          "raw": {
+            "distinct_dates": 253,
+            "span_days": 363
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2018",
+      "domain": "mf",
+      "overall_score": 68.2,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 40.1,
+          "detail": "80,280 / 200,000 expected (40.1%)",
+          "raw": {
+            "rows": 80280,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2018) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2018,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.7,
+          "detail": "247 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 247,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2019",
+      "domain": "mf",
+      "overall_score": 69.2,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 43.4,
+          "detail": "86,720 / 200,000 expected (43.4%)",
+          "raw": {
+            "rows": 86720,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2019) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2019,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.5,
+          "detail": "249 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 249,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2020",
+      "domain": "mf",
+      "overall_score": 70.5,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 48.0,
+          "detail": "95,919 / 200,000 expected (48.0%)",
+          "raw": {
+            "rows": 95919,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2020) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2020,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 96.4,
+          "detail": "252 distinct dates over 366d span (expected ~261 trading days)",
+          "raw": {
+            "distinct_dates": 252,
+            "span_days": 366
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2021",
+      "domain": "mf",
+      "overall_score": 71.7,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 54.0,
+          "detail": "108,067 / 200,000 expected (54.0%)",
+          "raw": {
+            "rows": 108067,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2021) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2021,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.7,
+          "detail": "247 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 247,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2022",
+      "domain": "mf",
+      "overall_score": 74.4,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 64.0,
+          "detail": "128,036 / 200,000 expected (64.0%)",
+          "raw": {
+            "rows": 128036,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2022) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2022,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.9,
+          "detail": "248 distinct dates over 362d span (expected ~258 trading days)",
+          "raw": {
+            "distinct_dates": 248,
+            "span_days": 362
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2023",
+      "domain": "mf",
+      "overall_score": 76.5,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 73.0,
+          "detail": "145,993 / 200,000 expected (73.0%)",
+          "raw": {
+            "rows": 145993,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2023) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2023,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.8,
+          "detail": "245 distinct dates over 362d span (expected ~258 trading days)",
+          "raw": {
+            "distinct_dates": 245,
+            "span_days": 362
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2024",
+      "domain": "mf",
+      "overall_score": 80.2,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 87.5,
+          "detail": "175,052 / 200,000 expected (87.5%)",
+          "raw": {
+            "rows": 175052,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "archived partition (year=2024) \u2014 SLA not applicable",
+          "raw": {
+            "table_year": 2024,
+            "archived": true
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.6,
+          "detail": "250 distinct dates over 366d span (expected ~261 trading days)",
+          "raw": {
+            "distinct_dates": 250,
+            "span_days": 366
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2025",
+      "domain": "mf",
+      "overall_score": 58.6,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "215,304 / 200,000 expected (100.0%)",
+          "raw": {
+            "rows": 215304,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "max(nav_date)=2025-12-31, lag=108d, sla=1d",
+          "raw": {
+            "max_date": "2025-12-31",
+            "lag_days": 108,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 97.4,
+          "detail": "254 distinct dates over 365d span (expected ~260 trading days)",
+          "raw": {
+            "distinct_dates": 254,
+            "span_days": 365
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_nav_daily_y2026",
+      "domain": "mf",
+      "overall_score": 66.1,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 31.7,
+          "detail": "63,490 / 200,000 expected (31.7%)",
+          "raw": {
+            "rows": 63490,
+            "expected": 200000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(nav_date)=2026-04-17, lag=1d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-17",
+            "lag_days": 1,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 94.2,
+          "detail": "72 distinct dates over 107d span (expected ~76 trading days)",
+          "raw": {
+            "distinct_dates": 72,
+            "span_days": 107
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_sector_exposure",
+      "domain": "mf",
+      "overall_score": 21.8,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 0.7,
+          "detail": "13,211 / 2,000,000 expected (0.7%)",
+          "raw": {
+            "rows": 13211,
+            "expected": 2000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 0.0,
+          "detail": "max(as_of_date)=2026-04-06, lag=12d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-06",
+            "lag_days": 12,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 31.1,
+          "detail": "2 distinct dates over 9d span (expected ~6 trading days)",
+          "raw": {
+            "distinct_dates": 2,
+            "span_days": 9
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 20.0,
+          "detail": "provenance markers present: ['created_at']",
+          "raw": {
+            "present": [
+              "created_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_technical_daily",
+      "domain": "mf",
+      "overall_score": 55.9,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 70.2,
+          "detail": "1,404,704 / 2,000,000 expected (70.2%)",
+          "raw": {
+            "rows": 1404704,
+            "expected": 2000000
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 20.0,
+          "detail": "max(nav_date)=2026-04-13, lag=5d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-13",
+            "lag_days": 5,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 95.4,
+          "detail": "4989 distinct dates over 7318d span (expected ~5227 trading days)",
+          "raw": {
+            "distinct_dates": 4989,
+            "span_days": 7318
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"scheme_code\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_mf_category_flows",
+      "domain": "mf_flows",
+      "overall_score": 86.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "3,177 rows (no universe expectation)",
+          "raw": {
+            "rows": 3177
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 100.0,
+          "detail": "max(created_at)=2026-04-13, lag=5d, sla=35d",
+          "raw": {
+            "max_date": "2026-04-13",
+            "lag_days": 5,
+            "sla_days": 35
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 46.5,
+          "detail": "avg null rate 53.47% across 4 cols",
+          "raw": {
+            "null_rates": {
+              "category": 0.0,
+              "month": 1.0,
+              "net_inflow_cr": 1.0,
+              "aum_cr": 0.1388101983002833
+            }
+          }
+        },
+        {
+          "name": "continuity",
+          "score": 100.0,
+          "detail": "non-daily \u2014 skipped",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 100.0,
+          "detail": "no natural key declared",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_rs_daily_summary",
+      "domain": "relative_strength",
+      "overall_score": 68.0,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "10,539,237 rows (no universe expectation)",
+          "raw": {
+            "rows": 10539237
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 40.0,
+          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-14",
+            "lag_days": 4,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "detail": "no business cols declared",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 93.3,
+          "detail": "2433 distinct dates over 3649d span (expected ~2606 trading days)",
+          "raw": {
+            "distinct_dates": 2433,
+            "span_days": 3649
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"asof_date\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "table": "de_rs_scores",
+      "domain": "relative_strength",
+      "overall_score": 53.9,
+      "pass": false,
+      "gap": false,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 100.0,
+          "detail": "14,743,298 rows (no universe expectation)",
+          "raw": {
+            "rows": 14743298
+          }
+        },
+        {
+          "name": "freshness",
+          "score": 40.0,
+          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "raw": {
+            "max_date": "2026-04-14",
+            "lag_days": 4,
+            "sla_days": 1
+          }
+        },
+        {
+          "name": "completeness",
+          "score": 0.0,
+          "detail": "avg null rate 100.00% across 5 cols",
+          "raw": {
+            "null_rates": {
+              "symbol": 1.0,
+              "asof_date": 1.0,
+              "period": 1.0,
+              "rs_score": 1.0,
+              "rs_rank": 1.0
+            }
+          }
+        },
+        {
+          "name": "continuity",
+          "score": 99.1,
+          "detail": "2591 distinct dates over 3659d span (expected ~2613 trading days)",
+          "raw": {
+            "distinct_dates": 2591,
+            "span_days": 3659
+          }
+        },
+        {
+          "name": "integrity",
+          "score": 0.0,
+          "detail": "natural-key check failed: column \"symbol\" does not exist",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 40.0,
+          "detail": "provenance markers present: ['created_at', 'updated_at']",
+          "raw": {
+            "present": [
+              "created_at",
+              "updated_at"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "table": "de_goldilocks_market_view",
       "domain": "rrg_quadrants",
       "overall_score": 74.0,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -4378,6 +5154,7 @@
       "domain": "rrg_quadrants",
       "overall_score": 74.0,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -4437,6 +5214,7 @@
       "domain": "rrg_quadrants",
       "overall_score": 74.0,
       "pass": false,
+      "gap": false,
       "error": null,
       "dimensions": [
         {
@@ -4492,492 +5270,140 @@
       ]
     },
     {
-      "table": "de_corporate_actions",
-      "domain": "corporate_actions",
-      "overall_score": 81.1,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "14,964 rows (no universe expectation)",
-          "raw": {
-            "rows": 14964
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 100.0,
-          "detail": "max(ex_date)=2026-04-30, lag=-12d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-30",
-            "lag_days": -12,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 40.0,
-          "detail": "avg null rate 60.00% across 5 cols",
-          "raw": {
-            "null_rates": {
-              "symbol": 1.0,
-              "ex_date": 0.0,
-              "action_type": 0.0,
-              "ratio": 1.0,
-              "dividend_amt": 1.0
-            }
-          }
-        },
-        {
-          "name": "continuity",
-          "score": 74.2,
-          "detail": "1241 distinct dates over 2341d span (expected ~1672 trading days)",
-          "raw": {
-            "distinct_dates": 1241,
-            "span_days": 2341
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_adjustment_factors_daily",
-      "domain": "corporate_actions",
-      "overall_score": 14.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 0.0,
-          "detail": "0 rows (no universe expectation)",
-          "raw": {
-            "rows": 0
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {
-            "date_col": "date"
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_institutional_flows",
-      "domain": "institutional_flows",
-      "overall_score": 69.1,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "5 rows (no universe expectation)",
-          "raw": {
-            "rows": 5
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 87.5,
-          "detail": "5 distinct dates over 8d span (expected ~5 trading days)",
-          "raw": {
-            "distinct_dates": 5,
-            "span_days": 8
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 0.0,
-          "detail": "natural-key check failed: column \"flow_date\" does not exist",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 60.0,
-          "detail": "provenance markers present: ['source', 'created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "source",
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "de_fo_bhavcopy_daily",
-      "domain": "derivatives_eod",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_fo_participant_oi_daily",
-      "domain": "derivatives_eod",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_fo_securities_in_ban",
-      "domain": "derivatives_eod",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_india_vix_daily",
-      "domain": "india_vix",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_insider_trades",
-      "domain": "insider_trading",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_bulk_deals",
-      "domain": "block_bulk_deals",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_block_deals",
-      "domain": "block_bulk_deals",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
       "table": "de_shareholding_pattern",
       "domain": "shareholding_patterns",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
     },
     {
       "table": "de_in_gsec_yields_daily",
       "domain": "yield_curve",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
+      "error": null,
+      "dimensions": [
+        {
+          "name": "coverage",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "freshness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "continuity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "integrity",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        },
+        {
+          "name": "provenance",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
+        }
+      ]
     },
     {
       "table": "de_rbi_policy_rates",
       "domain": "yield_curve",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "de_fx_rates_daily",
-      "domain": "fx_rates",
-      "overall_score": 0.0,
-      "pass": false,
-      "error": "table does not exist",
-      "dimensions": []
-    },
-    {
-      "table": "atlas_gold_rs_cache",
-      "domain": "gold_lens",
-      "overall_score": 14.0,
-      "pass": false,
+      "overall_score": 85.0,
+      "pass": true,
+      "gap": true,
       "error": null,
       "dimensions": [
         {
           "name": "coverage",
-          "score": 0.0,
-          "detail": "0 rows (no universe expectation)",
-          "raw": {
-            "rows": 0
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         },
         {
           "name": "freshness",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {
-            "date_col": "date"
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 0.0,
-          "detail": "table empty",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "atlas_decisions",
-      "domain": "derived_signals",
-      "overall_score": 79.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "418 rows (no universe expectation)",
-          "raw": {
-            "rows": 418
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 40.0,
-          "detail": "max(created_at)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "2 distinct dates over 1d span (expected ~0 trading days)",
-          "raw": {
-            "distinct_dates": 2,
-            "span_days": 1
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "atlas_intelligence",
-      "domain": "derived_signals",
-      "overall_score": 79.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "688 rows (no universe expectation)",
-          "raw": {
-            "rows": 688
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 40.0,
-          "detail": "max(created_at)=2026-04-14, lag=4d, sla=1d",
-          "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
-            "sla_days": 1
-          }
-        },
-        {
-          "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 100.0,
-          "detail": "688 distinct dates over 1d span (expected ~0 trading days)",
-          "raw": {
-            "distinct_dates": 688,
-            "span_days": 1
-          }
-        },
-        {
-          "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 40.0,
-          "detail": "provenance markers present: ['created_at', 'updated_at']",
-          "raw": {
-            "present": [
-              "created_at",
-              "updated_at"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "table": "atlas_tv_cache",
-      "domain": "derived_signals",
-      "overall_score": 65.0,
-      "pass": false,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 100.0,
-          "detail": "3 rows (no universe expectation)",
-          "raw": {
-            "rows": 3
-          }
-        },
-        {
-          "name": "freshness",
-          "score": 0.0,
-          "detail": "no date column found",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "completeness",
-          "score": 100.0,
-          "detail": "no business cols declared",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "continuity",
-          "score": 100.0,
-          "detail": "no date col \u2014 skipped",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "integrity",
-          "score": 100.0,
-          "detail": "no natural key declared",
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
           "raw": {}
         },
         {
           "name": "provenance",
-          "score": 0.0,
-          "detail": "provenance markers present: []",
-          "raw": {
-            "present": []
-          }
+          "score": 85.0,
+          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
+          "raw": {}
         }
       ]
     }
