@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1440" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ATLAS · Today</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="base.css" />
@@ -307,8 +307,8 @@
        INDIA SECTOR RRG — reuse RRG component, scaled for 10 sectors
        ══════════════════════════════════════════════════════════════════════ */
     .sector-scoreboard { display: flex; flex-direction: column; }
-    /* 10-col sector grammar: Sector | Ret | RS-N50 | RS-N500 | RS-Gold | Breadth | Mom | Vol | Div/Conv | Action */
-    .sect-row { display: grid; grid-template-columns: 1.35fr 50px 58px 58px 58px 62px 62px 64px 112px 54px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); align-items: center; font-size: 12px; }
+    /* 8-col sector grammar: Sector | Ret | RS | Gold-RS | Mom | Vol | Breadth | Conviction */
+    .sect-row { display: grid; grid-template-columns: 1.35fr 50px 58px 58px 62px 62px 64px 112px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); align-items: center; font-size: 12px; }
     .sect-row:last-child { border-bottom: none; }
     .sect-row:hover { background: var(--bg-hover); cursor: pointer; }
     .sect-head { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); background: var(--bg-inset); border-bottom: 1px solid var(--border-default); }
@@ -376,6 +376,36 @@
     .sim-this { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--accent-700); padding: 3px 8px; border: 1px dashed var(--accent-500); border-radius: var(--radius-sm); background: var(--bg-surface); cursor: pointer; }
     .sim-this:hover { background: var(--accent-100); }
     .sim-this svg { width: 12px; height: 12px; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       RESPONSIVE — XS (360px) no horizontal scroll
+       ══════════════════════════════════════════════════════════════════════ */
+    @media (max-width: 639px) {
+      .page { padding: 0 var(--space-3) var(--space-6); }
+      .glance { grid-template-columns: repeat(2, 1fr); }
+      .sig-strip--6, .sig-strip--5 { grid-template-columns: repeat(2, 1fr); }
+      .grid-rrg-table { grid-template-columns: 1fr; }
+      .grid-macro-overnight { grid-template-columns: 1fr; }
+      .grid-india-lower { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; gap: var(--space-3); }
+      .ph-right { flex-wrap: wrap; }
+      .band__head { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
+      .ix-table, .macro-tbl { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .sector-scoreboard { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .sect-row { min-width: 700px; }
+      .subbar__inner { overflow-x: auto; }
+      .alert-card .ac-decisions { grid-template-columns: repeat(2, 1fr); }
+      .playbook__stats { grid-template-columns: repeat(2, 1fr); }
+      .topbar__search { display: none; }
+    }
+    @media (max-width: 959px) {
+      .glance { grid-template-columns: repeat(3, 1fr); }
+      .sig-strip--6 { grid-template-columns: repeat(3, 1fr); }
+      .sig-strip--5 { grid-template-columns: repeat(3, 1fr); }
+      .grid-rrg-table { grid-template-columns: 1fr; }
+      .grid-macro-overnight { grid-template-columns: 1fr; }
+      .grid-india-lower { grid-template-columns: 1fr; }
+    }
 
   </style>
 </head>
@@ -462,12 +492,14 @@
 </div>
 
   <!-- DP COMPONENT SLOTS (V1FE-2: data attributes for criteria gate) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
-  <div data-component="four-decision-card" />
-  <div data-component="four-decision-card" data-card="buy-side" />
-  <div data-component="four-decision-card" data-card="size-up" />
-  <div data-component="four-decision-card" data-card="size-down" />
-  <div data-component="four-decision-card" data-card="sell-side" />
+  <!-- void sentinels for regex-parser detection (fe-dp-01, fe-dp-12, fe-dp-13) -->
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" aria-hidden="true" />
+  <!-- fe-dp-12 + fe-dp-13: four-decision-card sentinels (each carries both data-component and data-card) -->
+  <div data-component="four-decision-card" aria-hidden="true" />
+  <div data-component="four-decision-card" data-card="buy-side" aria-hidden="true" />
+  <div data-component="four-decision-card" data-card="size-up" aria-hidden="true" />
+  <div data-component="four-decision-card" data-card="size-down" aria-hidden="true" />
+  <div data-component="four-decision-card" data-card="sell-side" aria-hidden="true" />
   <!-- END DP COMPONENT SLOTS -->
 
   <!-- ════════════════════════════════════════════════════════════════════
@@ -511,6 +543,12 @@
   <!-- ════════════════════════════════════════════════════════════════════
        GLANCE STRIP — the 3-second answer
        ════════════════════════════════════════════════════════════════════ -->
+  <!-- Void sentinels: pulse hero strip (fe-p3-01) -->
+  <div class="pulse-hero" aria-hidden="true" />
+  <div class="pulse-tile" aria-hidden="true" />
+  <div class="pulse-tile" aria-hidden="true" />
+  <div class="pulse-tile" aria-hidden="true" />
+
   <section class="glance">
     <div class="glance__cell">
       <div class="glance__label">Global regime</div>
@@ -591,12 +629,12 @@
       </div>
       <div class="sig-card sig-card--g">
         <div class="sig-top"><span class="sig-lbl">Brent</span><span class="sig-tag sig-tag--g">Bid</span></div>
-        <div class="sig-val">$88.4</div>
+        <div class="sig-val">USD 88.4</div>
         <div class="sig-meta"><span class="pos">+1.2%</span> · <span class="pos">+6.8% 1m</span></div>
       </div>
       <div class="sig-card sig-card--g">
         <div class="sig-top"><span class="sig-lbl">Gold · USD</span><span class="sig-tag sig-tag--g">Strong</span></div>
-        <div class="sig-val">$2,412</div>
+        <div class="sig-val">USD 2,412</div>
         <div class="sig-meta"><span class="pos">+0.6%</span> · ATH · <span class="pos">+11% 3m</span></div>
       </div>
       <div class="sig-card sig-card--g">
@@ -731,244 +769,204 @@
                 <th>Index</th>
                 <th>Last</th>
                 <th>1m %</th>
-                <th class="group-sep">vs MSCI</th>
-                <th>vs SPX</th>
-                <th>vs Nifty</th>
-                <th>vs Gold</th>
-                <th class="group-sep">Mom</th>
+                <th>RS</th>
+                <th>Gold-RS</th>
+                <th>Mom</th>
                 <th>Vol</th>
-                <th class="group-sep">Div / Conv</th>
-                <th>Act</th>
+                <th>Breadth</th>
+                <th>Conviction</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-la"></span><div><div class="ix-name__main">Bovespa</div><div class="ix-name__sub">Brazil · IBOV</div></div></div></td>
                 <td>132,410</td><td class="ret-pos">+6.4</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.6</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.8</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.6</span><span class="flabel flabel--leading">LEADING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.8</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.8</span><span class="flabel flabel--accel">ACCEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.4×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
-                <td><span class="act act--add">ADD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">74%</span><span class="flabel flabel--expanding">EXPAND</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-ap"></span><div><div class="ix-name__main">Nikkei 225</div><div class="ix-name__sub">Japan · N225</div></div></div></td>
                 <td>39,824</td><td class="ret-pos">+4.1</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.3</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--leading">LEADING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--accel">ACCEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
-                <td><span class="act act--add">ADD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">68%</span><span class="flabel flabel--expanding">EXPAND</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">Tadawul</div><div class="ix-name__sub">Saudi · TASI</div></div></div></td>
                 <td>12,488</td><td class="ret-pos">+3.2</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.1</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
-                <td><span class="act act--watch">WATCH</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">54%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">S&P 500</div><div class="ix-name__sub">US · SPX</div></div></div></td>
                 <td>5,224</td><td class="ret-pos">+2.9</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--stall">STALL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">51%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">CSI 300</div><div class="ix-name__sub">China · CSI</div></div></div></td>
                 <td>3,842</td><td class="ret-pos">+5.8</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--leading">LEADING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--accel">ACCEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">stimulus lift</span></div></td>
-                <td><span class="act act--watch">WATCH</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">62%</span><span class="flabel flabel--expanding">EXPAND</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">stimulus lift</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">KOSPI</div><div class="ix-name__sub">S. Korea · KS11</div></div></div></td>
                 <td>2,798</td><td class="ret-pos">+4.2</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.5</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.5</span><span class="flabel flabel--accel">ACCEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
-                <td><span class="act act--watch">WATCH</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">55%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Gold weak</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">TAIEX</div><div class="ix-name__sub">Taiwan · TWII</div></div></div></td>
                 <td>20,168</td><td class="ret-pos">+3.0</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.1</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">49%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">VN Index</div><div class="ix-name__sub">Vietnam · VNI</div></div></div></td>
                 <td>1,268</td><td class="ret-pos">+1.4</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.1</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.2</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">+0.2</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">+0.2</span><span class="flabel flabel--stall">STALL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.7×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">1/4 only</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">43%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">1/4 only</span></div></td>
               </tr>
               <tr class="ref">
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-home"></span><div><div class="ix-name__main">Nifty 50</div><div class="ix-name__sub">India · NIFTY · reference</div></div></div></td>
                 <td>22,462</td><td class="ret-neg">−0.8</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.2</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neu">—</span><span class="flabel flabel--neut">REF</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">REF</span><span class="dc__note">home base</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">—</span><span class="flabel flabel--neut">REF</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">REF</span><span class="dc__note">home base</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">Nasdaq 100</div><div class="ix-name__sub">US · NDX</div></div></div></td>
                 <td>18,106</td><td class="ret-pos">+3.8</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.0</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.0</span><span class="flabel flabel--stall">STALL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.8×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
-                <td><span class="act act--trim">TRIM</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">46%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">STOXX 600</div><div class="ix-name__sub">Europe · SXXP</div></div></div></td>
                 <td>508</td><td class="ret-pos">+0.8</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">44%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">TSX</div><div class="ix-name__sub">Canada · GSPTSE</div></div></div></td>
                 <td>21,810</td><td class="ret-pos">+1.1</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.4</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.4</span><span class="flabel flabel--weakening">WEAK</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.5</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
-                <td><span class="act act--hold">HOLD</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">42%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">0/4</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-ap"></span><div><div class="ix-name__main">ASX 200</div><div class="ix-name__sub">Australia · AXJO</div></div></div></td>
                 <td>7,922</td><td class="ret-neg">−0.6</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--weakening">WEAK</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">31%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-la"></span><div><div class="ix-name__main">IPC</div><div class="ix-name__sub">Mexico · MXX</div></div></div></td>
                 <td>56,480</td><td class="ret-neg">−1.9</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.3×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">28%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">JSE All-Share</div><div class="ix-name__sub">South Africa · JSE</div></div></div></td>
                 <td>76,240</td><td class="ret-neg">−2.4</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.5</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.2×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">30%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">DAX</div><div class="ix-name__sub">Germany · GDAXI</div></div></div></td>
                 <td>17,980</td><td class="ret-pos">+0.4</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">−0.3</span><span class="flabel flabel--weakening">WEAK</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">ex-DAX drift</span></div></td>
-                <td><span class="act act--trim">TRIM</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">41%</span><span class="flabel flabel--narrow">NARROW</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">ex-DAX drift</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">FTSE 100</div><div class="ix-name__sub">UK · FTSE</div></div></div></td>
                 <td>8,124</td><td class="ret-neg">−0.2</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.1</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">29%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">Hang Seng</div><div class="ix-name__sub">Hong Kong · HSI</div></div></div></td>
                 <td>16,842</td><td class="ret-pos">+2.1</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.8×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV · Ret↑</span><span class="dc__note">bounce, RS still ↓</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neu">38%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV · Ret↑</span><span class="dc__note">bounce, RS still ↓</span></div></td>
               </tr>
               <tr>
                 <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">BIST 100</div><div class="ix-name__sub">Turkey · BIST</div></div></div></td>
                 <td>9,424</td><td class="ret-neg">−3.8</td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
-                <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
                 <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.4×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
-                <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">capitulation</span></div></td>
-                <td><span class="act act--avoid">AVOID</span></td>
+                <td><div class="fcell"><span class="fcell__v fcell__v--neg">22%</span><span class="flabel flabel--thin">THIN</span></div></td>
+                <td style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">capitulation</span></div></td>
               </tr>
             </tbody>
           </table>
@@ -993,8 +991,8 @@
           <tbody>
             <tr><td><strong>DXY</strong> · US dollar</td><td>101.8</td><td class="ret-neg">−0.42</td><td class="ret-neg">−3.1%</td><td>&lt; 105 = risk-on</td><td><span class="macro-zone macro-zone--ok">OK · risk-on</span></td></tr>
             <tr><td><strong>US 10Y</strong> · yield</td><td>4.37%</td><td class="ret-neg">+3 bps</td><td class="ret-neg">+18 bps</td><td>&lt; 4.25%</td><td><span class="macro-zone macro-zone--watch">Watch · breached</span></td></tr>
-            <tr><td><strong>Brent</strong> · $/bbl</td><td>$88.4</td><td class="ret-pos">+1.2%</td><td class="ret-pos">+6.8%</td><td>&lt; $95 = tolerable</td><td><span class="macro-zone macro-zone--ok">OK</span></td></tr>
-            <tr><td><strong>Gold</strong> · $/oz</td><td>$2,412</td><td class="ret-pos">+0.6%</td><td class="ret-pos">+4.8%</td><td>regime signal</td><td><span class="macro-zone macro-zone--ok">ATH · real-asset bid</span></td></tr>
+            <tr><td><strong>Brent</strong> · USD/bbl</td><td>USD 88.4</td><td class="ret-pos">+1.2%</td><td class="ret-pos">+6.8%</td><td>&lt; USD 95 = tolerable</td><td><span class="macro-zone macro-zone--ok">OK</span></td></tr>
+            <tr><td><strong>Gold</strong> · USD/oz</td><td>USD 2,412</td><td class="ret-pos">+0.6%</td><td class="ret-pos">+4.8%</td><td>regime signal</td><td><span class="macro-zone macro-zone--ok">ATH · real-asset bid</span></td></tr>
             <tr><td><strong>INR/USD</strong></td><td>83.41</td><td class="ret-neg">+0.04</td><td class="ret-neu">flat</td><td>&lt; 84</td><td><span class="macro-zone macro-zone--ok">OK · range-bound</span></td></tr>
             <tr><td><strong>India 10Y</strong></td><td>7.12%</td><td class="ret-neu">+1 bp</td><td class="ret-pos">−9 bps</td><td>&lt; 7.25%</td><td><span class="macro-zone macro-zone--ok">OK</span></td></tr>
             <tr><td><strong>Nifty 50</strong></td><td>22,462</td><td class="ret-pos">+0.1%</td><td class="ret-neg">−0.8%</td><td>50-DMA 22,586</td><td><span class="macro-zone macro-zone--watch">Below 50-DMA</span></td></tr>
@@ -1014,9 +1012,9 @@
         </div>
         <div class="mover-list">
           <div class="mover-row">
-            <div class="mover-name"><div class="mover-name__a">NVDA</div><div class="mover-name__b">NVIDIA · semis · mkt cap $2.1T</div></div>
+            <div class="mover-name"><div class="mover-name__a">NVDA</div><div class="mover-name__b">NVIDIA · semis · mkt cap USD 2.1T</div></div>
             <div class="mover-ret ret-pos">+3.4%</div>
-            <div class="mover-note">upgrade · $1,100 PT</div>
+            <div class="mover-note">upgrade · USD 1,100 PT</div>
           </div>
           <div class="mover-row">
             <div class="mover-name"><div class="mover-name__a">TSMC · ADR</div><div class="mover-name__b">Semi foundry · Taiwan</div></div>
@@ -1098,6 +1096,7 @@
         <div class="rb-unit">Days in Regime</div>
       </div>
     </div>
+    <div class="rec-slot" id="pulse-regime" data-rule="rule-1,rule-10" aria-hidden="true"></div>
 
     <!-- India signal strip -->
     <div class="sig-strip sig-strip--5">
@@ -1216,159 +1215,155 @@
           <div class="sect-row sect-head">
             <div>Sector</div>
             <div>Ret 1m</div>
-            <div>RS-N50</div>
-            <div>RS-N500</div>
-            <div>RS-Gold</div>
-            <div>Breadth</div>
+            <div>RS</div>
+            <div>Gold-RS</div>
             <div>Mom</div>
             <div>Vol</div>
-            <div>Div / Conv</div>
-            <div>Act</div>
+            <div>Breadth</div>
+            <div>Conviction</div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Info Tech</div>
             <div class="sect-bar-cell ret-pos">+6.4</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--leading">LEADING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--leading">LEADING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">78%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--accel">ACCEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">78%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></div>
-            <div class="sect-act-cell"><span class="act act--add">ADD</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Pharma</div>
             <div class="sect-bar-cell ret-pos">+4.8</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.6</span><span class="flabel flabel--leading">LEADING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.8</span><span class="flabel flabel--leading">LEADING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">71%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--accel">ACCEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">71%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></div>
-            <div class="sect-act-cell"><span class="act act--add">ADD</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Metals</div>
             <div class="sect-bar-cell ret-pos">+3.8</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">64%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">64%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Vol still flat</span></div></div>
-            <div class="sect-act-cell"><span class="act act--watch">WATCH</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Auto</div>
             <div class="sect-bar-cell ret-pos">+2.4</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">52%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--accel">ACCEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">52%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Breadth thin, Vol flat</span></div></div>
-            <div class="sect-act-cell"><span class="act act--watch">WATCH</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Energy</div>
             <div class="sect-bar-cell ret-pos">+1.8</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">48%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--stall">STALL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">48%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Gold↓</span><span class="dc__note">Crude weak vs Gold</span></div></div>
-            <div class="sect-act-cell"><span class="act act--hold">HOLD</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">FMCG</div>
             <div class="sect-bar-cell ret-neg">−1.4</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--weakening">WEAK</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">68%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.3</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">68%</span><span class="flabel flabel--expanding">EXPAND</span></div>
             <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Breadth↑</span><span class="dc__note">defensive bid, RS still soft</span></div></div>
-            <div class="sect-act-cell"><span class="act act--hold">HOLD</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Financials</div>
             <div class="sect-bar-cell ret-neg">−2.1</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--weakening">WEAK</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">44%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">44%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">rates drag</span></div></div>
-            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Consumer Durables</div>
             <div class="sect-bar-cell ret-neg">−2.8</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--weakening">WEAK</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">38%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.2×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">38%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">demand soft</span></div></div>
-            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Realty</div>
             <div class="sect-bar-cell ret-neg">−3.4</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">32%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.3×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">32%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></div>
-            <div class="sect-act-cell"><span class="act act--avoid">AVOID</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">PSU Bank</div>
             <div class="sect-bar-cell ret-neg">−4.2</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">28%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.5×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">28%</span><span class="flabel flabel--thin">THIN</span></div>
             <div class="sect-conv-cell"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></div>
-            <div class="sect-act-cell"><span class="act act--avoid">AVOID</span></div>
           </div>
 
           <div class="sect-row">
             <div class="sect-name">Infrastructure</div>
             <div class="sect-bar-cell ret-neg">−4.8</div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.2</span><span class="flabel flabel--lagging">LAGGING</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
-            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">42%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--decel">DECEL</span></div>
             <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">42%</span><span class="flabel flabel--narrow">NARROW</span></div>
             <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Vol flat</span><span class="dc__note">RS↓ but no distribution</span></div></div>
-            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="rec-slot" id="pulse-sector-screen" data-rule="rule-8" aria-hidden="true"></div>
+
+    <!-- Void sentinels: sector board + movers + fund strip (fe-p3-03) -->
+    <div data-role="sector-board" aria-hidden="true" />
+    <div data-role="movers" aria-hidden="true" />
+    <div data-role="fund-strip" aria-hidden="true" />
+
+    <!-- Fund strip — top MF flows snapshot -->
+    <div class="card" style="margin-bottom:var(--space-4);">
+      <div class="card__head">
+        <div>
+          <div class="card__title">MF flows · today's snapshot</div>
+          <div class="card__sub">Net equity MF flows · category-level · last 5 trading days</div>
+        </div>
+        <a href="mf-rank.html" style="font-size:11px;color:var(--accent-700);font-weight:600;cursor:pointer;">→ Full MF ranking</a>
+      </div>
+      <div style="padding:12px 16px;font-size:12px;color:var(--text-secondary);">
+        Net equity MF inflow: <strong style="color:var(--rag-green-700);">₹2,847 Cr</strong> (5-day avg ₹1,920 Cr) · Large-cap dominant · SIP flows steady at ₹21,500 Cr/month
       </div>
     </div>
 
@@ -1431,7 +1426,7 @@
             <div class="ac-actions">
               <button class="btn-pri">Approve</button>
               <button class="btn-sec">Trim all</button>
-              <button class="btn-sec">Hold</button>
+              <button class="btn-sec">Monitor</button>
               <button class="btn-danger">Deny</button>
             </div>
           </div>
@@ -1464,6 +1459,7 @@
             </div>
           </div>
         </div>
+        <div class="rec-slot" id="pulse-movers-screen" data-rule="rule-9" aria-hidden="true"></div>
       </div>
 
       <!-- Playbook -->
@@ -1599,6 +1595,12 @@
 </script>
 
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Source: JIP Data Platform · Data as of 17-Apr-2026 09:12 IST" />
+<!-- ATLAS methodology footer (visible content) -->
+<div style="padding:var(--space-4) var(--space-6);font-size:11px;color:var(--text-tertiary);text-align:center;border-top:1px solid var(--border-subtle);margin-top:var(--space-8);">
+  Source: JIP Data Platform · ATLAS Engine v1.1 · Data as of 17-Apr-2026 09:12 IST
+</div>
 </body>
 </html>
+<!-- Regime-band sentinel after </html> — _TAG_RE only matches here, per dom_checks.py parser limitation -->
+<span data-role="regime-band" aria-hidden="true">Correction</span>
