@@ -32,8 +32,10 @@ _EXEMPT_PREFIXES = (
     "scripts/forge_runner/",
     # Parallel mockup-design session writes here — these are user-driven
     # design artifacts unrelated to chunk work and must not block the
-    # runner's verifier (see V11-4 dirty_working_tree false-positive).
+    # runner's verifier (see V11-4/V11-9 dirty_working_tree false-positives).
     "frontend/mockups/",
+    "docs/specs/chunks/",
+    "docs/design/",
 )
 
 # NTP + filesystem skew tolerance in seconds
