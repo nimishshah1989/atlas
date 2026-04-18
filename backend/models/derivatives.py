@@ -26,13 +26,13 @@ class PCRMeta(BaseModel):
 
 
 class PCRResponse(BaseModel):
-    data: list[PCRPoint]
+    pcr_series: list[PCRPoint]
     meta: PCRMeta
 
     @model_serializer
     def _ser(self) -> dict[str, Any]:
         return {
-            "data": [p.model_dump(mode="json") for p in self.data],
+            "data": [p.model_dump(mode="json") for p in self.pcr_series],
             "_meta": self.meta.model_dump(mode="json"),
         }
 
@@ -53,13 +53,13 @@ class OIMeta(BaseModel):
 
 
 class OIResponse(BaseModel):
-    data: list[OIPoint]
+    oi_buildup: list[OIPoint]
     meta: OIMeta
 
     @model_serializer
     def _ser(self) -> dict[str, Any]:
         return {
-            "data": [p.model_dump(mode="json") for p in self.data],
+            "data": [p.model_dump(mode="json") for p in self.oi_buildup],
             "_meta": self.meta.model_dump(mode="json"),
         }
 
@@ -78,12 +78,12 @@ class VIXMeta(BaseModel):
 
 
 class VIXResponse(BaseModel):
-    data: list[VIXPoint]
+    vix_series: list[VIXPoint]
     meta: VIXMeta
 
     @model_serializer
     def _ser(self) -> dict[str, Any]:
         return {
-            "data": [p.model_dump(mode="json") for p in self.data],
+            "data": [p.model_dump(mode="json") for p in self.vix_series],
             "_meta": self.meta.model_dump(mode="json"),
         }

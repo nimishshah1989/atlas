@@ -25,10 +25,10 @@ class JIPDerivativesService:
 
     async def check_fo_health(self) -> tuple[bool, str]:
         """Return (is_healthy, reason). reason='' if healthy."""
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text("SELECT COUNT(*), MAX(trade_date) FROM de_fo_bhavcopy")
         )
-        row = result.fetchone()
+        row = qr.fetchone()
         count: int = row[0] or 0 if row is not None else 0
         max_date: date | None = row[1] if row is not None else None
         if count == 0:
@@ -52,7 +52,7 @@ class JIPDerivativesService:
         """
         sym = symbol.upper()
         # Try de_fo_summary
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text(
                 """
                 SELECT date AS trade_date, pcr_oi, pcr_volume, total_oi
@@ -63,12 +63,12 @@ class JIPDerivativesService:
             ),
             {"from_date": from_date, "to_date": to_date},
         )
-        rows = result.mappings().all()
+        rows = qr.mappings().all()
         if rows:
             return [dict(r) for r in rows], "fo_summary"
 
         # Fallback: compute from de_fo_bhavcopy
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text(
                 """
                 WITH oi_by_type AS (
@@ -97,7 +97,7 @@ class JIPDerivativesService:
             ),
             {"symbol": sym, "from_date": from_date, "to_date": to_date},
         )
-        rows = result.mappings().all()
+        rows = qr.mappings().all()
         return [dict(r) for r in rows], "fo_bhavcopy_computed"
 
     async def get_oi_buildup(
@@ -105,7 +105,7 @@ class JIPDerivativesService:
     ) -> list[dict[str, Any]]:
         """OI buildup chart: daily OI + change aggregated across expiries, by option_type."""
         sym = symbol.upper()
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text(
                 """
                 SELECT
@@ -122,12 +122,12 @@ class JIPDerivativesService:
             ),
             {"symbol": sym, "from_date": from_date, "to_date": to_date},
         )
-        rows = result.mappings().all()
+        rows = qr.mappings().all()
         return [dict(r) for r in rows]
 
     async def check_vix_health(self) -> tuple[bool, str]:
         """Return (is_healthy, reason). reason='' if healthy."""
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text(
                 """
                 SELECT COUNT(*), MAX(date)
@@ -136,7 +136,7 @@ class JIPDerivativesService:
                 """
             )
         )
-        row = result.fetchone()
+        row = qr.fetchone()
         count: int = row[0] or 0 if row is not None else 0
         max_date: date | None = row[1] if row is not None else None
         if count == 0:
@@ -150,7 +150,7 @@ class JIPDerivativesService:
 
     async def get_india_vix(self, from_date: date, to_date: date) -> list[dict[str, Any]]:
         """Get India VIX series from de_macro_values."""
-        result = await self._session.execute(
+        qr = await self._session.execute(
             text(
                 """
                 SELECT date AS trade_date, value AS close
@@ -162,5 +162,5 @@ class JIPDerivativesService:
             ),
             {"from_date": from_date, "to_date": to_date},
         )
-        rows = result.mappings().all()
+        rows = qr.mappings().all()
         return [dict(r) for r in rows]

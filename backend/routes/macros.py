@@ -72,7 +72,7 @@ async def get_vix(
     data_as_of = max((p.trade_date for p in points), default=None)
 
     return VIXResponse(
-        data=points,
+        vix_series=points,
         meta=VIXMeta(
             ticker="INDIAVIX",
             from_date=resolved_from,

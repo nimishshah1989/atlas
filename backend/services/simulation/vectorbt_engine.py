@@ -49,7 +49,7 @@ def _D(v: Any) -> Decimal:
     ndigits=10 strips floating-point noise beyond meaningful precision while
     preserving all digits relevant to a 4-decimal parity assertion.
     """
-    return Decimal(str(round(float(v), 10)))
+    return Decimal(str(round(np.float64(v), 10)))
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ class VectorbtEngine:
         if not price_series:
             raise ValueError("price_series must not be empty")
 
-        price_map_f: dict[date, Any] = {d: float(p) for d, p in price_series}
+        price_map_f: dict[date, Any] = {d: np.float64(p) for d, p in price_series}
         signal_map: dict[date, SignalState] = {pt.date: pt.state for pt in signal_series}
         common_dates: list[date] = sorted(price_map_f.keys() & signal_map.keys())
 
@@ -114,8 +114,8 @@ class VectorbtEngine:
         transactions: list[TransactionRecord] = []
         all_disposals: list[LotDisposal] = []
 
-        sip_amount_f: Any = float(params.sip_amount)
-        lumpsum_amount_f: Any = float(params.lumpsum_amount)
+        sip_amount_f: Any = np.float64(params.sip_amount)
+        lumpsum_amount_f: Any = np.float64(params.lumpsum_amount)
 
         for today in common_dates:
             nav_f: Any = price_map_f[today]
@@ -187,7 +187,7 @@ class VectorbtEngine:
                     total_tax_d = sum((d.tax_detail.total_tax for d in disposals), Decimal("0"))
                     gross_proceeds_d = units_to_sell_d * nav_d
                     # Convert to float for liquid pool
-                    liquid_f = liquid_f + float(gross_proceeds_d) - float(total_tax_d)
+                    liquid_f = liquid_f + np.float64(gross_proceeds_d) - np.float64(total_tax_d)
 
                     stcg_tax = sum((d.tax_detail.stcg_tax for d in disposals), Decimal("0"))
                     ltcg_tax = sum((d.tax_detail.ltcg_tax for d in disposals), Decimal("0"))
@@ -212,7 +212,7 @@ class VectorbtEngine:
             elif signal == SignalState.REENTRY and liquid_f > 0.0:
                 # Redeploy liquid
                 redeploy_pct_d = max(Decimal("0"), min(Decimal("100"), params.redeploy_pct))
-                redeploy_pct_f: Any = float(redeploy_pct_d)
+                redeploy_pct_f: Any = np.float64(redeploy_pct_d)
                 redeploy_amount_f: Any = liquid_f * redeploy_pct_f / 100.0
                 if redeploy_amount_f > 0.0:
                     re_units_f: Any = redeploy_amount_f / nav_f
@@ -232,7 +232,7 @@ class VectorbtEngine:
 
             # Daily snapshot
             current_units_d = lot_tracker.total_units
-            fv_f: Any = float(current_units_d) * nav_f
+            fv_f: Any = np.float64(current_units_d) * nav_f
             liquid_snapshot_d = _D(liquid_f)
             fv_d = _D(fv_f)
             daily_values.append(
@@ -289,7 +289,7 @@ class VectorbtBatchEngine:
             return []
 
         # 1. Build price array and signal map
-        price_map_f: dict[date, Any] = {d: float(p) for d, p in price_series}
+        price_map_f: dict[date, Any] = {d: np.float64(p) for d, p in price_series}
         signal_map: dict[date, SignalState] = {pt.date: pt.state for pt in signal_series}
         common_dates: list[date] = sorted(price_map_f.keys() & signal_map.keys())
 
@@ -301,9 +301,11 @@ class VectorbtBatchEngine:
         n_configs = len(configs)
 
         # 2. Build per-config amount vectors (m,)
-        sip_amounts = np.array([float(c.parameters.sip_amount) for c in configs], dtype=np.float64)
+        sip_amounts = np.array(
+            [np.float64(c.parameters.sip_amount) for c in configs], dtype=np.float64
+        )
         lumpsum_amounts = np.array(
-            [float(c.parameters.lumpsum_amount) for c in configs], dtype=np.float64
+            [np.float64(c.parameters.lumpsum_amount) for c in configs], dtype=np.float64
         )
 
         # 3. SIP mask (n_dates,): True on first trading day of each month

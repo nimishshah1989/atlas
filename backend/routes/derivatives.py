@@ -88,7 +88,7 @@ async def get_pcr(
     data_as_of = max((p.trade_date for p in points), default=None)
 
     return PCRResponse(
-        data=points,
+        pcr_series=points,
         meta=PCRMeta(
             symbol=symbol.upper(),
             from_date=resolved_from,
@@ -148,7 +148,7 @@ async def get_oi_buildup(
     data_as_of = max((p.trade_date for p in points), default=None)
 
     return OIResponse(
-        data=points,
+        oi_buildup=points,
         meta=OIMeta(
             symbol=symbol.upper(),
             from_date=resolved_from,
