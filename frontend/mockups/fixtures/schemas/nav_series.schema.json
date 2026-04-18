@@ -61,6 +61,11 @@
       "description": "Most recent NAV date in this fixture (ISO YYYY-MM-DD, IST).",
       "examples": ["2026-04-17"]
     },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Data source attribution string."
+    },
     "series": {
       "type": "array",
       "description": "Daily NAV rows, chronologically ascending. Typical 5Y sample is approximately 1,250 rows (one per business day on which NAV is published). Gaps allowed only when AMFI did not publish (holidays) — consumers must not fill forward silently.",

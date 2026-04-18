@@ -1,0 +1,150 @@
+{
+  "data_as_of": "2026-04-17",
+  "entries": [
+    {
+      "aliases": [
+        "RIL",
+        "Reliance",
+        "RELIANCE"
+      ],
+      "display_name": "Reliance Industries",
+      "entity_type": "stock",
+      "id": "stock:reliance",
+      "primary_url": "/mockups/stock-detail.html?symbol=RELIANCE",
+      "ranking_weight": 1.0
+    },
+    {
+      "aliases": [
+        "HDFC Bank",
+        "HDB",
+        "HDFCBANK"
+      ],
+      "display_name": "HDFC Bank",
+      "entity_type": "stock",
+      "id": "stock:hdfcbank",
+      "primary_url": "/mockups/stock-detail.html?symbol=HDFCBANK",
+      "ranking_weight": 0.95
+    },
+    {
+      "aliases": [
+        "Infosys",
+        "INFY",
+        "Infy"
+      ],
+      "display_name": "Infosys",
+      "entity_type": "stock",
+      "id": "stock:infy",
+      "primary_url": "/mockups/stock-detail.html?symbol=INFY",
+      "ranking_weight": 0.92
+    },
+    {
+      "aliases": [
+        "PPFAS",
+        "Parag Parikh Flexi",
+        "PPFCF"
+      ],
+      "display_name": "Parag Parikh Flexi Cap Fund - Direct Growth",
+      "entity_type": "mf",
+      "id": "mf:ppfas-flexi-cap-direct-growth",
+      "primary_url": "/mockups/mf-detail.html?id=ppfas-flexi-cap-direct-growth",
+      "ranking_weight": 0.88
+    },
+    {
+      "aliases": [
+        "Mirae Large Cap",
+        "MALCF"
+      ],
+      "display_name": "Mirae Asset Large Cap Fund - Direct Growth",
+      "entity_type": "mf",
+      "id": "mf:mirae-large-cap-direct-growth",
+      "primary_url": "/mockups/mf-detail.html?id=mirae-large-cap-direct-growth",
+      "ranking_weight": 0.82
+    },
+    {
+      "aliases": [
+        "IT sector",
+        "technology",
+        "Nifty IT"
+      ],
+      "display_name": "Nifty IT",
+      "entity_type": "sector",
+      "id": "sector:nifty_it",
+      "primary_url": "/mockups/explore-sector.html?sector=nifty_it",
+      "ranking_weight": 0.78
+    },
+    {
+      "aliases": [
+        "Bank Nifty",
+        "banking sector",
+        "Nifty Bank"
+      ],
+      "display_name": "Nifty Bank",
+      "entity_type": "sector",
+      "id": "sector:nifty_bank",
+      "primary_url": "/mockups/explore-sector.html?sector=nifty_bank",
+      "ranking_weight": 0.8
+    },
+    {
+      "aliases": [
+        "pulse",
+        "today",
+        "home",
+        "dashboard"
+      ],
+      "display_name": "Today — Market Pulse",
+      "entity_type": "page",
+      "id": "page:today",
+      "primary_url": "/mockups/today.html",
+      "ranking_weight": 0.7
+    },
+    {
+      "aliases": [
+        "MF rank",
+        "mutual fund ranking",
+        "fund screener"
+      ],
+      "display_name": "MF Rank — 4-Factor Scoring",
+      "entity_type": "page",
+      "id": "page:mf-rank",
+      "primary_url": "/mockups/mf-rank.html",
+      "ranking_weight": 0.65
+    },
+    {
+      "aliases": [
+        "lab",
+        "simulator",
+        "backtest",
+        "playback"
+      ],
+      "display_name": "Lab — Breadth Playback",
+      "entity_type": "page",
+      "id": "page:lab",
+      "primary_url": "/mockups/lab.html",
+      "ranking_weight": 0.6
+    },
+    {
+      "aliases": [
+        "TCS",
+        "Tata Consultancy",
+        "tcs"
+      ],
+      "display_name": "Tata Consultancy Services",
+      "entity_type": "stock",
+      "id": "stock:tcs",
+      "primary_url": "/mockups/stock-detail.html?symbol=TCS",
+      "ranking_weight": 0.9
+    },
+    {
+      "aliases": [
+        "Wipro",
+        "WIPRO"
+      ],
+      "display_name": "Wipro Limited",
+      "entity_type": "stock",
+      "id": "stock:wipro",
+      "primary_url": "/mockups/stock-detail.html?symbol=WIPRO",
+      "ranking_weight": 0.75
+    }
+  ],
+  "source": "ATLAS search index (NSE + AMFI)"
+}

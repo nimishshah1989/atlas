@@ -1,0 +1,31 @@
+{
+  "benchmark_id": "NIFTY_500_TRI",
+  "category": "flexi_cap",
+  "data_as_of": "2026-04-17",
+  "fund_id": "ppfas-flexi-cap-direct-growth",
+  "fund_name": "Parag Parikh Flexi Cap Fund - Direct Plan - Growth",
+  "scheme_code": "INF879O01027",
+  "series": [
+    {
+      "date": "2026-04-12",
+      "nav": 54.5
+    },
+    {
+      "date": "2026-04-13",
+      "nav": 53.5
+    },
+    {
+      "date": "2026-04-14",
+      "nav": 54.0
+    },
+    {
+      "date": "2026-04-15",
+      "nav": 55.5
+    },
+    {
+      "date": "2026-04-16",
+      "nav": 55.5
+    }
+  ],
+  "source": "AMFI NAV data via ATLAS MF pipeline"
+}

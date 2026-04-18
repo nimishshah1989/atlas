@@ -1,0 +1,1030 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-04-19T01:13:33.847837+05:30",
+  "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
+  "total": 113,
+  "passed": 51,
+  "failed": 23,
+  "skipped": 39,
+  "critical_fail_count": 18,
+  "high_fail_count": 5,
+  "results": [
+    {
+      "id": "fe-c-01",
+      "title": "components.css + tokens.css + _shared.html exist",
+      "severity": "critical",
+      "check_type": "file_exists",
+      "passed": true,
+      "evidence": "All 3 file(s) exist and non-empty",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-c-02",
+      "title": "Every page imports tokens.css + components.css",
+      "severity": "critical",
+      "check_type": "grep_require",
+      "passed": true,
+      "evidence": "Pattern 'href=\"tokens\\\\.css\".*href=\"components\\\\.css\"': 14 match(es)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-c-03",
+      "title": "Every reusable primitive present in components.css",
+      "severity": "critical",
+      "check_type": "grep_require",
+      "passed": true,
+      "evidence": "Pattern '\\\\.chip': 14 match(es); Pattern '\\\\.kpi-tile|\\\\.kpi-strip': 14 match(es); Pattern '\\\\.data-table': 14 match(es); Pattern '\\\\.sparkline': 4 match(es); Pattern '\\\\.rs-mini': 6 match(es)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-01",
+      "title": "regime-banner present on all market-facing pages (DP \u00a712)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\".regime-banner, [data-component='regime-banner']\": 6 element(s) in 6 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-02",
+      "title": "regime-banner: regime value drawn from a constrained enum",
+      "severity": "high",
+      "check_type": "attr_enum",
+      "passed": true,
+      "evidence": "attr_enum 'data-regime' in allowed set",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-03",
+      "title": "signal-strip present on all instrument-row pages (DP \u00a713)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\".signal-strip, [data-component='signal-strip']\": 16 element(s) in 5 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-04",
+      "title": "signal-strip carries all 4 base RRG chips",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='signal-strip'] [data-chip]\": 8 element(s) in 2 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-05",
+      "title": "gold-rs-chip present on every instrument-row + deep-dive page",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-chip='gold-rs'], .gold-rs-chip\": 5 element(s) in 5 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-06",
+      "title": "conviction-chip present on every deep-dive page",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-chip='conviction'], .conviction-chip\": 2 element(s) in 2 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-07",
+      "title": "divergences-block present on deep-dive pages (DP \u00a710 row 3)",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='divergences-block'], .divergences-block\": 2 element(s) in 2 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-08",
+      "title": "dual-axis-overlay present on every chart-bearing detail page",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\".chart[data-dual-axis='true'], [data-component='dual-axis-overlay']\": 4 element(s) in 4 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-09",
+      "title": "interpretation-sidecar present on all deep-dive pages",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='interpretation-sidecar'], .interpretation-sidecar\": 4 element(s) in 4 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-10",
+      "title": "interpretation-sidecar: RECOMMEND tier is gated OFF in V1",
+      "severity": "critical",
+      "check_type": "dom_forbidden",
+      "passed": true,
+      "evidence": "No forbidden elements in 7 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-11",
+      "title": "signal-history-table present on deep-dive pages (DP \u00a716)",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='signal-history-table'], .signal-history-table\": 2 element(s) in 2 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-12",
+      "title": "four-decision-card slot on Today + Lab pages (DP \u00a711)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='four-decision-card'], .four-decision-card\": 5 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-13",
+      "title": "four-decision-card: all 4 cards present and labelled",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='four-decision-card'] [data-card]\": 4 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-14",
+      "title": "simulate-this affordance on every deep-dive + breadth page",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-action='simulate-this'], .simulate-this, a[href*='lab.html']\": 4 element(s) in 4 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-15",
+      "title": "four-universal-benchmarks row on Global + Country + Stock + MF",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-component='four-universal-benchmarks'] [data-benchmark]\": 16 element(s) in 4 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-16",
+      "title": "conviction-chip: data-score is an integer 0..100",
+      "severity": "high",
+      "check_type": "attr_numeric_range",
+      "passed": true,
+      "evidence": "attr 'data-score' in numeric range [0, 100]",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-dp-17",
+      "title": "spec \u00a71.10 cross-reference matrix lists every DP-mandated component",
+      "severity": "high",
+      "check_type": "grep_require",
+      "passed": true,
+      "evidence": "Pattern 'regime-banner': 26 match(es); Pattern 'signal-strip': 22 match(es); Pattern 'gold-rs-chip': 4 match(es); Pattern 'conviction-chip': 6 match(es); Pattern 'divergences-block': 22 match(es)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-01",
+      "title": "Every fixture JSON validates against its JSON Schema",
+      "severity": "critical",
+      "check_type": "fixture_schema",
+      "passed": true,
+      "evidence": "fixture_schema: 6 fixture(s) validated",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-02",
+      "title": "Every fixture maps to an endpoint in spec \u00a715",
+      "severity": "critical",
+      "check_type": "fixture_parity",
+      "passed": true,
+      "evidence": "fixture_parity: 8 fixture(s) checked against \u00a715",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-03",
+      "title": "Core fixtures present (v1.1 \u2014 8 schemas)",
+      "severity": "critical",
+      "check_type": "file_exists",
+      "passed": true,
+      "evidence": "All 14 file(s) exist and non-empty",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-04",
+      "title": "mf_rank_universe fixture carries all 4 composite factors per row",
+      "severity": "critical",
+      "check_type": "fixture_field_required",
+      "passed": true,
+      "evidence": "fixture_field_required OK in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-05",
+      "title": "mf_rank_universe: composite_score is 0..100 with 1dp precision",
+      "severity": "high",
+      "check_type": "fixture_numeric_range",
+      "passed": true,
+      "evidence": "fixture_numeric_range [0, 100] OK",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-06",
+      "title": "sector_rrg fixture carries RS-ratio + RS-momentum per sector",
+      "severity": "critical",
+      "check_type": "fixture_field_required",
+      "passed": true,
+      "evidence": "fixture_field_required OK in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-07",
+      "title": "sector_rrg: every sector carries a tail of length >= 8",
+      "severity": "high",
+      "check_type": "fixture_array_length",
+      "passed": true,
+      "evidence": "fixture_array_length >= 8 OK",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-08",
+      "title": "sector_rrg: quadrant value drawn from a fixed enum",
+      "severity": "critical",
+      "check_type": "fixture_enum",
+      "passed": true,
+      "evidence": "fixture_enum ['leading', 'weakening', 'lagging', 'improving'] OK",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-09",
+      "title": "All fixtures carry a top-level data_as_of ISO date",
+      "severity": "critical",
+      "check_type": "fixture_field_required",
+      "passed": true,
+      "evidence": "fixture_field_required OK in 8 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-f-10",
+      "title": "All fixtures carry a source attribution string",
+      "severity": "high",
+      "check_type": "fixture_field_required",
+      "passed": true,
+      "evidence": "fixture_field_required OK in 8 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-01",
+      "title": "Every V1 page is reachable at /mockups/{page}",
+      "severity": "critical",
+      "check_type": "url_reachable",
+      "passed": false,
+      "evidence": "FAIL \u2014 https://atlas.jslwealth.in/mockups/mf-rank.html: HTTP 404; https://atlas.jslwealth.in/mockups/breadth.html: HTTP 404; https://atlas.jslwealth.in/mockups/lab.html: HTTP 404",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-02",
+      "title": "Spec viewer + spec markdown are reachable",
+      "severity": "high",
+      "check_type": "url_reachable",
+      "passed": true,
+      "evidence": "All 2 URL(s) returned 200",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-03",
+      "title": "All mockup pages are valid HTML5",
+      "severity": "critical",
+      "check_type": "html5_valid",
+      "passed": true,
+      "evidence": "SKIP: html5validator not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-g-04",
+      "title": "Pages use only tokens from tokens.css (no raw colors/fonts)",
+      "severity": "critical",
+      "check_type": "design_tokens_only",
+      "passed": false,
+      "evidence": "Raw color/font declarations: portfolio-detail.html: raw background in inline style; portfolio-detail.html: raw background in inline style; portfolio-detail.html: raw background in inline style; portfolio-detail.html: raw background in inline style; portfolio-detail.html: raw background in inline style",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-05",
+      "title": "No dark-mode residue",
+      "severity": "critical",
+      "check_type": "grep_forbid",
+      "passed": true,
+      "evidence": "Pattern absent in 20 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-06",
+      "title": "No LLM/verdict/recommendation prose (RECOMMEND tier gated to V1.1)",
+      "severity": "critical",
+      "check_type": "kill_list",
+      "passed": false,
+      "evidence": "Forbidden patterns found: explore-sector.html: 'AI commentary' (1 match); explore-global.html: '\\\\bHOLD\\\\b' (2 match); pulse-breadth.html: '\\\\bSELL\\\\b' (1 match); today.html: '\\\\bHOLD\\\\b' (8 match); pulse-sectors.html: '\\\\bBUY\\\\b' (3 match)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-07",
+      "title": "All monetary display uses \u20b9 lakh/crore, never $ or million/billion",
+      "severity": "critical",
+      "check_type": "i18n_indian",
+      "passed": false,
+      "evidence": "Forbidden i18n patterns found: portfolio-detail.html: '\\\\$[0-9]' (1 match); explore-sector.html: '\\\\$[0-9]' (3 match); explore-country.html: '\\\\$[0-9]' (2 match); explore-global.html: '\\\\$[0-9]' (17 match); explorer.html: '\\\\$[0-9]' (1 match)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-08",
+      "title": "Every page has an EXPLAIN block",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 _shared.html: found 0, need 1 for '.explain-block, [data-tier=explain]'",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-09",
+      "title": "Every page has a methodology footer",
+      "severity": "critical",
+      "check_type": "methodology_footer",
+      "passed": true,
+      "evidence": "methodology_footer OK in 7 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-10",
+      "title": "Every KPI tile carries a \u24d8 info-tooltip",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "Parent/child ratio check passed",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-11",
+      "title": "Every info-tooltip carries a title attribute",
+      "severity": "high",
+      "check_type": "attr_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-g-12",
+      "title": "Every chart carries the 5-block contract",
+      "severity": "critical",
+      "check_type": "chart_contract",
+      "passed": true,
+      "evidence": "chart_contract: 0 chart(s) have required children",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-13",
+      "title": "Every page passes axe-core WCAG AA",
+      "severity": "high",
+      "check_type": "playwright_a11y",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-g-14",
+      "title": "Every page matches its visual baseline within 2% delta",
+      "severity": "high",
+      "check_type": "playwright_screenshot",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-g-15",
+      "title": "Every page embeds the shared nav shell with all 10 entries",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'nav.atlas-nav a, [data-role=nav] a': 77 element(s) in 7 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-16",
+      "title": "Global search box present in top nav on every page",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'input.atlas-search, [data-role=global-search]': 7 element(s) in 7 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-17",
+      "title": "Every quantitative chart has a benchmark overlay or active-weight encoding",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-g-18",
+      "title": "No non-deterministic JS in mockups",
+      "severity": "high",
+      "check_type": "grep_forbid",
+      "passed": true,
+      "evidence": "Pattern absent in 17 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-g-19",
+      "title": "rec-slot placeholders present per \u00a714 rule-hook slot index",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-l-01",
+      "title": "index page links to all 10 Stage-1 mockups",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['index.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-l-02",
+      "title": "No dead links in any mockup",
+      "severity": "high",
+      "check_type": "link_integrity",
+      "passed": false,
+      "evidence": "Broken local links: portfolio-detail.html -> breadth.html; portfolio-detail.html -> mf-rank.html; portfolio-detail.html -> lab.html; portfolio-detail.html -> reports.html; stock-detail.html -> breadth.html",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-m-01",
+      "title": "EXPLAIN blocks carry a formula or methodology sentence",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-m-02",
+      "title": "DESCRIBE blocks are deterministic (no opinion/action language)",
+      "severity": "critical",
+      "check_type": "kill_list",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-m-03",
+      "title": "No RECOMMEND-tier prose outside rec-slot placeholders",
+      "severity": "critical",
+      "check_type": "kill_list",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-01",
+      "title": "No horizontal scroll at 360px \u2014 today.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-02",
+      "title": "No horizontal scroll at 360px \u2014 explore-global.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-03",
+      "title": "No horizontal scroll at 360px \u2014 explore-country.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-04",
+      "title": "No horizontal scroll at 360px \u2014 explore-sector.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-05",
+      "title": "No horizontal scroll at 360px \u2014 stock-detail.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-06",
+      "title": "No horizontal scroll at 360px \u2014 mf-detail.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-07",
+      "title": "No horizontal scroll at 360px \u2014 mf-rank.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-08",
+      "title": "No horizontal scroll at 360px \u2014 breadth.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-09",
+      "title": "No horizontal scroll at 360px \u2014 portfolios.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-10",
+      "title": "No horizontal scroll at 360px \u2014 lab.html",
+      "severity": "critical",
+      "check_type": "playwright_no_horizontal_scroll",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-mob-11",
+      "title": "Data-dense tables gain horizontal-scroll wrapper on S/XS",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-country.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; explore-sector.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; portfolios.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-mob-12",
+      "title": "Tap targets \u2265 44x44 px at XS (WCAG 2.5.5)",
+      "severity": "high",
+      "check_type": "playwright_tap_target",
+      "passed": true,
+      "evidence": "SKIP: playwright not installed",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10-01",
+      "title": "breadth.html: hero with 3 headline counts (21-EMA, 50-DMA, 200-DMA)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['breadth.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10-02",
+      "title": "breadth.html: regime band + 3 KPI cards + oscillator chart + zone reference + DESCRIBE + signal history",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10-03",
+      "title": "breadth.html: universe selector + MA selector pills",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10-04",
+      "title": "breadth.html: zone bands rendered (OB >=400 red tint, OS <=100 green tint, midline 250)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-01",
+      "title": "signal-playback: all 14 input parameters present with declared ids",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "selector_file_pairs check passed",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p10_5-02",
+      "title": "signal-playback: 3-overlay benchmark (Strategy, Nifty 50 B&H, Nifty 500 B&H)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-03",
+      "title": "signal-playback: three tabs (Transaction Log, Cashflow, Tax Analysis)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-04",
+      "title": "signal-playback: light-token port (no dark-v8 palette residue)",
+      "severity": "critical",
+      "check_type": "grep_forbid",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p10_5-05",
+      "title": "signal-playback: FIFO tax regime split coded (2024-07-23 cutoff)",
+      "severity": "critical",
+      "check_type": "grep_require",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p11-01",
+      "title": "portfolios.html: 4 book cards + holdings tables + benchmark comparison",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 portfolios.html: '[data-book]' found 0, need 4; portfolios.html: '[data-block=holdings]' found 0, need 4; portfolios.html: '[data-role=benchmark]' found 0, need 4",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p11-02",
+      "title": "portfolios.html: accountability banner + pending-rec ledger removed",
+      "severity": "critical",
+      "check_type": "dom_forbidden",
+      "passed": true,
+      "evidence": "No forbidden elements in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p12-01",
+      "title": "lab.html: 3 mode tabs (Breadth Playback, Rule Backtest V1.1 disabled, Compare)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p12-02",
+      "title": "lab.html: strategy config panel + run button + results area",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p12-03",
+      "title": "lab.html: full signal-playback embed in Breadth Playback mode",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['lab.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p3-01",
+      "title": "today.html: hero strip with 3 pulse tiles",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 today.html: '.pulse-hero' found 0, need 1; today.html: '.pulse-tile' found 0, need 3",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p3-02",
+      "title": "today.html: regime band with days-in-regime",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 today.html: found 0, need 1 for '[data-role=regime-band]'",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p3-03",
+      "title": "today.html: sector board (RRG) + movers strip + fund strip",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 today.html: '[data-role=sector-board]' found 0, need 1; today.html: '[data-role=movers]' found 0, need 1; today.html: '[data-role=fund-strip]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p4-01",
+      "title": "explore-global.html: macros/rates/FX/commod/credit blocks all present",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-global.html: '[data-block=macros]' found 0, need 1; explore-global.html: '[data-block=rates]' found 0, need 1; explore-global.html: '[data-block=fx]' found 0, need 1; explore-global.html: '[data-block=commodities]' found 0, need 1; explore-global.html: '[data-block=credit]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p4-02",
+      "title": "explore-global.html: stripped of verdict language + commentary blocks",
+      "severity": "critical",
+      "check_type": "kill_list",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p5-01",
+      "title": "explore-country.html: embedded breadth panel per \u00a75.1",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-country.html: found 0, need 1 for '[data-block=breadth-compact]'",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p5-02",
+      "title": "explore-country.html: compact signal-playback embed present",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-country.html: found 0, need 1 for '[data-component=signal-playback][data-mode=compact]'",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p5-03",
+      "title": "explore-country.html: sectors RRG + flows blocks present",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-country.html: '[data-block=sectors-rrg]' found 0, need 1; explore-country.html: '[data-block=flows]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p5-04",
+      "title": "explore-country.html: stripped of sect-comm, sect-alloc narrative",
+      "severity": "critical",
+      "check_type": "dom_forbidden",
+      "passed": true,
+      "evidence": "No forbidden elements in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p6-01",
+      "title": "explore-sector.html: full breadth panel + full signal-playback present",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-sector.html: '[data-block=breadth-full]' found 0, need 1; explore-sector.html: '[data-component=signal-playback][data-mode=full]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p6-02",
+      "title": "explore-sector.html: members table + sector RS/Mom/Vol chips",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 explore-sector.html: '[data-block=members]' found 0, need 1; explore-sector.html: '[data-chip=momentum]' found 0, need 1; explore-sector.html: '[data-chip=volume]' found 0, need 1; explore-sector.html: '[data-chip=breadth]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p7-01",
+      "title": "stock-detail.html: hero + chart + 4 RRG chips + peers + signal-playback compact",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 stock-detail.html: '[data-block=hero]' found 0, need 1; stock-detail.html: '.chart-with-events' found 0, need 1; stock-detail.html: '[data-block=peers]' found 0, need 1; stock-detail.html: '[data-component=signal-playback][data-mode=compact]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p7-02",
+      "title": "stock-detail.html: Atlas Insight block removed",
+      "severity": "critical",
+      "check_type": "dom_forbidden",
+      "passed": true,
+      "evidence": "No forbidden elements in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p8-01",
+      "title": "mf-detail.html: returns + alpha + holdings + weighted-technicals chips + signal-playback compact",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 mf-detail.html: '[data-block=returns]' found 0, need 1; mf-detail.html: '[data-block=alpha]' found 0, need 1; mf-detail.html: '[data-block=holdings]' found 0, need 1; mf-detail.html: '[data-block=weighted-technicals]' found 0, need 1; mf-detail.html: '[data-component=signal-playback][data-mode=compact]' found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p8-02",
+      "title": "mf-detail.html: Atlas Verdict HOLD/ADD ON DIPS removed",
+      "severity": "critical",
+      "check_type": "kill_list",
+      "passed": true,
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p9-01",
+      "title": "mf-rank.html: 4-factor scoring disclosed (Returns, Risk, Resilience, Consistency)",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['mf-rank.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p9-02",
+      "title": "mf-rank.html: tie-break indicator shown when composites tie",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['mf-rank.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p9-03",
+      "title": "mf-rank.html: formula disclosure block present",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found (['mf-rank.html'])",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-p9-04",
+      "title": "mf-rank.html: filter rail + rank table present",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: files not found",
+      "status": "SKIP"
+    },
+    {
+      "id": "fe-r-01",
+      "title": "Every \u00a714 rule-hook slot rendered as empty rec-slot placeholder",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 today.html: slot 'pulse-regime' not found ('div.rec-slot[data-slot-id=pulse-regime]'); explore-global.html: slot 'global-regime' not found ('div.rec-slot[data-slot-id=global-regime]'); explore-country.html: slot 'country-breadth' not found ('div.rec-slot[data-slot-id=country-breadth]'); explore-sector.html: slot 'sector-breadth' not found ('div.rec-slot[data-slot-id=sector-breadth]'); explore-sector.html: slot 'sector-members' not found ('div.rec-slot[data-slot-id=sector-members]')",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-r-02",
+      "title": "Every V1.1 rule (1-10) has at least one rec-slot binding in \u00a714",
+      "severity": "high",
+      "check_type": "rule_coverage",
+      "passed": true,
+      "evidence": "rule_coverage: 15 rec-slot bindings found (expected 10)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-s-01",
+      "title": "RRG chip vocabulary rendered consistently across all instrument pages",
+      "severity": "critical",
+      "check_type": "grep_require",
+      "passed": false,
+      "evidence": "FAIL \u2014 Pattern 'EXPANDING|NARROW|THIN': found 0, need 1",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-s-02",
+      "title": "Signal-feed endpoints referenced by at least one fixture (V1.1 preservation)",
+      "severity": "critical",
+      "check_type": "fixture_endpoint_reference",
+      "passed": false,
+      "evidence": "Endpoints not referenced in fixtures: ['/api/v1/stocks/breadth', '/api/v1/mf/{id}/weighted-technicals', '/api/v1/mf/{id}/rs-history', '/api/v1/stocks/{symbol}/rs-history', '/api/v1/sectors/rrg']",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-01",
+      "title": "Every chart carries a data-as-of attribute",
+      "severity": "critical",
+      "check_type": "attr_required",
+      "passed": false,
+      "evidence": "FAIL \u2014 portfolio-detail.html: \".chart, [data-component*='chart']\" missing attr 'data-as-of'; portfolio-detail.html: \".chart, [data-component*='chart']\" missing attr 'data-as-of'; portfolio-detail.html: \".chart, [data-component*='chart']\" missing attr 'data-as-of'; portfolio-detail.html: \".chart, [data-component*='chart']\" missing attr 'data-as-of'; portfolio-detail.html: \".chart, [data-component*='chart']\" missing attr 'data-as-of'",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-02",
+      "title": "Every regime-banner declares data-as-of",
+      "severity": "critical",
+      "check_type": "attr_required",
+      "passed": true,
+      "evidence": "attr 'data-as-of' present on all \"[data-component='regime-banner']\" elements",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-03",
+      "title": "Every signal-strip declares data-as-of",
+      "severity": "high",
+      "check_type": "attr_required",
+      "passed": true,
+      "evidence": "attr 'data-as-of' present on all \"[data-component='signal-strip']\" elements",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-04",
+      "title": "Empty-state pattern library present (DP-compliant)",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-state='empty'], .empty-state\": 1 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-05",
+      "title": "Loading skeleton pattern library present",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-state='loading'], .skeleton\": 1 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-06",
+      "title": "Error-state pattern library present",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "\"[data-state='error'], .error-state\": 1 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-07",
+      "title": "Staleness badge variants present (fresh / stale / very-stale)",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'[data-staleness]': 3 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-08",
+      "title": "Methodology footer renders on every page",
+      "severity": "critical",
+      "check_type": "methodology_footer",
+      "passed": true,
+      "evidence": "methodology_footer OK in 17 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-09",
+      "title": "No naked '\u2014' dashes without a staleness or empty label",
+      "severity": "medium",
+      "check_type": "dom_forbidden",
+      "passed": true,
+      "evidence": "No forbidden elements in 17 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-state-10",
+      "title": "Every simulated/delayed block has an explicit delay label",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "SKIP: soft check (informational)",
+      "status": "SKIP"
+    }
+  ]
+}

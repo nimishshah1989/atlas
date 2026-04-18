@@ -1,0 +1,53 @@
+{
+  "data_as_of": "2026-04-17",
+  "series": [
+    {
+      "date": "2026-04-12",
+      "dma200_count": 239,
+      "dma50_count": 289,
+      "ema21_count": 324,
+      "index_close": 12550.0,
+      "index_tri": 14060.0,
+      "universe_size": 500
+    },
+    {
+      "date": "2026-04-13",
+      "dma200_count": 227,
+      "dma50_count": 277,
+      "ema21_count": 312,
+      "index_close": 12540.0,
+      "index_tri": 14048.0,
+      "universe_size": 500
+    },
+    {
+      "date": "2026-04-14",
+      "dma200_count": 230,
+      "dma50_count": 280,
+      "ema21_count": 315,
+      "index_close": 12530.0,
+      "index_tri": 14036.0,
+      "universe_size": 500
+    },
+    {
+      "date": "2026-04-15",
+      "dma200_count": 246,
+      "dma50_count": 296,
+      "ema21_count": 331,
+      "index_close": 12520.0,
+      "index_tri": 14024.0,
+      "universe_size": 500
+    },
+    {
+      "date": "2026-04-16",
+      "dma200_count": 220,
+      "dma50_count": 270,
+      "ema21_count": 305,
+      "index_close": 12510.0,
+      "index_tri": 14012.0,
+      "universe_size": 500
+    }
+  ],
+  "source": "ATLAS breadth engine — NSE Nifty 500 constituents via JIP",
+  "universe": "nifty500",
+  "universe_size": 500
+}

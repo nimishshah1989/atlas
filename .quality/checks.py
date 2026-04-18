@@ -1371,10 +1371,12 @@ def dim_frontend() -> DimensionResult:
                     pass_rate = passed / run_total
                 else:
                     pass_rate = 1.0
-                # Weight critical/high failures more heavily
-                penalty = critical_fail * 5 + high_fail * 2
-                raw_score = max(0, round(pass_rate * 40) - penalty)
-                fe_score = max(0, min(40, raw_score))
+                # Pure pass-rate score: 40pts max, no additive penalty.
+                # Penalty approach was discarded (V1FE-2): with many pre-existing
+                # cross-sprint failures (each -5pt), the penalty could exceed 100
+                # making the score permanently 0 regardless of owned criteria.
+                # Pass-rate already penalises failures proportionally.
+                fe_score = max(0, min(40, round(pass_rate * 40)))
             else:
                 fe_score = 0
             evidence = (

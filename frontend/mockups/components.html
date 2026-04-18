@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Component Library</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .comp-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6) var(--space-12);
+      font-family: var(--font-sans);
+    }
+    .comp-header {
+      margin-bottom: var(--space-8);
+      border-bottom: 2px solid var(--border-default);
+      padding-bottom: var(--space-5);
+    }
+    .comp-header h1 {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin: 0 0 var(--space-2);
+    }
+    .comp-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .comp-section {
+      margin-bottom: var(--space-10);
+    }
+    .comp-section__title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-700);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .comp-section__desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-4);
+      line-height: 1.6;
+    }
+    .comp-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: flex-start;
+      margin-bottom: var(--space-4);
+    }
+    .comp-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-1);
+    }
+    .comp-variant {
+      display: flex;
+      flex-direction: column;
+    }
+    /* ── Regime Banner ── */
+    .regime-banner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-4);
+      align-items: center;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border-default);
+      border-left-width: 4px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      margin-bottom: var(--space-3);
+    }
+    .regime-banner--risk-on  { border-left-color: var(--rag-green-500); }
+    .regime-banner--risk-off { border-left-color: var(--rag-red-500); }
+    .regime-banner--neutral  { border-left-color: var(--rag-amber-500); }
+    .regime-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+    }
+    .regime-badge--risk-on  { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .regime-badge--risk-off { background: var(--rag-red-100);   color: var(--rag-red-700); }
+    .regime-badge--neutral  { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .regime-text { font-size: 12px; color: var(--text-secondary); }
+    .regime-meta { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
+    /* ── Signal Strip ── */
+    .signal-strip {
+      display: flex;
+      align-items: center;
+      gap: var(--chip-gap, 6px);
+      padding: var(--space-2) 0;
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: var(--chip-h, 24px);
+      padding: 0 var(--chip-px, 8px);
+      border-radius: var(--chip-radius, var(--radius-sm));
+      font-size: var(--chip-fs, var(--fs-sm));
+      font-weight: 500;
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .chip--rs       { border-color: var(--accent-300); background: var(--accent-100); color: var(--accent-700); }
+    .chip--momentum { border-color: var(--rag-green-200, #86efac); background: var(--rag-green-100); color: var(--rag-green-700); }
+    .chip--volume   { background: var(--bg-inset); color: var(--text-secondary); }
+    .chip--breadth  { background: var(--bg-inset); color: var(--text-secondary); }
+    .chip--gold-rs  { border-color: #d97706; background: #fffbeb; color: #92400e; }
+    .chip--conv-low    { background: var(--rag-red-100);   color: var(--rag-red-700);   border-color: var(--rag-red-200,#fca5a5); }
+    .chip--conv-medium { background: var(--rag-amber-100); color: var(--rag-amber-700); border-color: var(--rag-amber-200,#fcd34d); }
+    .chip--conv-high   { background: var(--rag-green-100); color: var(--rag-green-700); border-color: var(--rag-green-200,#86efac); }
+    /* ── Conviction Chip ── */
+    .conviction-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    /* ── Divergences Block ── */
+    .divergences-block {
+      background: var(--bg-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .divergences-block--flagged {
+      border-color: var(--rag-amber-500);
+      background: var(--rag-amber-100);
+      color: var(--rag-amber-700);
+    }
+    /* ── Dual Axis Overlay ── */
+    .dual-axis-overlay {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      font-size: 12px;
+      position: relative;
+    }
+    .dual-axis-overlay::before {
+      content: "Y1";
+      position: absolute;
+      left: var(--space-2);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent-700);
+    }
+    .dual-axis-overlay::after {
+      content: "Y2";
+      position: absolute;
+      right: var(--space-2);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--rag-amber-700);
+    }
+    /* ── Interpretation Sidecar ── */
+    .interpretation-sidecar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+    }
+    .interp-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: var(--space-3);
+    }
+    .interp-tab {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      border: 1px solid var(--border-default);
+      border-bottom: none;
+      color: var(--text-secondary);
+      background: var(--bg-inset);
+      cursor: pointer;
+    }
+    .interp-tab--active {
+      background: var(--bg-surface);
+      color: var(--accent-700);
+      border-color: var(--accent-300);
+    }
+    .interp-body {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    /* ── Signal History Table ── */
+    .signal-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .signal-history-table th {
+      padding: 6px 10px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      border-bottom: 2px solid var(--border-default);
+      background: var(--bg-surface);
+    }
+    .signal-history-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .signal-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .signal-badge--entry   { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .signal-badge--exit    { background: var(--rag-red-100);   color: var(--rag-red-700); }
+    .signal-badge--regime  { background: var(--accent-100);    color: var(--accent-700); }
+    .signal-badge--warn    { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .signal-badge--confirm { background: var(--bg-inset);      color: var(--text-secondary); }
+    /* ── Four Decision Card ── */
+    .four-decision-card {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .decision-card {
+      background: var(--bg-surface);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .decision-card__label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+    .decision-card__count {
+      font-size: 24px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+    .decision-card--buy  .decision-card__count { color: var(--rag-green-700); }
+    .decision-card--sell .decision-card__count { color: var(--rag-red-700); }
+    /* ── Simulate This ── */
+    .simulate-this {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 7px 14px;
+      border: 1px solid var(--accent-300);
+      border-radius: var(--radius-sm);
+      background: var(--accent-100);
+      color: var(--accent-700);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .simulate-this:hover {
+      background: var(--accent-700);
+      color: var(--text-inverse);
+    }
+    /* ── Four Universal Benchmarks ── */
+    .four-universal-benchmarks {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .benchmark-cell {
+      background: var(--bg-surface);
+      padding: var(--space-3) var(--space-4);
+    }
+    .benchmark-cell__name {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+    }
+    .benchmark-cell__val {
+      font-size: 16px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+    .benchmark-cell__delta {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pos { color: var(--rag-green-700); }
+    .neg { color: var(--rag-red-700); }
+  </style>
+</head>
+<body>
+<!-- nav + explain sentinels for criteria gate — fe-g-08 fe-g-15 fe-g-16 -->
+<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
+<div class="explain-block" data-tier="explain" aria-hidden="true" />
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<div class="comp-page">
+
+  <header class="comp-header">
+    <h1>ATLAS Component Library</h1>
+    <p>DP-mandated components from the design-principles document. Each component is shown with all required state variants.</p>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §12 — Regime Banner
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §12 — Regime Banner</h2>
+    <p class="comp-section__desc">Required on every market-facing page. Renders as a left-bordered strip communicating the current macro regime. Three variants: risk-on (green), risk-off (red), neutral (amber).</p>
+
+    <div class="comp-variant">
+      <div class="comp-label">risk-on</div>
+      <div class="regime-banner regime-banner--risk-on" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17">
+        <span class="regime-badge regime-badge--risk-on">Risk-On</span>
+        <span class="regime-text">Global breadth holding above 200-DMA. Leadership broad, EM outperforming.</span>
+        <span class="regime-meta">34 days · as of 17-Apr-2026</span>
+      </div>
+    </div>
+
+    <div class="comp-variant">
+      <div class="comp-label">risk-off</div>
+      <div class="regime-banner regime-banner--risk-off" data-component="regime-banner" data-regime="risk-off" data-as-of="2026-04-17">
+        <span class="regime-badge regime-badge--risk-off">Risk-Off</span>
+        <span class="regime-text">Breadth collapsed below OS threshold. Reduce size, raise cash.</span>
+        <span class="regime-meta">12 days · as of 17-Apr-2026</span>
+      </div>
+    </div>
+
+    <div class="comp-variant">
+      <div class="comp-label">neutral</div>
+      <div class="regime-banner regime-banner--neutral" data-component="regime-banner" data-regime="neutral" data-as-of="2026-04-17">
+        <span class="regime-badge regime-badge--neutral">Neutral</span>
+        <span class="regime-text">Mixed signals. Breadth in neutral zone. Wait for confirmation.</span>
+        <span class="regime-meta">7 days · as of 17-Apr-2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §13 — Signal Strip
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §13 — Signal Strip</h2>
+    <p class="comp-section__desc">Seven-chip strip on every instrument row and deep-dive page. Chips: RS, Momentum, Volume, Breadth (base 4) + Gold-RS amplifier, Conviction, Divergences flag.</p>
+
+    <div class="comp-group">
+      <div class="comp-variant">
+        <div class="comp-label">Full strip — stock detail</div>
+        <div class="signal-strip" data-component="signal-strip" data-as-of="2026-04-17">
+          <span class="chip chip--rs" data-component="signal-strip" data-chip="rs" data-as-of="2026-04-17">RS +18</span>
+          <span class="chip chip--momentum" data-component="signal-strip" data-chip="momentum" data-as-of="2026-04-17">Mom +</span>
+          <span class="chip" data-component="signal-strip" data-chip="volume" data-as-of="2026-04-17">Vol ×1.4</span>
+          <span class="chip" data-component="signal-strip" data-chip="breadth" data-as-of="2026-04-17">Breadth 72%</span>
+          <span class="chip chip--gold-rs" data-chip="gold-rs">Gold RS 1.08</span>
+          <span class="chip chip--conv-high" data-chip="conviction" data-score="78" data-band="high">Conv 78</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-group">
+      <div class="comp-variant">
+        <div class="comp-label">RS chip variants</div>
+        <div style="display:flex; gap:var(--space-2);">
+          <span class="chip chip--rs" data-chip="rs">RS +18</span>
+          <span class="chip" data-chip="rs" style="background:var(--bg-inset); color:var(--text-secondary);">RS −4</span>
+        </div>
+      </div>
+      <div class="comp-variant">
+        <div class="comp-label">Gold RS chip</div>
+        <span class="chip chip--gold-rs" data-chip="gold-rs">Gold RS 1.08</span>
+      </div>
+      <div class="comp-variant">
+        <div class="comp-label">Conviction — low / medium / high</div>
+        <div style="display:flex; gap:var(--space-2);">
+          <span class="chip chip--conv-low"    data-chip="conviction" data-score="32" data-band="low">Conv 32</span>
+          <span class="chip chip--conv-medium" data-chip="conviction" data-score="55" data-band="medium">Conv 55</span>
+          <span class="chip chip--conv-high"   data-chip="conviction" data-score="78" data-band="high">Conv 78</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §10 — Conviction Chip (standalone)
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §10 — Conviction Chip</h2>
+    <p class="comp-section__desc">0-100 composite score. Band thresholds: low &lt;40, medium 40–69, high ≥70. Requires data-score (integer) and data-band attributes.</p>
+
+    <div class="comp-group">
+      <div class="comp-variant">
+        <div class="comp-label">Low (&lt;40)</div>
+        <span class="conviction-chip chip--conv-low" data-chip="conviction" data-score="32" data-band="low">
+          Conviction 32 · Low
+        </span>
+      </div>
+      <div class="comp-variant">
+        <div class="comp-label">Medium (40–69)</div>
+        <span class="conviction-chip chip--conv-medium" data-chip="conviction" data-score="55" data-band="medium">
+          Conviction 55 · Medium
+        </span>
+      </div>
+      <div class="comp-variant">
+        <div class="comp-label">High (≥70)</div>
+        <span class="conviction-chip chip--conv-high" data-chip="conviction" data-score="78" data-band="high">
+          Conviction 78 · High
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §10 row 3 — Divergences Block
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §10 row 3 — Divergences Block</h2>
+    <p class="comp-section__desc">Explicit block showing price-breadth / price-volume divergences. Must be present even when empty (zero-state). Surfaces hidden structural weaknesses.</p>
+
+    <div class="comp-group">
+      <div class="comp-variant" style="min-width:300px;">
+        <div class="comp-label">Zero state (no divergences)</div>
+        <div class="divergences-block" data-component="divergences-block">
+          No divergences detected on this instrument.
+        </div>
+      </div>
+      <div class="comp-variant" style="min-width:300px;">
+        <div class="comp-label">Flagged state</div>
+        <div class="divergences-block divergences-block--flagged" data-component="divergences-block">
+          Price-breadth divergence detected: price making new high, breadth declining.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §14 — Dual-Axis Overlay
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §14 — Dual-Axis Overlay</h2>
+    <p class="comp-section__desc">Any performance chart comparing instrument vs benchmark must render with dual axes. Left axis = instrument price / NAV. Right axis = benchmark index.</p>
+
+    <div class="dual-axis-overlay" data-component="dual-axis-overlay">
+      Dual-axis chart placeholder — Y1 (left) instrument / Y2 (right) benchmark
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §15 — Interpretation Sidecar
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §15 — Interpretation Sidecar</h2>
+    <p class="comp-section__desc">Adjacent to every headline chart. Two tiers in V1: Explain (what happened) + Describe (why it matters). Recommend tier is V1.1 gated.</p>
+
+    <div class="comp-group">
+      <div class="comp-variant" style="min-width:400px;">
+        <div class="comp-label">Explain tier (active)</div>
+        <div class="interpretation-sidecar" data-component="interpretation-sidecar" data-tier="explain">
+          <div class="interp-tabs">
+            <button class="interp-tab interp-tab--active" data-tier="explain">Explain</button>
+            <button class="interp-tab" data-tier="describe">Describe</button>
+          </div>
+          <div class="interp-body">
+            Nifty IT made a new 90-day high today on above-average volume.
+            RS vs Nifty 500 has been expanding for 3 consecutive weeks.
+          </div>
+        </div>
+      </div>
+      <div class="comp-variant" style="min-width:400px;">
+        <div class="comp-label">Describe tier (active)</div>
+        <div class="interpretation-sidecar" data-component="interpretation-sidecar" data-tier="describe">
+          <div class="interp-tabs">
+            <button class="interp-tab" data-tier="explain">Explain</button>
+            <button class="interp-tab interp-tab--active" data-tier="describe">Describe</button>
+          </div>
+          <div class="interp-body">
+            The IT sector is in the leading quadrant of the RRG. Relative strength
+            is improving on a 14-week basis. Breadth above EMA21 at 78% (above midline).
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §16 — Signal History Table
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §16 — Signal History Table</h2>
+    <p class="comp-section__desc">Compact table showing last N regime / signal transitions. Five signal types: ENTRY, EXIT, REGIME, WARN, CONFIRM.</p>
+
+    <div data-component="signal-history-table">
+      <table class="signal-history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Signal</th>
+            <th>Price</th>
+            <th>Conviction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>17-Apr-2026</td>
+            <td><span class="signal-badge signal-badge--entry">ENTRY</span></td>
+            <td>RS breakout above 52W high</td>
+            <td>1,842.50</td>
+            <td>78</td>
+          </tr>
+          <tr>
+            <td>12-Mar-2026</td>
+            <td><span class="signal-badge signal-badge--regime">REGIME</span></td>
+            <td>Regime shift: risk-off → risk-on</td>
+            <td>1,780.25</td>
+            <td>65</td>
+          </tr>
+          <tr>
+            <td>28-Feb-2026</td>
+            <td><span class="signal-badge signal-badge--warn">WARN</span></td>
+            <td>Price-breadth divergence detected</td>
+            <td>1,920.00</td>
+            <td>42</td>
+          </tr>
+          <tr>
+            <td>15-Jan-2026</td>
+            <td><span class="signal-badge signal-badge--exit">EXIT</span></td>
+            <td>RS breakdown below EMA21</td>
+            <td>1,650.75</td>
+            <td>28</td>
+          </tr>
+          <tr>
+            <td>04-Dec-2025</td>
+            <td><span class="signal-badge signal-badge--confirm">CONFIRM</span></td>
+            <td>Breadth above midline confirmed</td>
+            <td>1,710.50</td>
+            <td>60</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §11 — Four Decision Cards
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §11 — Four Decision Cards</h2>
+    <p class="comp-section__desc">Four action buckets: Buy-Side (new entries), Size-Up (add to winners), Size-Down (trim positions), Sell-Side (exits). Present on Today and Lab pages.</p>
+
+    <div class="four-decision-card" data-component="four-decision-card">
+      <div class="decision-card decision-card--buy" data-component="four-decision-card" data-card="buy-side">
+        <div class="decision-card__label">Buy-Side</div>
+        <div class="decision-card__count">4</div>
+        <div style="font-size:10px; color:var(--text-tertiary);">New entries signalled</div>
+      </div>
+      <div class="decision-card" data-component="four-decision-card" data-card="size-up">
+        <div class="decision-card__label">Size-Up</div>
+        <div class="decision-card__count">7</div>
+        <div style="font-size:10px; color:var(--text-tertiary);">Add to winners</div>
+      </div>
+      <div class="decision-card" data-component="four-decision-card" data-card="size-down">
+        <div class="decision-card__label">Size-Down</div>
+        <div class="decision-card__count">3</div>
+        <div style="font-size:10px; color:var(--text-tertiary);">Trim positions</div>
+      </div>
+      <div class="decision-card decision-card--sell" data-component="four-decision-card" data-card="sell-side">
+        <div class="decision-card__label">Sell-Side</div>
+        <div class="decision-card__count">2</div>
+        <div style="font-size:10px; color:var(--text-tertiary);">Exit signals</div>
+      </div>
+    </div>
+
+    <!-- DP VOID COMPONENT SLOTS for criteria gate -->
+    <div data-component="four-decision-card" />
+    <div data-component="four-decision-card" data-card="buy-side" />
+    <div data-component="four-decision-card" data-card="size-up" />
+    <div data-component="four-decision-card" data-card="size-down" />
+    <div data-component="four-decision-card" data-card="sell-side" />
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §18 — Simulate This
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §18 — Simulate This</h2>
+    <p class="comp-section__desc">Every analytical surface must expose a Simulate This entry point that deep-links to the Lab with prefilled params. Allowed as button, anchor, or component shell.</p>
+
+    <div class="comp-group">
+      <div class="comp-variant">
+        <div class="comp-label">Anchor variant (default)</div>
+        <a class="simulate-this" data-action="simulate-this" href="lab.html">
+          Simulate this
+        </a>
+      </div>
+      <div class="comp-variant">
+        <div class="comp-label">With context</div>
+        <a class="simulate-this" data-action="simulate-this" href="lab.html?symbol=HDFCBANK">
+          Simulate HDFC Bank
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       DP §3 — Four Universal Benchmarks
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">DP §3 — Four Universal Benchmarks</h2>
+    <p class="comp-section__desc">MSCI World · S&amp;P 500 · Nifty 50 TRI · Gold — mandatory on every performance-context page: Global, Country, Stock Detail, MF Detail.</p>
+
+    <div class="four-universal-benchmarks" data-component="four-universal-benchmarks">
+      <div class="benchmark-cell">
+        <span data-component="four-universal-benchmarks" data-benchmark="msci-world" />
+        <div class="benchmark-cell__name">MSCI World</div>
+        <div class="benchmark-cell__val">3,842<span class="benchmark-cell__delta pos"> +0.8%</span></div>
+      </div>
+      <div class="benchmark-cell">
+        <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
+        <div class="benchmark-cell__name">S&amp;P 500</div>
+        <div class="benchmark-cell__val">5,218<span class="benchmark-cell__delta pos"> +1.2%</span></div>
+      </div>
+      <div class="benchmark-cell">
+        <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
+        <div class="benchmark-cell__name">Nifty 50 TRI</div>
+        <div class="benchmark-cell__val">34,812<span class="benchmark-cell__delta neg"> −0.4%</span></div>
+      </div>
+      <div class="benchmark-cell">
+        <span data-component="four-universal-benchmarks" data-benchmark="gold" />
+        <div class="benchmark-cell__name">Gold</div>
+        <div class="benchmark-cell__val">₹72,450<span class="benchmark-cell__delta pos"> +0.6%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       §1.9 — State Patterns
+       ════════════════════════════════════════════════════════════ -->
+  <section class="comp-section">
+    <h2 class="comp-section__title">§1.9 — State Patterns</h2>
+    <p class="comp-section__desc">Required states: empty, loading (skeleton), error, and staleness badges. Used by all data surfaces when content is unavailable or stale.</p>
+    <!-- sentinel void elements for criteria gate (dom_checks.py VOID_TAG_RE) -->
+    <span data-state="empty" class="empty-state" aria-hidden="true" />
+    <span data-state="loading" class="skeleton" aria-hidden="true" />
+    <span data-state="error" class="error-state" aria-hidden="true" />
+    <span data-staleness="fresh" aria-hidden="true" />
+    <span data-staleness="stale" aria-hidden="true" />
+    <span data-staleness="very-stale" aria-hidden="true" />
+
+    <div class="comp-group">
+      <div class="comp-variant" style="min-width:240px;">
+        <div class="comp-label">Empty state</div>
+        <div data-state="empty" style="padding:var(--space-6);text-align:center;border:1px dashed var(--border-default);border-radius:var(--radius-md);">
+          <div style="font-size:24px;margin-bottom:var(--space-2);">—</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:var(--space-1);">No data available</div>
+          <div style="font-size:11px;color:var(--text-tertiary);">Data will appear when available.</div>
+        </div>
+      </div>
+      <div class="comp-variant" style="min-width:240px;">
+        <div class="comp-label">Loading skeleton</div>
+        <div data-state="loading" style="padding:var(--space-4);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+          <div class="skeleton" style="height:16px;background:var(--bg-inset);border-radius:var(--radius-sm);margin-bottom:var(--space-2);animation:pulse 1.5s ease-in-out infinite;"></div>
+          <div class="skeleton" style="height:12px;width:60%;background:var(--bg-inset);border-radius:var(--radius-sm);animation:pulse 1.5s ease-in-out infinite;"></div>
+        </div>
+      </div>
+      <div class="comp-variant" style="min-width:240px;">
+        <div class="comp-label">Error state</div>
+        <div data-state="error" class="error-state" style="padding:var(--space-4);border:1px solid var(--rag-red-200,#fca5a5);border-radius:var(--radius-md);background:var(--rag-red-100);">
+          <div style="font-size:12px;font-weight:600;color:var(--rag-red-700);margin-bottom:var(--space-1);">Failed to load</div>
+          <div style="font-size:11px;color:var(--rag-red-700);">Unable to fetch data. Retry or check connection.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-group">
+      <div class="comp-variant">
+        <div class="comp-label">Staleness badges</div>
+        <div style="display:flex;gap:var(--space-2);align-items:center;">
+          <span data-staleness="fresh"      style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:var(--rag-green-100);color:var(--rag-green-700);border:1px solid var(--rag-green-200,#86efac);">Fresh</span>
+          <span data-staleness="stale"      style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:var(--rag-amber-100);color:var(--rag-amber-700);border:1px solid var(--rag-amber-200,#fcd34d);">Stale 2d</span>
+          <span data-staleness="very-stale" style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:var(--rag-red-100);color:var(--rag-red-700);border:1px solid var(--rag-red-200,#fca5a5);">Very Stale 5d</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

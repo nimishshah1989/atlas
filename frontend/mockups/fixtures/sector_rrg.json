@@ -1,0 +1,384 @@
+{
+  "benchmark_id": "NIFTY_500_TRI",
+  "data_as_of": "2026-04-17",
+  "lookback_weeks": 14,
+  "sectors": [
+    {
+      "quadrant": "leading",
+      "rs_momentum": 101.4,
+      "rs_ratio": 103.25,
+      "sector_code": "nifty_it",
+      "sector_name": "Nifty IT",
+      "sector_slug": "nifty_it",
+      "tail": [
+        {
+          "rs_momentum": 101.5423,
+          "rs_ratio": 105.4001
+        },
+        {
+          "rs_momentum": 101.2657,
+          "rs_ratio": 105.8155
+        },
+        {
+          "rs_momentum": 101.2333,
+          "rs_ratio": 106.1358
+        },
+        {
+          "rs_momentum": 101.6903,
+          "rs_ratio": 106.2251
+        },
+        {
+          "rs_momentum": 101.3832,
+          "rs_ratio": 106.0279
+        },
+        {
+          "rs_momentum": 101.6814,
+          "rs_ratio": 106.026
+        },
+        {
+          "rs_momentum": 101.5153,
+          "rs_ratio": 106.2199
+        },
+        {
+          "rs_momentum": 101.3691,
+          "rs_ratio": 105.7927
+        },
+        {
+          "rs_momentum": 101.7235,
+          "rs_ratio": 106.4187
+        }
+      ],
+      "universe_size": 10
+    },
+    {
+      "quadrant": "lagging",
+      "rs_momentum": 98.62,
+      "rs_ratio": 97.81,
+      "sector_code": "nifty_bank",
+      "sector_name": "Nifty Bank",
+      "sector_slug": "nifty_bank",
+      "tail": [
+        {
+          "rs_momentum": 97.949,
+          "rs_ratio": 101.1361
+        },
+        {
+          "rs_momentum": 98.1979,
+          "rs_ratio": 101.6523
+        },
+        {
+          "rs_momentum": 98.0234,
+          "rs_ratio": 102.2746
+        },
+        {
+          "rs_momentum": 98.5203,
+          "rs_ratio": 102.558
+        },
+        {
+          "rs_momentum": 98.6033,
+          "rs_ratio": 102.5446
+        },
+        {
+          "rs_momentum": 98.7139,
+          "rs_ratio": 102.4718
+        },
+        {
+          "rs_momentum": 99.1253,
+          "rs_ratio": 102.7554
+        },
+        {
+          "rs_momentum": 98.8066,
+          "rs_ratio": 102.3599
+        },
+        {
+          "rs_momentum": 99.2115,
+          "rs_ratio": 101.9382
+        }
+      ],
+      "universe_size": 12
+    },
+    {
+      "quadrant": "weakening",
+      "rs_momentum": 97.3,
+      "rs_ratio": 105.1,
+      "sector_code": "nifty_auto",
+      "sector_name": "Nifty Auto",
+      "sector_slug": "nifty_auto",
+      "tail": [
+        {
+          "rs_momentum": 98.1044,
+          "rs_ratio": 106.3016
+        },
+        {
+          "rs_momentum": 98.6727,
+          "rs_ratio": 105.8214
+        },
+        {
+          "rs_momentum": 98.8054,
+          "rs_ratio": 105.9221
+        },
+        {
+          "rs_momentum": 98.6641,
+          "rs_ratio": 105.8355
+        },
+        {
+          "rs_momentum": 98.2865,
+          "rs_ratio": 105.3793
+        },
+        {
+          "rs_momentum": 98.2592,
+          "rs_ratio": 105.6805
+        },
+        {
+          "rs_momentum": 97.9759,
+          "rs_ratio": 105.9299
+        },
+        {
+          "rs_momentum": 97.8603,
+          "rs_ratio": 106.5503
+        },
+        {
+          "rs_momentum": 98.0733,
+          "rs_ratio": 106.2977
+        }
+      ],
+      "universe_size": 15
+    },
+    {
+      "quadrant": "leading",
+      "rs_momentum": 102.75,
+      "rs_ratio": 101.55,
+      "sector_code": "nifty_pharma",
+      "sector_name": "Nifty Pharma",
+      "sector_slug": "nifty_pharma",
+      "tail": [
+        {
+          "rs_momentum": 102.3696,
+          "rs_ratio": 102.4037
+        },
+        {
+          "rs_momentum": 102.0991,
+          "rs_ratio": 102.144
+        },
+        {
+          "rs_momentum": 102.2763,
+          "rs_ratio": 102.4361
+        },
+        {
+          "rs_momentum": 102.5986,
+          "rs_ratio": 102.1764
+        },
+        {
+          "rs_momentum": 102.8933,
+          "rs_ratio": 102.5978
+        },
+        {
+          "rs_momentum": 102.8962,
+          "rs_ratio": 102.1037
+        },
+        {
+          "rs_momentum": 103.172,
+          "rs_ratio": 101.6257
+        },
+        {
+          "rs_momentum": 103.0815,
+          "rs_ratio": 101.3997
+        },
+        {
+          "rs_momentum": 103.4355,
+          "rs_ratio": 101.9598
+        }
+      ],
+      "universe_size": 20
+    },
+    {
+      "quadrant": "lagging",
+      "rs_momentum": 94.2,
+      "rs_ratio": 96.4,
+      "sector_code": "nifty_fmcg",
+      "sector_name": "Nifty FMCG",
+      "sector_slug": "nifty_fmcg",
+      "tail": [
+        {
+          "rs_momentum": 94.8299,
+          "rs_ratio": 98.7959
+        },
+        {
+          "rs_momentum": 94.9705,
+          "rs_ratio": 98.6664
+        },
+        {
+          "rs_momentum": 95.168,
+          "rs_ratio": 99.2472
+        },
+        {
+          "rs_momentum": 94.9046,
+          "rs_ratio": 99.5412
+        },
+        {
+          "rs_momentum": 94.6788,
+          "rs_ratio": 99.1142
+        },
+        {
+          "rs_momentum": 94.8966,
+          "rs_ratio": 99.7554
+        },
+        {
+          "rs_momentum": 95.141,
+          "rs_ratio": 100.0131
+        },
+        {
+          "rs_momentum": 95.6524,
+          "rs_ratio": 99.7798
+        },
+        {
+          "rs_momentum": 95.3967,
+          "rs_ratio": 99.4132
+        }
+      ],
+      "universe_size": 15
+    },
+    {
+      "quadrant": "improving",
+      "rs_momentum": 103.5,
+      "rs_ratio": 98.7,
+      "sector_code": "nifty_metal",
+      "sector_name": "Nifty Metal",
+      "sector_slug": "nifty_metal",
+      "tail": [
+        {
+          "rs_momentum": 102.8468,
+          "rs_ratio": 98.4736
+        },
+        {
+          "rs_momentum": 103.0064,
+          "rs_ratio": 98.5959
+        },
+        {
+          "rs_momentum": 102.6543,
+          "rs_ratio": 98.8881
+        },
+        {
+          "rs_momentum": 102.6159,
+          "rs_ratio": 98.5237
+        },
+        {
+          "rs_momentum": 102.3456,
+          "rs_ratio": 98.4184
+        },
+        {
+          "rs_momentum": 102.803,
+          "rs_ratio": 98.5658
+        },
+        {
+          "rs_momentum": 103.3886,
+          "rs_ratio": 98.8171
+        },
+        {
+          "rs_momentum": 103.8257,
+          "rs_ratio": 98.9058
+        },
+        {
+          "rs_momentum": 104.1323,
+          "rs_ratio": 98.9516
+        }
+      ],
+      "universe_size": 15
+    },
+    {
+      "quadrant": "lagging",
+      "rs_momentum": 96.8,
+      "rs_ratio": 99.2,
+      "sector_code": "nifty_energy",
+      "sector_name": "Nifty Energy",
+      "sector_slug": "nifty_energy",
+      "tail": [
+        {
+          "rs_momentum": 95.9439,
+          "rs_ratio": 99.7966
+        },
+        {
+          "rs_momentum": 96.2097,
+          "rs_ratio": 100.3537
+        },
+        {
+          "rs_momentum": 96.0684,
+          "rs_ratio": 100.6662
+        },
+        {
+          "rs_momentum": 96.1165,
+          "rs_ratio": 100.9775
+        },
+        {
+          "rs_momentum": 96.2749,
+          "rs_ratio": 101.6424
+        },
+        {
+          "rs_momentum": 96.445,
+          "rs_ratio": 101.2575
+        },
+        {
+          "rs_momentum": 96.6036,
+          "rs_ratio": 101.5329
+        },
+        {
+          "rs_momentum": 96.6507,
+          "rs_ratio": 102.318
+        },
+        {
+          "rs_momentum": 96.4539,
+          "rs_ratio": 102.6124
+        }
+      ],
+      "universe_size": 15
+    },
+    {
+      "quadrant": "improving",
+      "rs_momentum": 101.0,
+      "rs_ratio": 94.5,
+      "sector_code": "nifty_realty",
+      "sector_name": "Nifty Realty",
+      "sector_slug": "nifty_realty",
+      "tail": [
+        {
+          "rs_momentum": 100.4166,
+          "rs_ratio": 93.2135
+        },
+        {
+          "rs_momentum": 100.7115,
+          "rs_ratio": 94.0021
+        },
+        {
+          "rs_momentum": 100.7418,
+          "rs_ratio": 93.874
+        },
+        {
+          "rs_momentum": 100.6474,
+          "rs_ratio": 94.6164
+        },
+        {
+          "rs_momentum": 100.4135,
+          "rs_ratio": 95.1253
+        },
+        {
+          "rs_momentum": 100.0637,
+          "rs_ratio": 95.677
+        },
+        {
+          "rs_momentum": 100.2135,
+          "rs_ratio": 95.9296
+        },
+        {
+          "rs_momentum": 99.9118,
+          "rs_ratio": 96.0752
+        },
+        {
+          "rs_momentum": 99.8777,
+          "rs_ratio": 96.7221
+        }
+      ],
+      "universe_size": 10
+    }
+  ],
+  "source": "ATLAS Sector RRG engine — NSE index data via JIP"
+}

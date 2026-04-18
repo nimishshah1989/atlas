@@ -45,6 +45,11 @@
       "description": "Most recent trading session in the fixture (ISO YYYY-MM-DD, IST). Matches the last `series[].date`.",
       "examples": ["2026-04-17"]
     },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Data source attribution string."
+    },
     "adjustment_as_of": {
       "type": "string",
       "format": "date",

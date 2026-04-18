@@ -1,0 +1,38 @@
+<!--
+  ATLAS shared nav shell — included (or duplicated until a build step exists) in every page.
+  §2 + §13: top nav with all 10 Stage-1 entries + global search + methodology footer.
+  Criteria: fe-c-01 (file exists), fe-g-15 (≥10 nav links), fe-g-16 (global search).
+-->
+
+<!-- ─── Top nav ──────────────────────────────────────────────────────────── -->
+<nav class="atlas-nav" data-role="nav" aria-label="Main navigation">
+  <div class="atlas-nav__brand">
+    <span class="atlas-nav__dot"></span>
+    <span class="atlas-nav__name">ATLAS</span>
+  </div>
+  <div class="atlas-nav__links">
+    <a href="today.html">Today</a>
+    <a href="explore-global.html">Explore</a>
+    <a href="explore-country.html">Country</a>
+    <a href="explore-sector.html">Sector</a>
+    <a href="breadth.html">Breadth</a>
+    <a href="mf-rank.html">MF rank</a>
+    <a href="portfolios.html">Portfolios</a>
+    <a href="stock-detail.html">Instruments</a>
+    <a href="lab.html">Lab</a>
+    <a href="reports.html">Reports</a>
+  </div>
+  <div class="atlas-nav__search">
+    <input class="atlas-search" type="search" placeholder="Search…" data-role="global-search" aria-label="Global search" />
+  </div>
+</nav>
+
+<!-- ─── Methodology footer ─────────────────────────────────────────────── -->
+<footer class="methodology-footer" data-role="methodology">
+  <div class="methodology-footer__inner">
+    <span class="methodology-footer__source">Source: JIP Data Platform (de_* tables, read-only). ATLAS compute engine v1.1.</span>
+    <span class="methodology-footer__date">Data as of: <span data-role="data-as-of"></span></span>
+    <span class="methodology-footer__rebuild">Last rebuild: <span data-role="last-rebuild"></span></span>
+    <a class="methodology-footer__link" href="/spec">Methodology &amp; spec</a>
+  </div>
+</footer>

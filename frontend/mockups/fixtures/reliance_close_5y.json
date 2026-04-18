@@ -1,0 +1,56 @@
+{
+  "company_name": "Reliance Industries Limited",
+  "data_as_of": "2026-04-17",
+  "exchange": "NSE",
+  "isin": "INE002A01018",
+  "sector": "Energy",
+  "series": [
+    {
+      "adj_close": 2827.44,
+      "close": 2827.44,
+      "date": "2026-04-12",
+      "high": 2845.23,
+      "low": 2809.49,
+      "open": 2820.36,
+      "volume": 3160280
+    },
+    {
+      "adj_close": 2802.82,
+      "close": 2802.82,
+      "date": "2026-04-13",
+      "high": 2819.4,
+      "low": 2795.73,
+      "open": 2799.0,
+      "volume": 5225034
+    },
+    {
+      "adj_close": 2798.78,
+      "close": 2798.78,
+      "date": "2026-04-14",
+      "high": 2807.54,
+      "low": 2788.41,
+      "open": 2789.68,
+      "volume": 6551391
+    },
+    {
+      "adj_close": 2803.35,
+      "close": 2803.35,
+      "date": "2026-04-15",
+      "high": 2803.94,
+      "low": 2789.79,
+      "open": 2802.79,
+      "volume": 3627711
+    },
+    {
+      "adj_close": 2804.2,
+      "close": 2804.2,
+      "date": "2026-04-16",
+      "high": 2817.19,
+      "low": 2788.86,
+      "open": 2798.86,
+      "volume": 5130796
+    }
+  ],
+  "source": "NSE OHLCV data via JIP de_equity_ohlcv",
+  "symbol": "RELIANCE"
+}

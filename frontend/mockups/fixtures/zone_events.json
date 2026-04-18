@@ -1,0 +1,43 @@
+{
+  "data_as_of": "2026-04-17",
+  "events": [
+    {
+      "date": "2024-03-15",
+      "event_type": "exited_os",
+      "indicator": "dma200",
+      "prior_zone": "os",
+      "prior_zone_duration_days": 34,
+      "universe": "nifty500",
+      "value": 272
+    },
+    {
+      "date": "2024-06-10",
+      "event_type": "entered_ob",
+      "indicator": "ema21",
+      "prior_zone": "neutral",
+      "prior_zone_duration_days": 87,
+      "universe": "nifty500",
+      "value": 388
+    },
+    {
+      "date": "2025-01-20",
+      "event_type": "entered_os",
+      "indicator": "dma200",
+      "prior_zone": "neutral",
+      "prior_zone_duration_days": 12,
+      "universe": "nifty500",
+      "value": 98
+    },
+    {
+      "date": "2025-09-04",
+      "event_type": "crossed_midline_up",
+      "indicator": "dma50",
+      "prior_zone": "neutral",
+      "prior_zone_duration_days": 45,
+      "universe": "nifty500",
+      "value": 252
+    }
+  ],
+  "source": "ATLAS zone detection engine — breadth_daily_5y derived",
+  "universe": "nifty500"
+}

@@ -4,7 +4,7 @@
   "title": "ATLAS · MF Rank scored universe",
   "description": "Pre-scored universe for the MF Rank page (frontend-v1 spec §9). 4-factor composite (Returns / Risk / Resilience / Consistency) computed from raw `factor_inputs` then mapped to a 0–100 score via `100 · Φ(z)`. Stage 2 source: `/api/v1/mf/rank` (backlog). All numeric fields are Decimal-representable to 4 decimal places. Tie-break order is locked at `Consistency → Risk → Returns → Resilience` per spec §9 formula disclosure.",
   "type": "object",
-  "required": ["data_as_of", "universe_size", "ranking_as_of", "tie_break_order", "funds"],
+  "required": ["data_as_of", "source", "universe_size", "ranking_as_of", "tie_break_order", "funds"],
   "additionalProperties": false,
   "properties": {
     "data_as_of": {
@@ -39,6 +39,12 @@
       },
       "examples": [["consistency", "risk", "returns", "resilience"]]
     },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Data source attribution string.",
+      "examples": ["ATLAS MF rank engine v1.1 — AMFI NAV + internal scoring"]
+    },
     "benchmark_map": {
       "type": "object",
       "description": "Optional mapping from category → benchmark id used for the `excess_return_*` inputs. Enables consumers to display the per-fund benchmark without looking it up.",
@@ -56,6 +62,7 @@
         "required": [
           "fund_id",
           "scheme_code",
+          "scheme_name",
           "fund_name",
           "category",
           "aum_crore",
@@ -66,6 +73,7 @@
           "consistency_score",
           "composite_score",
           "rank",
+          "tie_break_rank",
           "factor_inputs"
         ],
         "additionalProperties": false,
@@ -83,6 +91,13 @@
             "maxLength": 20,
             "description": "AMFI ISIN or numeric scheme code.",
             "examples": ["INF879O01027"]
+          },
+          "scheme_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Alias for fund_name — full scheme name as registered with AMFI.",
+            "examples": ["Parag Parikh Flexi Cap Fund - Direct Plan - Growth"]
           },
           "fund_name": {
             "type": "string",
@@ -162,14 +177,20 @@
             "type": "number",
             "minimum": 0,
             "maximum": 100,
-            "multipleOf": 0.0001,
-            "description": "Average of the four factor scores. Composite = (Returns + Risk + Resilience + Consistency) / 4.",
-            "examples": [79.0705]
+            "multipleOf": 0.1,
+            "description": "Average of the four factor scores rounded to 1 decimal place. Composite = round((Returns + Risk + Resilience + Consistency) / 4, 1).",
+            "examples": [79.1]
           },
           "rank": {
             "type": "integer",
             "minimum": 1,
             "description": "1-based rank within the entire universe after tie-break order is applied. Ties share the same `rank` value and each carries a populated `tied_with` array.",
+            "examples": [1, 23]
+          },
+          "tie_break_rank": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Alias for rank — 1-based rank after tie-break order is applied.",
             "examples": [1, 23]
           },
           "tied_with": {

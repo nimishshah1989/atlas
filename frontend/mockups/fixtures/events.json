@@ -1,0 +1,80 @@
+{
+  "data_as_of": "2026-04-17",
+  "events": [
+    {
+      "affects": [
+        "india",
+        "global"
+      ],
+      "category": "covid",
+      "date": "2020-03-24",
+      "label": "COVID-19 National Lockdown",
+      "severity": "critical"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "rbi_policy",
+      "date": "2020-03-27",
+      "label": "RBI Emergency Rate Cut — 75 bps",
+      "severity": "high"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "demonetisation",
+      "date": "2016-11-08",
+      "label": "Demonetisation Announcement",
+      "severity": "critical"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "election",
+      "date": "2019-05-23",
+      "label": "General Election Result — NDA Majority",
+      "severity": "high"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "budget",
+      "date": "2021-02-01",
+      "label": "Union Budget 2021-22",
+      "severity": "high"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "rbi_policy",
+      "date": "2022-05-04",
+      "label": "RBI Emergency Rate Hike — 40 bps",
+      "severity": "high"
+    },
+    {
+      "affects": [
+        "global",
+        "india"
+      ],
+      "category": "global_macro",
+      "date": "2024-04-19",
+      "label": "Middle East Escalation — Iran-Israel",
+      "severity": "medium"
+    },
+    {
+      "affects": [
+        "india"
+      ],
+      "category": "election",
+      "date": "2024-06-04",
+      "label": "General Election 2024 — Coalition",
+      "severity": "high"
+    }
+  ],
+  "source": "ATLAS hand-curated (India macro + global)"
+}

@@ -4,9 +4,15 @@
   "title": "ATLAS · Daily breadth timeseries (5Y)",
   "description": "Daily breadth counts for an equity universe over a 5-year window. One row per trading session. Powers the breadth oscillator on §10 Breadth Terminal, the embedded compact breadth panels on Explore · Country (§5.1) and Explore · Sector (§6), and the Signal Playback block (§10.5). Stage 2 source: `/api/v1/stocks/breadth?universe=X&range=5y`. All counts are session-end snapshots; every count is `≤ universe_size`.",
   "type": "object",
-  "required": ["universe", "universe_size", "data_as_of", "series"],
+  "required": ["universe", "universe_size", "data_as_of", "source", "series"],
   "additionalProperties": false,
   "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Data source attribution string.",
+      "examples": ["ATLAS breadth engine — NSE Nifty 500 constituents via JIP"]
+    },
     "universe": {
       "type": "string",
       "enum": [

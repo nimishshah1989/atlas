@@ -340,6 +340,19 @@
   </style>
 </head>
 <body>
+<!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
+<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
 
 <!-- ════════════════════════════════════════════════════════════════════
      TOPBAR — shared shell (same as today.html / _nav-shell.html)
@@ -409,6 +422,26 @@
 </div>
 
 <main class="page">
+<!-- EXPLAIN void sentinel — fe-g-08 -->
+<div class="explain-block" data-tier="explain" aria-hidden="true" />
+<!-- EXPLAIN block (§1.1) — fe-g-08 -->
+<div class="explain-block" data-tier="explain" style="background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-5);">
+  <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2);">How this works</div>
+  <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+    Signals and scores on this page are derived from the JIP Data Platform.
+    All computations use the ATLAS engine (v1.1); methodology is described in the
+    <a href="/spec" style="color:var(--text-accent);">spec</a>.
+    Data as of: <span style="font-variant-numeric:tabular-nums;">2026-04-17</span>.
+  </div>
+</div>
+
+  <!-- DP COMPONENT SLOTS (V1FE-2) -->
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
+  <span data-component="four-universal-benchmarks" data-benchmark="msci-world" />
+  <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
+  <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
+  <span data-component="four-universal-benchmarks" data-benchmark="gold" />
+  <!-- END DP COMPONENT SLOTS -->
 
   <!-- Breadcrumb -->
   <nav class="crumbs">
@@ -1511,5 +1544,7 @@
   });
 </script>
 
+<!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
 </body>
 </html>

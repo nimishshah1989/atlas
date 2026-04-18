@@ -4,9 +4,15 @@
   "title": "ATLAS · Breadth zone-crossing events",
   "description": "Chronological log of breadth oscillator zone crossings (entered/exited OB or OS, crossed midline) for a given universe and indicator family. Powers the Signal history table on §10 Breadth Terminal (spec §10 block 7, design-principles §16). Every narrative claim in the Interpretation sidecar (design-principles §15) must be backed by a row in this table. Stage 2 source: `/api/v1/stocks/breadth/zone-events?universe=X&range=5y`.",
   "type": "object",
-  "required": ["universe", "data_as_of", "events"],
+  "required": ["universe", "data_as_of", "source", "events"],
   "additionalProperties": false,
   "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Data source attribution string.",
+      "examples": ["ATLAS zone detection engine — breadth_daily_5y derived"]
+    },
     "universe": {
       "type": "string",
       "pattern": "^(nifty50|nifty500|nifty_midcap150|nifty_smallcap250|sector:[a-z0-9_]+)$",
