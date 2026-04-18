@@ -62,21 +62,15 @@ class SimulationService:
     ) -> SimulationResult:
         """Execute a backtest simulation.
 
-        Steps:
-          1. Obtain price data (from jip or price_data)
-          2. Obtain signal source data (from jip or signal_data)
-          3. Build SignalSeries via signal adapter
-          4. Run backtest engine (vectorbt or legacy)
-          5. Compute analytics
-          6. Compute tax summary
-          7. Persist to atlas_simulations
-          8. Return SimulationResult
+        Fetches price+signal data, runs the selected engine (vectorbt or legacy),
+        computes analytics + tax summary, persists to atlas_simulations, and returns
+        SimulationResult.
 
         Args:
             config: Full simulation configuration.
-            price_data: Optional pre-fetched price rows [{"date": date, "nav": ...}, ...]
-            signal_data: Optional pre-fetched signal rows
-            jip: Optional JIPDataService for live data fetching
+            price_data: Optional pre-fetched price rows.
+            signal_data: Optional pre-fetched signal rows.
+            jip: Optional JIPDataService for live data fetching.
             engine: "vectorbt" (default) | "legacy" — selects the backtest engine.
 
         Raises:

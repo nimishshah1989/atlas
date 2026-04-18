@@ -1,6 +1,6 @@
 """Macro routes — VIX + (future: yield curve, FX, policy events).
 
-GET /api/macros/vix — India VIX time series (from de_macro_values, ticker='INDIAVIX')
+GET /api/macros/vix — India VIX time series (via JIPDerivativesService, ticker='INDIAVIX')
 
 Returns 503 when VIX data is unavailable/stale.
 """
@@ -34,7 +34,7 @@ async def get_vix(
 ) -> dict[str, Any]:
     """Return India VIX time series.
 
-    Source: de_macro_values WHERE ticker='INDIAVIX'.
+    Source: JIPDerivativesService macro values, ticker='INDIAVIX'.
     Returns 503 when VIX data is unavailable or stale (lag > 5 calendar days).
     """
     today = _today()

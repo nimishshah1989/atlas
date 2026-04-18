@@ -3,7 +3,7 @@
 GET /api/derivatives/pcr/{symbol}  — Put/Call Ratio time series
 GET /api/derivatives/{symbol}/oi   — OI buildup chart
 
-Both routes do an inline freshness/row-count check against de_fo_bhavcopy.
+Both routes do an inline freshness/row-count check via JIPDerivativesService.
 Returns 503 {"reason": "..."} when the table is empty or stale.
 """
 
@@ -48,7 +48,7 @@ async def get_pcr(
 ) -> dict[str, Any]:
     """Return Put/Call Ratio time series for a symbol.
 
-    Source: de_fo_summary (pre-computed) or de_fo_bhavcopy (computed).
+    Source: JIP F&O data via JIPDerivativesService (pre-computed or computed).
     Returns 503 when F&O data is unavailable/stale.
     """
     today = _today()
