@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-18T19:59:20.204108+05:30",
+  "generated_at": "2026-04-18T20:09:12.625389+05:30",
   "manifest_version": 1,
   "rubric": {
     "dimensions": [
@@ -24,144 +24,6 @@
     }
   },
   "tables": [
-    {
-      "table": "de_block_deals",
-      "domain": "block_bulk_deals",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_bulk_deals",
-      "domain": "block_bulk_deals",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_adjustment_factors_daily",
-      "domain": "corporate_actions",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
     {
       "table": "de_corporate_actions",
       "domain": "corporate_actions",
@@ -227,144 +89,6 @@
               "updated_at"
             ]
           }
-        }
-      ]
-    },
-    {
-      "table": "de_fo_bhavcopy_daily",
-      "domain": "derivatives_eod",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_fo_participant_oi_daily",
-      "domain": "derivatives_eod",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_fo_securities_in_ban",
-      "domain": "derivatives_eod",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
         }
       ]
     },
@@ -2070,7 +1794,7 @@
     {
       "table": "de_equity_technical_daily",
       "domain": "equity_technicals",
-      "overall_score": 49.0,
+      "overall_score": 49.1,
       "pass": false,
       "gap": false,
       "error": null,
@@ -2096,17 +1820,17 @@
         },
         {
           "name": "completeness",
-          "score": 56.7,
-          "detail": "avg null rate 43.28% across 7 cols",
+          "score": 56.8,
+          "detail": "avg null rate 43.25% across 7 cols",
           "raw": {
             "null_rates": {
               "symbol": 1.0,
               "trade_date": 1.0,
-              "rsi_14": 0.00556,
+              "rsi_14": 0.00542,
               "macd": 1.0,
-              "macd_signal": 0.01468,
-              "adx_14": 0.00472,
-              "atr_14": 0.00448
+              "macd_signal": 0.01178,
+              "adx_14": 0.005,
+              "atr_14": 0.00526
             }
           }
         },
@@ -2437,52 +2161,6 @@
       ]
     },
     {
-      "table": "de_fx_rates_daily",
-      "domain": "fx_rates",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
       "table": "de_global_instrument_master",
       "domain": "global_macros",
       "overall_score": 86.0,
@@ -2785,98 +2463,6 @@
       ]
     },
     {
-      "table": "atlas_gold_rs_cache",
-      "domain": "gold_lens",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_india_vix_daily",
-      "domain": "india_vix",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
       "table": "de_index_constituents",
       "domain": "indices",
       "overall_score": 44.3,
@@ -3121,101 +2707,9 @@
       ]
     },
     {
-      "table": "de_insider_trades",
-      "domain": "insider_trading",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_institutional_flows",
-      "domain": "institutional_flows",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=gap) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
       "table": "de_breadth_daily",
       "domain": "market_breadth",
-      "overall_score": 72.1,
+      "overall_score": 92.1,
       "pass": false,
       "gap": false,
       "error": null,
@@ -3223,18 +2717,18 @@
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "4,382 rows (no universe expectation)",
+          "detail": "4,385 rows (no universe expectation)",
           "raw": {
-            "rows": 4382
+            "rows": 4385
           }
         },
         {
           "name": "freshness",
-          "score": 20.0,
-          "detail": "max(date)=2026-04-13, lag=5d, sla=1d",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-17, lag=1d, sla=1d",
           "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
+            "max_date": "2026-04-17",
+            "lag_days": 1,
             "sla_days": 1
           }
         },
@@ -3247,10 +2741,10 @@
         {
           "name": "continuity",
           "score": 87.1,
-          "detail": "4382 distinct dates over 7042d span (expected ~5030 trading days)",
+          "detail": "4385 distinct dates over 7046d span (expected ~5032 trading days)",
           "raw": {
-            "distinct_dates": 4382,
-            "span_days": 7042
+            "distinct_dates": 4385,
+            "span_days": 7046
           }
         },
         {
@@ -3275,7 +2769,7 @@
     {
       "table": "de_sector_breadth_daily",
       "domain": "market_breadth",
-      "overall_score": 72.1,
+      "overall_score": 92.1,
       "pass": false,
       "gap": false,
       "error": null,
@@ -3283,18 +2777,18 @@
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "127,584 rows (no universe expectation)",
+          "detail": "127,680 rows (no universe expectation)",
           "raw": {
-            "rows": 127584
+            "rows": 127680
           }
         },
         {
           "name": "freshness",
-          "score": 20.0,
-          "detail": "max(date)=2026-04-13, lag=5d, sla=1d",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-17, lag=1d, sla=1d",
           "raw": {
-            "max_date": "2026-04-13",
-            "lag_days": 5,
+            "max_date": "2026-04-17",
+            "lag_days": 1,
             "sla_days": 1
           }
         },
@@ -3307,10 +2801,10 @@
         {
           "name": "continuity",
           "score": 87.1,
-          "detail": "4383 distinct dates over 7043d span (expected ~5030 trading days)",
+          "detail": "4386 distinct dates over 7047d span (expected ~5033 trading days)",
           "raw": {
-            "distinct_dates": 4383,
-            "span_days": 7043
+            "distinct_dates": 4386,
+            "span_days": 7047
           }
         },
         {
@@ -5024,7 +4518,7 @@
     {
       "table": "de_rs_scores",
       "domain": "relative_strength",
-      "overall_score": 53.9,
+      "overall_score": 68.9,
       "pass": false,
       "gap": false,
       "error": null,
@@ -5032,18 +4526,18 @@
         {
           "name": "coverage",
           "score": 100.0,
-          "detail": "14,743,298 rows (no universe expectation)",
+          "detail": "14,750,060 rows (no universe expectation)",
           "raw": {
-            "rows": 14743298
+            "rows": 14750060
           }
         },
         {
           "name": "freshness",
-          "score": 40.0,
-          "detail": "max(date)=2026-04-14, lag=4d, sla=1d",
+          "score": 100.0,
+          "detail": "max(date)=2026-04-17, lag=1d, sla=1d",
           "raw": {
-            "max_date": "2026-04-14",
-            "lag_days": 4,
+            "max_date": "2026-04-17",
+            "lag_days": 1,
             "sla_days": 1
           }
         },
@@ -5063,11 +4557,11 @@
         },
         {
           "name": "continuity",
-          "score": 99.1,
-          "detail": "2591 distinct dates over 3659d span (expected ~2613 trading days)",
+          "score": 99.2,
+          "detail": "2594 distinct dates over 3662d span (expected ~2615 trading days)",
           "raw": {
-            "distinct_dates": 2591,
-            "span_days": 3659
+            "distinct_dates": 2594,
+            "span_days": 3662
           }
         },
         {
@@ -5266,144 +4760,6 @@
               "updated_at"
             ]
           }
-        }
-      ]
-    },
-    {
-      "table": "de_shareholding_pattern",
-      "domain": "shareholding_patterns",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_in_gsec_yields_daily",
-      "domain": "yield_curve",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        }
-      ]
-    },
-    {
-      "table": "de_rbi_policy_rates",
-      "domain": "yield_curve",
-      "overall_score": 85.0,
-      "pass": true,
-      "gap": true,
-      "error": null,
-      "dimensions": [
-        {
-          "name": "coverage",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "freshness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "completeness",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "continuity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "integrity",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
-        },
-        {
-          "name": "provenance",
-          "score": 85.0,
-          "detail": "documented gap (status=missing) \u2014 tracked in manifest",
-          "raw": {}
         }
       ]
     }

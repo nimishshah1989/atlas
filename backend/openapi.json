@@ -370,6 +370,70 @@
         }
       }
     },
+    "/api/v1/stocks/{symbol}/analysis": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock Analysis",
+        "description": "Structured signal analysis for a stock.\n\nReturns a structured signal set for investment analysis.\nThe ``engine`` parameter selects the signal provider:\n\n* **legacy** (default): Minimal structured signals from JIP data.\n  Fast, deterministic, always available.\n* **openbb** (pilot): Strict superset of legacy signals, adding\n  additional technical and fundamental metrics.\n  The pilot is disabled by default; pass ``?engine=openbb`` to opt in.\n\nThe OpenBB engine response always contains all keys that the legacy\nengine returns, plus additional fields. A schema-diff test in the\ntest suite enforces this invariant.",
+        "operationId": "get_stock_analysis_api_v1_stocks__symbol__analysis_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "engine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Analysis engine: 'legacy' (JIP data, default) or 'openbb' (superset pilot)",
+              "default": "legacy",
+              "title": "Engine"
+            },
+            "description": "Analysis engine: 'legacy' (JIP data, default) or 'openbb' (superset pilot)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Stock Analysis Api V1 Stocks  Symbol  Analysis Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/screener": {
       "get": {
         "tags": [
@@ -1338,6 +1402,72 @@
         }
       }
     },
+    "/api/global/ratios": {
+      "get": {
+        "tags": [
+          "global-v7"
+        ],
+        "summary": "Global Macro Ratios V7",
+        "description": "Return 9 macro series (DGS10, VIXCLS, INDIAVIX, DXY, BRENT, GOLD, SP500, USDINR, FEDFUNDS) each with a 10-point sparkline and MoM change. MoM change = latest_value - value at ~30 trading days ago.",
+        "operationId": "get_macro_ratios_v7_api_global_ratios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MacroRatiosV7Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/global/rs-heatmap": {
+      "get": {
+        "tags": [
+          "global-v7"
+        ],
+        "summary": "Global RS Heatmap (all 131 instruments, grouped by type)",
+        "description": "Return all 131 global instruments from the master instrument table, grouped by instrument_type. Instruments without RS scores are still included (LEFT JOIN). total reflects all instrument rows.",
+        "operationId": "get_global_rs_heatmap_api_global_rs_heatmap_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSHeatmapGroupedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/global/indices": {
+      "get": {
+        "tags": [
+          "global-v7"
+        ],
+        "summary": "Global Indices with Four-Benchmark Verdict",
+        "description": "Return global indices (instrument_type='indices') with RS scores, gold_rs_signal from atlas_gold_rs_cache, and four_bench_verdict (STRONG_BUY|BUY|HOLD|CAUTION|AVOID). Nulls count as non-positive in verdict derivation.",
+        "operationId": "get_global_indices_api_global_indices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalIndicesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mf/universe": {
       "get": {
         "tags": [
@@ -1913,17 +2043,30 @@
           "simulation"
         ],
         "summary": "Run Simulation",
-        "description": "Execute a backtest simulation.\n\nAccepts a SimulationConfig and returns the full simulation result including\ndaily portfolio values, transactions, analytics summary, and tax breakdown.",
+        "description": "Execute a backtest simulation.\n\nAccepts a SimulationConfig and returns the full simulation result including\ndaily portfolio values, transactions, analytics summary, and tax breakdown.\n\nQuery params:\n  engine: \"vectorbt\" (default) | \"legacy\" \u2014 selects the backtest engine.\n          Use ?engine=legacy for rollback if vectorbt produces unexpected results.",
         "operationId": "run_simulation_api_v1_simulate_run_post",
+        "parameters": [
+          {
+            "name": "engine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(legacy|vectorbt)$",
+              "default": "vectorbt",
+              "title": "Engine"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SimulationRunRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2972,6 +3115,50 @@
         }
       }
     },
+    "/api/v1/system/routines": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Routines",
+        "description": "Routine visibility \u2014 one entry per JIP routine from jip-source-manifest.yaml.\n\nEnriched with last-run data from the JIP observability table (graceful\ndegradation if the table is missing or empty). 60s cached.",
+        "operationId": "routines_api_v1_system_routines_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutinesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/data-health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Data Health",
+        "description": "Data health \u2014 returns data-health.json produced by check-data-coverage.py. 60s cached.",
+        "operationId": "data_health_api_v1_system_data_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -3839,6 +4026,1174 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SentimentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/etf/universe": {
+      "get": {
+        "tags": [
+          "etf"
+        ],
+        "summary": "ETF Universe",
+        "description": "Return all active ETFs filtered by country/benchmark. Use `include` to add optional blocks: rs, technicals, gold_rs. Default response shape is always shape-stable regardless of include.",
+        "operationId": "get_universe_api_etf_universe_get",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by country: US|India|UK|HK|JP",
+              "title": "Country"
+            },
+            "description": "Filter by country: US|India|UK|HK|JP"
+          },
+          {
+            "name": "benchmark",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by benchmark name",
+              "title": "Benchmark"
+            },
+            "description": "Filter by benchmark name"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated modules: rs,technicals,gold_rs",
+              "title": "Include"
+            },
+            "description": "Comma-separated modules: rs,technicals,gold_rs"
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Data cutoff date (default: today)",
+              "title": "As Of"
+            },
+            "description": "Data cutoff date (default: today)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ETFUniverseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid include parameter (INVALID_INCLUDE)"
+          },
+          "503": {
+            "description": "JIP data unavailable (JIP_UNAVAILABLE)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/etf/{ticker}/chart-data": {
+      "get": {
+        "tags": [
+          "etf"
+        ],
+        "summary": "ETF OHLCV + technicals chart data",
+        "description": "Returns OHLCV + key technicals for an ETF over a date range. Default: last 365 days.",
+        "operationId": "get_etf_chart_data_api_etf__ticker__chart_data_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ETFChartDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date range (INVALID_DATE_RANGE or DATE_RANGE_TOO_LARGE)"
+          },
+          "404": {
+            "description": "ETF not found (ETF_NOT_FOUND)"
+          },
+          "503": {
+            "description": "JIP unavailable (JIP_UNAVAILABLE)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/etf/{ticker}/rs-history": {
+      "get": {
+        "tags": [
+          "etf"
+        ],
+        "summary": "ETF RS score history",
+        "description": "Returns RS composite+momentum+quadrant time series. Default: 12 months.",
+        "operationId": "get_etf_rs_history_api_etf__ticker__rs_history_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 120,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Lookback in months (1-120)",
+              "default": 12,
+              "title": "Months"
+            },
+            "description": "Lookback in months (1-120)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ETFRSHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid months (INVALID_DATE_RANGE)"
+          },
+          "404": {
+            "description": "ETF not found (ETF_NOT_FOUND)"
+          },
+          "503": {
+            "description": "JIP unavailable (JIP_UNAVAILABLE)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/etf/{ticker}": {
+      "get": {
+        "tags": [
+          "etf"
+        ],
+        "summary": "ETF detail",
+        "description": "Full ETF detail: master info + latest RS, technicals, gold_rs blocks.",
+        "operationId": "get_etf_detail_api_etf__ticker__get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Data cutoff date",
+              "title": "As Of"
+            },
+            "description": "Data cutoff date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ETFDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ETF not found (ETF_NOT_FOUND)"
+          },
+          "503": {
+            "description": "JIP unavailable (JIP_UNAVAILABLE)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instruments/{symbol}/price": {
+      "get": {
+        "tags": [
+          "instruments"
+        ],
+        "summary": "Get Price",
+        "description": "Return OHLCV price series for a symbol, optionally back-adjusted.\n\nBack-adjustment uses corporate action factors from de_corporate_actions\n(split/bonus/rights only, dividend-neutral). Historical prices are multiplied\nby the product of all adj_factors for events occurring after each price date.\n\nWhen adjustment-factor health is degraded, falls back to raw prices and\nincludes a warning in _meta.warnings.",
+        "operationId": "get_price_api_instruments__symbol__price_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "adjusted",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Apply back-adjustment (default true)",
+              "default": true,
+              "title": "Adjusted"
+            },
+            "description": "Apply back-adjustment (default true)"
+          },
+          {
+            "name": "denomination",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Price denomination: inr (default), gold, usd",
+              "default": "inr",
+              "title": "Denomination"
+            },
+            "description": "Price denomination: inr (default), gold, usd"
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/derivatives/pcr/{symbol}": {
+      "get": {
+        "tags": [
+          "derivatives"
+        ],
+        "summary": "Get Pcr",
+        "description": "Return Put/Call Ratio time series for a symbol.\n\nSource: JIP F&O data via JIPDerivativesService (pre-computed or computed).\nReturns 503 when F&O data is unavailable/stale.",
+        "operationId": "get_pcr_api_derivatives_pcr__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/derivatives/{symbol}/oi": {
+      "get": {
+        "tags": [
+          "derivatives"
+        ],
+        "summary": "Get Oi Buildup",
+        "description": "Return OI buildup chart for a symbol.\n\nDaily total open interest + change-in-OI, split by option type (CE/PE/FUT).\nReturns 503 when F&O data is unavailable/stale.",
+        "operationId": "get_oi_buildup_api_derivatives__symbol__oi_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/{symbol}/insider": {
+      "get": {
+        "tags": [
+          "insider"
+        ],
+        "summary": "Get Insider Trades",
+        "description": "Return SEBI PIT insider trades for a symbol.\n\nSource: JIP de_insider_trades table via JIPInsiderService.\nReturns 503 when insider data is unavailable/stale.",
+        "operationId": "get_insider_trades_api_stocks__symbol__insider_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Max rows (1-500)",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Max rows (1-500)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/{symbol}/bulk-deals": {
+      "get": {
+        "tags": [
+          "insider"
+        ],
+        "summary": "Get Bulk Deals",
+        "description": "Return NSE bulk deals for a symbol.\n\nSource: JIP de_bulk_deals table via JIPInsiderService.\nReturns 503 when bulk deal data is unavailable/stale.",
+        "operationId": "get_bulk_deals_api_stocks__symbol__bulk_deals_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/{symbol}/block-deals": {
+      "get": {
+        "tags": [
+          "insider"
+        ],
+        "summary": "Get Block Deals",
+        "description": "Return NSE block deals for a symbol.\n\nSource: JIP de_block_deals table via JIPInsiderService.\nReturns 503 when block deal data is unavailable/stale.",
+        "operationId": "get_block_deals_api_stocks__symbol__block_deals_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/macros/vix": {
+      "get": {
+        "tags": [
+          "macros"
+        ],
+        "summary": "Get Vix",
+        "description": "Return India VIX time series.\n\nSource: JIPDerivativesService macro values, ticker='INDIAVIX'.\nReturns 503 when VIX data is unavailable or stale (lag > 5 calendar days).",
+        "operationId": "get_vix_api_macros_vix_get",
+        "parameters": [
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/macros/yield-curve": {
+      "get": {
+        "tags": [
+          "macros"
+        ],
+        "summary": "Get Yield Curve",
+        "description": "Return G-Sec yield curve time series via JIPMacroService.\n\nEach entry groups all tenor points for a single yield_date.\nReturns 503 when yield curve data is empty or stale (lag > 5 days).",
+        "operationId": "get_yield_curve_api_macros_yield_curve_get",
+        "parameters": [
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/macros/fx": {
+      "get": {
+        "tags": [
+          "macros"
+        ],
+        "summary": "Get Fx Rates",
+        "description": "Return RBI reference FX rates via JIPMacroService.\n\nSupports USD/INR, EUR/INR, GBP/INR, JPY/INR.\nReturns 503 when FX rate data is empty or stale (lag > 5 days).",
+        "operationId": "get_fx_rates_api_macros_fx_get",
+        "parameters": [
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          },
+          {
+            "name": "currency_pair",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by pair e.g. USD/INR (optional)",
+              "title": "Currency Pair"
+            },
+            "description": "Filter by pair e.g. USD/INR (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/macros/policy-rates": {
+      "get": {
+        "tags": [
+          "macros"
+        ],
+        "summary": "Get Policy Rates",
+        "description": "Return RBI policy rates via JIPMacroService.\n\nRate types: REPO, REVERSE_REPO, CRR, SLR, BANK_RATE.\nReturns 503 when policy rate data is empty or stale (lag > 5 days).",
+        "operationId": "get_policy_rates_api_macros_policy_rates_get",
+        "parameters": [
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "From Date"
+            },
+            "description": "Start date (inclusive)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "To Date"
+            },
+            "description": "End date (inclusive)"
+          },
+          {
+            "name": "rate_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by rate type: REPO, REVERSE_REPO, CRR, SLR, BANK_RATE (optional)",
+              "title": "Rate Type"
+            },
+            "description": "Filter by rate type: REPO, REVERSE_REPO, CRR, SLR, BANK_RATE (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -5352,6 +6707,56 @@
         "type": "object",
         "title": "DataFreshness"
       },
+      "DataHealthResponse": {
+        "properties": {
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "manifest_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifest Version"
+          },
+          "rubric": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rubric"
+          },
+          "tables": {
+            "items": {},
+            "type": "array",
+            "title": "Tables",
+            "default": []
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "DataHealthResponse"
+      },
       "DecisionAction": {
         "type": "string",
         "enum": [
@@ -5621,6 +7026,887 @@
         ],
         "title": "DriftHistoryResponse",
         "description": "GET /api/v1/simulate/{sim_id}/drift-history response."
+      },
+      "ETFChartDataResponse": {},
+      "ETFChartPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "open": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume"
+          },
+          "sma_50": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 50"
+          },
+          "sma_200": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 200"
+          },
+          "ema_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 20"
+          },
+          "rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsi 14"
+          },
+          "macd_line": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Line"
+          },
+          "macd_signal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Signal"
+          },
+          "macd_histogram": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Histogram"
+          },
+          "bollinger_upper": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bollinger Upper"
+          },
+          "bollinger_lower": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bollinger Lower"
+          },
+          "adx_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adx 14"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "ETFChartPoint",
+        "description": "OHLCV + key technicals for a single trading day."
+      },
+      "ETFDetailResponse": {},
+      "ETFGoldRSBlock": {
+        "properties": {
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          },
+          "rs_6m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 6M"
+          },
+          "rs_12m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 12M"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "AMPLIFIES_BULL",
+              "AMPLIFIES_BEAR",
+              "NEUTRAL_BENCH_ONLY",
+              "FRAGILE",
+              "STALE"
+            ],
+            "title": "Signal",
+            "default": "STALE"
+          },
+          "gold_series": {
+            "type": "string",
+            "enum": [
+              "MCX_INR",
+              "LBMA_USD"
+            ],
+            "title": "Gold Series",
+            "default": "LBMA_USD"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "data_gap": {
+            "type": "boolean",
+            "title": "Data Gap",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "ETFGoldRSBlock",
+        "description": "Gold RS enrichment block -- opt-in via include=gold_rs."
+      },
+      "ETFRSBlock": {
+        "properties": {
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ETFRSBlock",
+        "description": "RS enrichment block -- opt-in via include=rs."
+      },
+      "ETFRSHistoryPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_momentum": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Momentum"
+          },
+          "quadrant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quadrant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "ETFRSHistoryPoint",
+        "description": "Single RS data point in the RS history series."
+      },
+      "ETFRSHistoryResponse": {},
+      "ETFTechnicals": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "close_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Price"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume"
+          },
+          "rsi_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsi 14"
+          },
+          "macd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd"
+          },
+          "macd_signal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Signal"
+          },
+          "macd_hist": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Macd Hist"
+          },
+          "bb_upper": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bb Upper"
+          },
+          "bb_middle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bb Middle"
+          },
+          "bb_lower": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bb Lower"
+          },
+          "bb_width": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bb Width"
+          },
+          "sma_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 20"
+          },
+          "sma_50": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 50"
+          },
+          "sma_200": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sma 200"
+          },
+          "ema_9": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 9"
+          },
+          "ema_21": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 21"
+          },
+          "adx_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adx 14"
+          },
+          "di_plus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Di Plus"
+          },
+          "di_minus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Di Minus"
+          },
+          "stoch_k": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stoch K"
+          },
+          "stoch_d": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stoch D"
+          },
+          "atr_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atr 14"
+          },
+          "obv": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obv"
+          },
+          "vwap": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vwap"
+          },
+          "mom_10": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mom 10"
+          },
+          "roc_10": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roc 10"
+          },
+          "cci_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cci 20"
+          },
+          "wpr_14": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wpr 14"
+          },
+          "cmf_20": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cmf 20"
+          }
+        },
+        "type": "object",
+        "title": "ETFTechnicals",
+        "description": "24-field technical indicators block -- opt-in via include=technicals."
+      },
+      "ETFUniverseResponse": {},
+      "ETFUniverseRow": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "expense_ratio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Ratio"
+          },
+          "inception_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inception Date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "last_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Price"
+          },
+          "last_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Date"
+          },
+          "rs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ETFRSBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "technicals": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ETFTechnicals"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gold_rs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ETFGoldRSBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "name",
+          "country",
+          "currency"
+        ],
+        "title": "ETFUniverseRow",
+        "description": "Single ETF row in universe response. Core fields always present."
       },
       "FindingCreate": {
         "properties": {
@@ -5994,6 +8280,17 @@
           "staleness"
         ],
         "title": "FlowsResponse"
+      },
+      "FourBenchVerdict": {
+        "type": "string",
+        "enum": [
+          "STRONG_BUY",
+          "BUY",
+          "HOLD",
+          "CAUTION",
+          "AVOID"
+        ],
+        "title": "FourBenchVerdict"
       },
       "FourFactorConviction": {
         "properties": {
@@ -6632,6 +8929,276 @@
           "as_of_date"
         ],
         "title": "FundSectorsResponse"
+      },
+      "GlobalIndexRow": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          },
+          "rs_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Date"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "price_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Date"
+          },
+          "four_bench_verdict": {
+            "$ref": "#/components/schemas/FourBenchVerdict"
+          },
+          "gold_rs_signal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AMPLIFIES_BULL",
+                  "AMPLIFIES_BEAR",
+                  "NEUTRAL_BENCH_ONLY",
+                  "FRAGILE",
+                  "STALE"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gold Rs Signal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id",
+          "four_bench_verdict"
+        ],
+        "title": "GlobalIndexRow",
+        "description": "Single index row with four_bench_verdict and gold_rs_signal."
+      },
+      "GlobalIndicesResponse": {
+        "properties": {
+          "indices": {
+            "items": {
+              "$ref": "#/components/schemas/GlobalIndexRow"
+            },
+            "type": "array",
+            "title": "Indices"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indices",
+          "meta"
+        ],
+        "title": "GlobalIndicesResponse",
+        "description": "Response for GET /api/global/indices."
+      },
+      "GlobalInstrumentEntry": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "instrument_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Type"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "rs_composite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Composite"
+          },
+          "rs_1m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 1M"
+          },
+          "rs_3m": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs 3M"
+          },
+          "rs_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rs Date"
+          },
+          "close": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close"
+          },
+          "price_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "GlobalInstrumentEntry",
+        "description": "Single row in the RS heatmap \u2014 one global instrument."
       },
       "GlobalPatternsResponse": {
         "properties": {
@@ -7688,6 +10255,86 @@
         "title": "MacroRatioItem",
         "description": "A single macro series with its latest value and sparkline."
       },
+      "MacroRatioV7Item": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "latest_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Value"
+          },
+          "latest_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Date"
+          },
+          "mom_change": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mom Change"
+          },
+          "sparkline": {
+            "items": {
+              "$ref": "#/components/schemas/MacroSparkItem"
+            },
+            "type": "array",
+            "title": "Sparkline",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker"
+        ],
+        "title": "MacroRatioV7Item",
+        "description": "Macro ratio series with MoM change added."
+      },
       "MacroRatiosResponse": {
         "properties": {
           "ratios": {
@@ -7708,6 +10355,27 @@
         ],
         "title": "MacroRatiosResponse",
         "description": "Response for GET /global/ratios.\n\nEmits ``data`` (\u00a720.4) and ``ratios`` (V1 compat). ``_meta`` mirrors ``meta``."
+      },
+      "MacroRatiosV7Response": {
+        "properties": {
+          "ratios": {
+            "items": {
+              "$ref": "#/components/schemas/MacroRatioV7Item"
+            },
+            "type": "array",
+            "title": "Ratios"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ratios",
+          "meta"
+        ],
+        "title": "MacroRatiosV7Response",
+        "description": "Response for GET /api/global/ratios."
       },
       "MacroSparkItem": {
         "properties": {
@@ -9615,6 +12283,35 @@
         ],
         "title": "RSDataPoint"
       },
+      "RSHeatmapGroupedResponse": {
+        "properties": {
+          "by_type": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/GlobalInstrumentEntry"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "By Type"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "by_type",
+          "total",
+          "meta"
+        ],
+        "title": "RSHeatmapGroupedResponse",
+        "description": "Response for GET /api/global/rs-heatmap (grouped by instrument_type)."
+      },
       "RSHeatmapResponse": {
         "properties": {
           "heatmap": {
@@ -10113,6 +12810,243 @@
           "pct"
         ],
         "title": "RollupResponse"
+      },
+      "RoutineEntry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tables"
+          },
+          "cadence": {
+            "type": "string",
+            "title": "Cadence"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "manifest_status": {
+            "type": "string",
+            "title": "Manifest Status"
+          },
+          "is_new": {
+            "type": "boolean",
+            "title": "Is New"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "sla_freshness_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Freshness Hours"
+          },
+          "last_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutineLastRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sla_breached": {
+            "type": "boolean",
+            "title": "Sla Breached"
+          },
+          "display_status": {
+            "type": "string",
+            "title": "Display Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tables",
+          "cadence",
+          "manifest_status",
+          "is_new",
+          "sla_breached",
+          "display_status"
+        ],
+        "title": "RoutineEntry"
+      },
+      "RoutineLastRun": {
+        "properties": {
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "rows_fetched": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rows Fetched"
+          },
+          "rows_inserted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rows Inserted"
+          },
+          "rows_updated": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rows Updated"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "ran_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ran At"
+          }
+        },
+        "type": "object",
+        "title": "RoutineLastRun"
+      },
+      "RoutinesResponse": {
+        "properties": {
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineEntry"
+            },
+            "type": "array",
+            "title": "Routines"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "live_count": {
+            "type": "integer",
+            "title": "Live Count"
+          },
+          "sla_breached_count": {
+            "type": "integer",
+            "title": "Sla Breached Count"
+          },
+          "data_available": {
+            "type": "boolean",
+            "title": "Data Available"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routines",
+          "total",
+          "live_count",
+          "sla_breached_count",
+          "data_available",
+          "as_of"
+        ],
+        "title": "RoutinesResponse"
       },
       "SEBIConstraint": {
         "properties": {
