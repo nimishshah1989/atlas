@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Explore · Global</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ══ Shell (same as today.html — keep in sync) ═══════════════════════ */
+    .topbar { position: sticky; top: 0; z-index: 30; }
+    .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
+    .subbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-1); min-height: 40px; }
+    .subbar__link { font-size: 12px; font-weight: 500; color: var(--text-secondary); padding: 10px 14px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+    .subbar__link--active { color: var(--accent-700); font-weight: 600; border-bottom-color: var(--accent-700); }
+    .subbar__spacer { flex: 1; }
+    .subbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+    .uni-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-primary); padding: 4px 10px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-full); cursor: pointer; }
+    .uni-pill__chev { font-size: 9px; color: var(--text-tertiary); }
+    .sync-meta { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+    .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+
+    /* ── Breadcrumb */
+    .crumbs { display: flex; align-items: center; gap: 6px; padding-top: var(--space-4); font-size: 11px; color: var(--text-tertiary); }
+    .crumbs a { color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+    .crumbs a:hover { color: var(--accent-700); }
+    .crumbs__sep { color: var(--border-default); }
+    .crumbs__current { color: var(--text-primary); font-weight: 600; }
+
+    /* ── Page header */
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding: var(--space-4) 0 var(--space-5); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph-left { display: flex; flex-direction: column; gap: 4px; }
+    .ph-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+    .ph-title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+    .ph-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; max-width: 860px; line-height: 1.55; }
+    .ph-right { display: flex; align-items: center; gap: var(--space-3); }
+    .regime-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 6px 10px; background: var(--bg-surface); border: 1px solid var(--border-default); border-left-width: 3px; border-radius: var(--radius-sm); font-variant-numeric: tabular-nums; cursor: pointer; }
+    .regime-chip__label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .regime-chip__val { font-family: var(--font-serif); font-size: 15px; font-weight: 500; line-height: 1; }
+    .regime-chip__days { font-size: 10px; color: var(--text-tertiary); }
+    .regime-chip--expansion { border-left-color: var(--rag-green-500); }
+    .regime-chip--expansion .regime-chip__val { color: var(--rag-green-700); }
+
+    /* ── Section heading (used within the page) */
+    .sect { margin-bottom: var(--space-8); scroll-margin-top: 110px; }
+    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 2px solid var(--border-default); padding-bottom: var(--space-3); margin-bottom: var(--space-4); }
+    .sect__title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .sect__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
+    .sect__title { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
+    .sect__sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+    .sect__actions { display: flex; gap: var(--space-2); }
+
+    /* ══ Regime-why — transparency block ════════════════════════════════════════ */
+    .regime-why { display: grid; grid-template-columns: 340px 1fr; gap: var(--space-5); background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--rag-green-500); border-radius: var(--radius-md); padding: var(--space-5); }
+    .rw-hero { display: flex; flex-direction: column; gap: var(--space-3); }
+    .rw-hero__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .rw-hero__name { font-family: var(--font-serif); font-size: 44px; font-weight: 400; color: var(--rag-green-700); line-height: 0.95; }
+    .rw-hero__meta { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+    .rw-hero__meta strong { color: var(--text-primary); }
+    .rw-hero__days { display: flex; align-items: baseline; gap: 8px; margin-top: var(--space-2); }
+    .rw-hero__days-n { font-size: 40px; font-weight: 700; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .rw-hero__days-l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); font-weight: 600; }
+    .rw-factors { display: flex; flex-direction: column; gap: 8px; }
+    .rw-factors__title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 4px; }
+    .rw-fac { display: grid; grid-template-columns: 150px 1fr auto 56px; gap: var(--space-3); align-items: center; font-size: 12px; padding: 5px 0; border-bottom: 1px dashed var(--border-subtle); }
+    .rw-fac:last-child { border-bottom: none; }
+    .rw-fac__name { font-weight: 600; color: var(--text-primary); }
+    .rw-fac__bar { height: 6px; background: var(--bg-inset); border-radius: 3px; overflow: hidden; position: relative; }
+    .rw-fac__fill { height: 100%; border-radius: 3px; }
+    .rw-fac__fill--pos { background: var(--rag-green-500); }
+    .rw-fac__fill--neg { background: var(--rag-red-500); }
+    .rw-fac__fill--neu { background: var(--text-tertiary); }
+    .rw-fac__state { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 6px; border-radius: 2px; }
+    .rw-fac__state--pos { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .rw-fac__state--neg { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .rw-fac__state--neu { background: var(--bg-inset); color: var(--text-tertiary); }
+    .rw-fac__wgt { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ══ Signal strip — compact levels gallery ═══════════════════════════════════ */
+    .ss-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .ss-cell { background: var(--bg-surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+    .ss-cell__l { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .ss-cell__v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+    .ss-cell__m { font-size: 10px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .ss-cell__m .pos { color: var(--rag-green-700); font-weight: 600; }
+    .ss-cell__m .neg { color: var(--rag-red-700); font-weight: 600; }
+    .ss-zone { display: inline-flex; align-items: center; font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 2px; }
+    .ss-zone--ok { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .ss-zone--watch { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .ss-zone--breach { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ══ Card primitives ═════════════════════════════════════════════════════════ */
+    .card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .card__head { display: flex; align-items: flex-end; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+    .card__title { font-family: var(--font-serif); font-size: 15px; font-weight: 500; color: var(--text-primary); }
+    .card__sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .card__body { padding: var(--space-3) var(--space-4); }
+
+    /* ══ Yield curves — 4-country gallery ═══════════════════════════════════════ */
+    .yc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+    .yc-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+    .yc-head { display: flex; justify-content: space-between; align-items: flex-start; }
+    .yc-title { font-family: var(--font-serif); font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .yc-title__sub { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
+    .yc-slope { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 2px; }
+    .yc-slope--pos { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .yc-slope--neg { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .yc-slope--neu { background: var(--bg-inset); color: var(--text-tertiary); }
+    .yc-svg { width: 100%; height: 120px; }
+    .yc-rows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 10px; font-variant-numeric: tabular-nums; }
+    .yc-row { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+    .yc-row__l { font-size: 9px; color: var(--text-tertiary); font-weight: 600; }
+    .yc-row__v { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .yc-row__d { font-size: 9px; color: var(--text-secondary); }
+
+    /* ══ Cross-FX matrix ═════════════════════════════════════════════════════════ */
+    .fx-grid { border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface); }
+    .fx-matrix { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .fx-matrix th, .fx-matrix td { padding: 7px 8px; text-align: center; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); }
+    .fx-matrix th:last-child, .fx-matrix td:last-child { border-right: none; }
+    .fx-matrix tr:last-child td { border-bottom: none; }
+    .fx-matrix th { background: var(--bg-inset); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .fx-matrix th.corner { background: var(--bg-app); }
+    .fx-matrix td.fx-self { background: var(--bg-app); color: var(--border-default); }
+    .fx-matrix td.fx-pair { font-weight: 600; }
+    .fx-matrix td .fx-v { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .fx-matrix td .fx-d { display: block; font-size: 9.5px; margin-top: 1px; }
+    .fx-matrix .pos { color: var(--rag-green-700); }
+    .fx-matrix .neg { color: var(--rag-red-700); }
+
+    /* ══ Commodities panel ═══════════════════════════════════════════════════════ */
+    .cm-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--space-4); }
+    .cm-list { display: flex; flex-direction: column; }
+    .cm-row { display: grid; grid-template-columns: 1.1fr 54px 54px 54px 62px 60px 60px 100px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); align-items: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .cm-row--head { background: var(--bg-inset); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .cm-row:last-child { border-bottom: none; }
+    .cm-row:not(.cm-row--head):hover { background: var(--bg-hover); cursor: pointer; }
+    .cm-name { font-weight: 600; color: var(--text-primary); display: flex; flex-direction: column; gap: 1px; }
+    .cm-name__sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+    .cm-num { text-align: right; font-weight: 600; }
+    .cm-num.pos { color: var(--rag-green-700); }
+    .cm-num.neg { color: var(--rag-red-700); }
+    .cm-num.neu { color: var(--text-tertiary); }
+
+    /* Gold vs risk scatter (simplified) */
+    .cm-map { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+
+    /* ══ Credit spreads ═════════════════════════════════════════════════════════ */
+    .cr-list { display: flex; flex-direction: column; }
+    .cr-row { display: grid; grid-template-columns: 1.2fr 60px 60px 100px; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border-subtle); align-items: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .cr-row--head { background: var(--bg-inset); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .cr-row:last-child { border-bottom: none; }
+    .cr-name { font-weight: 600; color: var(--text-primary); display: flex; flex-direction: column; gap: 1px; }
+    .cr-name__sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+    .cr-band { height: 4px; background: var(--bg-inset); border-radius: 2px; position: relative; }
+    .cr-band__dot { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ══ VIX term / Risk ════════════════════════════════════════════════════════ */
+    .vix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .vix-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+    .vix-term-svg { width: 100%; height: 120px; }
+    .vix-rows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: var(--space-2); }
+    .vix-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; background: var(--bg-inset); border-radius: var(--radius-sm); }
+    .vix-cell__l { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
+    .vix-cell__v { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+
+    /* ══ RRG (reused from today.html pattern) ═══════════════════════════════════ */
+    .rrg-wrap { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); position: relative; }
+    .rrg-svg { width: 100%; height: 520px; overflow: visible; }
+    .rrg-quad-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; fill: var(--text-tertiary); }
+    .rrg-axis-label { font-size: 10px; font-weight: 600; fill: var(--text-secondary); }
+    .rrg-axis { stroke: var(--border-default); stroke-width: 1; }
+    .rrg-grid { stroke: var(--border-subtle); stroke-width: 0.5; stroke-dasharray: 2 3; }
+    .rrg-dot { cursor: pointer; transition: all 120ms; }
+    .rrg-dot:hover { stroke: var(--accent-700); stroke-width: 2; }
+    .rrg-label { font-size: 9.5px; font-weight: 600; fill: var(--text-primary); pointer-events: none; }
+    .rrg-tail { fill: none; stroke-width: 1.2; opacity: 0.35; }
+    .lg-dm-am { background: #1d6fb8; } .rrg-dot.lg-dm-am-f { fill: #1d6fb8; } .rrg-tail.lg-dm-am-s { stroke: #1d6fb8; }
+    .lg-dm-eu { background: #5b3a8a; } .rrg-dot.lg-dm-eu-f { fill: #5b3a8a; } .rrg-tail.lg-dm-eu-s { stroke: #5b3a8a; }
+    .lg-dm-ap { background: #1f7a5c; } .rrg-dot.lg-dm-ap-f { fill: #1f7a5c; } .rrg-tail.lg-dm-ap-s { stroke: #1f7a5c; }
+    .lg-em-as { background: #b4451a; } .rrg-dot.lg-em-as-f { fill: #b4451a; } .rrg-tail.lg-em-as-s { stroke: #b4451a; }
+    .lg-em-la { background: #9a6410; } .rrg-dot.lg-em-la-f { fill: #9a6410; } .rrg-tail.lg-em-la-s { stroke: #9a6410; }
+    .lg-em-em { background: #6b4a08; } .rrg-dot.lg-em-em-f { fill: #6b4a08; } .rrg-tail.lg-em-em-s { stroke: #6b4a08; }
+    .lg-home  { background: #8a909c; } .rrg-dot.lg-home-f  { fill: #8a909c; } .rrg-tail.lg-home-s  { stroke: #8a909c; }
+    .rrg-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); font-size: 10px; color: var(--text-secondary); }
+    .rrg-legend__item { display: inline-flex; align-items: center; gap: 5px; }
+    .rrg-legend__dot { width: 9px; height: 9px; border-radius: 50%; }
+    .rrg-toggle { display: inline-flex; gap: 4px; }
+    .rrg-toggle button { font-size: 10px; font-weight: 600; padding: 4px 9px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; }
+    .rrg-toggle button.active { background: var(--accent-100); color: var(--accent-700); border-color: var(--accent-500); }
+
+    /* ══ Indices table (reused grammar from today.html) ════════════════════════ */
+    .ix-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ix-table th { padding: 8px 7px; text-align: right; font-size: 9.5px; font-weight: 600; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; position: sticky; top: 0; background: var(--bg-surface); }
+    .ix-table th:first-child { text-align: left; padding-left: 12px; }
+    .ix-table th.group-sep { border-left: 1px solid var(--border-subtle); }
+    .ix-table td { padding: 7px 7px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; text-align: right; vertical-align: middle; white-space: nowrap; }
+    .ix-table td:first-child { padding-left: 12px; text-align: left; }
+    .ix-table td.group-sep { border-left: 1px solid var(--border-subtle); }
+    .ix-table tbody tr { cursor: pointer; }
+    .ix-table tbody tr:hover td { background: var(--bg-hover); }
+    .ix-table tbody tr.ref td { background: var(--bg-inset); color: var(--text-secondary); }
+    .ix-name { display: flex; align-items: center; gap: 8px; }
+    .ix-rgn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .ix-name__main { font-weight: 600; color: var(--text-primary); }
+    .ix-name__sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+    .ret-pos { color: var(--rag-green-700); font-weight: 600; }
+    .ret-neg { color: var(--rag-red-700); font-weight: 600; }
+    .ret-neu { color: var(--text-tertiary); }
+
+    /* Factor-label chips (copy from today.html — single vocabulary) */
+    .fcell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; line-height: 1; }
+    .fcell__v { font-size: 11px; font-weight: 600; }
+    .fcell__v--pos { color: var(--rag-green-700); }
+    .fcell__v--neg { color: var(--rag-red-700); }
+    .fcell__v--neu { color: var(--text-tertiary); }
+    .flabel { display: inline-block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 4px; border-radius: 2px; line-height: 1.1; }
+    .flabel--leading    { background: var(--accent-700);       color: #fff; }
+    .flabel--improving  { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--weakening  { background: var(--rag-amber-100);    color: var(--rag-amber-700); }
+    .flabel--lagging    { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    .flabel--accel      { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--stall      { background: var(--bg-inset);         color: var(--text-secondary); }
+    .flabel--decel      { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    .flabel--accum      { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--neut       { background: var(--bg-inset);         color: var(--text-tertiary); }
+    .flabel--distrib    { background: var(--rag-red-100);      color: var(--rag-red-700); }
+    .flabel--expanding  { background: var(--rag-green-100);    color: var(--rag-green-700); }
+    .flabel--narrow     { background: var(--rag-amber-100);    color: var(--rag-amber-700); }
+    .flabel--thin       { background: var(--rag-red-100);      color: var(--rag-red-700); }
+
+    .dc { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; font-size: 9.5px; font-weight: 700; padding: 3px 6px; border-radius: var(--radius-sm); letter-spacing: 0.04em; line-height: 1.15; text-transform: uppercase; white-space: nowrap; }
+    .dc__lbl { font-size: 9px; font-weight: 700; }
+    .dc__note { font-size: 8.5px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.88; text-transform: none; }
+    .dc--conv4  { background: var(--accent-700);      color: #fff; }
+    .dc--conv3  { background: var(--rag-green-100);   color: var(--rag-green-700); }
+    .dc--conv4r { background: var(--rag-red-700);     color: #fff; }
+    .dc--conv3r { background: var(--rag-red-100);     color: var(--rag-red-700); }
+    .dc--div    { background: var(--rag-amber-100);   color: var(--rag-amber-700); }
+    .dc--none   { background: var(--bg-inset);        color: var(--text-tertiary); }
+
+    .act { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.03em; }
+    .act--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .act--hold { background: var(--bg-inset); color: var(--text-secondary); }
+    .act--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .act--avoid { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .act--watch { background: var(--accent-100); color: var(--accent-700); }
+
+    /* buttons */
+    .btn-pri { font-size: 11px; font-weight: 600; padding: 6px 12px; background: var(--accent-700); color: #fff; border: 1px solid var(--accent-800); border-radius: var(--radius-sm); cursor: pointer; }
+    .btn-sec { font-size: 11px; font-weight: 500; padding: 6px 12px; background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; }
+    .sim-this { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 6px 11px; background: var(--accent-100); color: var(--accent-700); border: 1px solid var(--accent-500); border-radius: var(--radius-sm); cursor: pointer; }
+    .sim-this svg { width: 11px; height: 11px; }
+
+    /* ── Commentary rail (LLM-driven, data-cited bullets) ─────────────── */
+    .comm-rail { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-5); }
+    .comm-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--accent-700); border-radius: var(--radius-md); padding: var(--space-5); }
+    .comm-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle); }
+    .comm-card__title { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    .comm-card__model { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); background: var(--bg-inset); padding: 3px 8px; border-radius: 10px; }
+    .comm-card__model::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); }
+    .comm-b { display: grid; grid-template-columns: 78px 1fr; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--border-subtle); }
+    .comm-b:last-child { border-bottom: none; }
+    .comm-b__tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; padding: 4px 6px; border-radius: 2px; height: fit-content; }
+    .comm-b__tag--rates { background: #E0E7FF; color: #3730A3; }
+    .comm-b__tag--fx { background: #FCE7F3; color: #9D174D; }
+    .comm-b__tag--commod { background: #FEF3C7; color: #92400E; }
+    .comm-b__tag--risk { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .comm-b__tag--india { background: var(--accent-100); color: var(--accent-700); }
+    .comm-b__body { font-size: 12.5px; line-height: 1.55; color: var(--text-primary); }
+    .comm-b__body strong { font-weight: 700; }
+    .comm-b__body em { font-style: normal; font-weight: 700; color: var(--accent-700); background: var(--accent-100); padding: 1px 5px; border-radius: 2px; }
+    .comm-b__body .chg-pos { color: var(--rag-green-700); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .comm-b__body .chg-neg { color: var(--rag-red-700); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .comm-b__src { display: block; margin-top: 6px; font-size: 10.5px; color: var(--text-tertiary); font-style: italic; }
+    .comm-side { display: flex; flex-direction: column; gap: var(--space-3); }
+    .comm-side__card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); }
+    .comm-side__title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
+    .news-row { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--border-subtle); font-size: 11.5px; }
+    .news-row:last-child { border-bottom: none; }
+    .news-row__time { font-size: 10px; color: var(--text-tertiary); padding-top: 2px; font-variant-numeric: tabular-nums; }
+    .news-row__txt { color: var(--text-primary); line-height: 1.4; }
+    .news-row__impact { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 5px; border-radius: 2px; }
+    .news-row__impact--high { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .news-row__impact--med { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .news-row__impact--low { background: var(--bg-inset); color: var(--text-tertiary); }
+    .sowhat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; }
+    .sowhat-cell { background: var(--bg-surface); padding: 10px 12px; }
+    .sowhat-cell__lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); margin-bottom: 4px; }
+    .sowhat-cell__val { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.35; }
+    .sowhat-cell__val .pos { color: var(--rag-green-700); }
+    .sowhat-cell__val .neg { color: var(--rag-red-700); }
+
+    /* ── Portfolio-call block (IBKR global allocation) ───────────────── */
+    .alloc-hero { background: linear-gradient(135deg, var(--accent-900) 0%, var(--accent-700) 100%); color: #fff; border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-4); display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: var(--space-5); }
+    .alloc-hero__block { display: flex; flex-direction: column; gap: 6px; }
+    .alloc-hero__lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.72); }
+    .alloc-hero__val { font-family: var(--font-serif); font-size: 22px; font-weight: 600; line-height: 1.2; }
+    .alloc-hero__sub { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.45; }
+    .alloc-hero__divider { width: 1px; background: rgba(255,255,255,0.18); }
+    .mkt-rank { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .mkt-rank thead th { background: var(--bg-inset); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border-default); }
+    .mkt-rank thead th.num, .mkt-rank tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .mkt-rank tbody td { padding: 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+    .mkt-rank tbody tr:last-child td { border-bottom: none; }
+    .mkt-rank tbody tr:hover { background: var(--bg-inset); }
+    .mkt-flag { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-primary); }
+    .mkt-flag__em { font-size: 15px; }
+    .pos-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 2px; }
+    .pos-chip--ow { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .pos-chip--ow-strong { background: var(--rag-green-500); color: #fff; }
+    .pos-chip--nw { background: var(--bg-inset); color: var(--text-secondary); }
+    .pos-chip--uw { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .pos-chip--uw-strong { background: var(--rag-red-500); color: #fff; }
+    .alloc-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-4); }
+    .alloc-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: 10px; }
+    .alloc-card__head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle); }
+    .alloc-card__title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .alloc-card__pos { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .etf-row { display: grid; grid-template-columns: 62px 1fr 78px 56px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--border-subtle); font-size: 12px; }
+    .etf-row:last-child { border-bottom: none; }
+    .etf-row__tick { font-weight: 700; font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--text-primary); letter-spacing: 0.02em; }
+    .etf-row__name { font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
+    .etf-row__act { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 6px; border-radius: 2px; text-align: center; }
+    .etf-row__act--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .etf-row__act--add-strong { background: var(--rag-green-500); color: #fff; }
+    .etf-row__act--hold { background: var(--bg-inset); color: var(--text-secondary); }
+    .etf-row__act--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .etf-row__act--exit { background: var(--rag-red-500); color: #fff; }
+    .etf-row__rs { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+    .etf-row__rs--pos { color: var(--rag-green-700); }
+    .etf-row__rs--neg { color: var(--rag-red-700); }
+    .alloc-why { font-size: 11px; color: var(--text-secondary); line-height: 1.4; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-top: auto; }
+    .alloc-why strong { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     TOPBAR — shared shell (same as today.html / _nav-shell.html)
+     ════════════════════════════════════════════════════════════════════ -->
+<header class="topbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); box-shadow: 0 1px 2px rgba(16,24,40,0.03);">
+  <div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
+    <!-- Brand -->
+    <a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
+      <div style="display: flex; flex-direction: column; line-height: 1;">
+        <span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
+        <span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
+      </div>
+    </a>
+
+    <!-- 5 surfaces -->
+    <nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
+      <a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
+      <a href="explore-global.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">3</span></a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
+    </nav>
+
+    <div style="flex: 1;"></div>
+
+    <!-- Search -->
+    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span style="font-size: 12px; color: var(--text-tertiary);">Search indices, stocks, funds, macros…</span>
+      <span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
+    </div>
+
+    <!-- Live status -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span class="sync-dot"></span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
+        <span style="font-size: 9px; color: var(--text-tertiary);">SGX open · NSE pre-open</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SUB-BAR — Explore Global anchors
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a href="#sect-regime" class="subbar__link subbar__link--active">Regime</a>
+    <a href="#sect-comm" class="subbar__link">Commentary</a>
+    <a href="#sect-macros" class="subbar__link">Macros</a>
+    <a href="#sect-yields" class="subbar__link">Yield curves</a>
+    <a href="#sect-fx" class="subbar__link">FX matrix</a>
+    <a href="#sect-commod" class="subbar__link">Commodities</a>
+    <a href="#sect-credit" class="subbar__link">Credit</a>
+    <a href="#sect-risk" class="subbar__link">Risk · VIX</a>
+    <a href="#sect-rrg" class="subbar__link">Indices RRG</a>
+    <a href="#sect-alloc" class="subbar__link">Portfolio call</a>
+    <div class="subbar__spacer"></div>
+    <div class="subbar__actions">
+      <div class="uni-pill"><span style="font-size:13px;line-height:1;">🌐</span><span>Global</span><span class="uni-pill__chev">▾</span></div>
+      <span class="sync-meta">synced 3m ago · 04 Apr 2026 09:11 IST</span>
+      <button class="icon-btn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+
+  <!-- Breadcrumb -->
+  <nav class="crumbs">
+    <a href="today.html">Today</a>
+    <span class="crumbs__sep">›</span>
+    <span class="crumbs__current">Explore · Global</span>
+  </nav>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="page-header">
+    <div class="ph-left">
+      <div class="ph-eyebrow">Explore · Level 1 · Global landscape</div>
+      <h1 class="ph-title">World macro &amp; cross-asset</h1>
+      <div class="ph-sub">
+        Everything you need to pressure-test the <strong>"Expansion" tag</strong> on global risk: the 6 factors that drive the regime, full yield curves across 4 majors, cross-currency, commodities, credit, and volatility.
+        Drill into any single asset for its RS vs the four benchmarks.
+      </div>
+    </div>
+    <div class="ph-right">
+      <div class="regime-chip regime-chip--expansion">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="regime-chip__label">Global regime</span>
+          <span class="regime-chip__val">Expansion</span>
+        </div>
+        <span class="regime-chip__days">· 34 d</span>
+      </div>
+      <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate macro scenario</button>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       1 · REGIME WHY — transparency card
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-regime">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">1 · Regime classifier</div>
+        <div class="sect__title">Why is global risk tagged "Expansion"?</div>
+        <div class="sect__sub">Six weighted factors. Each scored on a standardised −3 to +3 axis. Composite &gt; +0.5 = Expansion, &lt; −0.5 = Contraction, between = transitional.</div>
+      </div>
+      <div class="sect__actions">
+        <button class="btn-sec">Change thresholds</button>
+        <button class="btn-sec">90d history</button>
+      </div>
+    </div>
+    <div class="regime-why">
+      <div class="rw-hero">
+        <div>
+          <div class="rw-hero__label">Current tag</div>
+          <div class="rw-hero__name">Expansion</div>
+          <div class="rw-hero__days">
+            <div class="rw-hero__days-n">34</div>
+            <div class="rw-hero__days-l">days in regime</div>
+          </div>
+        </div>
+        <div class="rw-hero__meta">
+          Composite score <strong style="color:var(--rag-green-700);">+1.34</strong> (threshold +0.50). Previous regime: <strong>Recovery</strong> · 62d, ended 01 Mar 2026.
+          Next regime flip if composite &lt; +0.5 for 5 consecutive sessions — currently flagged if DXY reclaims <strong>105</strong> or US10Y breaks <strong>4.5%</strong>.
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <span class="flabel flabel--improving" style="font-size:9px;padding:2px 6px;">4 of 6 bullish</span>
+          <span class="flabel flabel--weakening" style="font-size:9px;padding:2px 6px;">1 watch</span>
+          <span class="flabel flabel--neut" style="font-size:9px;padding:2px 6px;">1 neutral</span>
+        </div>
+      </div>
+
+      <div class="rw-factors">
+        <div class="rw-factors__title">Contributing factors · weight &amp; current state</div>
+
+        <div class="rw-fac">
+          <div class="rw-fac__name">Breadth &gt; 200-DMA</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:62%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--pos">62% · Expand</span>
+          <span class="rw-fac__wgt">w 0.25</span>
+        </div>
+        <div class="rw-fac">
+          <div class="rw-fac__name">DXY trajectory</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:72%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--pos">101.8 · Risk-on</span>
+          <span class="rw-fac__wgt">w 0.20</span>
+        </div>
+        <div class="rw-fac">
+          <div class="rw-fac__name">Gold vs MSCI RS</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:58%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--pos">+1.2 · Real-asset bid</span>
+          <span class="rw-fac__wgt">w 0.15</span>
+        </div>
+        <div class="rw-fac">
+          <div class="rw-fac__name">VIX regime</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:68%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--pos">16.3 · Compressed</span>
+          <span class="rw-fac__wgt">w 0.15</span>
+        </div>
+        <div class="rw-fac">
+          <div class="rw-fac__name">Credit spreads (HY)</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neu" style="width:48%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--neu">328 bps · Neutral</span>
+          <span class="rw-fac__wgt">w 0.15</span>
+        </div>
+        <div class="rw-fac">
+          <div class="rw-fac__name">Yield-curve slope (US 2s10s)</div>
+          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:30%;"></div></div>
+          <span class="rw-fac__state rw-fac__state--neg">−48 bps · Inverted</span>
+          <span class="rw-fac__wgt">w 0.10</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       1.5 · COMMENTARY — LLM-driven, data-cited, portfolio-biased bullets
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-comm">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <h2 class="sect__title">What this actually means</h2>
+        <p class="sect__sub">Five bullets, generated fresh every 30 min off live macro prints + news feed. Every bullet cites specific numbers, names the mechanism, and ends with the portfolio action. <strong>Not commentary in general — commentary for <em>your</em> IBKR global book</strong>.</p>
+      </div>
+      <div class="sect__tools">
+        <span class="comm-card__model">GPT-4 · tuned on Atlas factor-grammar</span>
+      </div>
+    </div>
+
+    <div class="comm-rail">
+      <!-- LEFT: 5 hard bullets -->
+      <div class="comm-card">
+        <div class="comm-card__head">
+          <span class="comm-card__title">Signal bullets · 04 Apr 2026, 09:11 IST</span>
+          <span class="comm-card__model">5 · fresh 2m ago</span>
+        </div>
+
+        <div class="comm-b">
+          <span class="comm-b__tag comm-b__tag--rates">Rates</span>
+          <div class="comm-b__body">
+            <strong>JPY 10Y at 1.62%</strong> <span class="chg-pos">(+18 bps MoM, highest since 2011)</span> after BoJ signalled JGB-purchase taper at the Apr meeting. This is the re-pricing we've been waiting for — <strong>yen-carry is unwinding</strong>, visible in USDJPY −2.1% this month and TOPIX Banks +6.4%.
+            <em>Trim JP-exporter ETFs (DXJ, EWJ) — they re-rate lower on a stronger yen. Add DXJF (TOPIX Banks) — direct NIM beneficiary.</em>
+            <span class="comm-b__src">Sources: BoJ Apr statement · MoF auction tail · Reuters JGB tape</span>
+          </div>
+        </div>
+
+        <div class="comm-b">
+          <span class="comm-b__tag comm-b__tag--fx">FX</span>
+          <div class="comm-b__body">
+            <strong>DXY at 101.8</strong> <span class="chg-neg">(−1.4% MoM)</span>, breaking the 102 support that held since Jan. Real-rate differential has compressed as US 10Y real yield drifted from 2.1% to 1.84%. <strong>Weak dollar = EM tailwind</strong> — historically INR, KRW, TWD outperform when DXY sits below 102.
+            <em>Add EM ex-China (EMXC) and India-focused ETFs (INDA, SMIN). Hold EEM — China weight dilutes the signal.</em>
+            <span class="comm-b__src">Sources: FRED DGS10 · TIPS curve · Bloomberg DXY tape</span>
+          </div>
+        </div>
+
+        <div class="comm-b">
+          <span class="comm-b__tag comm-b__tag--commod">Commodities</span>
+          <div class="comm-b__body">
+            <strong>Gold/Copper ratio 577</strong> (95th %ile, 5Y) — gold is shouting stagflation while copper is mumbling growth. Gold's RS vs MSCI +1.8 <em>even though</em> DXY is weak and real yields are falling — this is the <strong>central-bank bid</strong> (China PBoC +18t YTD per WGC) not retail.
+            <em>Hold GLD/GDX at neutral — don't chase, but don't sell. Add CPER only if copper breaches $4.80/lb — not yet.</em>
+            <span class="comm-b__src">Sources: WGC demand trends Q1 · LME copper · CME gold OI</span>
+          </div>
+        </div>
+
+        <div class="comm-b">
+          <span class="comm-b__tag comm-b__tag--risk">Risk</span>
+          <div class="comm-b__body">
+            <strong>VIX 16.3, MOVE 82, India VIX 11.4</strong> — all three compressed, all three at &lt;25th %ile. This is the classic "low-vol trap" setup: the market is priced for continuation, <strong>but HY spreads at 328 bps sit at 58th %ile</strong> — credit is not confirming the equity calm. The last 3 times this divergence ran &gt;30 days, equity drew down 4–7% within 6 weeks.
+            <em>Don't lever up. Keep 8–12% dry powder. Buy 30d SPY puts at 5% OTM if regime-composite slips below +1.0.</em>
+            <span class="comm-b__src">Sources: CBOE VIX · ICE BofA HY OAS · Atlas regime composite</span>
+          </div>
+        </div>
+
+        <div class="comm-b">
+          <span class="comm-b__tag comm-b__tag--india">India</span>
+          <div class="comm-b__body">
+            <strong>Nifty RS vs MSCI = −0.4 (weakening)</strong> despite weak dollar + soft oil ($83 Brent). Reason: FII debt outflows (₹−18,400 cr MTD) on JPM index rebalance optics + Mar CPI print at 5.1% resetting rate-cut timeline to H2FY26. <strong>This is positioning, not fundamentals</strong> — earnings revisions still positive.
+            <em>Hold India weight. Stagger new INDA/SMIN adds over 3 tranches across Apr. Do not cut — this underperformance is mechanical.</em>
+            <span class="comm-b__src">Sources: NSDL FII flows · MoSPI CPI · Kotak Eq-Strategy Apr note</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: news feed + so-what grid -->
+      <div class="comm-side">
+        <div class="comm-side__card">
+          <div class="comm-side__title">Global news feed · filtered for India impact</div>
+          <div class="news-row">
+            <span class="news-row__time">07:40</span>
+            <span class="news-row__txt"><strong>BoJ minutes:</strong> "conditions for further tapering are in place". JPY 10Y broke 1.60% — first time since 2011.</span>
+            <span class="news-row__impact news-row__impact--high">High</span>
+          </div>
+          <div class="news-row">
+            <span class="news-row__time">06:15</span>
+            <span class="news-row__txt"><strong>OPEC+ JMMC holds cuts</strong> through Q3. Brent +1.2% pre-mkt. India oil-import bill sensitivity: +$2/bbl = ~₹13k cr annual.</span>
+            <span class="news-row__impact news-row__impact--high">High</span>
+          </div>
+          <div class="news-row">
+            <span class="news-row__time">04:30</span>
+            <span class="news-row__txt"><strong>US ISM Manuf 50.3</strong> (vs 49.8 est, first expansion in 17m). 10Y yield +6 bps, gold −0.4%.</span>
+            <span class="news-row__impact news-row__impact--med">Med</span>
+          </div>
+          <div class="news-row">
+            <span class="news-row__time">03:10</span>
+            <span class="news-row__txt"><strong>China Caixin PMI 51.1</strong>, beat. Copper +0.8%. Metals/miners ETFs watchlist.</span>
+            <span class="news-row__impact news-row__impact--med">Med</span>
+          </div>
+          <div class="news-row">
+            <span class="news-row__time">yest</span>
+            <span class="news-row__txt"><strong>RBI hold at 6.50%</strong>. Stance "withdrawal of accommodation". OIS 1Y at 6.42 — market pricing 1 cut in FY27 only.</span>
+            <span class="news-row__impact news-row__impact--low">Low</span>
+          </div>
+        </div>
+
+        <div class="comm-side__card">
+          <div class="comm-side__title">So-what for the book · auto-computed</div>
+          <div class="sowhat-grid">
+            <div class="sowhat-cell">
+              <div class="sowhat-cell__lbl">Composite view</div>
+              <div class="sowhat-cell__val"><span class="pos">Risk-on, ex-JP exporters</span></div>
+            </div>
+            <div class="sowhat-cell">
+              <div class="sowhat-cell__lbl">Book bias</div>
+              <div class="sowhat-cell__val">OW EM-ex-China, US tech; NW Europe; UW JP exporters</div>
+            </div>
+            <div class="sowhat-cell">
+              <div class="sowhat-cell__lbl">Hedge suggestion</div>
+              <div class="sowhat-cell__val">30d SPY 5% OTM puts · ~0.6% NAV</div>
+            </div>
+            <div class="sowhat-cell">
+              <div class="sowhat-cell__lbl">Confidence</div>
+              <div class="sowhat-cell__val"><span class="pos">High — 5 of 6 regime factors align</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comm-side__card" style="background:var(--bg-inset);border-color:var(--border-subtle);">
+          <div class="comm-side__title" style="border-bottom:none;margin-bottom:4px;">How this is generated</div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">
+            Prompt chain pulls live numbers from: <strong>FRED</strong> (US rates), <strong>RBI</strong> (INR rates), <strong>BoJ/ECB</strong> (JP/EU rates), <strong>NSDL</strong> (FII flows), <strong>OpenBB</strong> (FX + commodities), <strong>GDELT</strong> (news), <strong>Atlas regime composite</strong>. Model is instructed: <em>cite specific numbers, name the mechanism, end with a portfolio action</em>. No free-form commentary — fails schema check otherwise.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       2 · MACROS — expanded signal strip + levels table
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-macros">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">2 · Macro levels</div>
+        <div class="sect__title">Today's signal strip &amp; threshold watch</div>
+        <div class="sect__sub">The 12 macros the regime classifier watches. Thresholds are FM-configured; breaches auto-fire alerts in Decide.</div>
+      </div>
+      <div class="sect__actions">
+        <button class="btn-sec">Manage thresholds</button>
+        <button class="btn-sec">Export CSV</button>
+      </div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-cell">
+        <div class="ss-cell__l">DXY</div>
+        <div class="ss-cell__v">101.8</div>
+        <div class="ss-cell__m"><span class="neg">−0.42</span> · <span class="ss-zone ss-zone--ok">OK</span></div>
+      </div>
+      <div class="ss-cell">
+        <div class="ss-cell__l">US 10Y</div>
+        <div class="ss-cell__v">4.37%</div>
+        <div class="ss-cell__m"><span class="neg">+3 bps</span> · <span class="ss-zone ss-zone--watch">WATCH</span></div>
+      </div>
+      <div class="ss-cell">
+        <div class="ss-cell__l">Brent</div>
+        <div class="ss-cell__v">$88.4</div>
+        <div class="ss-cell__m"><span class="pos">+1.2%</span> · <span class="ss-zone ss-zone--ok">OK</span></div>
+      </div>
+      <div class="ss-cell">
+        <div class="ss-cell__l">Gold</div>
+        <div class="ss-cell__v">$2,412</div>
+        <div class="ss-cell__m"><span class="pos">+0.6%</span> · <span class="ss-zone ss-zone--ok">ATH</span></div>
+      </div>
+      <div class="ss-cell">
+        <div class="ss-cell__l">VIX</div>
+        <div class="ss-cell__v">16.3</div>
+        <div class="ss-cell__m"><span class="neu">flat</span> · <span class="ss-zone ss-zone--ok">Compressed</span></div>
+      </div>
+      <div class="ss-cell">
+        <div class="ss-cell__l">Copper</div>
+        <div class="ss-cell__v">$4.32</div>
+        <div class="ss-cell__m"><span class="pos">+0.8%</span> · <span class="ss-zone ss-zone--ok">Cyclicals OK</span></div>
+      </div>
+    </div>
+
+    <div style="height:var(--space-4);"></div>
+
+    <div class="card">
+      <div class="card__head">
+        <div>
+          <div class="card__title">Macro levels · 12 watches</div>
+          <div class="card__sub">Current · day Δ · 20-day Δ · threshold · zone. Click any row for 1Y chart + regime overlay.</div>
+        </div>
+        <span style="font-size:10px;color:var(--text-tertiary);">All times IST · data_as_of 04 Apr 2026 09:11</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:var(--bg-inset);">
+              <th style="text-align:left;padding:8px 12px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">Macro</th>
+              <th style="text-align:right;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">Value</th>
+              <th style="text-align:right;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">1d Δ</th>
+              <th style="text-align:right;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">5d Δ</th>
+              <th style="text-align:right;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">20d Δ</th>
+              <th style="text-align:right;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">52w range pos</th>
+              <th style="text-align:left;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">Threshold</th>
+              <th style="text-align:left;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">Zone</th>
+            </tr>
+          </thead>
+          <tbody style="font-variant-numeric:tabular-nums;">
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>DXY</strong> · US dollar index</td><td style="text-align:right;padding:8px 10px;">101.8</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−0.42</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−1.1%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−3.1%</td><td style="text-align:right;padding:8px 10px;">28% of 52w</td><td style="padding:8px 10px;">&lt; 105 = risk-on</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK · risk-on</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 2Y</strong> · Treasury</td><td style="text-align:right;padding:8px 10px;">4.85%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+4 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+12 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+24 bps</td><td style="text-align:right;padding:8px 10px;">68%</td><td style="padding:8px 10px;">Fed path proxy</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Higher for longer</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 10Y</strong> · Treasury</td><td style="text-align:right;padding:8px 10px;">4.37%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+3 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+9 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+18 bps</td><td style="text-align:right;padding:8px 10px;">72%</td><td style="padding:8px 10px;">&lt; 4.25%</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Watch · breached</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 30Y</strong> · Treasury</td><td style="text-align:right;padding:8px 10px;">4.54%</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+2 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+6 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+14 bps</td><td style="text-align:right;padding:8px 10px;">64%</td><td style="padding:8px 10px;">term premium</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>US 2s10s spread</strong></td><td style="text-align:right;padding:8px 10px;">−48 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−1 bp</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−3 bps</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−6 bps</td><td style="text-align:right;padding:8px 10px;">18%</td><td style="padding:8px 10px;">inversion signal</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Inverted 18mo</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Brent crude</strong> · $/bbl</td><td style="text-align:right;padding:8px 10px;">$88.4</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.2%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+6.8%</td><td style="text-align:right;padding:8px 10px;">58%</td><td style="padding:8px 10px;">&lt; $95 = tolerable</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Gold</strong> · $/oz</td><td style="text-align:right;padding:8px 10px;">$2,412</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.6%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+1.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+4.8%</td><td style="text-align:right;padding:8px 10px;">96%</td><td style="padding:8px 10px;">regime signal</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">ATH · real-asset bid</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Copper</strong> · $/lb</td><td style="text-align:right;padding:8px 10px;">$4.32</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+0.8%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+2.1%</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">+5.4%</td><td style="text-align:right;padding:8px 10px;">74%</td><td style="padding:8px 10px;">growth proxy</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">OK · cyclicals</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>Gold/Copper ratio</strong></td><td style="text-align:right;padding:8px 10px;">559</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">−0.2</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">−0.3</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">−0.6</td><td style="text-align:right;padding:8px 10px;">76%</td><td style="padding:8px 10px;">&lt; 600 = growth</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">Growth tilt</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>VIX</strong> · S&amp;P 500</td><td style="text-align:right;padding:8px 10px;">16.3</td><td style="text-align:right;padding:8px 10px;" class="ret-neu">flat</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+0.8</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+1.2</td><td style="text-align:right;padding:8px 10px;">38%</td><td style="padding:8px 10px;">&lt; 20 = risk-on</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">Compressed</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:8px 12px;"><strong>MOVE</strong> · bond vol</td><td style="text-align:right;padding:8px 10px;">102</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+3</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+8</td><td style="text-align:right;padding:8px 10px;" class="ret-neg">+14</td><td style="text-align:right;padding:8px 10px;">62%</td><td style="padding:8px 10px;">&lt; 110 = OK</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--watch">Elevated</span></td></tr>
+            <tr><td style="padding:8px 12px;"><strong>US HY spread</strong> · bps</td><td style="text-align:right;padding:8px 10px;">328</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">−2</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">−6</td><td style="text-align:right;padding:8px 10px;" class="ret-pos">−14</td><td style="text-align:right;padding:8px 10px;">22%</td><td style="padding:8px 10px;">&lt; 400 = OK</td><td style="padding:8px 10px;"><span class="ss-zone ss-zone--ok">Tight</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       3 · YIELD CURVES — 4-country gallery
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-yields">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">3 · Yield curves</div>
+        <div class="sect__title">Rate-path map · US · India · Germany · Japan</div>
+        <div class="sect__sub">Solid = today · dashed = 30 days ago. Inversion regions shaded. Slope chip = 2s10s spread.</div>
+      </div>
+      <div class="sect__actions">
+        <button class="btn-sec">Add country</button>
+        <button class="btn-sec">Overlay OIS</button>
+      </div>
+    </div>
+    <div class="yc-grid">
+
+      <!-- US curve -->
+      <div class="yc-card">
+        <div class="yc-head">
+          <div>
+            <div class="yc-title">United States</div>
+            <div class="yc-title__sub">Treasury · USD</div>
+          </div>
+          <span class="yc-slope yc-slope--neg">2s10s · −48 bps</span>
+        </div>
+        <svg class="yc-svg" viewBox="0 0 280 120">
+          <g stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="2 3">
+            <line x1="20" y1="20" x2="270" y2="20"/>
+            <line x1="20" y1="50" x2="270" y2="50"/>
+            <line x1="20" y1="80" x2="270" y2="80"/>
+            <line x1="20" y1="110" x2="270" y2="110"/>
+          </g>
+          <g font-size="7" fill="var(--text-tertiary)">
+            <text x="15" y="22" text-anchor="end">5.0%</text>
+            <text x="15" y="52" text-anchor="end">4.5%</text>
+            <text x="15" y="82" text-anchor="end">4.0%</text>
+            <text x="15" y="112" text-anchor="end">3.5%</text>
+            <text x="28" y="118">3m</text>
+            <text x="78" y="118">2y</text>
+            <text x="128" y="118">5y</text>
+            <text x="188" y="118">10y</text>
+            <text x="255" y="118">30y</text>
+          </g>
+          <!-- 30 days ago curve (dashed) -->
+          <path d="M 32,22 Q 80,30 125,50 Q 160,68 195,72 Q 230,72 268,72" fill="none" stroke="#9CA3AF" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.7"/>
+          <!-- Today curve (solid) -->
+          <path d="M 32,14 Q 80,18 125,36 Q 160,58 195,68 Q 230,64 268,60" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+          <!-- Points -->
+          <g fill="var(--accent-700)">
+            <circle cx="32" cy="14" r="2.5"/>
+            <circle cx="80" cy="18" r="2.5"/>
+            <circle cx="128" cy="36" r="2.5"/>
+            <circle cx="195" cy="68" r="2.5"/>
+            <circle cx="268" cy="60" r="2.5"/>
+          </g>
+        </svg>
+        <div class="yc-rows">
+          <div class="yc-row"><span class="yc-row__l">2Y</span><span class="yc-row__v">4.85%</span><span class="yc-row__d ret-neg">+24 bps 20d</span></div>
+          <div class="yc-row"><span class="yc-row__l">5Y</span><span class="yc-row__v">4.52%</span><span class="yc-row__d ret-neg">+21 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">10Y</span><span class="yc-row__v">4.37%</span><span class="yc-row__d ret-neg">+18 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">30Y</span><span class="yc-row__v">4.54%</span><span class="yc-row__d ret-neg">+14 bps</span></div>
+        </div>
+      </div>
+
+      <!-- India curve -->
+      <div class="yc-card">
+        <div class="yc-head">
+          <div>
+            <div class="yc-title">India</div>
+            <div class="yc-title__sub">G-Sec · INR</div>
+          </div>
+          <span class="yc-slope yc-slope--pos">2s10s · +26 bps</span>
+        </div>
+        <svg class="yc-svg" viewBox="0 0 280 120">
+          <g stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="2 3">
+            <line x1="20" y1="20" x2="270" y2="20"/>
+            <line x1="20" y1="50" x2="270" y2="50"/>
+            <line x1="20" y1="80" x2="270" y2="80"/>
+            <line x1="20" y1="110" x2="270" y2="110"/>
+          </g>
+          <g font-size="7" fill="var(--text-tertiary)">
+            <text x="15" y="22" text-anchor="end">7.4%</text>
+            <text x="15" y="52" text-anchor="end">7.2%</text>
+            <text x="15" y="82" text-anchor="end">7.0%</text>
+            <text x="15" y="112" text-anchor="end">6.8%</text>
+            <text x="28" y="118">3m</text>
+            <text x="78" y="118">2y</text>
+            <text x="128" y="118">5y</text>
+            <text x="188" y="118">10y</text>
+            <text x="255" y="118">30y</text>
+          </g>
+          <path d="M 32,82 Q 80,70 125,55 Q 160,46 195,42 Q 230,36 268,32" fill="none" stroke="#9CA3AF" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.7"/>
+          <path d="M 32,88 Q 80,76 125,60 Q 160,50 195,46 Q 230,38 268,34" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+          <g fill="var(--accent-700)">
+            <circle cx="32" cy="88" r="2.5"/>
+            <circle cx="80" cy="76" r="2.5"/>
+            <circle cx="128" cy="60" r="2.5"/>
+            <circle cx="195" cy="46" r="2.5"/>
+            <circle cx="268" cy="34" r="2.5"/>
+          </g>
+        </svg>
+        <div class="yc-rows">
+          <div class="yc-row"><span class="yc-row__l">2Y</span><span class="yc-row__v">6.86%</span><span class="yc-row__d ret-pos">−8 bps 20d</span></div>
+          <div class="yc-row"><span class="yc-row__l">5Y</span><span class="yc-row__v">7.02%</span><span class="yc-row__d ret-pos">−7 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">10Y</span><span class="yc-row__v">7.12%</span><span class="yc-row__d ret-pos">−9 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">30Y</span><span class="yc-row__v">7.28%</span><span class="yc-row__d ret-pos">−11 bps</span></div>
+        </div>
+      </div>
+
+      <!-- Germany -->
+      <div class="yc-card">
+        <div class="yc-head">
+          <div>
+            <div class="yc-title">Germany</div>
+            <div class="yc-title__sub">Bund · EUR</div>
+          </div>
+          <span class="yc-slope yc-slope--neg">2s10s · −34 bps</span>
+        </div>
+        <svg class="yc-svg" viewBox="0 0 280 120">
+          <g stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="2 3">
+            <line x1="20" y1="20" x2="270" y2="20"/>
+            <line x1="20" y1="50" x2="270" y2="50"/>
+            <line x1="20" y1="80" x2="270" y2="80"/>
+            <line x1="20" y1="110" x2="270" y2="110"/>
+          </g>
+          <g font-size="7" fill="var(--text-tertiary)">
+            <text x="15" y="22" text-anchor="end">3.2%</text>
+            <text x="15" y="52" text-anchor="end">2.8%</text>
+            <text x="15" y="82" text-anchor="end">2.4%</text>
+            <text x="15" y="112" text-anchor="end">2.0%</text>
+            <text x="28" y="118">3m</text>
+            <text x="78" y="118">2y</text>
+            <text x="128" y="118">5y</text>
+            <text x="188" y="118">10y</text>
+            <text x="255" y="118">30y</text>
+          </g>
+          <path d="M 32,40 Q 80,44 125,58 Q 160,66 195,72 Q 230,74 268,68" fill="none" stroke="#9CA3AF" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.7"/>
+          <path d="M 32,34 Q 80,38 125,52 Q 160,62 195,68 Q 230,68 268,58" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+          <g fill="var(--accent-700)">
+            <circle cx="32" cy="34" r="2.5"/>
+            <circle cx="80" cy="38" r="2.5"/>
+            <circle cx="128" cy="52" r="2.5"/>
+            <circle cx="195" cy="68" r="2.5"/>
+            <circle cx="268" cy="58" r="2.5"/>
+          </g>
+        </svg>
+        <div class="yc-rows">
+          <div class="yc-row"><span class="yc-row__l">2Y</span><span class="yc-row__v">2.88%</span><span class="yc-row__d ret-pos">−4 bps 20d</span></div>
+          <div class="yc-row"><span class="yc-row__l">5Y</span><span class="yc-row__v">2.52%</span><span class="yc-row__d ret-pos">−6 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">10Y</span><span class="yc-row__v">2.54%</span><span class="yc-row__d ret-pos">−8 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">30Y</span><span class="yc-row__v">2.72%</span><span class="yc-row__d ret-pos">−9 bps</span></div>
+        </div>
+      </div>
+
+      <!-- Japan -->
+      <div class="yc-card">
+        <div class="yc-head">
+          <div>
+            <div class="yc-title">Japan</div>
+            <div class="yc-title__sub">JGB · JPY · post-YCC</div>
+          </div>
+          <span class="yc-slope yc-slope--pos">2s10s · +74 bps</span>
+        </div>
+        <svg class="yc-svg" viewBox="0 0 280 120">
+          <g stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="2 3">
+            <line x1="20" y1="20" x2="270" y2="20"/>
+            <line x1="20" y1="50" x2="270" y2="50"/>
+            <line x1="20" y1="80" x2="270" y2="80"/>
+            <line x1="20" y1="110" x2="270" y2="110"/>
+          </g>
+          <g font-size="7" fill="var(--text-tertiary)">
+            <text x="15" y="22" text-anchor="end">2.0%</text>
+            <text x="15" y="52" text-anchor="end">1.4%</text>
+            <text x="15" y="82" text-anchor="end">0.8%</text>
+            <text x="15" y="112" text-anchor="end">0.2%</text>
+            <text x="28" y="118">3m</text>
+            <text x="78" y="118">2y</text>
+            <text x="128" y="118">5y</text>
+            <text x="188" y="118">10y</text>
+            <text x="255" y="118">30y</text>
+          </g>
+          <path d="M 32,100 Q 80,92 125,80 Q 160,72 195,64 Q 230,50 268,32" fill="none" stroke="#9CA3AF" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.7"/>
+          <path d="M 32,96 Q 80,86 125,72 Q 160,62 195,54 Q 230,40 268,24" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+          <g fill="var(--accent-700)">
+            <circle cx="32" cy="96" r="2.5"/>
+            <circle cx="80" cy="86" r="2.5"/>
+            <circle cx="128" cy="72" r="2.5"/>
+            <circle cx="195" cy="54" r="2.5"/>
+            <circle cx="268" cy="24" r="2.5"/>
+          </g>
+        </svg>
+        <div class="yc-rows">
+          <div class="yc-row"><span class="yc-row__l">2Y</span><span class="yc-row__v">0.62%</span><span class="yc-row__d ret-neg">+8 bps 20d</span></div>
+          <div class="yc-row"><span class="yc-row__l">5Y</span><span class="yc-row__v">0.88%</span><span class="yc-row__d ret-neg">+11 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">10Y</span><span class="yc-row__v">1.36%</span><span class="yc-row__d ret-neg">+16 bps</span></div>
+          <div class="yc-row"><span class="yc-row__l">30Y</span><span class="yc-row__v">2.08%</span><span class="yc-row__d ret-neg">+22 bps</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       4 · FX MATRIX
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-fx">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">4 · Cross-currency</div>
+        <div class="sect__title">FX matrix · 6 × 6 majors + INR</div>
+        <div class="sect__sub">Each cell: spot · 20-day Δ (green = base strengthening, red = base weakening). INR-row shows what INR is doing against everyone.</div>
+      </div>
+      <div class="sect__actions">
+        <button class="btn-sec">1W</button>
+        <button class="btn-sec" style="background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);">20D</button>
+        <button class="btn-sec">3M</button>
+        <button class="btn-sec">12M</button>
+      </div>
+    </div>
+    <div class="fx-grid">
+      <table class="fx-matrix">
+        <thead>
+          <tr>
+            <th class="corner"></th>
+            <th>USD</th>
+            <th>EUR</th>
+            <th>JPY</th>
+            <th>GBP</th>
+            <th>AUD</th>
+            <th>CNH</th>
+            <th>INR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">USD</td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">1.088</span><span class="fx-d neg">−1.2%</span></td>
+            <td><span class="fx-v">148.2</span><span class="fx-d pos">+2.4%</span></td>
+            <td><span class="fx-v">1.278</span><span class="fx-d neg">−0.8%</span></td>
+            <td><span class="fx-v">0.658</span><span class="fx-d pos">+0.6%</span></td>
+            <td><span class="fx-v">7.216</span><span class="fx-d pos">+0.3%</span></td>
+            <td><span class="fx-v">83.41</span><span class="fx-d neg">−0.4%</span></td>
+          </tr>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">EUR</td>
+            <td><span class="fx-v">0.919</span><span class="fx-d pos">+1.2%</span></td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">161.2</span><span class="fx-d pos">+3.6%</span></td>
+            <td><span class="fx-v">0.851</span><span class="fx-d pos">+0.4%</span></td>
+            <td><span class="fx-v">1.654</span><span class="fx-d pos">+1.8%</span></td>
+            <td><span class="fx-v">7.852</span><span class="fx-d pos">+1.5%</span></td>
+            <td><span class="fx-v">90.75</span><span class="fx-d pos">+0.8%</span></td>
+          </tr>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">JPY</td>
+            <td><span class="fx-v">0.00674</span><span class="fx-d neg">−2.4%</span></td>
+            <td><span class="fx-v">0.00620</span><span class="fx-d neg">−3.6%</span></td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">0.00528</span><span class="fx-d neg">−3.2%</span></td>
+            <td><span class="fx-v">0.00444</span><span class="fx-d neg">−1.8%</span></td>
+            <td><span class="fx-v">0.0487</span><span class="fx-d neg">−2.1%</span></td>
+            <td><span class="fx-v">0.562</span><span class="fx-d neg">−2.8%</span></td>
+          </tr>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">GBP</td>
+            <td><span class="fx-v">1.278</span><span class="fx-d pos">+0.8%</span></td>
+            <td><span class="fx-v">1.175</span><span class="fx-d neg">−0.4%</span></td>
+            <td><span class="fx-v">189.4</span><span class="fx-d pos">+3.2%</span></td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">1.942</span><span class="fx-d pos">+1.4%</span></td>
+            <td><span class="fx-v">9.222</span><span class="fx-d pos">+1.1%</span></td>
+            <td><span class="fx-v">106.6</span><span class="fx-d pos">+0.4%</span></td>
+          </tr>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">AUD</td>
+            <td><span class="fx-v">0.658</span><span class="fx-d neg">−0.6%</span></td>
+            <td><span class="fx-v">0.605</span><span class="fx-d neg">−1.8%</span></td>
+            <td><span class="fx-v">97.5</span><span class="fx-d pos">+1.8%</span></td>
+            <td><span class="fx-v">0.515</span><span class="fx-d neg">−1.4%</span></td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">4.752</span><span class="fx-d neg">−0.3%</span></td>
+            <td><span class="fx-v">54.89</span><span class="fx-d neg">−1.0%</span></td>
+          </tr>
+          <tr>
+            <td class="fx-pair" style="background:var(--bg-inset);text-align:left;padding-left:10px;">CNH</td>
+            <td><span class="fx-v">0.1386</span><span class="fx-d neg">−0.3%</span></td>
+            <td><span class="fx-v">0.1273</span><span class="fx-d neg">−1.5%</span></td>
+            <td><span class="fx-v">20.54</span><span class="fx-d pos">+2.1%</span></td>
+            <td><span class="fx-v">0.1084</span><span class="fx-d neg">−1.1%</span></td>
+            <td><span class="fx-v">0.2104</span><span class="fx-d pos">+0.3%</span></td>
+            <td class="fx-self">—</td>
+            <td><span class="fx-v">11.56</span><span class="fx-d neg">−0.7%</span></td>
+          </tr>
+          <tr style="background:var(--bg-inset);">
+            <td class="fx-pair" style="background:var(--accent-100);color:var(--accent-700);font-weight:700;text-align:left;padding-left:10px;">INR</td>
+            <td><span class="fx-v">0.01199</span><span class="fx-d pos">+0.4%</span></td>
+            <td><span class="fx-v">0.01102</span><span class="fx-d neg">−0.8%</span></td>
+            <td><span class="fx-v">1.778</span><span class="fx-d pos">+2.8%</span></td>
+            <td><span class="fx-v">0.00938</span><span class="fx-d neg">−0.4%</span></td>
+            <td><span class="fx-v">0.01822</span><span class="fx-d pos">+1.0%</span></td>
+            <td><span class="fx-v">0.0865</span><span class="fx-d pos">+0.7%</span></td>
+            <td class="fx-self">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);margin-top:var(--space-4);">
+      <div class="card" style="padding:var(--space-4);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:6px;">INR REER · Real Effective</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--font-serif);color:var(--text-primary);">105.4</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><span class="ret-pos">+0.8 20d</span> · at 94th %ile of 5Y range · mildly overvalued by PPP</div>
+      </div>
+      <div class="card" style="padding:var(--space-4);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:6px;">Carry · INR vs USD (1Y fwd)</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--font-serif);color:var(--text-primary);">2.28%</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><span class="ret-neg">−18 bps 20d</span> · narrowest since Oct 2023 · FX hedging cost compressed</div>
+      </div>
+      <div class="card" style="padding:var(--space-4);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:6px;">RBI FX reserve</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--font-serif);color:var(--text-primary);">$642.4 bn</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><span class="ret-pos">+$1.4 bn wk</span> · ≈ 11 months import cover · ATH</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       5 · COMMODITIES
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-commod">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">5 · Commodities</div>
+        <div class="sect__title">Cross-commodity · levels, rotation, RS vs Gold</div>
+        <div class="sect__sub">Same 4-factor grammar. Gold is the reference asset at global level (like Nifty is at India level). RS-Gold tells you what's actually outperforming real value.</div>
+      </div>
+      <div class="sect__actions">
+        <button class="btn-sec">RS vs DXY</button>
+        <button class="btn-sec" style="background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);">RS vs Gold</button>
+      </div>
+    </div>
+    <div class="cm-grid">
+      <div class="card" style="overflow:hidden;">
+        <div class="cm-list">
+          <div class="cm-row cm-row--head">
+            <div>Commodity</div>
+            <div>Last</div>
+            <div>1d</div>
+            <div>20d</div>
+            <div>RS-Gold</div>
+            <div>Mom</div>
+            <div>Vol</div>
+            <div>Div / Conv</div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Gold<span class="cm-name__sub">COMEX · $/oz · ref</span></div>
+            <div class="cm-num">$2,412</div>
+            <div class="cm-num pos">+0.6</div>
+            <div class="cm-num pos">+4.8</div>
+            <div class="fcell"><span class="fcell__v fcell__v--neu">ref</span><span class="flabel flabel--neut">REF</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">reference bid</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Silver<span class="cm-name__sub">COMEX · $/oz</span></div>
+            <div class="cm-num">$28.4</div>
+            <div class="cm-num pos">+1.4</div>
+            <div class="cm-num pos">+6.2</div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">1.4×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">silver &gt; gold</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Copper<span class="cm-name__sub">LME · $/lb</span></div>
+            <div class="cm-num">$4.32</div>
+            <div class="cm-num pos">+0.8</div>
+            <div class="cm-num pos">+5.4</div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">growth signal</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Brent<span class="cm-name__sub">ICE · $/bbl</span></div>
+            <div class="cm-num">$88.4</div>
+            <div class="cm-num pos">+1.2</div>
+            <div class="cm-num pos">+6.8</div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">geopolitical bid</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">WTI<span class="cm-name__sub">NYMEX · $/bbl</span></div>
+            <div class="cm-num">$83.8</div>
+            <div class="cm-num pos">+1.0</div>
+            <div class="cm-num pos">+5.6</div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+0.5</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">backwardation</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Nat Gas<span class="cm-name__sub">HH · $/MMBtu</span></div>
+            <div class="cm-num">$1.84</div>
+            <div class="cm-num neg">−1.8</div>
+            <div class="cm-num neg">−12.4</div>
+            <div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neg">1.4×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">oversupply</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Aluminium<span class="cm-name__sub">LME · $/tonne</span></div>
+            <div class="cm-num">$2,284</div>
+            <div class="cm-num pos">+0.4</div>
+            <div class="cm-num pos">+3.8</div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">industrial lift</span></div></div>
+          </div>
+          <div class="cm-row">
+            <div class="cm-name">Platinum<span class="cm-name__sub">NYMEX · $/oz</span></div>
+            <div class="cm-num">$918</div>
+            <div class="cm-num neu">+0.2</div>
+            <div class="cm-num neg">−1.4</div>
+            <div class="fcell"><span class="fcell__v fcell__v--neg">−1.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div><div class="dc dc--div"><span class="dc__lbl">DIV · EV headwind</span><span class="dc__note">auto demand weak</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cm-map">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary); margin-bottom:10px;">Gold / Copper · Growth–Inflation map</div>
+        <svg viewBox="0 0 280 280" style="width:100%;height:auto;">
+          <defs>
+            <linearGradient id="grad-q" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="var(--rag-red-100)"/>
+              <stop offset="100%" stop-color="var(--rag-red-100)"/>
+            </linearGradient>
+          </defs>
+          <!-- Quadrants -->
+          <rect x="0" y="0" width="140" height="140" fill="var(--rag-red-100)" opacity="0.25"/>
+          <rect x="140" y="0" width="140" height="140" fill="var(--rag-amber-100)" opacity="0.35"/>
+          <rect x="0" y="140" width="140" height="140" fill="var(--rag-amber-100)" opacity="0.25"/>
+          <rect x="140" y="140" width="140" height="140" fill="var(--rag-green-100)" opacity="0.5"/>
+          <!-- Axes -->
+          <line x1="0" y1="140" x2="280" y2="140" stroke="var(--text-secondary)" stroke-width="0.8"/>
+          <line x1="140" y1="0" x2="140" y2="280" stroke="var(--text-secondary)" stroke-width="0.8"/>
+          <!-- Labels -->
+          <text x="140" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="var(--rag-red-700)">INFLATION ↑ · GROWTH ↓ (stagflation)</text>
+          <text x="140" y="272" text-anchor="middle" font-size="9" font-weight="700" fill="var(--rag-green-700)">GROWTH ↑ · INFLATION ↓ (goldilocks)</text>
+          <text x="8" y="144" font-size="9" font-weight="600" fill="var(--text-secondary)">Gold ↑</text>
+          <text x="240" y="144" font-size="9" font-weight="600" fill="var(--text-secondary)">Copper ↑</text>
+          <!-- Dots = 30d trajectory -->
+          <circle cx="152" cy="168" r="5" fill="var(--accent-700)"/>
+          <text x="160" y="172" font-size="10" font-weight="600" fill="var(--text-primary)">Now · Apr 04</text>
+          <circle cx="168" cy="158" r="3.5" fill="var(--accent-500)" opacity="0.7"/>
+          <circle cx="184" cy="150" r="3" fill="var(--accent-300)" opacity="0.6"/>
+          <circle cx="200" cy="146" r="2.5" fill="var(--accent-200)" opacity="0.5"/>
+          <circle cx="218" cy="138" r="2" fill="var(--accent-100)" opacity="0.4"/>
+          <text x="226" y="138" font-size="8" font-weight="500" fill="var(--text-tertiary)">Mar 06</text>
+          <!-- Path connecting -->
+          <path d="M 218,138 Q 200,146 184,150 Q 168,158 152,168" fill="none" stroke="var(--accent-500)" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        </svg>
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.55;margin-top:var(--space-2);">
+          Current reading: <strong style="color:var(--rag-green-700);">goldilocks quadrant</strong>, drifting south-west from <strong>neutral</strong> over 30d. Both gold and copper bid = demand returning but with inflation caveat. Consistent with the Expansion tag.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       6 · CREDIT SPREADS
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-credit">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">6 · Credit spreads</div>
+        <div class="sect__title">Risk appetite via credit · 5 spread families</div>
+        <div class="sect__sub">Spreads widening = risk off · spreads tightening = risk on. Shown as position within 5-year range.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cr-list">
+        <div class="cr-row cr-row--head">
+          <div>Spread</div>
+          <div style="text-align:right;">Current</div>
+          <div style="text-align:right;">20d Δ</div>
+          <div>5Y range position</div>
+        </div>
+        <div class="cr-row">
+          <div class="cr-name">US Investment Grade<span class="cr-name__sub">ICE BofA IG OAS · bps</span></div>
+          <div style="text-align:right;font-weight:700;">94</div>
+          <div style="text-align:right;" class="ret-pos">−4</div>
+          <div class="cr-band"><div class="cr-band__dot" style="left:22%;background:var(--rag-green-500);"></div></div>
+        </div>
+        <div class="cr-row">
+          <div class="cr-name">US High Yield<span class="cr-name__sub">ICE BofA HY OAS · bps</span></div>
+          <div style="text-align:right;font-weight:700;">328</div>
+          <div style="text-align:right;" class="ret-pos">−14</div>
+          <div class="cr-band"><div class="cr-band__dot" style="left:26%;background:var(--rag-green-500);"></div></div>
+        </div>
+        <div class="cr-row">
+          <div class="cr-name">EM Sovereign USD<span class="cr-name__sub">EMBIG spread vs UST · bps</span></div>
+          <div style="text-align:right;font-weight:700;">284</div>
+          <div style="text-align:right;" class="ret-pos">−8</div>
+          <div class="cr-band"><div class="cr-band__dot" style="left:34%;background:var(--rag-green-500);"></div></div>
+        </div>
+        <div class="cr-row">
+          <div class="cr-name">India AAA–G-Sec<span class="cr-name__sub">10Y corp vs G-Sec · bps</span></div>
+          <div style="text-align:right;font-weight:700;">58</div>
+          <div style="text-align:right;" class="ret-pos">−3</div>
+          <div class="cr-band"><div class="cr-band__dot" style="left:18%;background:var(--rag-green-500);"></div></div>
+        </div>
+        <div class="cr-row">
+          <div class="cr-name">India AA–AAA<span class="cr-name__sub">credit quality compression · bps</span></div>
+          <div style="text-align:right;font-weight:700;">84</div>
+          <div style="text-align:right;" class="ret-neu">+1</div>
+          <div class="cr-band"><div class="cr-band__dot" style="left:42%;background:var(--rag-amber-500);"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       7 · RISK · VIX term + cross-asset vol
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-risk">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">7 · Risk · volatility</div>
+        <div class="sect__title">Vol regime · VIX term + cross-asset implied</div>
+        <div class="sect__sub">Contango (upward term) = complacency. Backwardation = stress. Bond, FX, and equity vol together tell you where the wobbles are.</div>
+      </div>
+    </div>
+    <div class="vix-grid">
+      <div class="vix-card">
+        <div style="font-family:var(--font-serif);font-size:14px;font-weight:500;margin-bottom:10px;">VIX term structure · S&amp;P 500</div>
+        <svg class="vix-term-svg" viewBox="0 0 300 120">
+          <g stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="2 3">
+            <line x1="30" y1="15" x2="290" y2="15"/>
+            <line x1="30" y1="45" x2="290" y2="45"/>
+            <line x1="30" y1="75" x2="290" y2="75"/>
+            <line x1="30" y1="105" x2="290" y2="105"/>
+          </g>
+          <g font-size="7.5" fill="var(--text-tertiary)">
+            <text x="25" y="18" text-anchor="end">22</text>
+            <text x="25" y="48" text-anchor="end">19</text>
+            <text x="25" y="78" text-anchor="end">16</text>
+            <text x="25" y="108" text-anchor="end">13</text>
+            <text x="38" y="118">Spot</text>
+            <text x="108" y="118">1M</text>
+            <text x="178" y="118">3M</text>
+            <text x="228" y="118">6M</text>
+            <text x="280" y="118">1Y</text>
+          </g>
+          <!-- 30d ago (dashed) -->
+          <path d="M 42,92 L 108,74 L 178,62 L 228,54 L 288,48" fill="none" stroke="#9CA3AF" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.7"/>
+          <!-- Today (solid) -->
+          <path d="M 42,78 L 108,64 L 178,52 L 228,42 L 288,36" fill="none" stroke="var(--accent-700)" stroke-width="2"/>
+          <g fill="var(--accent-700)">
+            <circle cx="42" cy="78" r="3"/>
+            <circle cx="108" cy="64" r="3"/>
+            <circle cx="178" cy="52" r="3"/>
+            <circle cx="228" cy="42" r="3"/>
+            <circle cx="288" cy="36" r="3"/>
+          </g>
+          <text x="50" y="72" font-size="8.5" font-weight="600" fill="var(--text-primary)">16.3</text>
+          <text x="180" y="46" font-size="8.5" font-weight="600" fill="var(--text-primary)">18.8</text>
+        </svg>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:var(--space-2);line-height:1.5;">
+          Solid upward contango · spot 16.3, 6M 19.9. Market pricing calm near-term, uncertainty further out. <strong style="color:var(--rag-green-700);">Risk-on posture confirmed.</strong>
+        </div>
+        <div class="vix-rows">
+          <div class="vix-cell"><span class="vix-cell__l">Spot</span><span class="vix-cell__v">16.3</span></div>
+          <div class="vix-cell"><span class="vix-cell__l">1M</span><span class="vix-cell__v">17.8</span></div>
+          <div class="vix-cell"><span class="vix-cell__l">3M</span><span class="vix-cell__v">18.8</span></div>
+          <div class="vix-cell"><span class="vix-cell__l">6M</span><span class="vix-cell__v">19.9</span></div>
+        </div>
+      </div>
+
+      <div class="vix-card">
+        <div style="font-family:var(--font-serif);font-size:14px;font-weight:500;margin-bottom:10px;">Cross-asset implied vol</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2);">
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">VIX</strong> <span style="font-size:10px;color:var(--text-tertiary);">· S&amp;P 500 equity</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">16.3</div>
+            <div style="font-size:10px;color:var(--rag-green-700);font-weight:600;">38th %ile 5Y</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">MOVE</strong> <span style="font-size:10px;color:var(--text-tertiary);">· US Treasury</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">102</div>
+            <div style="font-size:10px;color:var(--rag-amber-700);font-weight:600;">62nd %ile</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">JPY vol</strong> <span style="font-size:10px;color:var(--text-tertiary);">· 1M implied</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">9.8%</div>
+            <div style="font-size:10px;color:var(--rag-amber-700);font-weight:600;">58th %ile</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">India VIX</strong> <span style="font-size:10px;color:var(--text-tertiary);">· Nifty equity</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">14.1</div>
+            <div style="font-size:10px;color:var(--rag-green-700);font-weight:600;">32nd %ile</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">Gold vol</strong> <span style="font-size:10px;color:var(--text-tertiary);">· 30d realized</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">13.2%</div>
+            <div style="font-size:10px;color:var(--rag-amber-700);font-weight:600;">71st %ile</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:var(--space-3);align-items:center;padding:8px 10px;background:var(--bg-inset);border-radius:var(--radius-sm);">
+            <div><strong style="color:var(--text-primary);font-size:12px;">CVIX</strong> <span style="font-size:10px;color:var(--text-tertiary);">· DB FX vol index</span></div>
+            <div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">7.8</div>
+            <div style="font-size:10px;color:var(--rag-green-700);font-weight:600;">28th %ile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       8 · GLOBAL RRG + INDICES TABLE
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-rrg">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <div class="sect__eyebrow">8 · Indices rotation</div>
+        <div class="sect__title">Global RRG · drill into any index</div>
+        <div class="sect__sub">Same grammar as Today. Toggle the x-axis benchmark to re-plot. Click any dot → Explore · Country (that country's India-equivalent deep-dive).</div>
+      </div>
+      <div class="sect__actions rrg-toggle">
+        <button class="active">vs MSCI</button>
+        <button>vs Gold</button>
+        <button>vs SPX</button>
+        <button>vs Nifty</button>
+      </div>
+    </div>
+    <div class="rrg-wrap">
+      <svg class="rrg-svg" viewBox="0 0 900 520">
+        <!-- Quadrant backgrounds (very faint) -->
+        <rect x="0" y="0" width="450" height="260" fill="var(--rag-amber-100)" opacity="0.18"/>
+        <rect x="450" y="0" width="450" height="260" fill="var(--rag-green-100)" opacity="0.22"/>
+        <rect x="0" y="260" width="450" height="260" fill="var(--rag-red-100)" opacity="0.18"/>
+        <rect x="450" y="260" width="450" height="260" fill="var(--accent-100)" opacity="0.18"/>
+        <!-- Axes -->
+        <line class="rrg-axis" x1="0" y1="260" x2="900" y2="260"/>
+        <line class="rrg-axis" x1="450" y1="0" x2="450" y2="520"/>
+        <!-- Grid -->
+        <g class="rrg-grid">
+          <line x1="0" y1="130" x2="900" y2="130"/>
+          <line x1="0" y1="390" x2="900" y2="390"/>
+          <line x1="225" y1="0" x2="225" y2="520"/>
+          <line x1="675" y1="0" x2="675" y2="520"/>
+        </g>
+        <!-- Quadrant labels -->
+        <text class="rrg-quad-label" x="40" y="28">IMPROVING</text>
+        <text class="rrg-quad-label" x="765" y="28">LEADING</text>
+        <text class="rrg-quad-label" x="40" y="510">LAGGING</text>
+        <text class="rrg-quad-label" x="755" y="510">WEAKENING</text>
+        <text class="rrg-axis-label" x="890" y="252" text-anchor="end">RS ratio vs MSCI World →</text>
+        <text class="rrg-axis-label" x="460" y="14">↑ Momentum (Δ RS)</text>
+
+        <!-- Reference: Nifty 50 -->
+        <circle class="rrg-dot lg-home-f" cx="428" cy="280" r="10"/>
+        <text class="rrg-label" x="440" y="284">Nifty 50 (ref)</text>
+
+        <!-- Leading quadrant -->
+        <circle class="rrg-dot lg-em-la-f" cx="780" cy="70" r="14"/>
+        <text class="rrg-label" x="798" y="74">Bovespa</text>
+        <circle class="rrg-dot lg-dm-ap-f" cx="720" cy="110" r="13"/>
+        <text class="rrg-label" x="738" y="114">Nikkei</text>
+        <circle class="rrg-dot lg-em-as-f" cx="660" cy="140" r="12"/>
+        <text class="rrg-label" x="678" y="144">CSI 300</text>
+        <circle class="rrg-dot lg-em-as-f" cx="620" cy="180" r="11"/>
+        <text class="rrg-label" x="638" y="184">KOSPI</text>
+
+        <!-- Improving quadrant -->
+        <circle class="rrg-dot lg-em-em-f" cx="362" cy="180" r="10"/>
+        <text class="rrg-label" x="300" y="184">Tadawul</text>
+        <circle class="rrg-dot lg-em-as-f" cx="398" cy="204" r="10"/>
+        <text class="rrg-label" x="330" y="208">TAIEX</text>
+        <circle class="rrg-dot lg-dm-am-f" cx="488" cy="224" r="13"/>
+        <text class="rrg-label" x="506" y="228">S&amp;P 500</text>
+        <circle class="rrg-dot lg-dm-am-f" cx="522" cy="244" r="13"/>
+        <text class="rrg-label" x="540" y="248">Nasdaq</text>
+
+        <!-- Weakening quadrant -->
+        <circle class="rrg-dot lg-em-as-f" cx="558" cy="318" r="12"/>
+        <text class="rrg-label" x="576" y="322">Hang Seng</text>
+        <circle class="rrg-dot lg-dm-eu-f" cx="498" cy="360" r="10"/>
+        <text class="rrg-label" x="516" y="364">DAX</text>
+        <circle class="rrg-dot lg-em-as-f" cx="472" cy="400" r="9"/>
+        <text class="rrg-label" x="490" y="404">VN Index</text>
+
+        <!-- Lagging quadrant -->
+        <circle class="rrg-dot lg-dm-am-f" cx="340" cy="398" r="10"/>
+        <text class="rrg-label" x="272" y="402">TSX</text>
+        <circle class="rrg-dot lg-dm-ap-f" cx="288" cy="428" r="10"/>
+        <text class="rrg-label" x="224" y="432">ASX 200</text>
+        <circle class="rrg-dot lg-em-la-f" cx="242" cy="452" r="10"/>
+        <text class="rrg-label" x="182" y="456">IPC Mex</text>
+        <circle class="rrg-dot lg-em-em-f" cx="210" cy="472" r="10"/>
+        <text class="rrg-label" x="128" y="476">JSE All</text>
+        <circle class="rrg-dot lg-dm-eu-f" cx="168" cy="488" r="11"/>
+        <text class="rrg-label" x="112" y="492">FTSE</text>
+        <circle class="rrg-dot lg-dm-eu-f" cx="310" cy="346" r="11"/>
+        <text class="rrg-label" x="244" y="350">STOXX 600</text>
+        <circle class="rrg-dot lg-em-em-f" cx="104" cy="492" r="11"/>
+        <text class="rrg-label" x="48" y="496">BIST</text>
+
+        <!-- Tails (30d trajectory) for a couple to show motion concept -->
+        <path class="rrg-tail lg-em-la-s" d="M 720,120 L 748,100 L 780,70"/>
+        <path class="rrg-tail lg-em-as-s" d="M 504,288 L 530,302 L 558,318"/>
+      </svg>
+      <div class="rrg-legend">
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-am"></span>DM Americas</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-eu"></span>DM Europe</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-dm-ap"></span>DM Asia-Pac</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-as"></span>EM Asia</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-la"></span>EM LatAm</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-em-em"></span>EM EMEA</span>
+        <span class="rrg-legend__item"><span class="rrg-legend__dot lg-home"></span>Home (ref)</span>
+        <span class="rrg-legend__item" style="margin-left:auto;font-weight:500;color:var(--text-tertiary);">Dot size = 1M return · tail = 30d trajectory · click → drill into country</span>
+      </div>
+    </div>
+
+    <div style="height:var(--space-5);"></div>
+
+    <!-- Indices drill table -->
+    <div class="card" style="overflow:hidden;">
+      <div class="card__head">
+        <div>
+          <div class="card__title">Global indices · drill grammar (identical to Today)</div>
+          <div class="card__sub">Same 11-col layout as Today's indices table. Extra column: local-10Y yield (rate context for that country).</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-sec" style="padding:3px 9px;font-size:10px;">1M</button>
+          <button class="btn-sec" style="padding:3px 9px;font-size:10px;background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);">3M</button>
+          <button class="btn-sec" style="padding:3px 9px;font-size:10px;">6M</button>
+          <button class="btn-sec" style="padding:3px 9px;font-size:10px;">12M</button>
+        </div>
+      </div>
+      <div style="max-height:520px;overflow-y:auto;">
+        <table class="ix-table">
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>Last</th>
+              <th>1m %</th>
+              <th>10Y yield</th>
+              <th class="group-sep">vs MSCI</th>
+              <th>vs SPX</th>
+              <th>vs Nifty</th>
+              <th>vs Gold</th>
+              <th class="group-sep">Mom</th>
+              <th>Vol</th>
+              <th class="group-sep">Div / Conv</th>
+              <th>Act</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-em-la"></span><div><div class="ix-name__main">Bovespa</div><div class="ix-name__sub">Brazil · IBOV</div></div></div></td>
+              <td>132,410</td><td class="ret-pos">+6.4</td><td>10.92%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.6</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.8</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.8</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.4×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+              <td><span class="act act--add">ADD</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-ap"></span><div><div class="ix-name__main">Nikkei 225</div><div class="ix-name__sub">Japan · N225</div></div></div></td>
+              <td>39,824</td><td class="ret-pos">+4.1</td><td>1.36%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.3</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.9</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+              <td><span class="act act--add">ADD</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">CSI 300</div><div class="ix-name__sub">China · CSI</div></div></div></td>
+              <td>3,842</td><td class="ret-pos">+5.8</td><td>2.28%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+1.4</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--accel">ACCEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">stimulus lift</span></div></td>
+              <td><span class="act act--watch">WATCH</span></td>
+            </tr>
+            <tr class="ref">
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-home"></span><div><div class="ix-name__main">Nifty 50</div><div class="ix-name__sub">India · NIFTY · reference</div></div></div></td>
+              <td>22,462</td><td class="ret-neg">−0.8</td><td>7.12%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−0.2</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neu">—</span><span class="flabel flabel--neut">REF</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--none"><span class="dc__lbl">REF</span><span class="dc__note">home base</span></div></td>
+              <td><span class="act act--hold">HOLD</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-am"></span><div><div class="ix-name__main">S&P 500</div><div class="ix-name__sub">US · SPX</div></div></div></td>
+              <td>5,224</td><td class="ret-pos">+2.9</td><td>4.37%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.0</span><span class="flabel flabel--weakening">WEAK</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--stall">STALL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Gold↓ Vol↓</span></div></td>
+              <td><span class="act act--hold">HOLD</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-em-as"></span><div><div class="ix-name__main">Hang Seng</div><div class="ix-name__sub">Hong Kong · HSI</div></div></div></td>
+              <td>16,842</td><td class="ret-pos">+2.1</td><td>3.82%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.3</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--stall">STALL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">0.8×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--div"><span class="dc__lbl">DIV · Ret↑</span><span class="dc__note">bounce, RS ↓</span></div></td>
+              <td><span class="act act--avoid">AVOID</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-dm-eu"></span><div><div class="ix-name__main">FTSE 100</div><div class="ix-name__sub">UK · FTSE</div></div></div></td>
+              <td>8,124</td><td class="ret-neg">−0.2</td><td>4.24%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.1</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+              <td><span class="act act--avoid">AVOID</span></td>
+            </tr>
+            <tr>
+              <td><div class="ix-name"><span class="ix-rgn-dot lg-em-em"></span><div><div class="ix-name__main">BIST 100</div><div class="ix-name__sub">Turkey · BIST</div></div></div></td>
+              <td>9,424</td><td class="ret-neg">−3.8</td><td>28.4%</td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.0</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.2</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">−2.8</span><span class="flabel flabel--lagging">LAGGING</span></div></td>
+              <td class="group-sep"><div class="fcell"><span class="fcell__v fcell__v--neg">−2.4</span><span class="flabel flabel--decel">DECEL</span></div></td>
+              <td><div class="fcell"><span class="fcell__v fcell__v--neg">1.4×</span><span class="flabel flabel--distrib">DISTRIB</span></div></td>
+              <td class="group-sep" style="text-align:left;"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">capitulation</span></div></td>
+              <td><span class="act act--avoid">AVOID</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:10px 14px;background:var(--bg-inset);font-size:11px;color:var(--text-secondary);border-top:1px solid var(--border-subtle);">
+          Showing 8 of 18 indices · <a href="#" style="color:var(--accent-700);font-weight:600;">Expand all 18 →</a> ·
+          <span style="color:var(--text-tertiary);margin-left:8px;">same grammar as Today's table · extra 10Y-yield column for rate context</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       9 · PORTFOLIO CALL — IBKR global book, the actual output of this page
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="sect" id="sect-alloc">
+    <div class="sect__head">
+      <div class="sect__title-wrap">
+        <h2 class="sect__title">IBKR global book · allocation call</h2>
+        <p class="sect__sub">Everything above collapses to this: <strong>which market, which ETF, how much, why</strong>. Every action is traceable — click any row to see the factor-chain that justifies it. Locked from the 6-factor regime + the 5 commentary bullets.</p>
+      </div>
+      <div class="sect__tools">
+        <button class="btn-sec" type="button">Export to IBKR TWS</button>
+        <button class="sim-this" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+          Simulate in Lab
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero strip -->
+    <div class="alloc-hero">
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Composite call · 04 Apr 2026</span>
+        <span class="alloc-hero__val">Risk-on · pro-EM · hedged</span>
+        <span class="alloc-hero__sub">Regime Expansion (+1.34) + DXY weakness + HY spreads not confirming. Confidence: <strong>High</strong>. Duration of view: 4–6 weeks unless composite slips below +1.0.</span>
+      </div>
+      <div class="alloc-hero__divider"></div>
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Target equity weight</span>
+        <span class="alloc-hero__val">88% invested · 12% cash</span>
+        <span class="alloc-hero__sub">Current book at 84% — room to add 4 pts into EM-ex-China &amp; JP banks. Hedge layer: 0.6% NAV in SPY puts (30d, 5% OTM).</span>
+      </div>
+      <div class="alloc-hero__divider"></div>
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Top 3 actions today</span>
+        <span class="alloc-hero__val" style="font-size:14px;font-family:var(--font-sans);font-weight:500;line-height:1.45;">
+          <strong>Add</strong> EMXC +1.5% · <strong>Add</strong> DXJF +1.0% · <strong>Trim</strong> DXJ −1.2%
+        </span>
+        <span class="alloc-hero__sub">Rebalance est. cost: 18 bps · executed as TWAP over 3 sessions to avoid impact.</span>
+      </div>
+    </div>
+
+    <!-- Market ranking -->
+    <table class="mkt-rank">
+      <thead>
+        <tr>
+          <th style="width:180px;">Market</th>
+          <th style="width:110px;">Position</th>
+          <th class="num" style="width:78px;">Curr wt</th>
+          <th class="num" style="width:78px;">Target wt</th>
+          <th class="num" style="width:72px;">Δ</th>
+          <th class="num" style="width:72px;">RS vs MSCI</th>
+          <th class="num" style="width:72px;">Regime</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇺🇸</span>United States</span></td>
+          <td><span class="pos-chip pos-chip--ow">OW</span></td>
+          <td class="num">38.0%</td>
+          <td class="num">38.0%</td>
+          <td class="num" style="color:var(--text-tertiary);">—</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+0.8</td>
+          <td class="num">Exp</td>
+          <td>Earnings breadth improving, but stretched P/E. Add selectively (semis, banks); avoid mega-cap tech at cycle top.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇯🇵</span>Japan</span></td>
+          <td><span class="pos-chip pos-chip--ow">OW (shift)</span></td>
+          <td class="num">9.0%</td>
+          <td class="num">9.5%</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+0.5</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+1.4</td>
+          <td class="num">Exp</td>
+          <td>BoJ taper + yen strength flips the trade: out of exporters, into banks &amp; domestic cyclicals. Net wt ↑, composition changed.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🌏</span>EM ex-China</span></td>
+          <td><span class="pos-chip pos-chip--ow-strong">OW+</span></td>
+          <td class="num">12.0%</td>
+          <td class="num">14.5%</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+2.5</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+2.1</td>
+          <td class="num">Exp</td>
+          <td>Weak DXY + soft oil + rate-cut pipeline = textbook EM setup. India + Taiwan + Korea lead; Brazil lags on fiscal.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇮🇳</span>India (via ADRs/ETFs)</span></td>
+          <td><span class="pos-chip pos-chip--ow">OW</span></td>
+          <td class="num">8.0%</td>
+          <td class="num">9.0%</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+1.0</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−0.4</td>
+          <td class="num" style="color:var(--rag-amber-700);">Corr</td>
+          <td>RS soft on FII debt outflows (JPM index optics), not fundamentals. Stagger adds over 3 tranches in Apr.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇨🇳</span>China + HK</span></td>
+          <td><span class="pos-chip pos-chip--nw">NW</span></td>
+          <td class="num">5.0%</td>
+          <td class="num">5.0%</td>
+          <td class="num" style="color:var(--text-tertiary);">—</td>
+          <td class="num" style="color:var(--rag-green-700);font-weight:600;">+0.6</td>
+          <td class="num">Exp</td>
+          <td>PMI beat + policy pulse supports tactical hold, but structural deflation + property overhang caps upside. Barbell: internet vs SOE.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇪🇺</span>Europe</span></td>
+          <td><span class="pos-chip pos-chip--uw">UW</span></td>
+          <td class="num">12.0%</td>
+          <td class="num">10.5%</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−1.5</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−1.1</td>
+          <td class="num">Exp</td>
+          <td>Growth underwhelms, ECB behind curve, Bund yields drifting up squeezes multiples. Trim broad EU; hold defence &amp; luxury niches.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇬🇧</span>UK</span></td>
+          <td><span class="pos-chip pos-chip--nw">NW</span></td>
+          <td class="num">4.0%</td>
+          <td class="num">4.0%</td>
+          <td class="num" style="color:var(--text-tertiary);">—</td>
+          <td class="num" style="color:var(--text-tertiary);">+0.1</td>
+          <td class="num">Exp</td>
+          <td>FTSE cheap but growth tepid. Hold at NW for income via energy majors.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">🇨🇦🇦🇺</span>Canada &amp; Australia</span></td>
+          <td><span class="pos-chip pos-chip--uw">UW</span></td>
+          <td class="num">6.0%</td>
+          <td class="num">5.0%</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−1.0</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−0.7</td>
+          <td class="num">Exp</td>
+          <td>Commodity proxies, but Gold/Copper ratio says stagflation not growth — hurts miners more than helps energy.</td>
+        </tr>
+        <tr>
+          <td><span class="mkt-flag"><span class="mkt-flag__em">💵</span>Cash + bond buffer</span></td>
+          <td><span class="pos-chip pos-chip--nw">Dry powder</span></td>
+          <td class="num">6.0%</td>
+          <td class="num">4.5%</td>
+          <td class="num" style="color:var(--rag-red-700);font-weight:600;">−1.5</td>
+          <td class="num" style="color:var(--text-tertiary);">—</td>
+          <td class="num">—</td>
+          <td>Deploying 1.5 pts into EM-ex-China + India. Maintain 4.5% to fund a down-move buy (trigger: composite &lt; +1.0).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ETF-level cards: US / Japan / EM -->
+    <div class="alloc-cards">
+
+      <div class="alloc-card">
+        <div class="alloc-card__head">
+          <span class="alloc-card__title">🇺🇸 US · within-market picks</span>
+          <span class="alloc-card__pos" style="color:var(--rag-green-700);">OW · tilt selective</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">SMH</span>
+          <div><div>iShares Semis</div><div class="etf-row__name">Cycle-on, AI capex spillover</div></div>
+          <span class="etf-row__act etf-row__act--add">Add +0.8</span>
+          <span class="etf-row__rs etf-row__rs--pos">+2.4</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">KBE</span>
+          <div><div>SPDR S&amp;P Banks</div><div class="etf-row__name">Curve steepener + loan growth</div></div>
+          <span class="etf-row__act etf-row__act--add">Add +0.6</span>
+          <span class="etf-row__rs etf-row__rs--pos">+1.6</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">XLE</span>
+          <div><div>SPDR Energy</div><div class="etf-row__name">OPEC+ extension + soft USD</div></div>
+          <span class="etf-row__act etf-row__act--hold">Hold</span>
+          <span class="etf-row__rs etf-row__rs--pos">+0.8</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">QQQ</span>
+          <div><div>Invesco Nasdaq 100</div><div class="etf-row__name">Concentrated, P/E 29×</div></div>
+          <span class="etf-row__act etf-row__act--trim">Trim −0.5</span>
+          <span class="etf-row__rs etf-row__rs--pos">+0.4</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">XLU</span>
+          <div><div>SPDR Utilities</div><div class="etf-row__name">Rate-sensitive, losing RS</div></div>
+          <span class="etf-row__act etf-row__act--exit">Exit</span>
+          <span class="etf-row__rs etf-row__rs--neg">−1.1</span>
+        </div>
+        <div class="alloc-why">
+          <strong>Why this split:</strong> US is a regime winner but the barbell matters — add to cyclicals where yield steepening + dollar softness help, trim the crowded index-beta (QQQ) and exit the rate-losers (XLU).
+        </div>
+      </div>
+
+      <div class="alloc-card">
+        <div class="alloc-card__head">
+          <span class="alloc-card__title">🇯🇵 Japan · rotate, don't cut</span>
+          <span class="alloc-card__pos" style="color:var(--rag-green-700);">OW · composition flip</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">DXJF</span>
+          <div><div>WisdomTree Japan Banks</div><div class="etf-row__name">Direct JPY-rate beneficiary</div></div>
+          <span class="etf-row__act etf-row__act--add-strong">Add +1.0</span>
+          <span class="etf-row__rs etf-row__rs--pos">+2.8</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">EWJ</span>
+          <div><div>iShares MSCI Japan</div><div class="etf-row__name">Broad exposure, unhedged</div></div>
+          <span class="etf-row__act etf-row__act--hold">Hold</span>
+          <span class="etf-row__rs etf-row__rs--pos">+1.0</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">DXJ</span>
+          <div><div>WT Japan Hedged Eq</div><div class="etf-row__name">Exporter tilt, JPY-hedged</div></div>
+          <span class="etf-row__act etf-row__act--trim">Trim −1.2</span>
+          <span class="etf-row__rs etf-row__rs--neg">−0.9</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">HEWJ</span>
+          <div><div>iShares JP Hedged</div><div class="etf-row__name">Same exporter hedge trade</div></div>
+          <span class="etf-row__act etf-row__act--exit">Exit</span>
+          <span class="etf-row__rs etf-row__rs--neg">−1.3</span>
+        </div>
+        <div class="alloc-why">
+          <strong>Why this split:</strong> BoJ's tapering signal flips the JPY direction — hedged exporter ETFs (DXJ/HEWJ) lose their edge and absolute exporter exposure hurts on a stronger yen. Domestic banks (DXJF) get NIM uplift. <strong>Net Japan weight up, but via different vehicles.</strong>
+        </div>
+      </div>
+
+      <div class="alloc-card">
+        <div class="alloc-card__head">
+          <span class="alloc-card__title">🌏 EM · ex-China lead</span>
+          <span class="alloc-card__pos" style="color:var(--rag-green-700);">OW+ · structural</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">EMXC</span>
+          <div><div>iShares EM ex-China</div><div class="etf-row__name">Core EM, no China drag</div></div>
+          <span class="etf-row__act etf-row__act--add-strong">Add +1.5</span>
+          <span class="etf-row__rs etf-row__rs--pos">+2.1</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">INDA</span>
+          <div><div>iShares MSCI India</div><div class="etf-row__name">Large-cap India exposure</div></div>
+          <span class="etf-row__act etf-row__act--add">Add +0.6</span>
+          <span class="etf-row__rs etf-row__rs--neg">−0.4</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">SMIN</span>
+          <div><div>iShares India Small</div><div class="etf-row__name">High-beta India play</div></div>
+          <span class="etf-row__act etf-row__act--add">Add +0.4</span>
+          <span class="etf-row__rs etf-row__rs--pos">+0.9</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">EWT</span>
+          <div><div>iShares Taiwan</div><div class="etf-row__name">Semis proxy + soft USD</div></div>
+          <span class="etf-row__act etf-row__act--add">Add +0.5</span>
+          <span class="etf-row__rs etf-row__rs--pos">+1.8</span>
+        </div>
+        <div class="etf-row">
+          <span class="etf-row__tick">EWZ</span>
+          <div><div>iShares Brazil</div><div class="etf-row__name">Fiscal overhang</div></div>
+          <span class="etf-row__act etf-row__act--exit">Exit</span>
+          <span class="etf-row__rs etf-row__rs--neg">−1.7</span>
+        </div>
+        <div class="alloc-why">
+          <strong>Why this split:</strong> EM is our biggest conviction — weak DXY + soft oil + rate-cut pipeline. Lead with EMXC (core), add India on mechanical weakness (stagger), add Taiwan on semis tailwind. Exit Brazil: fiscal noise kills the setup.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Provenance footer -->
+    <div style="margin-top:var(--space-4);padding:12px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:11px;color:var(--text-secondary);line-height:1.5;">
+      <strong style="color:var(--text-primary);">Provenance:</strong> every action row is linked to (1) a specific factor chain in the regime panel, (2) at least one commentary bullet above, and (3) the asset's RS chip in the indices RRG. Hover any ticker to see its full factor-chain. All weights are model-suggested — click <em>Export to IBKR TWS</em> to stage orders before execution.
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Sub-bar active state follows scroll position
+  const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
+  const sections = Array.from(anchors).map(a => a.getAttribute('href').slice(1));
+  const spy = () => {
+    let active = sections[0];
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < 140) active = id;
+    }
+    anchors.forEach(a => a.classList.toggle('subbar__link--active', a.getAttribute('href') === '#' + active));
+  };
+  window.addEventListener('scroll', spy, { passive: true });
+
+  // RRG benchmark toggle (visual only)
+  document.querySelectorAll('.rrg-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -463,3 +463,4 @@ async def logs_tail(
 # router is defined. Import is at the bottom to avoid circular imports.
 from backend.routes import system_roadmap  # noqa: E402, F401
 from backend.routes import system_routines  # noqa: E402, F401
+from backend.routes import system_data_health  # noqa: E402, F401

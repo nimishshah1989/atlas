@@ -46,6 +46,16 @@ jobs:
       - name: Quality gate
         run: python .quality/checks.py --gate --save
 
+      - name: Data coverage check (mandatory domains)
+        run: |
+          if [ -n "${{ env.DATABASE_URL }}" ]; then
+            python scripts/check-data-coverage.py --strict --mandatory-only
+          else
+            echo "DATABASE_URL not set — skipping live data health check"
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Upload quality report
         if: always()
         uses: actions/upload-artifact@v4

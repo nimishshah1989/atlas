@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · Explore · Sector · IT</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .topbar { position: sticky; top: 0; z-index: 30; }
+    .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
+    .subbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-1); min-height: 40px; }
+    .subbar__link { font-size: 12px; font-weight: 500; color: var(--text-secondary); padding: 10px 14px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none; }
+    .subbar__link--active { color: var(--accent-700); font-weight: 600; border-bottom-color: var(--accent-700); }
+    .subbar__spacer { flex: 1; }
+    .subbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+    .uni-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-primary); padding: 4px 10px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-full); cursor: pointer; }
+    .uni-pill__chev { font-size: 9px; color: var(--text-tertiary); }
+    .sync-meta { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+    .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+
+    .crumbs { display: flex; align-items: center; gap: 6px; padding-top: var(--space-4); font-size: 11px; color: var(--text-tertiary); }
+    .crumbs a { color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+    .crumbs a:hover { color: var(--accent-700); }
+    .crumbs__sep { color: var(--border-default); }
+    .crumbs__current { color: var(--text-primary); font-weight: 600; }
+
+    .page-header { display: grid; grid-template-columns: 1fr auto; gap: var(--space-4); padding: var(--space-4) 0 var(--space-5); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+    .ph-title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+    .ph-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; max-width: 800px; line-height: 1.55; }
+    .ph-stats { display: grid; grid-template-columns: repeat(4, auto); gap: var(--space-4); align-items: center; }
+    .ph-stat { display: flex; flex-direction: column; }
+    .ph-stat__lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .ph-stat__val { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .ph-stat__d { font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .ph-stat__d--pos { color: var(--rag-green-700); }
+    .ph-stat__d--neg { color: var(--rag-red-700); }
+
+    .sect { margin-bottom: var(--space-8); }
+    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--space-4); gap: var(--space-4); }
+    .sect__title { font-family: var(--font-serif); font-size: 24px; font-weight: 500; color: var(--text-primary); margin: 0; letter-spacing: -0.01em; }
+    .sect__sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; max-width: 780px; line-height: 1.5; }
+    .sect__tools { display: flex; gap: 8px; align-items: center; }
+
+    /* Sector state card */
+    .state-grid { display: grid; grid-template-columns: 320px 1fr; gap: var(--space-5); }
+    .state-hero { background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); border: 1px solid #86EFAC; border-left: 4px solid var(--rag-green-500); border-radius: var(--radius-md); padding: var(--space-5); display: flex; flex-direction: column; gap: 10px; }
+    .state-hero__tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--rag-green-700); }
+    .state-hero__title { font-family: var(--font-serif); font-size: 28px; font-weight: 600; color: var(--rag-green-700); }
+    .state-hero__body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+    .state-hero__meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 10px; border-top: 1px solid #86EFAC; font-size: 11px; }
+    .state-hero__meta-lbl { font-size: 9px; font-weight: 700; color: var(--rag-green-700); text-transform: uppercase; letter-spacing: 0.04em; }
+    .state-hero__meta-val { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 13px; margin-top: 2px; }
+
+    /* Narrative bullets */
+    .narr-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--accent-700); border-radius: var(--radius-md); padding: var(--space-5); }
+    .narr-card__title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle); }
+    .narr-b { display: grid; grid-template-columns: 80px 1fr; gap: 14px; padding: 10px 0; border-bottom: 1px dashed var(--border-subtle); font-size: 12.5px; line-height: 1.55; }
+    .narr-b:last-child { border-bottom: none; }
+    .narr-b__tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 6px; border-radius: 2px; height: fit-content; text-align: center; }
+    .narr-b__tag--demand { background: var(--accent-100); color: var(--accent-700); }
+    .narr-b__tag--margin { background: #E0E7FF; color: #3730A3; }
+    .narr-b__tag--valn { background: #FEF3C7; color: #92400E; }
+    .narr-b__tag--risk { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .narr-b__body strong { font-weight: 700; }
+    .narr-b__body em { font-style: normal; font-weight: 700; color: var(--accent-700); background: var(--accent-100); padding: 1px 5px; border-radius: 2px; }
+    .narr-b__body .chg-pos { color: var(--rag-green-700); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .narr-b__body .chg-neg { color: var(--rag-red-700); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* Member RRG */
+    .member-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .member-rrg-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); }
+    .member-rrg-card__title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .member-rrg-card__sub { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+    .member-rrg-svg { width: 100%; height: 380px; }
+
+    /* Stock scoreboard */
+    .stock-sb { font-size: 11.5px; width: 100%; border-collapse: separate; border-spacing: 0; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .stock-sb thead th { background: var(--bg-inset); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--border-default); }
+    .stock-sb thead th.num { text-align: right; }
+    .stock-sb tbody td { padding: 8px 6px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; vertical-align: middle; }
+    .stock-sb tbody tr:last-child td { border-bottom: none; }
+    .stock-sb tbody tr:hover { background: var(--bg-inset); cursor: pointer; }
+    .stock-sb tbody td.num { text-align: right; font-weight: 600; }
+    .stock-sb__name { font-weight: 600; color: var(--text-primary); text-align: left !important; }
+    .stock-sb__tick { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-primary); font-weight: 700; }
+    .stock-sb__name-wrap { display: flex; flex-direction: column; gap: 1px; }
+    .stock-sb__name-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
+
+    /* Factor chips */
+    .fcell { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; }
+    .fcell__v { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .fcell__v--pos { color: var(--rag-green-700); }
+    .fcell__v--neg { color: var(--rag-red-700); }
+    .fcell__v--neu { color: var(--text-secondary); }
+    .flabel { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; white-space: nowrap; }
+    .flabel--leading { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .flabel--improving { background: #DCFCE7; color: #15803D; }
+    .flabel--weakening { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .flabel--lagging { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .flabel--accel { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .flabel--stall { background: var(--bg-inset); color: var(--text-tertiary); }
+    .flabel--decel { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .flabel--accum { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .flabel--neut { background: var(--bg-inset); color: var(--text-tertiary); }
+    .flabel--distrib { background: var(--rag-red-100); color: var(--rag-red-700); }
+    .dc { display: inline-flex; flex-direction: column; gap: 1px; }
+    .dc__lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 5px; border-radius: 2px; }
+    .dc__note { font-size: 9px; color: var(--text-tertiary); }
+    .dc--conv4 .dc__lbl { background: var(--accent-100); color: var(--accent-700); }
+    .dc--conv3 .dc__lbl { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .dc--div .dc__lbl { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .dc--conv4r .dc__lbl { background: var(--rag-red-500); color: #fff; }
+    .dc--none .dc__lbl { background: var(--bg-inset); color: var(--text-tertiary); }
+
+    .act { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 2px; }
+    .act--add { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .act--add-strong { background: var(--rag-green-500); color: #fff; }
+    .act--hold { background: var(--bg-inset); color: var(--text-secondary); }
+    .act--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .act--exit { background: var(--rag-red-500); color: #fff; }
+
+    /* Fundamentals card */
+    .fund-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+    .fund-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4); }
+    .fund-card__title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 6px; }
+    .fund-card__v { font-family: var(--font-serif); font-size: 22px; font-weight: 600; color: var(--text-primary); line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .fund-card__d { font-size: 11px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .fund-card__d--pos { color: var(--rag-green-700); }
+    .fund-card__d--neg { color: var(--rag-red-700); }
+    .fund-card__d--neu { color: var(--text-secondary); }
+    .fund-card__hint { font-size: 11px; color: var(--text-secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle); line-height: 1.4; }
+
+    /* Macro sensitivities */
+    .sens-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .sens-table thead th { background: var(--bg-inset); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border-default); }
+    .sens-table thead th.num { text-align: right; }
+    .sens-table tbody td { padding: 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+    .sens-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .sens-table tbody tr:last-child td { border-bottom: none; }
+    .sens-bar { display: inline-block; height: 6px; background: var(--bg-inset); width: 120px; border-radius: 3px; overflow: hidden; vertical-align: middle; position: relative; }
+    .sens-bar__fill { position: absolute; top: 0; height: 100%; left: 50%; }
+    .sens-bar__fill--pos { background: var(--rag-green-500); }
+    .sens-bar__fill--neg { background: var(--rag-red-500); transform: scaleX(-1); transform-origin: left; }
+
+    /* Within-sector call */
+    .alloc-hero { background: linear-gradient(135deg, var(--accent-900) 0%, var(--accent-700) 100%); color: #fff; border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-4); display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: var(--space-5); }
+    .alloc-hero__block { display: flex; flex-direction: column; gap: 6px; }
+    .alloc-hero__lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.72); }
+    .alloc-hero__val { font-family: var(--font-serif); font-size: 22px; font-weight: 600; line-height: 1.2; }
+    .alloc-hero__sub { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.45; }
+    .alloc-hero__divider { width: 1px; background: rgba(255,255,255,0.18); }
+
+    .btn-sec { font-size: 11px; font-weight: 500; padding: 6px 12px; background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; }
+    .sim-this { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 6px 11px; background: var(--accent-100); color: var(--accent-700); border: 1px solid var(--accent-500); border-radius: var(--radius-sm); cursor: pointer; }
+    .sim-this svg { width: 11px; height: 11px; }
+    .sector-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--accent-700); padding: 4px 10px; background: var(--accent-100); border: 1px solid var(--accent-500); border-radius: var(--radius-full); cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- Shared topbar -->
+<header class="topbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); box-shadow: 0 1px 2px rgba(16,24,40,0.03);">
+  <div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
+    <a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
+      <div style="display: flex; flex-direction: column; line-height: 1;">
+        <span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
+        <span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
+      </div>
+    </a>
+    <nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
+      <a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
+      <a href="explore-global.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
+      <a href="portfolios.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">3</span></a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
+    </nav>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span style="font-size: 12px; color: var(--text-tertiary);">Search indices, stocks, funds, macros…</span>
+      <span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span class="sync-dot"></span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
+        <span style="font-size: 9px; color: var(--text-tertiary);">NSE pre-open</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sub-bar -->
+<div class="subbar">
+  <div class="subbar__inner">
+    <a href="#sect-state" class="subbar__link subbar__link--active">State</a>
+    <a href="#sect-narr" class="subbar__link">Narrative</a>
+    <a href="#sect-members" class="subbar__link">Member stocks</a>
+    <a href="#sect-fund" class="subbar__link">Fundamentals</a>
+    <a href="#sect-sens" class="subbar__link">Macro sens</a>
+    <a href="#sect-alloc" class="subbar__link">Sector call</a>
+    <div class="subbar__spacer"></div>
+    <div class="subbar__actions">
+      <div class="uni-pill"><span>IT</span><span class="uni-pill__chev">▾</span></div>
+      <span class="sync-meta">synced 2m ago · 04 Apr 2026 09:11 IST</span>
+      <button class="icon-btn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+
+  <nav class="crumbs">
+    <a href="today.html">Today</a>
+    <span class="crumbs__sep">›</span>
+    <a href="explore-global.html">Explore</a>
+    <span class="crumbs__sep">›</span>
+    <a href="explore-country.html">India</a>
+    <span class="crumbs__sep">›</span>
+    <span class="crumbs__current">Sector · IT</span>
+  </nav>
+
+  <section class="page-header">
+    <div>
+      <div class="ph-eyebrow">Explore · Level 3 · Sector deep-dive</div>
+      <h1 class="ph-title">Information Technology</h1>
+      <div class="ph-sub">
+        Sector state + member-stock RRG + fundamentals + macro sensitivities, ending in a <strong>within-sector stock call</strong>. Tail-risk: USDINR &amp; US client spend; upside driver: AI capex spillover + margin recovery.
+      </div>
+    </div>
+    <div class="ph-stats">
+      <div class="ph-stat">
+        <span class="ph-stat__lbl">Sector index</span>
+        <span class="ph-stat__val">36,842</span>
+        <span class="ph-stat__d ph-stat__d--pos">+1.24%</span>
+      </div>
+      <div class="ph-stat">
+        <span class="ph-stat__lbl">RS vs Nifty 500</span>
+        <span class="ph-stat__val">+2.1</span>
+        <span class="ph-stat__d ph-stat__d--pos">LEADING</span>
+      </div>
+      <div class="ph-stat">
+        <span class="ph-stat__lbl">Sector weight</span>
+        <span class="ph-stat__val">14.2%</span>
+        <span class="ph-stat__d ph-stat__d--neu">of N500</span>
+      </div>
+      <div class="ph-stat">
+        <span class="ph-stat__lbl">Retn 1m</span>
+        <span class="ph-stat__val">+4.8%</span>
+        <span class="ph-stat__d ph-stat__d--pos">vs N500 +2.1%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 · STATE + NARRATIVE -->
+  <section class="sect" id="sect-state">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">Sector state · LEADING · 9 days</h2>
+        <p class="sect__sub">Upgraded from IMPROVING 9 days ago after Infosys/TCS Q4 guidance + AI capex signal from US hyperscalers.</p>
+      </div>
+    </div>
+
+    <div class="state-grid">
+      <div class="state-hero">
+        <span class="state-hero__tag">IT · LEADING · 9d</span>
+        <span class="state-hero__title">All 4 factors bullish</span>
+        <div class="state-hero__body">
+          RS +2.1 (LEADING), Breadth 72% (EXP), Vol 1.32 (ACCUM), Momentum ACCEL. <strong>CONV 4/4</strong> — highest-conviction sector read right now. Earnings season adds to signal.
+        </div>
+        <div class="state-hero__meta">
+          <div>
+            <span class="state-hero__meta-lbl">Upgrade date</span>
+            <div class="state-hero__meta-val">26 Mar 2026</div>
+          </div>
+          <div>
+            <span class="state-hero__meta-lbl">From state</span>
+            <div class="state-hero__meta-val">IMPROVING</div>
+          </div>
+          <div>
+            <span class="state-hero__meta-lbl">Return since</span>
+            <div class="state-hero__meta-val" style="color:var(--rag-green-700);">+6.8%</div>
+          </div>
+          <div>
+            <span class="state-hero__meta-lbl">vs N500 since</span>
+            <div class="state-hero__meta-val" style="color:var(--rag-green-700);">+3.2%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="narr-card" id="sect-narr">
+        <div class="narr-card__title">Why this sector is LEADING now · 4 reasons</div>
+        <div class="narr-b">
+          <span class="narr-b__tag narr-b__tag--demand">Demand</span>
+          <div class="narr-b__body">
+            <strong>US BFSI spend pipeline recovering</strong> — top-4 Indian IT commentary: 8 of 10 earnings calls mentioned "deal TCV +20% YoY". AI/gen-AI deals running at <strong>12–15% of book</strong> (vs 3–5% a year ago). <em>Demand is here — the "IT winter" narrative is 6 months stale.</em>
+          </div>
+        </div>
+        <div class="narr-b">
+          <span class="narr-b__tag narr-b__tag--margin">Margin</span>
+          <div class="narr-b__body">
+            <strong>Margin recovery confirmed</strong> — sector EBIT margin rose 70 bps QoQ to 22.4% (vs 10Y median 23.8%). Attrition down to 11.2% (vs peak 24% in Q4 FY23). <em>Operating leverage just turned.</em>
+          </div>
+        </div>
+        <div class="narr-b">
+          <span class="narr-b__tag narr-b__tag--valn">Valuation</span>
+          <div class="narr-b__body">
+            <strong>Sector P/E 26.4×</strong> (vs 10Y median 24.8×) — slightly expensive but earnings upgrades justify it. PEG 1.8 (vs broader N500 at 2.4). <em>Not cheap, but re-rating story is intact.</em>
+          </div>
+        </div>
+        <div class="narr-b">
+          <span class="narr-b__tag narr-b__tag--risk">Risk</span>
+          <div class="narr-b__body">
+            <strong>Tail: INR strength</strong> (DXY weakness) — every 1% INR appreciation hits margins ~40 bps. Not yet triggered (USDINR stable 83.4) but <strong>monitor RBI intervention</strong> at 83.00. Secondary risk: US macro rolling over (ISM new orders).
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · MEMBER STOCKS -->
+  <section class="sect" id="sect-members">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">Member stocks · RRG + scoreboard</h2>
+        <p class="sect__sub">12 IT names · RS measured against Nifty IT index (sector-relative, not market-relative). Click any row → stock detail.</p>
+      </div>
+      <div class="sect__tools">
+        <button class="btn-sec" type="button">Benchmark: Nifty IT ▾</button>
+      </div>
+    </div>
+
+    <div class="member-grid">
+      <div class="member-rrg-card">
+        <div class="member-rrg-card__title">RRG · 12 IT stocks vs Nifty IT</div>
+        <div class="member-rrg-card__sub">Sector-relative: which stocks lead within IT itself</div>
+        <svg class="member-rrg-svg" viewBox="0 0 480 380">
+          <rect x="30" y="20" width="210" height="170" fill="#F0FDF4" opacity="0.7"/>
+          <rect x="240" y="20" width="210" height="170" fill="#DCFCE7" opacity="0.7"/>
+          <rect x="30" y="190" width="210" height="170" fill="#FEF3C7" opacity="0.7"/>
+          <rect x="240" y="190" width="210" height="170" fill="#FEE2E2" opacity="0.7"/>
+          <line x1="240" y1="20" x2="240" y2="360" stroke="#A8AFBC" stroke-dasharray="3 3"/>
+          <line x1="30" y1="190" x2="450" y2="190" stroke="#A8AFBC" stroke-dasharray="3 3"/>
+          <text x="40" y="38" font-size="9" fill="#15803D" font-weight="700" font-family="Inter">IMPROVING</text>
+          <text x="380" y="38" font-size="9" fill="#15803D" font-weight="700" font-family="Inter">LEADING</text>
+          <text x="40" y="374" font-size="9" fill="#92400E" font-weight="700" font-family="Inter">LAGGING</text>
+          <text x="380" y="374" font-size="9" fill="#B91C1C" font-weight="700" font-family="Inter">WEAKENING</text>
+
+          <!-- TCS -->
+          <g>
+            <path d="M 340,110 L 355,102 L 370,92 L 385,80" fill="none" stroke="#134F5C" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="385" cy="80" r="7" fill="#134F5C"/>
+            <text x="396" y="84" font-size="11" fill="#101828" font-weight="700" font-family="Inter">TCS</text>
+          </g>
+          <!-- INFY -->
+          <g>
+            <path d="M 315,118 L 335,108 L 355,98 L 372,86" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="372" cy="86" r="6.5" fill="#15803D"/>
+            <text x="382" y="90" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">INFY</text>
+          </g>
+          <!-- Persistent -->
+          <g>
+            <path d="M 290,128 L 310,118 L 330,108 L 352,96" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="352" cy="96" r="6" fill="#15803D"/>
+            <text x="362" y="100" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">PERSISTENT</text>
+          </g>
+          <!-- Coforge -->
+          <g>
+            <path d="M 280,140 L 300,128 L 320,116 L 340,105" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="340" cy="105" r="5.5" fill="#15803D"/>
+            <text x="350" y="109" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">COFORGE</text>
+          </g>
+          <!-- HCL -->
+          <g>
+            <path d="M 265,150 L 285,138 L 305,128 L 325,118" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="325" cy="118" r="6" fill="#15803D"/>
+            <text x="335" y="122" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">HCL</text>
+          </g>
+          <!-- Wipro (improving) -->
+          <g>
+            <path d="M 130,220 L 150,200 L 175,180 L 200,162" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="200" cy="162" r="6" fill="#15803D"/>
+            <text x="210" y="166" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">WIPRO</text>
+          </g>
+          <!-- LTIM (improving) -->
+          <g>
+            <path d="M 115,228 L 135,212 L 160,195 L 188,175" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="188" cy="175" r="5.5" fill="#15803D"/>
+            <text x="196" y="178" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">LTIM</text>
+          </g>
+          <!-- Mphasis (improving) -->
+          <g>
+            <path d="M 100,220 L 120,208 L 140,195 L 165,180" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="165" cy="180" r="5" fill="#15803D"/>
+            <text x="110" y="184" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">MPHASIS</text>
+          </g>
+          <!-- Tech M (weakening) -->
+          <g>
+            <path d="M 340,205 L 358,218 L 374,232 L 388,248" fill="none" stroke="#B91C1C" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="388" cy="248" r="6" fill="#B91C1C"/>
+            <text x="398" y="252" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">TECHM</text>
+          </g>
+          <!-- Oracle Fin (weakening) -->
+          <g>
+            <path d="M 300,212 L 318,224 L 335,236 L 352,250" fill="none" stroke="#B91C1C" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="352" cy="250" r="5" fill="#B91C1C"/>
+            <text x="280" y="268" font-size="10" fill="#101828" font-weight="700" font-family="Inter">OFSS</text>
+          </g>
+          <!-- Mindtree/LTI (lagging) -->
+          <g>
+            <circle cx="120" cy="300" r="4.5" fill="#92400E"/>
+            <text x="72" y="304" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">TATAELXSI</text>
+          </g>
+          <!-- Zensar (lagging) -->
+          <g>
+            <circle cx="150" cy="325" r="4" fill="#92400E"/>
+            <text x="108" y="329" font-size="10" fill="#101828" font-weight="700" font-family="Inter">ZENSAR</text>
+          </g>
+        </svg>
+      </div>
+
+      <div>
+        <table class="stock-sb">
+          <thead>
+            <tr>
+              <th>Stock</th>
+              <th class="num">Ret 1m</th>
+              <th class="num">RS-IT</th>
+              <th class="num">Mom</th>
+              <th class="num">Vol</th>
+              <th>D/C</th>
+              <th>Act</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">TCS</span>
+                  <span class="stock-sb__name-sub">Tata Consultancy</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+6.8%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+2.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td><span class="act act--add-strong">Add</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">INFY</span>
+                  <span class="stock-sb__name-sub">Infosys</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+5.2%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+1.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td><span class="act act--add">Add</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">PERSISTENT</span>
+                  <span class="stock-sb__name-sub">Persistent Systems</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+7.1%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+2.2</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td><span class="act act--add">Add</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">COFORGE</span>
+                  <span class="stock-sb__name-sub">Coforge</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+4.6%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+1.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
+              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td><span class="act act--hold">Hold</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">HCLTECH</span>
+                  <span class="stock-sb__name-sub">HCL Tech</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+3.9%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+0.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td><span class="act act--add">Add</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">WIPRO</span>
+                  <span class="stock-sb__name-sub">Wipro</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+1.8%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+0.3</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
+              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td><span class="act act--hold">Hold</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">LTIM</span>
+                  <span class="stock-sb__name-sub">LTIMindtree</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+1.2%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+0.2</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num"><span class="flabel flabel--stall">STALL</span></td>
+              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
+              <td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
+              <td><span class="act act--hold">Hold</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">MPHASIS</span>
+                  <span class="stock-sb__name-sub">Mphasis</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-green-700);">+1.6%</td>
+              <td class="num"><span class="fcell__v fcell__v--pos">+0.4</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
+              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td><span class="act act--hold">Hold</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">TECHM</span>
+                  <span class="stock-sb__name-sub">Tech Mahindra</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-red-700);">−1.4%</td>
+              <td class="num"><span class="fcell__v fcell__v--neg">−0.8</span><br><span class="flabel flabel--weakening">WEAK</span></td>
+              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td><div class="dc dc--conv3r"><span class="dc__lbl">3/4R</span></div></td>
+              <td><span class="act act--trim">Trim</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">OFSS</span>
+                  <span class="stock-sb__name-sub">Oracle Fin Serv</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-red-700);">−0.8%</td>
+              <td class="num"><span class="fcell__v fcell__v--neg">−0.4</span><br><span class="flabel flabel--weakening">WEAK</span></td>
+              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
+              <td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
+              <td><span class="act act--hold">Hold</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">TATAELXSI</span>
+                  <span class="stock-sb__name-sub">Tata Elxsi</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-red-700);">−3.2%</td>
+              <td class="num"><span class="fcell__v fcell__v--neg">−1.6</span><br><span class="flabel flabel--lagging">LAG</span></td>
+              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
+              <td><span class="act act--exit">Exit</span></td>
+            </tr>
+            <tr>
+              <td class="stock-sb__name">
+                <div class="stock-sb__name-wrap">
+                  <span class="stock-sb__tick">ZENSAR</span>
+                  <span class="stock-sb__name-sub">Zensar Tech</span>
+                </div>
+              </td>
+              <td class="num" style="color:var(--rag-red-700);">−4.1%</td>
+              <td class="num"><span class="fcell__v fcell__v--neg">−1.8</span><br><span class="flabel flabel--lagging">LAG</span></td>
+              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
+              <td><span class="act act--exit">Exit</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · FUNDAMENTALS -->
+  <section class="sect" id="sect-fund">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">Fundamental aggregates · Nifty IT</h2>
+        <p class="sect__sub">Earnings, margin, growth at sector level. Dots show where the current number sits vs the 10Y range.</p>
+      </div>
+    </div>
+
+    <div class="fund-grid">
+      <div class="fund-card">
+        <div class="fund-card__title">P/E (TTM)</div>
+        <div class="fund-card__v">26.4×</div>
+        <div class="fund-card__d fund-card__d--neu">10Y med 24.8× · 62%ile</div>
+        <div class="fund-card__hint">Slightly expensive but not extreme. Re-rating fuelled by AI/gen-AI commentary + earnings upgrades.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Earnings growth (FY27e)</div>
+        <div class="fund-card__v">14.8%</div>
+        <div class="fund-card__d fund-card__d--pos">+2.4 pts MoM (revisions)</div>
+        <div class="fund-card__hint">Street upgrading FY27e EPS. Deal momentum + margin tailwind. 2nd highest FY27e growth after Cap Goods.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">EBIT margin</div>
+        <div class="fund-card__v">22.4%</div>
+        <div class="fund-card__d fund-card__d--pos">+70 bps QoQ</div>
+        <div class="fund-card__hint">Recovery from low of 20.8% in Q2 FY26. 10Y median 23.8% — <strong>room for 140 bps more expansion</strong> before hitting median.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Attrition</div>
+        <div class="fund-card__v">11.2%</div>
+        <div class="fund-card__d fund-card__d--pos">−280 bps YoY</div>
+        <div class="fund-card__hint">Peak was 24% in Q4 FY23. Normalising rapidly. Lower attrition = lower sub-contractor cost = margin upside.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Revenue / employee</div>
+        <div class="fund-card__v">$58.4k</div>
+        <div class="fund-card__d fund-card__d--pos">+3.2% YoY</div>
+        <div class="fund-card__hint">Productivity metric. Gen-AI tooling starting to show up in the numbers. Watch TCS BFSI specifically — leads the trend.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Cash conversion</div>
+        <div class="fund-card__v">98%</div>
+        <div class="fund-card__d fund-card__d--pos">High-quality earnings</div>
+        <div class="fund-card__hint">Top-5 IT firms average. Buybacks + dividend support intact. Low balance-sheet risk.</div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Book-to-bill (top 4)</div>
+        <div class="fund-card__v">1.24×</div>
+        <div class="fund-card__d fund-card__d--pos">vs 1.08× prev Q</div>
+        <div class="fund-card__hint">Book-to-bill &gt; 1 means deal inflow &gt; revenue recognition. Rising means pipeline growing faster than burn. <strong>Leading indicator of FY27 revenue.</strong></div>
+      </div>
+      <div class="fund-card">
+        <div class="fund-card__title">Dividend yield</div>
+        <div class="fund-card__v">1.8%</div>
+        <div class="fund-card__d fund-card__d--neu">stable · covered 5.2×</div>
+        <div class="fund-card__hint">Below Cap Goods (2.4%) but quality compounders. Best-in-class for 10Y hold.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · MACRO SENSITIVITIES -->
+  <section class="sect" id="sect-sens">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">Macro sensitivities · what moves IT</h2>
+        <p class="sect__sub">Beta to each macro variable. This is where Explore · Global connects to this sector page — a weak-DXY, lower-real-rates, AI-capex world is <strong>textbook for Indian IT</strong>.</p>
+      </div>
+    </div>
+
+    <table class="sens-table">
+      <thead>
+        <tr>
+          <th style="width:200px;">Macro variable</th>
+          <th class="num" style="width:90px;">Beta</th>
+          <th style="width:160px;">Direction · today</th>
+          <th class="num" style="width:90px;">Impact</th>
+          <th>How this feeds IT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>USDINR</strong></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.72</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:32%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">weak USD</span></td>
+          <td class="num" style="color:var(--rag-red-700);">−0.3%</td>
+          <td>Every 1% INR appreciation cuts EBIT margin ~40 bps. Currently USDINR drifting lower on weak DXY — <strong>watch RBI intervention level 83.00</strong>.</td>
+        </tr>
+        <tr>
+          <td><strong>US 10Y real yield</strong></td>
+          <td class="num" style="color:var(--rag-red-700);">−0.58</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:28%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">falling</span></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.6%</td>
+          <td>Lower real rates = longer-duration cash flows rerate up. Quality growth IT (TCS/Infosys) benefits most. <strong>Direct RSI tailwind.</strong></td>
+        </tr>
+        <tr>
+          <td><strong>US ISM New Orders</strong></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.64</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:44%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">50.3 rising</span></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.4%</td>
+          <td>First US manuf expansion in 17m. Leading indicator of US enterprise IT capex. BFSI spending follows ISM with 2Q lag.</td>
+        </tr>
+        <tr>
+          <td><strong>Nasdaq 100</strong></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.84</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:62%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">+4.8% MoM</span></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.9%</td>
+          <td>Highest single beta — Indian IT follows US tech by 1–2 weeks. Nasdaq rally persistence is <strong>the strongest real-time confirmation</strong> of the sector call.</td>
+        </tr>
+        <tr>
+          <td><strong>AI capex proxy (MSFT+GOOG+AMZN capex)</strong></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.46</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:72%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">+42% YoY</span></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.5%</td>
+          <td>Hyperscaler capex is the fuel for gen-AI deals at Indian IT. $200bn FY27 capex plan across big-4 = tailwind for next 4–6 quarters.</td>
+        </tr>
+        <tr>
+          <td><strong>Oil (Brent)</strong></td>
+          <td class="num" style="color:var(--rag-red-700);">−0.22</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--neg" style="width:14%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">$83 rising</span></td>
+          <td class="num" style="color:var(--rag-red-700);">−0.1%</td>
+          <td>Second-order: higher oil = higher US inflation = higher real rates = IT discount rate goes up. Weak signal but monitor.</td>
+        </tr>
+        <tr>
+          <td><strong>India GDP nowcast</strong></td>
+          <td class="num" style="color:var(--rag-green-700);">+0.18</td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:34%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">7.2% stable</span></td>
+          <td class="num" style="color:var(--text-tertiary);">+0.1%</td>
+          <td>Domestic revenue is &lt;10% of IT book — weak direct link. Supports INR and local sentiment.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:var(--space-3);padding:10px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;color:var(--text-secondary);line-height:1.5;">
+      <strong style="color:var(--text-primary);">Net read:</strong> 5 of 7 macros currently point the right way for IT — <em style="color:var(--accent-700);font-weight:700;">best alignment in any sector right now</em>. Monitor USDINR break below 83.00 as a margin-pressure trigger.
+    </div>
+  </section>
+
+  <!-- 5 · SECTOR CALL -->
+  <section class="sect" id="sect-alloc">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">IT sector · portfolio call</h2>
+        <p class="sect__sub">Sector verdict + top-3 within-IT picks + 1 exit. Flows straight into the <strong>India book allocation</strong> on the country page.</p>
+      </div>
+      <div class="sect__tools">
+        <button class="btn-sec" type="button">Add to watchlist</button>
+        <button class="sim-this" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+          Simulate in Lab
+        </button>
+      </div>
+    </div>
+
+    <div class="alloc-hero">
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Sector call · 04 Apr 2026</span>
+        <span class="alloc-hero__val">Overweight · highest conviction</span>
+        <span class="alloc-hero__sub">CONV 4/4 on RS/Mom/Vol/Breadth. Fundamentals confirming (margin +70 bps QoQ, attrition down, deal TCV +20% YoY). 5 of 7 macros aligned. Confidence: <strong>High</strong>.</span>
+      </div>
+      <div class="alloc-hero__divider"></div>
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Target sector weight</span>
+        <span class="alloc-hero__val">14% (+3 pts)</span>
+        <span class="alloc-hero__sub">Currently 11% in India book. Add 3 pts, funded 60% from FMCG trim, 40% from cash. Execute staggered over 3 sessions.</span>
+      </div>
+      <div class="alloc-hero__divider"></div>
+      <div class="alloc-hero__block">
+        <span class="alloc-hero__lbl">Top picks + one exit</span>
+        <span class="alloc-hero__val" style="font-size:14px;font-family:var(--font-sans);font-weight:500;line-height:1.45;">
+          <strong>Add</strong> TCS, INFY, PERSISTENT · <strong>Exit</strong> TATAELXSI
+        </span>
+        <span class="alloc-hero__sub">Tier-2 picks: HCLTECH, COFORGE. Monitor Wipro for upgrade to Add on next earnings.</span>
+      </div>
+    </div>
+
+    <div style="margin-top:var(--space-4);padding:12px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:11px;color:var(--text-secondary);line-height:1.5;">
+      <strong style="color:var(--text-primary);">Provenance:</strong> this call is the <strong>convergence</strong> of sector-RS (LEADING), fundamentals (margin + attrition + TCV), and macro alignment (DXY weakness + Nasdaq + hyperscaler capex). Each picks links to its stock-detail page; the whole call logs to the India book portfolio once accepted.
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
+  const sections = Array.from(anchors).map(a => a.getAttribute('href').slice(1));
+  const spy = () => {
+    let active = sections[0];
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < 140) active = id;
+    }
+    anchors.forEach(a => a.classList.toggle('subbar__link--active', a.getAttribute('href') === '#' + active));
+  };
+  window.addEventListener('scroll', spy, { passive: true });
+</script>
+
+</body>
+</html>

@@ -17,6 +17,8 @@ Usage:
     python scripts/check-data-coverage.py --domain equity_ohlcv  # one domain
     python scripts/check-data-coverage.py --json-only            # no markdown
     python scripts/check-data-coverage.py --strict               # exit 1 on any fail
+    python scripts/check-data-coverage.py --mandatory-only       # skip non-mandatory domains
+    python scripts/check-data-coverage.py --strict --mandatory-only  # CI mode
 
 Wired into:
     - CI gate (block PRs that drop coverage below threshold)
@@ -30,6 +32,7 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -49,6 +52,9 @@ MANIFEST_PATH = ROOT / "docs" / "specs" / "data-coverage.yaml"
 OUTPUT_PATH = ROOT / "data-health.json"
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# Regex to detect year-partitioned table names like de_equity_ohlcv_y2020
+_YEAR_PART_RE = re.compile(r".*_y(\d{4})$")
 
 
 # ─── Data model ──────────────────────────────────────────────────────────
@@ -90,11 +96,22 @@ def expand_partitioned_tables(table_spec: dict[str, Any]) -> list[str]:
 def collect_tables(
     manifest: dict[str, Any],
     domain_filter: str | None,
+    mandatory_only: bool = False,
 ) -> list[tuple[str, dict[str, Any], str]]:
-    """Return list of (resolved_table_name, table_spec, domain_name)."""
+    """Return list of (resolved_table_name, table_spec, domain_name).
+
+    Args:
+        manifest: Parsed YAML manifest dict.
+        domain_filter: If set, only include tables from this domain.
+        mandatory_only: If True, skip domains where mandatory != True.
+    """
     out = []
     for domain_name, domain_spec in manifest.get("domains", {}).items():
         if domain_filter and domain_name != domain_filter:
+            continue
+        # Skip non-mandatory domains when --mandatory-only is set.
+        # Default is True for existing domains (legacy compat).
+        if mandatory_only and not domain_spec.get("mandatory", True):
             continue
         for tbl in domain_spec.get("tables", []):
             for resolved in expand_partitioned_tables(tbl):
@@ -185,6 +202,19 @@ async def score_coverage(
 async def score_freshness(
     conn: asyncpg.Connection, table: str, spec: dict[str, Any]
 ) -> DimensionScore:
+    # Partition-aware: archived year partitions score 100 (SLA not applicable).
+    m = _YEAR_PART_RE.match(table)
+    if m:
+        table_year = int(m.group(1))
+        current_year = datetime.now(IST).year
+        if table_year < current_year - 1:
+            return DimensionScore(
+                "freshness",
+                100.0,
+                f"archived partition (year={table_year}) — SLA not applicable",
+                {"table_year": table_year, "archived": True},
+            )
+
     sla = spec.get("sla_freshness_days", 1)
     date_col = await find_date_column(conn, table)
     if date_col is None:
@@ -280,11 +310,45 @@ async def score_continuity(
 async def score_integrity(
     conn: asyncpg.Connection, table: str, spec: dict[str, Any]
 ) -> DimensionScore:
-    """Dedupe check on declared natural key."""
+    """Dedupe check on declared natural key.
+
+    Uses TABLESAMPLE SYSTEM(1) for tables with >500k estimated rows to
+    bound execution time to <5s even on 10M-row tables.
+    """
     nk = spec.get("natural_key")
     if not nk:
         return DimensionScore("integrity", 100.0, "no natural key declared", {})
+
+    # Check estimated row count via pg_stat to decide sampling strategy.
+    est_rows_raw: Any = await conn.fetchval(
+        "SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = $1", table
+    )
+    est_rows = int(est_rows_raw or 0)
+
     cols_quoted = ", ".join(f'"{c}"' for c in nk)
+
+    if est_rows > 500_000:
+        # Large table: use TABLESAMPLE SYSTEM(1) for ~1% random sample.
+        try:
+            _sample_sql = (
+                f"SELECT COUNT(*) FROM ("
+                f"SELECT {cols_quoted}, COUNT(*) c "
+                f'FROM "{table}" TABLESAMPLE SYSTEM(1) '
+                f"GROUP BY {cols_quoted} HAVING COUNT(*) > 1) s"
+            )
+            dupes: Any = await conn.fetchval(_sample_sql)
+        except Exception as e:
+            return DimensionScore("integrity", 0.0, f"sampled natural-key check failed: {e}", {})
+        sample_rows_est = max(est_rows // 100, 1)
+        dupe_rate = int(dupes or 0) / sample_rows_est
+        return DimensionScore(
+            "integrity",
+            round((1 - min(dupe_rate, 1.0)) * 100, 1),
+            (f"{dupes} duplicate {nk} groups in ~1% TABLESAMPLE of {est_rows:,} rows (sampled)"),
+            {"duplicates": int(dupes or 0), "estimated_rows": est_rows, "sampled": True},
+        )
+
+    # Small table: exact count.
     try:
         dupes = await conn.fetchval(
             f"SELECT COUNT(*) FROM ("
@@ -384,6 +448,11 @@ async def main() -> int:
     parser.add_argument("--domain", help="Limit to one domain")
     parser.add_argument("--json-only", action="store_true")
     parser.add_argument("--strict", action="store_true", help="Exit 1 on any fail")
+    parser.add_argument(
+        "--mandatory-only",
+        action="store_true",
+        help="Only check domains with mandatory: true in the manifest",
+    )
     parser.add_argument("--db-url", default=os.getenv("DATABASE_URL"))
     args = parser.parse_args()
 
@@ -401,7 +470,7 @@ async def main() -> int:
     pass_floor = rubric.get("scoring", {}).get("pass_threshold", 80)
     overall_floor = rubric.get("scoring", {}).get("overall_threshold", 85)
 
-    tables = collect_tables(manifest, args.domain)
+    tables = collect_tables(manifest, args.domain, mandatory_only=args.mandatory_only)
 
     conn = await asyncpg.connect(args.db_url)
     try:
@@ -454,7 +523,8 @@ def print_markdown_summary(
 
     for domain, rows in sorted(by_domain.items()):
         domain_pass = sum(1 for r in rows if r.pass_)
-        print(f"## {domain} ({domain_pass}/{len(rows)} pass)\n")
+        domain_status = "PASS" if domain_pass == len(rows) else "FAIL"
+        print(f"## {domain} — {domain_status} ({domain_pass}/{len(rows)} tables pass)\n")
         header = (
             "| Table | Overall | Coverage | Freshness | Complete "
             "| Continuity | Integrity | Provenance | Status |"

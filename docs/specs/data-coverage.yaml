@@ -37,6 +37,7 @@ rubric:
 domains:
 
   equity_ohlcv:
+    mandatory: true
     description: Daily OHLCV for Indian equities (Nifty universe + extended)
     owner: jip-data-engine
     expected_universe: 2000
@@ -51,6 +52,7 @@ domains:
         notes: Year-partitioned. Unpartitioned `de_equity_ohlcv` is empty by design.
 
   equity_technicals:
+    mandatory: true
     description: Daily/weekly/monthly technical indicators (TA-Lib computed in JIP)
     owner: jip-data-engine
     expected_universe: 2000
@@ -66,6 +68,7 @@ domains:
         sla_freshness_days: 31
 
   equity_fundamentals:
+    mandatory: true
     description: Quarterly fundamentals + history
     owner: jip-data-engine
     expected_universe: 2000
@@ -78,6 +81,7 @@ domains:
         history_years: 10
 
   mf:
+    mandatory: true
     description: Mutual fund NAV + technicals + meta
     owner: jip-data-engine
     expected_universe: 800
@@ -95,6 +99,7 @@ domains:
       - name: de_mf_sector_exposure
 
   mf_flows:
+    mandatory: true
     description: Monthly mutual fund flows (AMFI)
     owner: jip-data-engine
     expected_universe: null   # category-level
@@ -105,6 +110,7 @@ domains:
         business_columns: [category, month, net_inflow_cr, aum_cr]
 
   indices:
+    mandatory: true
     description: Indian indices + global top-10 indices
     owner: jip-data-engine
     expected_universe: 85    # 75 IN + 10 global
@@ -117,6 +123,7 @@ domains:
       - name: de_index_technical_daily
 
   etfs:
+    mandatory: true
     description: Indian + global ETFs
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -126,6 +133,7 @@ domains:
       - name: de_etf_technical_daily
 
   global_macros:
+    mandatory: true
     description: Yields, DXY, commodities, VIX, currencies
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -137,6 +145,7 @@ domains:
       - name: de_global_technical_daily
 
   relative_strength:
+    mandatory: true
     description: RS scores per instrument vs benchmark across periods
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -147,6 +156,7 @@ domains:
       - name: de_rs_daily_summary
 
   market_breadth:
+    mandatory: true
     description: A/D, % above MAs, new highs/lows, sector breadth
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -155,6 +165,7 @@ domains:
       - name: de_sector_breadth_daily
 
   rrg_quadrants:
+    mandatory: true
     description: RRG / Goldilocks quadrant classifications
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -164,6 +175,7 @@ domains:
       - name: de_goldilocks_stock_ideas
 
   corporate_actions:
+    mandatory: true
     description: Splits, bonus, dividends, mergers + cumulative adjustment factors
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -175,6 +187,7 @@ domains:
         business_columns: [symbol, trade_date, cum_split_factor, cum_dividend_factor]
 
   institutional_flows:
+    mandatory: true
     description: FII / DII cash market flows daily
     owner: jip-data-engine
     sla_freshness_days: 1
@@ -187,6 +200,7 @@ domains:
   # ─── NEW DOMAINS (to be built in JIP Data Core) ───────────────────────
 
   derivatives_eod:
+    mandatory: false
     description: NSE F&O bhavcopy — OI, change-in-OI, volume per contract
     owner: jip-data-engine
     status: missing
@@ -207,6 +221,7 @@ domains:
         source: https://nsearchives.nseindia.com/content/fo/fo_secban_{DDMMYYYY}.csv
 
   india_vix:
+    mandatory: false
     description: India VIX historical daily series
     owner: jip-data-engine
     status: missing
@@ -218,6 +233,7 @@ domains:
         source: https://www.nseindia.com/api/historical/vixhistory
 
   insider_trading:
+    mandatory: false
     description: SEBI PIT disclosures (insider + promoter trades)
     owner: jip-data-engine
     status: missing
@@ -228,6 +244,7 @@ domains:
         source: https://www.nseindia.com/api/corporates-pit
 
   block_bulk_deals:
+    mandatory: false
     description: NSE bulk + block deals daily
     owner: jip-data-engine
     status: missing
@@ -239,6 +256,7 @@ domains:
         source: https://nsearchives.nseindia.com/content/equities/block.csv
 
   shareholding_patterns:
+    mandatory: false
     description: Quarterly shareholding pattern (promoter, FII, DII, public)
     owner: jip-data-engine
     status: missing
@@ -249,6 +267,7 @@ domains:
         source: BSE corporate filings (XBRL)
 
   yield_curve:
+    mandatory: false
     description: Indian G-Sec yield curve (1y/5y/10y) + RBI policy rates
     owner: jip-data-engine
     status: missing
@@ -262,6 +281,7 @@ domains:
         source: RBI press releases
 
   fx_rates:
+    mandatory: false
     description: INR cross-rates (USD, EUR, GBP, JPY, CNY)
     owner: jip-data-engine
     status: missing
@@ -271,6 +291,7 @@ domains:
         source: https://www.rbi.org.in/Scripts/ReferenceRateArchive.aspx
 
   global_rates:
+    mandatory: true
     description: US Treasury 2y/10y, DXY (already partially in de_macro_*)
     owner: jip-data-engine
     status: existing
@@ -279,6 +300,7 @@ domains:
   # ─── Atlas-owned derived layers ───────────────────────────────────────
 
   gold_lens:
+    mandatory: true
     description: Gold-denominated price + RS view (computed by Atlas, not stored OHLCV)
     owner: atlas
     status: gap
@@ -288,6 +310,7 @@ domains:
         notes: 6 backend refs but 0 rows. V7-7 / V8-2 must populate.
 
   derived_signals:
+    mandatory: true
     description: Atlas-derived composite signals (conviction, regime, decisions)
     owner: atlas
     status: existing
