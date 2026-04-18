@@ -30,6 +30,10 @@ logger = structlog.get_logger(__name__)
 _EXEMPT_PREFIXES = (
     ".forge/",
     "scripts/forge_runner/",
+    # Parallel mockup-design session writes here — these are user-driven
+    # design artifacts unrelated to chunk work and must not block the
+    # runner's verifier (see V11-4 dirty_working_tree false-positive).
+    "frontend/mockups/",
 )
 
 # NTP + filesystem skew tolerance in seconds
