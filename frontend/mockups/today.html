@@ -1174,25 +1174,166 @@
         <div class="card__head">
           <div>
             <div class="card__title">Sector scoreboard · 4-factor conviction</div>
-            <div class="card__sub">Returns · Momentum · Breadth · Volume — convergence score</div>
+            <div class="card__sub">Ret · RS vs Nifty / N500 / Gold · Breadth · Momentum · Volume — named divergence when factors disagree</div>
           </div>
           <a style="font-size:11px;color:var(--accent-700);font-weight:600;cursor:pointer;">→ Explore sectors</a>
         </div>
         <div class="sector-scoreboard">
           <div class="sect-row sect-head">
-            <div>Sector</div><div class="num">Ret 1m</div><div class="num">RS</div><div class="num">Mom</div><div class="num" style="text-align:center;">Conviction</div>
+            <div>Sector</div>
+            <div>Ret 1m</div>
+            <div>RS-N50</div>
+            <div>RS-N500</div>
+            <div>RS-Gold</div>
+            <div>Breadth</div>
+            <div>Mom</div>
+            <div>Vol</div>
+            <div>Div / Conv</div>
+            <div>Act</div>
           </div>
-          <div class="sect-row"><div class="sect-name">Info Tech</div><div class="sect-bar-cell ret-pos">+6.4</div><div class="sect-bar-cell ret-pos">+2.1</div><div class="sect-bar-cell ret-pos">+0.9</div><div class="sect-conv-cell"><span class="conv conv--high-plus">4/4 HIGH+</span></div></div>
-          <div class="sect-row"><div class="sect-name">Pharma</div><div class="sect-bar-cell ret-pos">+4.8</div><div class="sect-bar-cell ret-pos">+1.6</div><div class="sect-bar-cell ret-pos">+0.6</div><div class="sect-conv-cell"><span class="conv conv--high">4/4 HIGH</span></div></div>
-          <div class="sect-row"><div class="sect-name">Metals</div><div class="sect-bar-cell ret-pos">+3.8</div><div class="sect-bar-cell ret-pos">+0.9</div><div class="sect-bar-cell ret-pos">+1.1</div><div class="sect-conv-cell"><span class="conv conv--med">3/4 MED</span></div></div>
-          <div class="sect-row"><div class="sect-name">Auto</div><div class="sect-bar-cell ret-pos">+2.4</div><div class="sect-bar-cell ret-pos">+0.6</div><div class="sect-bar-cell ret-pos">+0.8</div><div class="sect-conv-cell"><span class="conv conv--med">3/4 MED</span></div></div>
-          <div class="sect-row"><div class="sect-name">Energy</div><div class="sect-bar-cell ret-pos">+1.8</div><div class="sect-bar-cell ret-pos">+0.4</div><div class="sect-bar-cell ret-pos">+0.3</div><div class="sect-conv-cell"><span class="conv conv--div">2/4 DIV</span></div></div>
-          <div class="sect-row"><div class="sect-name">FMCG</div><div class="sect-bar-cell ret-neg">−1.4</div><div class="sect-bar-cell ret-neg">−0.5</div><div class="sect-bar-cell ret-neg">−0.3</div><div class="sect-conv-cell"><span class="conv conv--div">2/4 DIV</span></div></div>
-          <div class="sect-row"><div class="sect-name">Financials</div><div class="sect-bar-cell ret-neg">−2.1</div><div class="sect-bar-cell ret-neg">−0.7</div><div class="sect-bar-cell ret-neg">−0.4</div><div class="sect-conv-cell"><span class="conv conv--med-r">3/4 MED-R</span></div></div>
-          <div class="sect-row"><div class="sect-name">Consumer Durables</div><div class="sect-bar-cell ret-neg">−2.8</div><div class="sect-bar-cell ret-neg">−0.9</div><div class="sect-bar-cell ret-neg">−0.5</div><div class="sect-conv-cell"><span class="conv conv--med-r">3/4 MED-R</span></div></div>
-          <div class="sect-row"><div class="sect-name">Realty</div><div class="sect-bar-cell ret-neg">−3.4</div><div class="sect-bar-cell ret-neg">−1.1</div><div class="sect-bar-cell ret-neg">−0.6</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
-          <div class="sect-row"><div class="sect-name">PSU Bank</div><div class="sect-bar-cell ret-neg">−4.2</div><div class="sect-bar-cell ret-neg">−1.6</div><div class="sect-bar-cell ret-neg">−1.0</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
-          <div class="sect-row"><div class="sect-name">Infrastructure</div><div class="sect-bar-cell ret-neg">−4.8</div><div class="sect-bar-cell ret-neg">−1.9</div><div class="sect-bar-cell ret-neg">−1.2</div><div class="sect-conv-cell"><span class="conv conv--high-r">4/4 HIGH-R</span></div></div>
+
+          <div class="sect-row">
+            <div class="sect-name">Info Tech</div>
+            <div class="sect-bar-cell ret-pos">+6.4</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+2.1</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+2.4</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.2</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">78%</span><span class="flabel flabel--expanding">EXPAND</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">1.3×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></div>
+            <div class="sect-act-cell"><span class="act act--add">ADD</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Pharma</div>
+            <div class="sect-bar-cell ret-pos">+4.8</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.6</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.8</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.7</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">71%</span><span class="flabel flabel--expanding">EXPAND</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">1.2×</span><span class="flabel flabel--accum">ACCUM</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></div>
+            <div class="sect-act-cell"><span class="act act--add">ADD</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Metals</div>
+            <div class="sect-bar-cell ret-pos">+3.8</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--leading">LEADING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">64%</span><span class="flabel flabel--expanding">EXPAND</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+1.1</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.1×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">Vol still flat</span></div></div>
+            <div class="sect-act-cell"><span class="act act--watch">WATCH</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Auto</div>
+            <div class="sect-bar-cell ret-pos">+2.4</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.9</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.2</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">52%</span><span class="flabel flabel--narrow">NARROW</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.8</span><span class="flabel flabel--accel">ACCEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">Breadth thin, Vol flat</span></div></div>
+            <div class="sect-act-cell"><span class="act act--watch">WATCH</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Energy</div>
+            <div class="sect-bar-cell ret-pos">+1.8</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.4</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.6</span><span class="flabel flabel--improving">IMPROV</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">48%</span><span class="flabel flabel--narrow">NARROW</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">+0.3</span><span class="flabel flabel--stall">STALL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Gold↓</span><span class="dc__note">Crude weak vs Gold</span></div></div>
+            <div class="sect-act-cell"><span class="act act--hold">HOLD</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">FMCG</div>
+            <div class="sect-bar-cell ret-neg">−1.4</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--weakening">WEAK</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--pos">68%</span><span class="flabel flabel--expanding">EXPAND</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.3</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">0.9×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Breadth↑</span><span class="dc__note">defensive bid, RS still soft</span></div></div>
+            <div class="sect-act-cell"><span class="act act--hold">HOLD</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Financials</div>
+            <div class="sect-bar-cell ret-neg">−2.1</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.7</span><span class="flabel flabel--weakening">WEAK</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--weakening">WEAK</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">44%</span><span class="flabel flabel--narrow">NARROW</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.4</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.1×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">rates drag</span></div></div>
+            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Consumer Durables</div>
+            <div class="sect-bar-cell ret-neg">−2.8</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.9</span><span class="flabel flabel--weakening">WEAK</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">38%</span><span class="flabel flabel--thin">THIN</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.5</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.2×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">demand soft</span></div></div>
+            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Realty</div>
+            <div class="sect-bar-cell ret-neg">−3.4</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.4</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.1</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">32%</span><span class="flabel flabel--thin">THIN</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−0.6</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.3×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></div>
+            <div class="sect-act-cell"><span class="act act--avoid">AVOID</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">PSU Bank</div>
+            <div class="sect-bar-cell ret-neg">−4.2</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.6</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">28%</span><span class="flabel flabel--thin">THIN</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.0</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">1.5×</span><span class="flabel flabel--distrib">DISTRIB</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></div>
+            <div class="sect-act-cell"><span class="act act--avoid">AVOID</span></div>
+          </div>
+
+          <div class="sect-row">
+            <div class="sect-name">Infrastructure</div>
+            <div class="sect-bar-cell ret-neg">−4.8</div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.9</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.2</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−2.8</span><span class="flabel flabel--lagging">LAGGING</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">42%</span><span class="flabel flabel--narrow">NARROW</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neg">−1.2</span><span class="flabel flabel--decel">DECEL</span></div>
+            <div class="fcell sect-fcell"><span class="fcell__v fcell__v--neu">1.0×</span><span class="flabel flabel--neut">NEUT</span></div>
+            <div class="sect-conv-cell"><div class="dc dc--div"><span class="dc__lbl">DIV · Vol flat</span><span class="dc__note">RS↓ but no distribution</span></div></div>
+            <div class="sect-act-cell"><span class="act act--trim">TRIM</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1310,6 +1451,87 @@
             <button class="sim-this"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l3 18 5-9 9-5z"/></svg>Simulate in Lab</button>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       FACTOR-LABEL LEGEND — single vocabulary across every Atlas surface
+       ════════════════════════════════════════════════════════════════════ -->
+  <section style="margin-top:var(--space-8); margin-bottom:var(--space-6);">
+    <div class="card" style="background:var(--bg-inset); border-style:dashed;">
+      <div class="card__head" style="border-bottom:1px dashed var(--border-default);">
+        <div>
+          <div class="card__title" style="font-family:var(--font-serif); font-size:17px;">Factor-label vocabulary</div>
+          <div class="card__sub">Same four-factor language on every RRG table across the platform — Global indices, India sectors, Explorer, instrument detail. Read once here, recognise everywhere.</div>
+        </div>
+        <a style="font-size:11px;color:var(--accent-700);font-weight:600;cursor:pointer;">→ Full methodology</a>
+      </div>
+      <div style="padding:var(--space-4) var(--space-5); display:grid; grid-template-columns:repeat(5, 1fr); gap:var(--space-5);">
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:10px;">RS · Relative Strength</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+            Asset's return vs benchmark, standardised (z-score over 60d). Four lenses: MSCI World · S&amp;P 500 · Nifty 50 · Gold. RRG quadrant follows RS level × momentum.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--leading">LEADING</span><span style="font-size:11px; color:var(--text-secondary);">RS &gt; +0.5, momentum up</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--improving">IMPROV</span><span style="font-size:11px; color:var(--text-secondary);">RS rising, still &lt; +0.5</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--weakening">WEAK</span><span style="font-size:11px; color:var(--text-secondary);">RS falling, still &gt; 0</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--lagging">LAGGING</span><span style="font-size:11px; color:var(--text-secondary);">RS &lt; −0.5, momentum down</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:10px;">Momentum</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+            Rate of change of RS (Δ over 10d). Answers <em>is this getting better or worse?</em> — independent of absolute level.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--accel">ACCEL</span><span style="font-size:11px; color:var(--text-secondary);">ΔRS &gt; +0.5 · getting stronger</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--stall">STALL</span><span style="font-size:11px; color:var(--text-secondary);">|ΔRS| ≤ 0.5 · flat</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--decel">DECEL</span><span style="font-size:11px; color:var(--text-secondary);">ΔRS &lt; −0.5 · losing steam</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:10px;">Volume</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+            <strong>Vol ratio</strong> = today ÷ 20-day avg. Label combines ratio with OBV direction on closes-up vs closes-down days.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--accum">ACCUM</span><span style="font-size:11px; color:var(--text-secondary);">&gt; 1.2× &amp; OBV↑ on up-days</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--neut">NEUT</span><span style="font-size:11px; color:var(--text-secondary);">0.85–1.2× · no OBV tilt</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--distrib">DISTRIB</span><span style="font-size:11px; color:var(--text-secondary);">&lt; 0.85× or OBV↓ on down-days</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:10px;">Breadth</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+            % of constituents above 50-DMA (for sectors: member stocks; for indices: component stocks). Tells you if the move is broad or concentrated.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--expanding">EXPAND</span><span style="font-size:11px; color:var(--text-secondary);">≥ 60% · broad participation</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--narrow">NARROW</span><span style="font-size:11px; color:var(--text-secondary);">40–60% · split tape</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="flabel flabel--thin">THIN</span><span style="font-size:11px; color:var(--text-secondary);">&lt; 40% · few leaders carrying</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:10px;">Div / Conv</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">
+            How many of the 4 factors agree. <strong>Divergence is called out loudly</strong> with the dissenting factor named — that's where the risk or the opportunity hides.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="dc dc--conv4" style="padding:2px 5px; font-size:8.5px;"><span class="dc__lbl">CONV 4/4</span></span><span style="font-size:11px; color:var(--text-secondary);">all 4 bullish</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="dc dc--conv3" style="padding:2px 5px; font-size:8.5px;"><span class="dc__lbl">CONV 3/4</span></span><span style="font-size:11px; color:var(--text-secondary);">3 agree bullish, 1 neutral</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="dc dc--div" style="padding:2px 5px; font-size:8.5px;"><span class="dc__lbl">DIV 2/4</span></span><span style="font-size:11px; color:var(--text-secondary);">factors disagree — investigate</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="dc dc--conv4r" style="padding:2px 5px; font-size:8.5px;"><span class="dc__lbl">CONV 4/4R</span></span><span style="font-size:11px; color:var(--text-secondary);">all 4 bearish</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="dc dc--none" style="padding:2px 5px; font-size:8.5px;"><span class="dc__lbl">NO SIG</span></span><span style="font-size:11px; color:var(--text-secondary);">&lt; 2 meaningful factors</span></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
