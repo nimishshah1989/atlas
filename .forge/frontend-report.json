@@ -1,26 +1,17 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T02:20:05.519673+05:30",
+  "generated_at": "2026-04-19T03:01:29.400608+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
-  "total": 9,
-  "passed": 5,
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "skipped": 4,
+  "skipped": 0,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
     {
-      "id": "fe-p10-01",
-      "title": "breadth.html: hero with 3 headline counts (21-EMA, 50-DMA, 200-DMA)",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "'[data-headline=ema21], [data-headline=dma50], [data-headline=dma200]': 3 element(s) in 1 file(s)",
-      "status": "RUN"
-    },
-    {
-      "id": "fe-p10-02",
-      "title": "breadth.html: regime band + 3 KPI cards + oscillator chart + zone reference + DESCRIBE + signal history",
+      "id": "fe-p11-01",
+      "title": "portfolios.html: 4 book cards + holdings tables + benchmark comparison",
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
@@ -28,67 +19,13 @@
       "status": "RUN"
     },
     {
-      "id": "fe-p10-03",
-      "title": "breadth.html: universe selector + MA selector pills",
-      "severity": "high",
-      "check_type": "dom_required",
+      "id": "fe-p11-02",
+      "title": "portfolios.html: accountability banner + pending-rec ledger removed",
+      "severity": "critical",
+      "check_type": "dom_forbidden",
       "passed": true,
-      "evidence": "All selectors matched in 1 file(s)",
+      "evidence": "No forbidden elements in 1 file(s)",
       "status": "RUN"
-    },
-    {
-      "id": "fe-p10-04",
-      "title": "breadth.html: zone bands rendered (OB >=400 red tint, OS <=100 green tint, midline 250)",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "All selectors matched in 1 file(s)",
-      "status": "RUN"
-    },
-    {
-      "id": "fe-p10_5-01",
-      "title": "signal-playback: all 14 input parameters present with declared ids",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "selector_file_pairs check passed",
-      "status": "RUN"
-    },
-    {
-      "id": "fe-p10_5-02",
-      "title": "signal-playback: 3-overlay benchmark (Strategy, Nifty 50 B&H, Nifty 500 B&H)",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "SKIP: no files matched",
-      "status": "SKIP"
-    },
-    {
-      "id": "fe-p10_5-03",
-      "title": "signal-playback: three tabs (Transaction Log, Cashflow, Tax Analysis)",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "SKIP: no files matched",
-      "status": "SKIP"
-    },
-    {
-      "id": "fe-p10_5-04",
-      "title": "signal-playback: light-token port (no dark-v8 palette residue)",
-      "severity": "critical",
-      "check_type": "grep_forbid",
-      "passed": true,
-      "evidence": "SKIP: no files matched",
-      "status": "SKIP"
-    },
-    {
-      "id": "fe-p10_5-05",
-      "title": "signal-playback: FIFO tax regime split coded (2024-07-23 cutoff)",
-      "severity": "critical",
-      "check_type": "grep_require",
-      "passed": true,
-      "evidence": "SKIP: no files matched",
-      "status": "SKIP"
     }
   ]
 }

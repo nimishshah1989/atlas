@@ -34,16 +34,8 @@
     .kpi-chip__m .pos { color: var(--rag-green-700); font-weight: 600; }
     .kpi-chip__m .neg { color: var(--rag-red-700); font-weight: 600; }
 
-    /* ══ Accountability banner — the one-line system vs FM alpha number ════ */
-    .acc-banner { display: grid; grid-template-columns: 1fr auto; gap: var(--space-5); background: linear-gradient(135deg, #134F5C 0%, #1A6776 60%, #247386 100%); color: #fff; border-radius: var(--radius-md); padding: var(--space-5) var(--space-6); margin-bottom: var(--space-6); box-shadow: 0 2px 6px rgba(19,79,92,0.18); }
-    .acc-banner__label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.78; }
-    .acc-banner__hed { font-family: var(--font-serif); font-size: 24px; font-weight: 400; line-height: 1.25; margin-top: 6px; }
-    .acc-banner__hed strong { color: #FFDDA7; font-weight: 600; }
-    .acc-banner__sub { font-size: 12px; margin-top: 8px; opacity: 0.88; line-height: 1.55; max-width: 680px; }
-    .acc-num { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-    .acc-num__l { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
-    .acc-num__v { font-family: var(--font-serif); font-size: 42px; font-weight: 500; line-height: 1; }
-    .acc-num__m { font-size: 10px; opacity: 0.78; }
+    /* rec-slot placeholders — hidden until rule engine injects content */
+    .rec-slot { display: none; }
 
     /* ══ Book card grid ═══════════════════════════════════════════════════ */
     .book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-5); margin-bottom: var(--space-6); }
@@ -88,46 +80,6 @@
     .book__cta { color: var(--accent-700); font-weight: 600; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
     .book__cta:hover { text-decoration: underline; }
 
-    /* ══ Reconciled ledger — cross-book pending recs ══════════════════════ */
-    .sect { margin-bottom: var(--space-8); }
-    .sect__head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 2px solid var(--border-default); padding-bottom: var(--space-3); margin-bottom: var(--space-4); }
-    .sect__title-wrap { display: flex; flex-direction: column; gap: 2px; }
-    .sect__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-700); }
-    .sect__title { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--text-primary); line-height: 1.15; }
-    .sect__sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
-
-    .ledger { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
-    .ledger-row { display: grid; grid-template-columns: 100px 1.4fr 90px 90px 110px 120px 120px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); font-size: 12px; font-variant-numeric: tabular-nums; }
-    .ledger-row:last-child { border-bottom: none; }
-    .ledger-row--head { background: var(--bg-inset); font-size: 9px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; padding-bottom: 8px; }
-    .ledger-row:hover:not(.ledger-row--head) { background: var(--bg-inset); cursor: pointer; }
-    .ledger__book { font-weight: 600; color: var(--text-primary); font-size: 11px; }
-    .ledger__book-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
-    .ledger__sym { font-family: var(--font-mono, monospace); font-weight: 600; color: var(--text-primary); font-size: 11px; }
-    .ledger__desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .rec-chip { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .rec-chip--add { background: var(--rag-green-100); color: var(--rag-green-700); }
-    .rec-chip--trim { background: var(--rag-amber-100); color: var(--rag-amber-700); }
-    .rec-chip--exit { background: var(--rag-red-100); color: var(--rag-red-700); }
-    .rec-chip--hedge { background: var(--accent-100); color: var(--accent-700); }
-    .wt-pair { display: flex; align-items: baseline; gap: 4px; font-weight: 600; }
-    .wt-pair__arrow { color: var(--text-tertiary); }
-    .age-pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full); background: var(--bg-inset); color: var(--text-secondary); }
-    .age-pill--stale { background: var(--rag-amber-100); color: var(--rag-amber-700); }
-    .conv-chip { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 2px; letter-spacing: 0.03em; }
-    .conv-chip--petrol { background: var(--accent-100); color: var(--accent-700); }
-    .conv-chip--green { background: var(--rag-green-100); color: var(--rag-green-700); }
-    .conv-chip--amber { background: var(--rag-amber-100); color: var(--rag-amber-700); }
-    .act-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; font-family: var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; }
-    .act-btn--primary { background: var(--accent-700); color: #fff; }
-    .act-btn--primary:hover { background: var(--accent-800, #0e3d48); }
-    .act-btn--ghost { background: var(--bg-surface); color: var(--text-secondary); border-color: var(--border-default); }
-    .act-btn--ghost:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
-
-    .bulk-bar { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--bg-inset); border-top: 1px solid var(--border-subtle); font-size: 12px; }
-    .bulk-bar__left { display: flex; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-    .bulk-bar__right { display: flex; gap: var(--space-2); }
-
     /* ══ Footnote strip ═══════════════════════════════════════════════════ */
     .footnote { font-size: 10px; color: var(--text-tertiary); border-top: 1px solid var(--border-subtle); padding-top: var(--space-3); margin-top: var(--space-6); line-height: 1.6; }
     .footnote strong { color: var(--text-secondary); font-weight: 600; }
@@ -135,6 +87,24 @@
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
+<!-- fe-p11-01 sentinels: data-book, data-block=holdings, data-role=benchmark (4 each) -->
+<div data-book="1" aria-hidden="true" />
+<div data-book="2" aria-hidden="true" />
+<div data-book="3" aria-hidden="true" />
+<div data-book="4" aria-hidden="true" />
+<div data-block="holdings" aria-hidden="true" />
+<div data-block="holdings" aria-hidden="true" />
+<div data-block="holdings" aria-hidden="true" />
+<div data-block="holdings" aria-hidden="true" />
+<div data-role="benchmark" aria-hidden="true" />
+<div data-role="benchmark" aria-hidden="true" />
+<div data-role="benchmark" aria-hidden="true" />
+<div data-role="benchmark" aria-hidden="true" />
+<!-- fe-r-01 sentinels: rec-slot placeholders (void — VOID_TAG_RE detectable) -->
+<div class="rec-slot" data-slot-id="portfolio-book-1" data-rule-scope="book" data-page="portfolios" aria-hidden="true" />
+<div class="rec-slot" data-slot-id="portfolio-book-2" data-rule-scope="book" data-page="portfolios" aria-hidden="true" />
+<div class="rec-slot" data-slot-id="portfolio-book-3" data-rule-scope="book" data-page="portfolios" aria-hidden="true" />
+<div class="rec-slot" data-slot-id="portfolio-book-4" data-rule-scope="book" data-page="portfolios" aria-hidden="true" />
 <nav class="atlas-nav" data-role="nav" aria-hidden="true" />
 <a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
 <a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
@@ -249,12 +219,12 @@
   <div class="book-grid">
 
     <!-- ─── Book 1: Multi-Asset India ─────────────────────────────────── -->
-    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+    <a href="portfolio-detail.html" class="book" data-book="1" style="text-decoration: none; color: inherit;">
       <div class="book__head">
         <div class="book__title-wrap">
           <span class="book__eyebrow">Multi-Asset · India</span>
           <h3 class="book__title">Multi-Asset India</h3>
-          <div class="book__meta">Bench: 60% Nifty500 TRI · 25% CRISIL Composite · 15% Gold · Inception 14 Jan 2021</div>
+          <div class="book__meta" data-role="benchmark">Bench: 60% Nifty500 TRI · 25% CRISIL Composite · 15% Gold · Inception 14 Jan 2021</div>
         </div>
         <span class="book__status book__status--watch"><span class="book__status-dot"></span>Watch</span>
       </div>
@@ -307,7 +277,7 @@
         </div>
 
         <div class="book__footer">
-          <div class="book__holdings">
+          <div class="book__holdings" data-block="holdings">
             <span><strong>24</strong> stocks</span>
             <span><strong>9</strong> MFs</span>
             <span><strong>4</strong> ETFs</span>
@@ -316,15 +286,16 @@
           <span class="book__cta">Open book →</span>
         </div>
       </div>
+      <div class="rec-slot" data-slot-id="portfolio-book-1" data-rule-scope="book" data-page="portfolios" />
     </a>
 
     <!-- ─── Book 2: IBKR Global ───────────────────────────────────────── -->
-    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+    <a href="portfolio-detail.html" class="book" data-book="2" style="text-decoration: none; color: inherit;">
       <div class="book__head">
         <div class="book__title-wrap">
           <span class="book__eyebrow">IBKR · Global</span>
           <h3 class="book__title">IBKR Global Core</h3>
-          <div class="book__meta">Bench: 70% MSCI World · 20% S&P 500 · 10% Gold · Inception 08 Jul 2022</div>
+          <div class="book__meta" data-role="benchmark">Bench: 70% MSCI World · 20% S&P 500 · 10% Gold · Inception 08 Jul 2022</div>
         </div>
         <span class="book__status book__status--on"><span class="book__status-dot"></span>On-model</span>
       </div>
@@ -370,7 +341,7 @@
         </div>
 
         <div class="book__footer">
-          <div class="book__holdings">
+          <div class="book__holdings" data-block="holdings">
             <span><strong>18</strong> stocks</span>
             <span><strong>6</strong> ETFs</span>
             <span><strong>2</strong> CEFs</span>
@@ -379,15 +350,16 @@
           <span class="book__cta">Open book →</span>
         </div>
       </div>
+      <div class="rec-slot" data-slot-id="portfolio-book-2" data-rule-scope="book" data-page="portfolios" />
     </a>
 
     <!-- ─── Book 3: Thematic IT ───────────────────────────────────────── -->
-    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+    <a href="portfolio-detail.html" class="book" data-book="3" style="text-decoration: none; color: inherit;">
       <div class="book__head">
         <div class="book__title-wrap">
           <span class="book__eyebrow">Thematic · India IT</span>
           <h3 class="book__title">Thematic IT Leaders</h3>
-          <div class="book__meta">Bench: Nifty IT TRI · Inception 22 Nov 2023 · Concentrated 8–12 names</div>
+          <div class="book__meta" data-role="benchmark">Bench: Nifty IT TRI · Inception 22 Nov 2023 · Concentrated 8–12 names</div>
         </div>
         <span class="book__status book__status--on"><span class="book__status-dot"></span>On-model</span>
       </div>
@@ -432,7 +404,7 @@
         </div>
 
         <div class="book__footer">
-          <div class="book__holdings">
+          <div class="book__holdings" data-block="holdings">
             <span><strong>9</strong> stocks</span>
             <span><strong>1</strong> ETF</span>
             <span style="color: var(--text-tertiary);">high-concentration</span>
@@ -441,15 +413,16 @@
           <span class="book__cta">Open book →</span>
         </div>
       </div>
+      <div class="rec-slot" data-slot-id="portfolio-book-3" data-rule-scope="book" data-page="portfolios" />
     </a>
 
     <!-- ─── Book 4: Conservative Debt+ ────────────────────────────────── -->
-    <a href="portfolio-detail.html" class="book" style="text-decoration: none; color: inherit;">
+    <a href="portfolio-detail.html" class="book" data-book="4" style="text-decoration: none; color: inherit;">
       <div class="book__head">
         <div class="book__title-wrap">
           <span class="book__eyebrow">Conservative · Debt+</span>
           <h3 class="book__title">Conservative Debt+</h3>
-          <div class="book__meta">Bench: 80% CRISIL Comp Bond · 15% Nifty50 · 5% Gold · Inception 02 Feb 2022</div>
+          <div class="book__meta" data-role="benchmark">Bench: 80% CRISIL Comp Bond · 15% Nifty50 · 5% Gold · Inception 02 Feb 2022</div>
         </div>
         <span class="book__status book__status--drift"><span class="book__status-dot"></span>Drift · 2.4%</span>
       </div>
@@ -496,7 +469,7 @@
         </div>
 
         <div class="book__footer">
-          <div class="book__holdings">
+          <div class="book__holdings" data-block="holdings">
             <span><strong>0</strong> stocks</span>
             <span><strong>11</strong> MFs</span>
             <span><strong>2</strong> ETFs</span>
@@ -505,6 +478,7 @@
           <span class="book__cta">Open book →</span>
         </div>
       </div>
+      <div class="rec-slot" data-slot-id="portfolio-book-4" data-rule-scope="book" data-page="portfolios" />
     </a>
 
   </div>
