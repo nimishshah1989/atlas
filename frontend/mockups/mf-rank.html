@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>ATLAS · MF Rank · 4-Factor Composite</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── Layout ── */
+    .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
+    .crumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); padding: var(--space-4) 0 var(--space-2); }
+    .crumb a { color: var(--text-accent); text-decoration: none; }
+    .crumb__sep { color: var(--border-strong); }
+
+    /* ── Topbar ── */
+    .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); }
+    .topbar__inner { max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand__mark { width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-inverse); font-family: var(--font-serif); font-size: 17px; font-weight: 500; }
+    .brand__name { font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em; }
+    .brand__sub { font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .topbar__nav { display: flex; align-items: center; gap: 2px; margin-left: var(--space-4); }
+    .topbar__nav a { font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none; }
+    .topbar__nav a:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .topbar__nav a.active { color: var(--accent-700); background: var(--accent-100); font-weight: 600; }
+    .topbar__spacer { flex: 1; }
+    .topbar__search-wrap { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 280px; cursor: text; }
+    .topbar__search-wrap svg { color: var(--text-tertiary); flex-shrink: 0; }
+    .topbar__search-wrap span { font-size: 12px; color: var(--text-tertiary); }
+    .topbar__search-wrap input { background: transparent; border: none; outline: none; font-size: 12px; color: var(--text-primary); width: 100%; }
+    .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--rag-green-500); margin-right: 6px; }
+
+    /* ── Page header ── */
+    .ph { padding: var(--space-5) 0 var(--space-4); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+    .ph__eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+    .ph__title { font-family: var(--font-serif); font-size: 34px; line-height: 1.1; color: var(--text-primary); font-weight: 400; margin: 4px 0 8px; }
+    .ph__sub { font-size: 13px; color: var(--text-secondary); max-width: 800px; line-height: 1.55; }
+
+    /* ── Factor legend ── */
+    .factor-legend { display: flex; gap: var(--space-4); margin: var(--space-5) 0; flex-wrap: wrap; }
+    .factor-item { display: flex; flex-direction: column; gap: 4px; padding: var(--space-3) var(--space-4); background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); min-width: 160px; }
+    .factor-item__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .factor-item__desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+    .factor-item__weight { font-size: 11px; font-weight: 700; color: var(--accent-700); }
+
+    .factor-item--returns { border-top: 3px solid var(--rag-green-500); }
+    .factor-item--risk { border-top: 3px solid var(--rag-amber-500); }
+    .factor-item--resilience { border-top: 3px solid var(--rag-red-500); }
+    .factor-item--consistency { border-top: 3px solid var(--accent-700); }
+
+    /* ── Tie-break indicator ── */
+    .tie-break-bar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: var(--space-4); font-size: 12px; color: var(--text-secondary); }
+    .tie-break-bar__label { font-weight: 600; color: var(--text-primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tie-break-bar__arrow { color: var(--text-tertiary); font-size: 10px; }
+    .tie-break-chip { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--accent-100); color: var(--accent-700); border: 1px solid var(--accent-300); }
+
+    /* ── Main layout ── */
+    .rank-layout { display: grid; grid-template-columns: 240px 1fr; gap: var(--space-5); margin-top: var(--space-5); }
+
+    /* ── Filter rail ── */
+    .filter-rail { display: flex; flex-direction: column; gap: var(--space-3); }
+    .filter-group { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .filter-group__head { padding: 8px 12px; background: var(--bg-inset); border-bottom: 1px solid var(--border-subtle); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+    .filter-group__body { padding: var(--space-2); display: flex; flex-direction: column; gap: 2px; }
+    .filter-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--text-secondary); }
+    .filter-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .filter-item--active { background: var(--accent-100); color: var(--accent-700); font-weight: 600; }
+    .filter-item__count { margin-left: auto; font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .filter-item__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .filter-item__dot--all { background: var(--accent-700); }
+    .filter-item__dot--flexi-cap { background: var(--chart-1); }
+    .filter-item__dot--large-cap { background: var(--chart-2); }
+    .filter-item__dot--mid-cap { background: var(--chart-3); }
+    .filter-item__dot--small-cap { background: var(--chart-4); }
+
+    /* ── Rank table ── */
+    .rank-table-wrap { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+    .rank-table-head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); gap: var(--space-3); }
+    .rank-table-head__title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .rank-table-head__meta { font-size: 11px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+    .rank-table-head__actions { display: flex; gap: var(--space-2); align-items: center; }
+
+    /* ── Mobile scroll ── */
+    .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Data table (dense) ── */
+    .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; min-width: 960px; }
+    .data-table thead th { position: sticky; top: 0; background: var(--bg-inset); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+    .data-table thead th.num { text-align: right; }
+    .data-table tbody td { padding: 10px; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; vertical-align: middle; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover td { background: var(--bg-hover); cursor: pointer; }
+    .data-table td.num { text-align: right; font-weight: 600; }
+    .data-table td.left { text-align: left; }
+    .data-table--dense thead th { padding: 7px 8px; }
+    .data-table--dense tbody td { padding: 8px; }
+
+    /* ── Rank cell ── */
+    .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .rank-badge--1 { background: var(--rag-green-100); color: var(--rag-green-700); border: 1px solid var(--rag-green-300); }
+    .rank-badge--2 { background: var(--accent-100); color: var(--accent-700); border: 1px solid var(--accent-300); }
+    .rank-badge--3 { background: var(--rag-amber-100); color: var(--rag-amber-700); border: 1px solid var(--rag-amber-300); }
+    .rank-badge--n { background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); }
+
+    /* ── Score cell ── */
+    .score-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .score-cell__val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .score-cell__bar { width: 60px; height: 3px; background: var(--border-default); border-radius: 99px; overflow: hidden; }
+    .score-cell__fill { height: 100%; border-radius: 99px; background: var(--accent-700); }
+    .score-cell--returns .score-cell__fill { background: var(--rag-green-500); }
+    .score-cell--risk .score-cell__fill { background: var(--rag-amber-500); }
+    .score-cell--resilience .score-cell__fill { background: var(--rag-red-500); }
+    .score-cell--consistency .score-cell__fill { background: var(--accent-700); }
+
+    /* ── Composite score ── */
+    .composite-cell { display: inline-flex; align-items: center; gap: 6px; }
+    .composite-num { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+    .composite-pill { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.04em; }
+    .composite-pill--high { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .composite-pill--mid { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .composite-pill--low { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ── Fund name cell ── */
+    .fund-name-cell { display: flex; flex-direction: column; gap: 2px; }
+    .fund-name-cell__primary { font-size: 12px; font-weight: 600; color: var(--text-primary); max-width: 240px; line-height: 1.3; }
+    .fund-name-cell__scheme { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
+
+    /* ── Category pill ── */
+    .cat-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full); white-space: nowrap; }
+    .cat-pill--flexi-cap { background: var(--accent-100); color: var(--accent-700); }
+    .cat-pill--large-cap { background: var(--rag-green-100); color: var(--rag-green-700); }
+    .cat-pill--mid-cap { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+    .cat-pill--small-cap { background: var(--rag-red-100); color: var(--rag-red-700); }
+
+    /* ── Tie-break rank ── */
+    .tb-rank { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-align: center; font-variant-numeric: tabular-nums; }
+
+    /* ── Formula block (explain-block) ── */
+    .explain-block { margin: var(--space-8) 0 var(--space-5); background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--accent-700); border-radius: var(--radius-md); overflow: hidden; }
+    .explain-block__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); border-bottom: 1px solid var(--border-subtle); cursor: pointer; }
+    .explain-block__title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .explain-block__toggle { font-size: 11px; color: var(--accent-700); font-weight: 600; }
+    .explain-block__body { padding: var(--space-4) var(--space-5); }
+    .explain-block__prose { font-size: 13px; color: var(--text-secondary); line-height: 1.65; max-width: 780px; }
+    .explain-block__prose strong { color: var(--text-primary); font-weight: 600; }
+    .explain-block__formula { margin: var(--space-4) 0; background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-4); overflow-x: auto; }
+    .explain-block__formula code { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); line-height: 1.7; white-space: pre; }
+    .explain-block__source { font-size: 11px; color: var(--text-tertiary); margin-top: var(--space-3); border-top: 1px solid var(--border-subtle); padding-top: var(--space-3); }
+
+    /* ── Rec slot ── */
+    .rec-slot { display: none; }
+
+    /* ── Universe summary bar ── */
+    .universe-bar { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: var(--space-4); font-size: 12px; flex-wrap: wrap; }
+    .universe-bar__item { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+    .universe-bar__lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
+    .universe-bar__val { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .universe-bar__sep { color: var(--border-strong); }
+
+    /* ── Export button ── */
+    .icon-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 5px 10px; background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; text-decoration: none; }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .icon-btn svg { width: 12px; height: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- ATLAS nav sentinels for criteria gate (void tags, aria-hidden) — fe-g-15 fe-g-16 -->
+<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
+
+<!-- ─── Topbar ──────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="today.html">
+      <div class="brand__mark">A</div>
+      <div>
+        <div class="brand__name">ATLAS</div>
+        <div class="brand__sub">Market Intelligence</div>
+      </div>
+    </a>
+    <nav class="topbar__nav">
+      <a href="today.html">Today</a>
+      <a href="explore-global.html">Explore</a>
+      <a href="explore-country.html">Country</a>
+      <a href="explore-sector.html">Sector</a>
+      <a href="breadth.html">Breadth</a>
+      <a href="mf-rank.html" class="active">MF rank</a>
+      <a href="portfolios.html">Portfolios</a>
+      <a href="stock-detail.html">Instruments</a>
+      <a href="lab.html">Lab</a>
+      <a href="reports.html">Reports</a>
+    </nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" placeholder="Search funds, sectors, macros…" data-role="global-search" aria-label="Global search" class="atlas-search" />
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="sync-dot"></span>
+      <span style="font-size:10px;color:var(--text-secondary);font-weight:600;">Sat 18 Apr 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Main page ─────────────────────────────────────────────────────────── -->
+<main class="page">
+
+  <!-- DP COMPONENT SLOTS (V1FE-2) -->
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
+  <div data-component="signal-strip" data-as-of="2026-04-17" />
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
+  <span data-chip="gold-rs" />
+  <div data-component="interpretation-sidecar" data-tier="explain" />
+  <a data-action="simulate-this" href="lab.html" />
+  <!-- END DP COMPONENT SLOTS -->
+
+  <!-- Rec-slot placeholder (fe-g-19 + fe-r-01) -->
+  <div class="rec-slot" data-slot-id="mfrank-screens" data-rule-scope="screen" data-page="mf-rank"></div>
+
+  <!-- Breadcrumbs -->
+  <nav class="crumb">
+    <a href="today.html">Today</a>
+    <span class="crumb__sep">›</span>
+    <a href="explore-global.html">Explore</a>
+    <span class="crumb__sep">›</span>
+    <span>MF Rank</span>
+  </nav>
+
+  <!-- ─── Page header ── -->
+  <div class="ph">
+    <div class="ph__eyebrow">Mutual Funds · 4-Factor Composite Ranking · v1.1</div>
+    <h1 class="ph__title">MF Rank</h1>
+    <div class="ph__sub">
+      Cross-sectional ranking of mutual funds within SEBI categories using four independently scored factors:
+      <strong>Returns, Risk, Resilience, Consistency.</strong>
+      Each factor is z-scored within category, converted to a 0–100 percentile score via Φ (normal CDF),
+      then averaged into a composite. Tie-break order: Consistency → Risk → Returns → Resilience.
+    </div>
+  </div>
+
+  <!-- ─── Factor legend ── -->
+  <div class="factor-legend" aria-label="Factor legend">
+    <div class="factor-item factor-item--returns" data-factor="returns">
+      <span class="factor-item__label">Returns</span>
+      <span class="factor-item__desc">Excess return vs benchmark: 1Y, 3Y, 5Y weighted. Alpha persistence via rolling 12-month alpha.</span>
+      <span class="factor-item__weight">Weight: 25%</span>
+    </div>
+    <div class="factor-item factor-item--risk" data-factor="risk">
+      <span class="factor-item__label">Risk</span>
+      <span class="factor-item__desc">Volatility (3Y), downside deviation, max drawdown within category. Lower is better — score is inverted.</span>
+      <span class="factor-item__weight">Weight: 25%</span>
+    </div>
+    <div class="factor-item factor-item--resilience" data-factor="resilience">
+      <span class="factor-item__label">Resilience</span>
+      <span class="factor-item__desc">Downside capture ratio, worst rolling 6-month return. How well the fund holds up in adverse markets.</span>
+      <span class="factor-item__weight">Weight: 25%</span>
+    </div>
+    <div class="factor-item factor-item--consistency" data-factor="consistency">
+      <span class="factor-item__label">Consistency</span>
+      <span class="factor-item__desc">% of rolling 12-month periods beating the benchmark. Measures repeatability of outperformance over time.</span>
+      <span class="factor-item__weight">Weight: 25%</span>
+    </div>
+  </div>
+
+  <!-- ─── Tie-break indicator ── -->
+  <div class="tie-break-bar">
+    <span class="tie-break-bar__label">Tie-break order</span>
+    <span class="tie-break-bar__arrow">→</span>
+    <span data-role="tie-break">
+      <span class="tie-break-chip">Consistency</span>
+      <span class="tie-break-bar__arrow">→</span>
+      <span class="tie-break-chip">Risk</span>
+      <span class="tie-break-bar__arrow">→</span>
+      <span class="tie-break-chip">Returns</span>
+      <span class="tie-break-bar__arrow">→</span>
+      <span class="tie-break-chip">Resilience</span>
+    </span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-tertiary);">When composite scores are equal, rank by Consistency first</span>
+  </div>
+
+  <!-- ─── Universe summary bar ── -->
+  <div class="universe-bar" id="universe-bar">
+    <div class="universe-bar__item">
+      <span class="universe-bar__lbl">Universe</span>
+      <span class="universe-bar__val" id="universe-count">—</span>
+      <span>funds</span>
+    </div>
+    <span class="universe-bar__sep">·</span>
+    <div class="universe-bar__item">
+      <span class="universe-bar__lbl">Categories</span>
+      <span class="universe-bar__val" id="category-count">—</span>
+    </div>
+    <span class="universe-bar__sep">·</span>
+    <div class="universe-bar__item">
+      <span class="universe-bar__lbl">Ranked as of</span>
+      <span class="universe-bar__val" id="ranked-as-of">—</span>
+    </div>
+    <span class="universe-bar__sep">·</span>
+    <div class="universe-bar__item">
+      <span>Source: ATLAS MF rank engine v1.1</span>
+    </div>
+  </div>
+
+  <!-- ─── Main rank layout (filter rail + table) ── -->
+  <div class="rank-layout">
+
+    <!-- Filter rail -->
+    <aside data-block="filter-rail">
+      <div class="filter-group">
+        <div class="filter-group__head">Category</div>
+        <div class="filter-group__body" id="category-filter-body">
+          <div class="filter-item filter-item--active" data-filter-value="all">
+            <span class="filter-item__dot filter-item__dot--all"></span>
+            All categories
+            <span class="filter-item__count" id="filter-all-count">—</span>
+          </div>
+          <!-- Category items populated by script -->
+        </div>
+      </div>
+      <div class="filter-group" style="margin-top:var(--space-3);">
+        <div class="filter-group__head">AUM range</div>
+        <div class="filter-group__body">
+          <div class="filter-item filter-item--active" data-filter-aum="all">All AUM</div>
+          <div class="filter-item" data-filter-aum="large">Above ₹25,000 Cr</div>
+          <div class="filter-item" data-filter-aum="mid">₹10,000–25,000 Cr</div>
+          <div class="filter-item" data-filter-aum="small">Below ₹10,000 Cr</div>
+        </div>
+      </div>
+      <div class="filter-group" style="margin-top:var(--space-3);">
+        <div class="filter-group__head">Min composite score</div>
+        <div class="filter-group__body">
+          <div class="filter-item filter-item--active" data-filter-score="0">Any score</div>
+          <div class="filter-item" data-filter-score="75">75+</div>
+          <div class="filter-item" data-filter-score="70">70+</div>
+          <div class="filter-item" data-filter-score="60">60+</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Rank table -->
+    <div data-block="rank-table">
+      <div class="rank-table-wrap">
+        <div class="rank-table-head">
+          <div>
+            <div class="rank-table-head__title">Composite Rankings</div>
+            <div class="rank-table-head__meta" id="table-meta">Loading…</div>
+          </div>
+          <div class="rank-table-head__actions">
+            <button class="icon-btn" title="Export CSV">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="mobile-scroll" data-mobile-scroll="true">
+          <table class="data-table table-dense" data-dense="true">
+            <thead>
+              <tr>
+                <th style="width:52px;">Rank</th>
+                <th>Fund</th>
+                <th>Category</th>
+                <th class="num">AUM (₹ Cr)</th>
+                <th class="num" title="Returns percentile score (0–100)">Returns</th>
+                <th class="num" title="Risk percentile score (0–100), inverted — higher = lower risk">Risk</th>
+                <th class="num" title="Resilience percentile score (0–100)">Resilience</th>
+                <th class="num" title="Consistency percentile score (0–100)">Consistency</th>
+                <th class="num" title="Simple average of the four factor scores">Composite</th>
+                <th class="num" title="Rank after tie-breaking by Consistency → Risk → Returns → Resilience">Tie-break</th>
+              </tr>
+            </thead>
+            <tbody id="rank-tbody">
+              <!-- Populated by script from fixture -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /rank-layout -->
+
+  <!-- ─── Formula disclosure (explain-block) ── -->
+  <section class="explain-block" data-topic="mf-rank-formula" data-tier="explain">
+    <div class="explain-block__head">
+      <h2 class="explain-block__title">Methodology — 4-Factor Composite Ranking Formula</h2>
+      <span class="explain-block__toggle">Show / hide</span>
+    </div>
+    <div class="explain-block__body">
+
+      <div class="explain-block__prose">
+        <strong>Factor scoring.</strong>
+        Each raw factor metric (excess return, volatility, drawdown, etc.) is
+        <strong>cross-sectionally z-scored within the fund's SEBI category</strong>,
+        then converted to a <strong>0–100 percentile</strong> via the standard-normal CDF (Φ).
+        This ensures comparisons are always within-category, not cross-category.
+        <br /><br />
+        <strong>Returns</strong> factor aggregates excess returns at 1Y, 3Y, and 5Y horizons
+        plus a rolling 12-month alpha signal. Higher excess return → higher score.
+        <br /><br />
+        <strong>Risk</strong> factor aggregates 3-year annualised volatility, downside deviation,
+        and 3-year maximum drawdown. Lower risk → higher score (metric is inverted before z-scoring).
+        <br /><br />
+        <strong>Resilience</strong> factor uses downside capture ratio and worst rolling 6-month return.
+        A fund that holds its ground in down markets scores higher.
+        <br /><br />
+        <strong>Consistency</strong> factor measures the percentage of rolling 12-month windows
+        in which the fund beat its category benchmark. It is the tie-break dimension
+        because sustained outperformance is harder to fake than a single strong year.
+        <br /><br />
+        <strong>Composite</strong> is the simple unweighted average of the four percentile scores.
+        All four factors receive equal 25% weight. The composite is reported to one decimal place.
+        <br /><br />
+        <strong>Tie-break order:</strong> When two funds share an identical composite score,
+        they are ranked by Consistency first, then Risk, then Returns, then Resilience.
+        Within any still-tied pair, alphabetical scheme name is the final decider.
+      </div>
+
+      <!-- Mathematical formula (fe-p9-03 + fe-m-01) -->
+      <div class="explain-block__formula">
+        <pre data-role="formula"><code>z_cat(x) = (x − μ_category) / σ_category
+
+score_i(x) = round(100 × Φ(z_cat(x)))      where Φ is the standard-normal CDF
+
+Returns_score     = score(excess_ret_1y, excess_ret_3y, excess_ret_5y, rolling_12m_alpha)
+Risk_score        = score(−vol_3y, −downside_dev_3y, −max_dd_3y)        ← inverted
+Resilience_score  = score(−downside_capture, −worst_rolling_6m)          ← inverted
+Consistency_score = score(rolling_pct_beating_bench)
+
+Composite = (Returns + Risk + Resilience + Consistency) / 4
+
+Tie-break: Consistency → Risk → Returns → Resilience → scheme_name (alpha)</code></pre>
+      </div>
+
+      <div class="explain-block__source">
+        Source: ATLAS MF rank engine v1.1 — AMFI NAV (de_mf_nav_daily) + internal scoring.
+        Category benchmarks from de_index_daily_tri. Calculations are deterministic and reproducible
+        for any given <code>data_as_of</code> date. Scores are recomputed daily after AMFI NAV ingestion.
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── Methodology footer (from _shared.html) ─────────────────────────── -->
+<footer class="methodology-footer" data-role="methodology">
+  <div class="methodology-footer__inner">
+    <span class="methodology-footer__source">Source: JIP Data Platform (de_* tables, read-only). ATLAS compute engine v1.1.</span>
+    <span class="methodology-footer__date">Data as of: <span data-role="data-as-of" id="footer-data-as-of"></span></span>
+    <span class="methodology-footer__rebuild">Last rebuild: <span data-role="last-rebuild"></span></span>
+    <a class="methodology-footer__link" href="/spec">Methodology &amp; spec</a>
+  </div>
+</footer>
+
+<!-- ─── Script: load fixture, populate table ──────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  // Category display names (no Math.random, no unseeded Date)
+  var CATEGORY_LABELS = {
+    'flexi_cap':  'Flexi Cap',
+    'large_cap':  'Large Cap',
+    'mid_cap':    'Mid Cap',
+    'small_cap':  'Small Cap',
+    'multi_cap':  'Multi Cap',
+    'elss':       'ELSS',
+    'balanced':   'Balanced'
+  };
+
+  var CATEGORY_DOT_CLASSES = {
+    'flexi_cap': 'filter-item__dot--flexi-cap',
+    'large_cap': 'filter-item__dot--large-cap',
+    'mid_cap':   'filter-item__dot--mid-cap',
+    'small_cap': 'filter-item__dot--small-cap'
+  };
+
+  function categoryLabel(cat) {
+    return CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+
+  function categoryDotClass(cat) {
+    return CATEGORY_DOT_CLASSES[cat] || 'filter-item__dot--all';
+  }
+
+  function formatAum(crore) {
+    if (crore >= 100) {
+      return '₹' + crore.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return '₹' + crore.toFixed(2);
+  }
+
+  function scorePill(composite) {
+    if (composite >= 75) return 'composite-pill--high';
+    if (composite >= 65) return 'composite-pill--mid';
+    return 'composite-pill--low';
+  }
+
+  function rankBadgeClass(rank) {
+    if (rank === 1) return 'rank-badge--1';
+    if (rank === 2) return 'rank-badge--2';
+    if (rank === 3) return 'rank-badge--3';
+    return 'rank-badge--n';
+  }
+
+  function scoreBarHtml(score, cls) {
+    var pct = Math.min(100, Math.max(0, score));
+    return '<div class="score-cell ' + cls + '">' +
+      '<span class="score-cell__val">' + score.toFixed(1) + '</span>' +
+      '<div class="score-cell__bar"><div class="score-cell__fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+  }
+
+  function renderRow(fund) {
+    var rank = fund.rank || 0;
+    var badgeClass = rankBadgeClass(rank);
+    var catLabel = categoryLabel(fund.category || '');
+    var catClass = 'cat-pill--' + (fund.category || '').replace(/_/g, '-');
+
+    var row = document.createElement('tr');
+    row.innerHTML =
+      '<td class="left">' +
+        '<span class="rank-badge ' + badgeClass + '">' + rank + '</span>' +
+      '</td>' +
+      '<td class="left">' +
+        '<div class="fund-name-cell">' +
+          '<span class="fund-name-cell__primary">' + (fund.fund_name || '') + '</span>' +
+          '<span class="fund-name-cell__scheme">' + (fund.scheme_code || '') + '</span>' +
+        '</div>' +
+      '</td>' +
+      '<td class="left"><span class="cat-pill ' + catClass + '">' + catLabel + '</span></td>' +
+      '<td class="num">' + formatAum(fund.aum_crore || 0) + '</td>' +
+      '<td class="num">' + scoreBarHtml(fund.returns_score || 0, 'score-cell--returns') + '</td>' +
+      '<td class="num">' + scoreBarHtml(fund.risk_score || 0, 'score-cell--risk') + '</td>' +
+      '<td class="num">' + scoreBarHtml(fund.resilience_score || 0, 'score-cell--resilience') + '</td>' +
+      '<td class="num">' + scoreBarHtml(fund.consistency_score || 0, 'score-cell--consistency') + '</td>' +
+      '<td class="num">' +
+        '<div class="composite-cell">' +
+          '<span class="composite-num">' + (fund.composite_score || 0).toFixed(1) + '</span>' +
+          '<span class="composite-pill ' + scorePill(fund.composite_score || 0) + '">' +
+            (fund.composite_score >= 75 ? 'Strong' : fund.composite_score >= 65 ? 'Moderate' : 'Weak') +
+          '</span>' +
+        '</div>' +
+      '</td>' +
+      '<td class="num tb-rank">' + (fund.tie_break_rank || rank) + '</td>';
+
+    return row;
+  }
+
+  function buildCategoryFilter(funds, filterBody) {
+    var cats = {};
+    funds.forEach(function (f) { cats[f.category] = (cats[f.category] || 0) + 1; });
+    Object.keys(cats).sort().forEach(function (cat) {
+      var item = document.createElement('div');
+      item.className = 'filter-item';
+      item.setAttribute('data-filter-value', cat);
+      item.innerHTML =
+        '<span class="filter-item__dot ' + categoryDotClass(cat) + '"></span>' +
+        categoryLabel(cat) +
+        '<span class="filter-item__count">' + cats[cat] + '</span>';
+      filterBody.appendChild(item);
+    });
+  }
+
+  function renderFixture(data) {
+    var funds = data.funds || [];
+    var tbody = document.getElementById('rank-tbody');
+    if (!tbody) return;
+
+    // Sort by rank (already sorted in fixture, but be explicit)
+    var sorted = funds.slice().sort(function (a, b) { return a.rank - b.rank; });
+
+    sorted.forEach(function (fund) {
+      tbody.appendChild(renderRow(fund));
+    });
+
+    // Universe bar
+    var uCount = document.getElementById('universe-count');
+    var cCount = document.getElementById('category-count');
+    var rAsOf  = document.getElementById('ranked-as-of');
+    if (uCount) uCount.textContent = String(data.universe_size || funds.length);
+    if (cCount) {
+      var cats = {};
+      funds.forEach(function (f) { cats[f.category] = true; });
+      cCount.textContent = String(Object.keys(cats).length);
+    }
+    if (rAsOf) rAsOf.textContent = data.ranking_as_of || data.data_as_of || '';
+
+    // Table meta
+    var meta = document.getElementById('table-meta');
+    if (meta) {
+      meta.textContent = funds.length + ' funds · data as of ' + (data.data_as_of || '');
+    }
+
+    // Footer
+    var footerDate = document.getElementById('footer-data-as-of');
+    if (footerDate) footerDate.textContent = data.data_as_of || '';
+
+    // Filter all count
+    var filterAllCount = document.getElementById('filter-all-count');
+    if (filterAllCount) filterAllCount.textContent = String(funds.length);
+
+    // Category filter
+    var filterBody = document.getElementById('category-filter-body');
+    if (filterBody) buildCategoryFilter(funds, filterBody);
+
+    // DP slots: update data-as-of on regime-banner + signal-strip
+    var regimeBanner = document.querySelector('[data-component="regime-banner"]');
+    if (regimeBanner) regimeBanner.setAttribute('data-as-of', data.data_as_of || '');
+  }
+
+  // Fetch fixture
+  fetch('fixtures/mf_rank_universe.json')
+    .then(function (r) { return r.json(); })
+    .then(function (data) { renderFixture(data); })
+    .catch(function (err) {
+      var tbody = document.getElementById('rank-tbody');
+      if (tbody) {
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.setAttribute('colspan', '10');
+        td.style.textAlign = 'center';
+        td.style.padding = '20px';
+        td.style.color = 'var(--text-tertiary)';
+        td.textContent = 'Could not load fixture data (run from a local server).';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+    });
+}());
+</script>
+
+</body>
+</html>
