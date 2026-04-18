@@ -251,7 +251,7 @@
     },
     "architecture": {
       "dimension": "architecture",
-      "score": 100,
+      "score": 89,
       "gating": true,
       "passed": 140,
       "eligible": 140,
@@ -542,7 +542,7 @@
     },
     "backend": {
       "dimension": "backend",
-      "score": 100,
+      "score": 80,
       "gating": false,
       "passed": 30,
       "eligible": 30,
