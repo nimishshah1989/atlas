@@ -187,6 +187,15 @@
   <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
   <span data-component="four-universal-benchmarks" data-benchmark="gold" />
+  <!-- V1FE-9 data-block sentinels for fe-p8-01 -->
+  <div data-block="returns" aria-hidden="true" />
+  <div data-block="alpha" aria-hidden="true" />
+  <div data-block="holdings" aria-hidden="true" />
+  <div data-block="weighted-technicals" aria-hidden="true" />
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" />
+  <!-- V1FE-9 rec-slot sentinels -->
+  <div class="rec-slot" data-slot-id="mf-alpha-thesis" data-rule-scope="mf-alpha" aria-hidden="true" />
+  <div class="rec-slot" data-slot-id="mf-risk-flag" data-rule-scope="mf-risk" aria-hidden="true" />
   <!-- END DP COMPONENT SLOTS -->
 
   <div class="crumb">
@@ -243,7 +252,7 @@
           <span class="badge badge--green">Strong</span>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text-tertiary);text-align:right">Atlas Verdict: <strong style="color:var(--rag-green-700)">HOLD / ADD ON DIPS</strong></div>
+      <div style="font-size:10px;color:var(--text-tertiary);text-align:right">Atlas Signal: <strong style="color:var(--rag-green-700)">Strong · RS 76</strong></div>
     </div>
   </div>
 
@@ -280,7 +289,7 @@
     <div class="shd__q">Is this fund generating alpha above its benchmark?</div>
     <div class="shd__sub">Nifty Midcap 150 TRI · 3Y window</div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);align-items:start">
+  <div data-block="returns" style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);align-items:start">
 
     <!-- NAV chart -->
     <div class="cw">
@@ -381,7 +390,7 @@
     <div class="shd__q">Is alpha skill-based or market beta? Where does it come from?</div>
     <div class="shd__sub">Rolling alpha · Brinson attribution · Manager track record</div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5);align-items:start">
+  <div data-block="alpha" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5);align-items:start">
 
     <!-- Rolling 12M alpha chart -->
     <div class="cw">
@@ -672,7 +681,7 @@
     <div class="shd__q">Are the fund's sector bets aligned with current market momentum?</div>
     <div class="shd__sub">Sector signal grid · Active tilts vs benchmark · Market cap shape · Style box</div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 280px;gap:var(--space-5);align-items:start">
+  <div data-block="weighted-technicals" style="display:grid;grid-template-columns:1fr 280px;gap:var(--space-5);align-items:start">
 
     <!-- Sector signal grid -->
     <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
@@ -882,7 +891,7 @@
     <div class="shd__sub">Top 10 holdings · RS + momentum + fundamentals quality · New entries / exits</div>
   </div>
 
-  <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:auto;margin-bottom:var(--space-4)">
+  <div data-block="holdings" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:auto;margin-bottom:var(--space-4)">
     <table class="htable">
       <thead>
         <tr style="background:var(--bg-inset)">
@@ -1158,6 +1167,35 @@
     </div>
   </div>
 
+  <!-- ════ §10.5 Signal Playback — Compact ════ -->
+  <section data-component="signal-playback" data-mode="compact" style="margin:var(--space-5) 0">
+    <div class="cw">
+      <div class="ct">
+        <span>Signal Playback — Quick Sim</span>
+        <a href="lab.html?symbol=HDFCMIDCAP" style="font-size:10px;color:var(--text-accent)">Open in Signal Lab →</a>
+      </div>
+      <div class="csub">Run a rapid SIP scenario against breadth signals for this fund's top holdings.</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-top:var(--space-3)">
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.03em">SIP Base</div>
+          <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums" data-param-id="i_sip_base">₹10,000/mo</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.03em">Lookback</div>
+          <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold)" data-param-id="i_lookback">5Y</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.03em">L<sub>os</sub> Level</div>
+          <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold)" data-param-id="i_l_os">50</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.03em">L<sub>ob</sub> Level</div>
+          <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold)" data-param-id="i_l_ob">400</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ════════════════════════════════════
        SECTION G — SUITABILITY & VERDICT
        ════════════════════════════════════ -->
@@ -1276,11 +1314,11 @@
       <div style="padding:var(--space-3) var(--space-4);font-size:10px;color:var(--text-tertiary);border-top:1px solid var(--border-subtle)">Data as of 14-Apr-2026. 3Y alpha vs Nifty MC150 TRI. Sharpe on 3Y rolling basis.</div>
     </div>
 
-    <!-- Atlas final verdict -->
+    <!-- Atlas analysis -->
     <div style="display:flex;flex-direction:column;gap:var(--space-4)">
       <div class="reading" style="border:2px solid var(--rag-green-300)">
         <div class="reading__verdict reading__verdict--green" style="font-size:var(--fs-md)">
-          HOLD / ADD ON DIPS. Top-quartile quality with consistent skill-based alpha. AUM size is the primary risk — monitor small-cap agility.
+          Top-quartile quality with consistent skill-based alpha. AUM size is the primary risk — monitor small-cap agility.
         </div>
         <div class="reading__tabs">
           <div class="reading__tab reading__tab--active">Summary</div>
