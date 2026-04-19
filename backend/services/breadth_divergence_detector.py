@@ -208,3 +208,42 @@ class BreadthDivergenceDetector:
                 "query_ms": elapsed_ms,
             },
         }
+
+
+# ---------------------------------------------------------------------------
+# Standalone wrapper: detect_divergences (V2FE-1a)
+# ---------------------------------------------------------------------------
+
+
+async def detect_divergences(
+    session: AsyncSession,
+    universe: str = "nifty500",
+    lookback_days: int = 180,
+) -> dict[str, Any]:
+    """Detect price vs breadth divergence events.
+
+    Thin wrapper over BreadthDivergenceDetector.compute that normalises the
+    result into the standard {"divergences": [...], "_meta": {...}} shape
+    with source annotation.
+
+    Args:
+        session: SQLAlchemy async session.
+        universe: Universe filter ("nifty500" or "nifty50").
+        lookback_days: Number of calendar days to look back (default 180).
+
+    Returns:
+        Dict with "divergences" list and "_meta" envelope.
+    """
+    lookback_months = max(1, lookback_days // 30)
+    computed = await BreadthDivergenceDetector(session).compute(
+        universe=universe,
+        window=20,
+        lookback=lookback_months,
+    )
+    # Inject source into _meta (may already exist from compute())
+    meta: dict[str, Any] = dict(computed.get("_meta") or {})
+    meta.setdefault("source", "de_bhavcopy_eq")
+    return {
+        "divergences": computed.get("divergences", []),
+        "_meta": meta,
+    }

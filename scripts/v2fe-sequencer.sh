@@ -88,8 +88,10 @@ log "Chunks: V2FE-0 → V2FE-1 → V2FE-2..7 → V2FE-8 → V2FE-9"
 # Phase 0: loader + criteria
 run_chunk "V2FE-0"
 
-# Phase 1: backend gaps (longest, must land before pages)
-run_chunk "V2FE-1"
+# Phase 1: backend gaps split into 3 focused chunks (~3h each)
+run_chunk "V2FE-1a"
+run_chunk "V2FE-1b"
+run_chunk "V2FE-1c"
 
 # Phase 2: per-page wiring
 for chunk in V2FE-2 V2FE-3 V2FE-4 V2FE-5 V2FE-6 V2FE-7; do

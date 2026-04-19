@@ -2292,6 +2292,48 @@ chunks:
       - "pytest tests/unit/v2fe/test_atlas_data_js.py -v passes ≥8 tests"
       - "scripts/check-frontend-criteria.py exits 0 (V1 gate unchanged)"
 
+  - id: V2FE-1a
+    title: "Backend: zone-events + breadth divergences endpoints"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-1a.md
+    depends_on: []
+    estimated_hours: 3
+    quality_targets:
+      api: 85
+      code: 80
+      test: 80
+    punch_list:
+      - "GET /api/v1/stocks/breadth/zone-events returns 200 with _meta envelope"
+      - "GET /api/v1/stocks/breadth/divergences returns 200 with _meta envelope"
+      - "Both return data:[] (not error) when JIP sparse"
+  - id: V2FE-1b
+    title: "Backend: global events + flows + atlas_key_events migration"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-1b.md
+    depends_on: [V2FE-1a]
+    estimated_hours: 3
+    quality_targets:
+      api: 85
+      code: 80
+      test: 80
+    punch_list:
+      - "GET /api/v1/global/events returns 200 with _meta envelope"
+      - "GET /api/v1/global/flows returns 200 with crore totals + daily series"
+      - "alembic upgrade head exits 0"
+  - id: V2FE-1c
+    title: "Backend: UQL templates + conviction_series include extension"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-1c.md
+    depends_on: [V2FE-1b]
+    estimated_hours: 3
+    quality_targets:
+      api: 85
+      code: 80
+      test: 80
+    punch_list:
+      - "POST /query/template with stock_peers template returns 200"
+      - "POST /query/template with mf_rank_composite template returns 200"
+      - "GET /mf/{id}/weighted-technicals?include=conviction_series includes conviction_series"
   - id: V2FE-1
     title: "Backend gaps: zone-events + global-events + divergences + flows + UQL templates + conviction_series"
     status: PENDING

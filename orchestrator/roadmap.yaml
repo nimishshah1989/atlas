@@ -87,6 +87,12 @@ versions:
         title: "Criteria YAML + loader skeleton + §6 states contract"
       - id: V2FE-1
         title: "Backend gaps: zone-events + global-events + divergences + flows + UQL templates"
+      - id: V2FE-1a
+        title: "Backend: zone-events + breadth divergences endpoints"
+      - id: V2FE-1b
+        title: "Backend: global events + flows + atlas_key_events migration"
+      - id: V2FE-1c
+        title: "Backend: UQL templates + conviction_series include extension"
       - id: V2FE-2
         title: "Today / Pulse page data wiring"
       - id: V2FE-3

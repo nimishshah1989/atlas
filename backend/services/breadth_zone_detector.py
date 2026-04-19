@@ -5,12 +5,17 @@ Zone thresholds for nifty500: OB=400, midline=250, OS=100.
 Proportionally scaled for nifty50: OB=40, midline=25, OS=10.
 
 Redis TTL 24h, best-effort (swallows errors).
+
+Also provides detect_zone_events() — standalone function that reads individual
+stock price vs MA zones via JIPDataService.get_chart_data (V2FE-1a).
 """
 
 from __future__ import annotations
 
+import datetime
 import json
 import time
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 
 import structlog
@@ -19,6 +24,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
+
+    from backend.clients.jip_data_service import JIPDataService
 
 log = structlog.get_logger()
 
@@ -282,3 +289,158 @@ class BreadthZoneDetector:
         await self._set_cached(cache_key, output)
 
         return output
+
+
+# ---------------------------------------------------------------------------
+# Standalone function: detect_zone_events (V2FE-1a)
+# ---------------------------------------------------------------------------
+
+_ZONE_ABOVE_200 = "ABOVE_200"
+_ZONE_BELOW_200 = "BELOW_200"
+_ZONE_ABOVE_20 = "ABOVE_20"
+_ZONE_BELOW_20 = "BELOW_20"
+_ZONE_CROSS_UP_200 = "CROSS_UP_200"
+_ZONE_CROSS_DOWN_200 = "CROSS_DOWN_200"
+_ZONE_CROSS_UP_20 = "CROSS_UP_20"
+_ZONE_CROSS_DOWN_20 = "CROSS_DOWN_20"
+
+
+def _classify_zone_200(close: Decimal, sma_200: Decimal) -> str:
+    """Return ABOVE_200 or BELOW_200 based on close vs sma_200."""
+    return _ZONE_ABOVE_200 if close >= sma_200 else _ZONE_BELOW_200
+
+
+def _classify_zone_20(close: Decimal, sma_20: Decimal) -> str:
+    """Return ABOVE_20 or BELOW_20 based on close vs sma_20."""
+    return _ZONE_ABOVE_20 if close >= sma_20 else _ZONE_BELOW_20
+
+
+async def detect_zone_events(
+    jip_svc: "JIPDataService",
+    symbol: str,
+    lookback_days: int = 365,
+) -> list[dict[str, Any]]:
+    """Detect price-vs-MA zone-crossing events for a single stock.
+
+    Uses JIPDataService.get_chart_data to read de_equity_ohlcv +
+    de_equity_technical_daily. Fault-tolerant: returns [] on sparse/empty data.
+
+    Args:
+        jip_svc: Caller-provided JIPDataService instance.
+        symbol: Stock ticker symbol (e.g. "RELIANCE").
+        lookback_days: Number of calendar days to look back (default 365).
+
+    Returns:
+        List of dicts with keys: date (ISO str), zone (str), close (Decimal),
+        ma_value (Decimal). One entry per zone crossing + current zone per day.
+    """
+    today = datetime.date.today()
+    from_date = today - datetime.timedelta(days=max(lookback_days, 1))
+
+    try:
+        rows = await jip_svc.get_chart_data(symbol, from_date, today)
+    except Exception as exc:
+        log.warning(
+            "detect_zone_events_jip_error",
+            symbol=symbol,
+            lookback_days=lookback_days,
+            error=str(exc)[:300],
+        )
+        return []
+
+    if not rows:
+        log.info(
+            "detect_zone_events_empty_jip_response",
+            symbol=symbol,
+            lookback_days=lookback_days,
+        )
+        return []
+
+    events: list[dict[str, Any]] = []
+
+    # Track previous zone states for 200 and 20 SMAs separately
+    prev_zone_200: Optional[str] = None
+    prev_zone_20: Optional[str] = None
+
+    for row in rows:
+        # Extract and validate
+        raw_close = row.get("close")
+        raw_sma_200 = row.get("sma_200")
+        raw_sma_20 = row.get("sma_20")
+        row_date: Any = row.get("date")
+
+        if raw_close is None or row_date is None:
+            continue
+
+        close = Decimal(str(raw_close))
+        date_str = str(row_date) if not isinstance(row_date, str) else row_date
+
+        # Process SMA-200 zone
+        if raw_sma_200 is not None:
+            sma_200 = Decimal(str(raw_sma_200))
+            curr_zone_200 = _classify_zone_200(close, sma_200)
+
+            if prev_zone_200 is None:
+                # First data point — just record current zone (not a crossing)
+                events.append(
+                    {
+                        "date": date_str,
+                        "zone": curr_zone_200,
+                        "close": close,
+                        "ma_value": sma_200,
+                    }
+                )
+            elif curr_zone_200 != prev_zone_200:
+                # Zone crossing detected
+                crossing_zone = (
+                    _ZONE_CROSS_UP_200 if curr_zone_200 == _ZONE_ABOVE_200 else _ZONE_CROSS_DOWN_200
+                )
+                events.append(
+                    {
+                        "date": date_str,
+                        "zone": crossing_zone,
+                        "close": close,
+                        "ma_value": sma_200,
+                    }
+                )
+
+            prev_zone_200 = curr_zone_200
+
+        # Process SMA-20 zone
+        if raw_sma_20 is not None:
+            sma_20 = Decimal(str(raw_sma_20))
+            curr_zone_20 = _classify_zone_20(close, sma_20)
+
+            if prev_zone_20 is None:
+                # First data point — record current zone
+                events.append(
+                    {
+                        "date": date_str,
+                        "zone": curr_zone_20,
+                        "close": close,
+                        "ma_value": sma_20,
+                    }
+                )
+            elif curr_zone_20 != prev_zone_20:
+                # Zone crossing detected
+                crossing_zone_20 = (
+                    _ZONE_CROSS_UP_20 if curr_zone_20 == _ZONE_ABOVE_20 else _ZONE_CROSS_DOWN_20
+                )
+                events.append(
+                    {
+                        "date": date_str,
+                        "zone": crossing_zone_20,
+                        "close": close,
+                        "ma_value": sma_20,
+                    }
+                )
+
+            prev_zone_20 = curr_zone_20
+
+    log.info(
+        "detect_zone_events_complete",
+        symbol=symbol,
+        lookback_days=lookback_days,
+        event_count=len(events),
+    )
+    return events

@@ -24,8 +24,8 @@ from backend.models.schemas import (
     RegimeSnapshot,
     ResponseMeta,
 )
-from backend.services.breadth_divergence_detector import BreadthDivergenceDetector
-from backend.services.breadth_zone_detector import BreadthZoneDetector
+from backend.services.breadth_divergence_detector import detect_divergences
+from backend.services.breadth_zone_detector import detect_zone_events
 from backend.services.regime_service import compute_regime_enrichment
 
 log = structlog.get_logger()
@@ -48,22 +48,58 @@ def _dec(val: Any) -> Any:
 
 @router.get("/breadth/zone-events")
 async def get_breadth_zone_events(
-    universe: Optional[str] = Query("nifty500", description="Universe: nifty500 or nifty50"),
-    range: Optional[str] = Query("5y", description="Date range: 1y, 5y, all"),
-    indicator: Optional[str] = Query("all", description="Indicator: ema21, dma50, dma200, or all"),
+    symbol: Optional[str] = Query("NIFTY", description="Stock symbol"),
+    lookback_days: Optional[int] = Query(365, description="Lookback in days"),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Return breadth zone-crossing events for the given universe and indicator.
+    """Zone-crossing events for a symbol vs its moving averages (V2FE-1a).
 
-    Reads de_breadth_daily time-series and emits edge-triggered events when
-    the breadth count crosses OB/midline/OS thresholds.
+    Returns events where the stock price crosses above or below its SMA-20
+    and SMA-200. Fault-tolerant: returns data=[] with insufficient_data=True
+    when JIP returns no data for the symbol.
     """
-    detector = BreadthZoneDetector(session=db)
-    return await detector.compute(
-        universe=universe or "nifty500",
-        range_=range or "5y",
-        indicator=indicator or "all",
-    )
+    import datetime as _dt
+
+    svc = JIPDataService(db)
+    resolved_symbol = (symbol or "NIFTY").upper()
+    resolved_lookback = lookback_days if lookback_days and lookback_days > 0 else 365
+
+    events: list[dict[str, Any]] = []
+    try:
+        events = await detect_zone_events(
+            jip_svc=svc,
+            symbol=resolved_symbol,
+            lookback_days=resolved_lookback,
+        )
+    except Exception as exc:
+        log.warning(
+            "get_breadth_zone_events_error",
+            symbol=resolved_symbol,
+            error=str(exc)[:300],
+        )
+
+    today_str = _dt.date.today().isoformat()
+    data_as_of = today_str
+
+    # Compute staleness_seconds relative to data_as_of (IST midnight)
+    try:
+        as_of_dt = _dt.datetime.fromisoformat(data_as_of + "T00:00:00+05:30")
+        staleness_seconds = int((_dt.datetime.now(tz=_dt.timezone.utc) - as_of_dt).total_seconds())
+    except ValueError:
+        staleness_seconds = 0
+
+    insufficient = len(events) == 0
+    meta: dict[str, Any] = {
+        "data_as_of": data_as_of,
+        "staleness_seconds": staleness_seconds,
+        "source": "de_bhavcopy_eq",
+        "symbol": resolved_symbol,
+        "lookback_days": resolved_lookback,
+    }
+    if insufficient:
+        meta["insufficient_data"] = True
+
+    return {"data": events, "_meta": meta}
 
 
 # ---------------------------------------------------------------------------
@@ -73,23 +109,59 @@ async def get_breadth_zone_events(
 
 @router.get("/breadth/divergences")
 async def get_breadth_divergences(
-    universe: Optional[str] = Query("nifty500", description="Universe: nifty500 or nifty50"),
-    window: Optional[int] = Query(20, description="Rolling window in trading days"),
-    lookback: Optional[int] = Query(3, description="Lookback period in months"),
+    universe: Optional[str] = Query("nifty500", description="Universe"),
+    lookback_days: Optional[int] = Query(180, description="Lookback in days"),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Return price vs breadth divergences.
+    """Price vs breadth divergence events (V2FE-1a).
 
     Bullish divergence: index down, breadth (pct above 50-DMA) up.
     Bearish divergence: index up, breadth down.
     Returns insufficient_data=True when price data unavailable.
     """
-    detector = BreadthDivergenceDetector(session=db)
-    return await detector.compute(
-        universe=universe or "nifty500",
-        window=window or 20,
-        lookback=lookback or 3,
-    )
+    import datetime as _dt
+
+    resolved_universe = universe or "nifty500"
+    resolved_lookback = lookback_days if lookback_days and lookback_days > 0 else 180
+
+    divergence_payload: dict[str, Any] = {}
+    try:
+        divergence_payload = await detect_divergences(
+            session=db,
+            universe=resolved_universe,
+            lookback_days=resolved_lookback,
+        )
+    except Exception as exc:
+        log.warning(
+            "get_breadth_divergences_error",
+            universe=resolved_universe,
+            error=str(exc)[:300],
+        )
+
+    divergences = divergence_payload.get("divergences", [])
+    inner_meta: dict[str, Any] = dict(divergence_payload.get("_meta") or {})
+
+    today_str = _dt.date.today().isoformat()
+    data_as_of = str(inner_meta.get("data_as_of") or today_str)
+
+    # Compute staleness_seconds relative to data_as_of (IST midnight)
+    try:
+        as_of_dt = _dt.datetime.fromisoformat(data_as_of + "T00:00:00+05:30")
+        staleness_seconds = int((_dt.datetime.now(tz=_dt.timezone.utc) - as_of_dt).total_seconds())
+    except ValueError:
+        staleness_seconds = 0
+
+    meta: dict[str, Any] = {
+        "data_as_of": data_as_of,
+        "staleness_seconds": staleness_seconds,
+        "source": "de_bhavcopy_eq",
+        "universe": resolved_universe,
+        "lookback_days": resolved_lookback,
+    }
+    if inner_meta.get("insufficient_data"):
+        meta["insufficient_data"] = True
+
+    return {"data": divergences, "_meta": meta}
 
 
 # ---------------------------------------------------------------------------
