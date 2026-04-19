@@ -109,6 +109,22 @@ versions:
         title: "States rollout: all 6 pages switch to atlas-states.js renderers"
       - id: V2FE-9
         title: "Integration gate: all V2FE checks pass + smoke probe"
+      - id: S1-0
+        title: "Shared infrastructure: SWR, apiFetch, useAtlasData, UI primitives"
+      - id: S1-1
+        title: "Pulse page (today.html → /pulse)"
+      - id: S1-2
+        title: "Explore Country page (explore-country.html → /explore/country)"
+      - id: S1-3
+        title: "Explore Sector page (explore-sector.html → /explore/sector)"
+      - id: S1-4
+        title: "MF Rank page (mf-rank.html → /mf-rank)"
+      - id: S1-5
+        title: "MF Detail page (mf-detail.html → /mf/[id])"
+      - id: S1-6
+        title: "Stock Detail page (stock-detail.html → /stocks/[symbol])"
+      - id: S1-7
+        title: "Breadth Terminal page (breadth.html → /breadth)"
 
   - id: V2
     title: "MF slice"

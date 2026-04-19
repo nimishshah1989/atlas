@@ -2503,3 +2503,143 @@ chunks:
       - "scripts/check-frontend-criteria.py exits 0 with critical_fail_count==0"
       - "scripts/check-frontend-v2.py exits 0"
       - "python .quality/checks.py frontend dim ≥ 95"
+
+
+  # --- S1 Sprint: HTML Mockups → Next.js Pages --------------------------------
+  # Converts V2FE-wired HTML mockups into real Next.js App Router pages.
+  # All pages use SWR + useAtlasData hook. No new backend routes.
+
+  - id: S1-0
+    title: "Shared infrastructure: SWR install, apiFetch, useAtlasData, UI primitives, format utils"
+    status: PENDING
+    spec: docs/specs/chunks/S1-0.md
+    depends_on: [V2FE-9]
+    estimated_hours: 3
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "npm install swr in frontend/ — swr appears in package.json dependencies"
+      - "frontend/src/lib/api.ts exports apiFetch, AtlasMeta, AtlasApiError"
+      - "frontend/src/hooks/useAtlasData.ts exports useAtlasData and STALENESS_THRESHOLDS"
+      - "frontend/src/components/ui/ contains DataBlock, LoadingSkeleton, EmptyState, StaleWarning, ErrorBanner, index.ts"
+      - "STALENESS_THRESHOLDS values match atlas-states.js exactly (intraday=3600, eod_breadth=21600, daily_regime=86400, etc.)"
+      - "All 14+ unit tests pass (npm test)"
+      - "npm run build exits 0"
+
+  - id: S1-1
+    title: "Pulse page (today.html → /pulse)"
+    status: PENDING
+    spec: docs/specs/chunks/S1-1.md
+    depends_on: [S1-0]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/pulse/page.tsx exists and compiles"
+      - "frontend/src/components/pulse/ contains at least 7 component files"
+      - "[data-role='sector-board'] renders ≥11 rows when backend returns ≥11 sector records"
+      - "All 8+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-2
+    title: "Explore Country page (explore-country.html → /explore/country)"
+    status: PENDING
+    spec: docs/specs/chunks/S1-2.md
+    depends_on: [S1-0]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/explore/country/page.tsx exists and compiles"
+      - "frontend/src/components/explore/ contains at least 8 component files"
+      - "DerivativesBlock and InrChartBlock render EmptyState (not ErrorBanner) on insufficient_data: true"
+      - "All 8+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-3
+    title: "Breadth Terminal (breadth.html → /breadth)"
+    status: PENDING
+    spec: docs/specs/chunks/S1-3.md
+    depends_on: [S1-0]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/breadth/page.tsx exists and compiles"
+      - "frontend/src/components/breadth/ contains at least 9 component files"
+      - "Universe selector change triggers SWR key change for all universe-dependent blocks"
+      - "[data-block='signal-history'] resolves to ready/stale in E2E"
+      - "All 9+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-4
+    title: "Stock Detail (stock-detail.html → /stocks/[symbol])"
+    status: PENDING
+    spec: docs/specs/chunks/S1-4.md
+    depends_on: [S1-0]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/stocks/[symbol]/page.tsx exists and compiles"
+      - "frontend/src/components/stocks/ contains at least 9 component files"
+      - "PeersBlock fetch gated on hero load (SWR key null until sector available)"
+      - "[data-block='hero'] resolves to ready/stale for HDFCBANK in E2E"
+      - "All 9+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-5
+    title: "MF Detail (mf-detail.html → /funds/[id])"
+    status: PENDING
+    spec: docs/specs/chunks/S1-5.md
+    depends_on: [S1-0]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/funds/[id]/page.tsx exists and compiles"
+      - "frontend/src/components/funds/ contains at least 9 component files"
+      - "'Atlas Verdict' and 'HOLD / ADD ON DIPS' absent from all fund components"
+      - "[data-block='returns'] resolves to ready/stale in E2E"
+      - "All 9+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-6
+    title: "MF Rank (mf-rank.html → /funds/rank)"
+    status: PENDING
+    spec: docs/specs/chunks/S1-6.md
+    depends_on: [S1-0]
+    estimated_hours: 3
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/funds/rank/page.tsx exists and compiles"
+      - "frontend/src/components/rank/ contains at least 4 component files"
+      - "[data-block='rank-table'] resolves to ready/stale in E2E with ≥10 rows"
+      - "CSV export button present in DOM"
+      - "All 8+ unit tests pass"
+      - "npm run build exits 0"
+
+  - id: S1-7
+    title: "Navigation + root redirect + build gate"
+    status: PENDING
+    spec: docs/specs/chunks/S1-7.md
+    depends_on: [S1-1, S1-2, S1-3, S1-4, S1-5, S1-6]
+    estimated_hours: 2
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/layout.tsx renders TopNav"
+      - "frontend/src/components/nav/TopNav.tsx exists with all 6 page links"
+      - "frontend/src/app/page.tsx redirects to /pulse"
+      - "/funds/rank and /funds/[id] routing does not conflict"
+      - "All 5+ unit tests pass"
+      - "cd frontend && npm run build exits 0 (primary S1 sprint gate)"

@@ -111,4 +111,16 @@ run_chunk "V2FE-8"
 # Phase 4: E2E gate
 run_chunk "V2FE-9"
 
-log "=== SEQUENCER_DONE: V2FE-0..V2FE-9 all DONE ==="
+log "=== V2FE slice complete — starting S1 React conversion ==="
+
+# Phase 5: S1 React conversion (HTML mockups → Next.js pages)
+run_chunk "S1-0"   # shared infrastructure (SWR, hooks, primitives)
+run_chunk "S1-1"   # Pulse page
+run_chunk "S1-2"   # Explore Country page
+run_chunk "S1-3"   # Breadth Terminal
+run_chunk "S1-4"   # Stock Detail
+run_chunk "S1-5"   # MF Detail
+run_chunk "S1-6"   # MF Rank
+run_chunk "S1-7"   # Nav + root redirect + build gate
+
+log "=== SEQUENCER_DONE: V2FE + S1 all DONE — website ready ==="
