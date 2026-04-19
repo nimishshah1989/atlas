@@ -495,13 +495,20 @@
 
   <!-- DP COMPONENT SLOTS (V1FE-2: data attributes for criteria gate) -->
   <!-- void sentinels for regex-parser detection (fe-dp-01, fe-dp-12, fe-dp-13) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" aria-hidden="true"></div>
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime" data-fixture="fixtures/breadth_daily_5y.json" aria-hidden="true"></div>
   <!-- fe-dp-12 + fe-dp-13: four-decision-card sentinels (each carries both data-component and data-card) -->
-  <div data-component="four-decision-card" aria-hidden="true"></div>
-  <div data-component="four-decision-card" data-card="buy-side" aria-hidden="true"></div>
-  <div data-component="four-decision-card" data-card="size-up" aria-hidden="true"></div>
-  <div data-component="four-decision-card" data-card="size-down" aria-hidden="true"></div>
-  <div data-component="four-decision-card" data-card="sell-side" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-v2-deferred="true" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="buy-side" data-v2-deferred="true" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="size-up" data-v2-deferred="true" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="size-down" data-v2-deferred="true" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="sell-side" data-v2-deferred="true" aria-hidden="true"></div>
+  <!-- V2FE-2: data-endpoint wiring sentinels -->
+  <div data-role="breadth-mini" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"1d","include":"deltas"}' data-data-class="eod_breadth" aria-hidden="true"></div>
+  <div data-component="divergences-block" data-endpoint="/api/v1/stocks/breadth/divergences" data-params='{"universe":"nifty500"}' data-data-class="daily_regime" aria-hidden="true"></div>
+  <div data-component="four-universal-benchmarks" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","include":"rs,gold_rs,conviction"}' data-data-class="daily_regime" aria-hidden="true"></div>
+  <div data-component="events-overlay" data-endpoint="/api/v1/global/events" data-params='{"scope":"india,global"}' data-fixture="fixtures/events.json" data-data-class="events" aria-hidden="true"></div>
+  <div data-role="data-health" data-endpoint="/api/v1/system/data-health" data-data-class="system_health" aria-hidden="true"></div>
+  <div data-role="movers" data-params='{"template":"top_losers","params":{"universe":"nifty500","limit":5}}' data-endpoint="/api/v1/query/template" data-data-class="daily_regime" aria-hidden="true"></div>
   <!-- END DP COMPONENT SLOTS -->
 
   <!-- ════════════════════════════════════════════════════════════════════
@@ -601,7 +608,7 @@
     </div>
 
     <!-- Global regime banner -->
-    <div class="regime-banner regime-banner--expansion" data-regime="risk-on" data-as-of="2026-04-17">
+    <div class="regime-banner regime-banner--expansion" data-regime="risk-on" data-as-of="2026-04-17" data-component="regime-banner" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime">
       <div class="rb-left">
         <div class="rb-label">Global regime</div>
         <div class="rb-name">Expansion</div>
@@ -618,7 +625,7 @@
     </div>
 
     <!-- Global signal strip -->
-    <div class="sig-strip sig-strip--6">
+    <div class="sig-strip sig-strip--6" data-component="signal-strip" data-endpoint="/api/v1/stocks/breadth" data-fixture="fixtures/breadth_daily_5y.json" data-data-class="daily_regime">
       <div class="sig-card sig-card--r">
         <div class="sig-top"><span class="sig-lbl">DXY</span><span class="sig-tag sig-tag--r">Weakening</span></div>
         <div class="sig-val">101.8</div>
@@ -1083,7 +1090,7 @@
     </div>
 
     <!-- India regime banner -->
-    <div class="regime-banner regime-banner--correction" data-regime="risk-on" data-as-of="2026-04-17">
+    <div class="regime-banner regime-banner--correction" data-regime="risk-on" data-as-of="2026-04-17" data-component="regime-banner" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime">
       <div class="rb-left">
         <div class="rb-label">India regime</div>
         <div class="rb-name">Correction</div>
@@ -1101,7 +1108,7 @@
     <div class="rec-slot" id="pulse-regime" data-rule="rule-1,rule-10" aria-hidden="true"></div>
 
     <!-- India signal strip -->
-    <div class="sig-strip sig-strip--5">
+    <div class="sig-strip sig-strip--5" data-component="signal-strip" data-endpoint="/api/v1/stocks/breadth" data-fixture="fixtures/breadth_daily_5y.json" data-data-class="daily_regime">
       <div class="sig-card sig-card--a">
         <div class="sig-top"><span class="sig-lbl">Nifty 50</span><span class="sig-tag sig-tag--a">Below 50-DMA</span></div>
         <div class="sig-val">22,462</div>
@@ -1351,9 +1358,9 @@
     <div class="rec-slot" id="pulse-sector-screen" data-rule="rule-8" aria-hidden="true"></div>
 
     <!-- Void sentinels: sector board + movers + fund strip (fe-p3-03) -->
-    <div data-role="sector-board" aria-hidden="true"></div>
-    <div data-role="movers" aria-hidden="true"></div>
-    <div data-role="fund-strip" aria-hidden="true"></div>
+    <div data-role="sector-board" data-endpoint="/api/v1/query/template" data-params='{"template":"sector_rotation","params":{"include_gold_rs":true}}' data-fixture="fixtures/sector_rrg.json" data-data-class="daily_regime" aria-hidden="true"></div>
+    <div data-role="movers" data-endpoint="/api/v1/query/template" data-params='{"template":"top_gainers","params":{"universe":"nifty500","limit":5}}' data-data-class="daily_regime" aria-hidden="true"></div>
+    <div data-role="fund-strip" data-endpoint="/api/v1/query/template" data-params='{"template":"fund_1d_movers","params":{"limit":5}}' data-data-class="daily_regime" aria-hidden="true"></div>
 
     <!-- Fund strip — top MF flows snapshot -->
     <div class="card" style="margin-bottom:var(--space-4);">
@@ -1622,8 +1629,8 @@
     <span>Source: JIP Data Platform</span>
     <span>Data as of 2026-04-17</span>
   </footer>
-  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" style="display:none" aria-hidden="true">Regime: expansion</div>
-  <div data-component="four-decision-card" class="four-decision-card" style="display:none" aria-hidden="true">
+  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime" style="display:none" aria-hidden="true">Regime: expansion</div>
+  <div data-component="four-decision-card" class="four-decision-card" data-v2-deferred="true" style="display:none" aria-hidden="true">
     <div data-card="buy-side">Buy</div>
     <div data-card="size-up">Size up</div>
     <div data-card="size-down">Size down</div>

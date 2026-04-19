@@ -2365,7 +2365,7 @@ chunks:
     title: "Today / Pulse page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-2.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 4
     quality_targets:
       code: 80
@@ -2382,7 +2382,7 @@ chunks:
     title: "Explore · Country (India deep dive) page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-3.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 4
     quality_targets:
       code: 80
@@ -2399,7 +2399,7 @@ chunks:
     title: "Breadth Terminal page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-4.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 4
     quality_targets:
       code: 80
@@ -2417,7 +2417,7 @@ chunks:
     title: "Stock detail (hub-and-spoke equity terminal) page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-5.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 4
     quality_targets:
       code: 80
@@ -2435,7 +2435,7 @@ chunks:
     title: "MF detail (hub-and-spoke MF terminal) page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-6.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 4
     quality_targets:
       code: 80
@@ -2453,7 +2453,7 @@ chunks:
     title: "MF rank (4-factor composite ranking) page data wiring"
     status: PENDING
     spec: docs/specs/chunks/V2FE-7.md
-    depends_on: [V2FE-0, V2FE-1]
+    depends_on: [V2FE-0, V2FE-1c]
     estimated_hours: 3
     quality_targets:
       code: 80
