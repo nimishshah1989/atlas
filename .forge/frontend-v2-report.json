@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T12:02:13.852607+05:30",
+  "generated_at": "2026-04-19T15:42:44.330500+05:30",
   "criteria_file": "docs/specs/frontend-v2-criteria.yaml",
-  "total": 36,
-  "passed": 27,
+  "total": 21,
+  "passed": 17,
   "failed": 0,
-  "skipped": 9,
+  "skipped": 4,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
@@ -28,24 +28,6 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/sectors"
     },
     {
-      "id": "v2fe-be-03",
-      "title": "Backend: /api/v1/stocks/{symbol} returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/stocks/RELIANCE.NS"
-    },
-    {
-      "id": "v2fe-be-04",
-      "title": "Backend: /api/v1/funds/{isin} returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/funds/INF846K01EW2"
-    },
-    {
       "id": "v2fe-be-05",
       "title": "Backend: /api/v1/breadth/country returns 200 or is unreachable",
       "severity": "high",
@@ -55,33 +37,6 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/breadth/country"
     },
     {
-      "id": "v2fe-be-06",
-      "title": "Backend: /api/v1/breadth/sector returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/breadth/sector"
-    },
-    {
-      "id": "v2fe-be-07",
-      "title": "Backend: /api/v1/today/pulse returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/today/pulse"
-    },
-    {
-      "id": "v2fe-be-08",
-      "title": "Backend: /api/v1/global/indices returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/global/indices"
-    },
-    {
       "id": "v2fe-be-09",
       "title": "Backend: /health returns 200 or is unreachable",
       "severity": "medium",
@@ -89,24 +44,6 @@
       "passed": true,
       "status": "SKIP",
       "evidence": "SKIP: backend unreachable at http://localhost:8000/health"
-    },
-    {
-      "id": "v2fe-pg-01",
-      "title": "today.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/today.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-02",
-      "title": "today.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/today.html: 'atlas-states\\\\.js'"
     },
     {
       "id": "v2fe-pg-03",
@@ -125,78 +62,6 @@
       "passed": true,
       "status": "RUN",
       "evidence": "Pattern found in frontend/mockups/explore-country.html: 'atlas-states\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-05",
-      "title": "explore-sector.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-sector.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-06",
-      "title": "explore-sector.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-sector.html: 'atlas-states\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-07",
-      "title": "stock-detail.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/stock-detail.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-08",
-      "title": "stock-detail.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/stock-detail.html: 'atlas-states\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-09",
-      "title": "mf-detail.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/mf-detail.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-10",
-      "title": "mf-detail.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/mf-detail.html: 'atlas-states\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-11",
-      "title": "explore-global.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-global.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-12",
-      "title": "explore-global.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-global.html: 'atlas-states\\\\.js'"
     },
     {
       "id": "v2fe-rg-01",

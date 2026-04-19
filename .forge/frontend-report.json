@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T12:03:12.330824+05:30",
+  "generated_at": "2026-04-19T15:42:44.224955+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
   "total": 113,
-  "passed": 85,
-  "failed": 1,
+  "passed": 84,
+  "failed": 2,
   "skipped": 27,
   "critical_fail_count": 0,
-  "high_fail_count": 1,
+  "high_fail_count": 2,
   "results": [
     {
       "id": "fe-c-01",
@@ -959,8 +959,8 @@
       "title": "Every signal-strip declares data-as-of",
       "severity": "high",
       "check_type": "attr_required",
-      "passed": true,
-      "evidence": "attr 'data-as-of' present on all \"[data-component='signal-strip']\" elements",
+      "passed": false,
+      "evidence": "FAIL \u2014 today.html: \"[data-component='signal-strip']\" missing attr 'data-as-of'; today.html: \"[data-component='signal-strip']\" missing attr 'data-as-of'",
       "status": "RUN"
     },
     {

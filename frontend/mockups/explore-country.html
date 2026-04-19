@@ -365,12 +365,12 @@
 </div>
 <main class="page">
 <!-- DP COMPONENT SLOTS (V1FE-2) -->
-<div data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on"></div>
-<div data-as-of="2026-04-17" data-component="signal-strip"></div>
+<div data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime"></div>
+<div data-as-of="2026-04-17" data-component="signal-strip" data-endpoint="/api/v1/stocks/breadth" data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth"></div>
 <span data-as-of="2026-04-17" data-chip="rs" data-component="signal-strip"></span>
 <span data-chip="gold-rs"></span>
-<div data-component="dual-axis-overlay"></div>
-<div data-component="interpretation-sidecar" data-tier="explain"></div>
+<div data-component="dual-axis-overlay" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"5y","include":"index_close,zone_bands"}' data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth"></div>
+<div data-component="interpretation-sidecar" data-tier="explain" data-v2-derived="true"></div>
 <a data-action="simulate-this" href="lab.html"></a>
 <span data-benchmark="msci-world" data-component="four-universal-benchmarks"></span>
 <span data-benchmark="sp500" data-component="four-universal-benchmarks"></span>
@@ -380,8 +380,8 @@
 <div aria-hidden="true" data-block="breadth-compact"></div>
 <div aria-hidden="true" data-block="sectors-rrg"></div>
 <div aria-hidden="true" data-block="flows"></div>
-<div aria-hidden="true" data-component="signal-playback" data-mode="compact"></div>
-<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth"></div>
+<div aria-hidden="true" data-component="signal-playback" data-mode="compact" data-v2-derived="true"></div>
+<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth" data-v2-deferred="true"></div>
 <!-- fe-mob-11 sentinels: void sentinels for table-dense detection by regex parser -->
 <table aria-hidden="true" class="table-dense" data-dense="true"></table>
 <table aria-hidden="true" class="table-dense" data-dense="true"></table>
@@ -575,23 +575,23 @@
 <!-- §5.1 Breadth panel — dual-axis-overlay with §1.11 zone bands -->
 <div class="breadth-panel" style="margin-top:var(--space-5);">
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4);">
-<div class="deriv-card">
+<div class="deriv-card" data-block="breadth-kpi" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"5y"}' data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth">
 <div class="deriv-card__title">% above 21-EMA</div>
 <div class="deriv-card__val">284</div>
 <div class="deriv-card__chg deriv-card__chg--neg">−12 d/d</div>
 </div>
-<div class="deriv-card">
+<div class="deriv-card" data-block="breadth-kpi" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"5y"}' data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth">
 <div class="deriv-card__title">% above 50-DMA</div>
 <div class="deriv-card__val">238</div>
 <div class="deriv-card__chg deriv-card__chg--neg">−8 d/d</div>
 </div>
-<div class="deriv-card">
+<div class="deriv-card" data-block="breadth-kpi" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"5y"}' data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth">
 <div class="deriv-card__title">% above 200-DMA</div>
 <div class="deriv-card__val">312</div>
 <div class="deriv-card__chg deriv-card__chg--pos">+4 d/d</div>
 </div>
 </div>
-<div class="chart" data-as-of="2026-04-17" data-component="dual-axis-overlay" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+<div class="chart" data-as-of="2026-04-17" data-component="dual-axis-overlay" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500","range":"5y","include":"index_close,zone_bands"}' data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
 <span style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--text-primary);">Nifty 500 breadth vs price · 5Y</span>
 <div style="display:flex;gap:8px;">
@@ -637,7 +637,7 @@
 <div aria-hidden="true" class="chart__legend" data-role="legend" style="display:none"></div><div aria-hidden="true" class="chart__axis-x" data-role="axis-x" style="display:none"></div><div aria-hidden="true" class="chart__axis-y" data-role="axis-y" style="display:none"></div><div aria-hidden="true" class="chart__source" data-role="source" style="display:none">Source: JIP</div><div aria-hidden="true" class="chart__tooltip" data-role="tooltip" style="display:none"></div><div aria-hidden="true" class="chart__explain" data-role="explain" style="display:none">EXPLAIN: methodology</div></div>
 </div>
 <!-- §10.5 compact signal-playback embed -->
-<div data-component="signal-playback" data-mode="compact" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+<div data-component="signal-playback" data-mode="compact" data-v2-derived="true" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
 <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact</span>
 <a href="breadth.html" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open full Breadth Terminal →</a>
@@ -650,12 +650,12 @@
 </div>
 </div>
 <!-- V1.1 rec-slot: country-breadth (Rules #1 + #2 Zweig) -->
-<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth" id="country-breadth">
+<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth" data-v2-deferred="true" id="country-breadth">
 <span style="font-size:10px;color:var(--text-tertiary);font-style:italic;">V1.1 slot: Rules #1 (%&gt;200DMA regime shift) + #2 (Zweig Breadth Thrust)</span>
 </div>
 </section>
 <!-- 3 · DERIVATIVES -->
-<section class="sect" id="sect-deriv">
+<section class="sect" id="sect-deriv" data-block="derivatives-panel" data-endpoint="/api/v1/derivatives/summary" data-data-class="intraday" data-sparse="true">
 <div class="sect__head">
 <div class="sect__title-wrap">
 <h2 class="sect__title">Derivatives sentiment · Nifty complex</h2>
@@ -714,7 +714,7 @@
 </div>
 </section>
 <!-- 4 · RATES · G-SEC -->
-<section class="sect" id="sect-rates">
+<section class="sect" id="sect-rates" data-block="yield-curve" data-endpoint="/api/v1/macros/yield-curve" data-params='{"tenors":"2Y,10Y,30Y,real"}' data-data-class="daily_regime">
 <div class="sect__head">
 <div class="sect__title-wrap">
 <h2 class="sect__title">Rates · G-Sec curve + OIS + repo path</h2>
@@ -822,7 +822,7 @@
 </div>
 </section>
 <!-- 5 · INR / FX -->
-<section class="sect" id="sect-fx">
+<section class="sect" id="sect-fx" data-block="inr-chart" data-endpoint="/api/v1/query" data-params='{"entity_type":"timeseries","filters":[{"field":"symbol","op":"=","value":"USDINR=X"}]}' data-data-class="daily_regime" data-sparse="true">
 <div class="sect__head">
 <div class="sect__title-wrap">
 <h2 class="sect__title">INR complex · spot · REER · carry · reserves</h2>
@@ -857,7 +857,7 @@
 </div>
 </section>
 <!-- 6 · FII / DII FLOWS -->
-<section class="sect" data-block="flows" id="sect-flows">
+<section class="sect" data-block="flows" id="sect-flows" data-endpoint="/api/v1/global/flows" data-params='{"scope":"india","range":"5y"}' data-data-class="daily_regime">
 <div class="sect__head">
 <div class="sect__title-wrap">
 <h2 class="sect__title">FII / DII positioning · 20 trading days</h2>
@@ -936,7 +936,7 @@
 </div>
 </section>
 <!-- 7 · SECTOR RRG + SCOREBOARD -->
-<section class="sect" data-block="sectors-rrg" id="sect-sectors">
+<section class="sect" data-block="sectors-rrg" id="sect-sectors" data-endpoint="/api/v1/sectors/rrg" data-params='{"include":"gold_rs,conviction"}' data-fixture="fixtures/sector_rrg.json" data-data-class="daily_regime">
 <div class="sect__head">
 <div class="sect__title-wrap">
 <h2 class="sect__title">India sectors · RRG + scoreboard</h2>
@@ -1139,22 +1139,14 @@
 </div>
 </section>
 <!-- 8 · PORTFOLIO CALL (INDIA BOOK) -->
+<!-- V2FE-3 void sentinels for signal-history-table, divergences-block, events-overlay -->
+<div aria-hidden="true" data-component="signal-history-table" data-endpoint="/api/v1/stocks/breadth/zone-events" data-params='{"universe":"nifty500","range":"5y"}' data-fixture="fixtures/zone_events.json" data-data-class="daily_regime" style="display:none"></div>
+<div aria-hidden="true" data-component="divergences-block" data-endpoint="/api/v1/stocks/breadth/divergences" data-params='{"universe":"nifty500"}' data-data-class="daily_regime" style="display:none"></div>
+<div aria-hidden="true" data-component="events-overlay" data-endpoint="/api/v1/global/events" data-params='{"scope":"india"}' data-fixture="fixtures/events.json" data-data-class="events" style="display:none"></div>
 </main>
-<script>
-  const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
-  const sections = Array.from(anchors).map(a => a.getAttribute('href').slice(1));
-  const spy = () => {
-    let active = sections[0];
-    for (const id of sections) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      if (r.top < 140) active = id;
-    }
-    anchors.forEach(a => a.classList.toggle('subbar__link--active', a.getAttribute('href') === '#' + active));
-  };
-  window.addEventListener('scroll', spy, { passive: true });
-</script>
+<script defer src="assets/explore-country.js"></script>
+<script defer src="assets/atlas-data.js"></script>
+<script defer src="assets/atlas-states.js"></script>
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
 <footer aria-hidden="true" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." class="methodology-footer" data-as-of="2026-04-17" data-role="methodology" data-source="JIP Data Platform"></footer>
 <!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
@@ -1177,15 +1169,15 @@
 <span>Source: JIP Data Platform</span>
 <span>Data as of 2026-04-17</span>
 </footer>
-<div aria-hidden="true" class="regime-banner" data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on" style="display:none">Regime: expansion</div>
-<div aria-hidden="true" class="signal-strip" data-as-of="2026-04-17" data-component="signal-strip" data-scope="daily" style="display:none">
+<div aria-hidden="true" class="regime-banner" data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on" data-endpoint="/api/v1/stocks/breadth" data-params='{"universe":"nifty500"}' data-data-class="daily_regime" style="display:none">Regime: expansion</div>
+<div aria-hidden="true" class="signal-strip" data-as-of="2026-04-17" data-component="signal-strip" data-scope="daily" data-endpoint="/api/v1/stocks/breadth" data-fixture="fixtures/breadth_daily_5y.json" data-data-class="eod_breadth" style="display:none">
 <span data-chip="rs">RS LEADING</span>
 <span data-chip="momentum">Momentum ACCEL</span>
 <span data-chip="volume">Volume ACCUM</span>
 <span data-chip="breadth">Breadth EXPANDING</span>
 <span class="gold-rs-chip" data-chip="gold-rs">Gold-RS AMPLIFY+</span>
 </div>
-<div aria-hidden="true" data-component="four-universal-benchmarks" style="display:none">
+<div aria-hidden="true" data-component="four-universal-benchmarks" data-endpoint="/api/v1/query" data-params='{"entity_type":"index","filters":[{"field":"index_id","op":"=","value":"NIFTY_500"}],"include":["rs_msci_world","rs_sp500","rs_nifty50tri","rs_gold"]}' data-data-class="daily_regime" style="display:none">
 <div data-benchmark="msci-world">MSCI World</div>
 <div data-benchmark="sp500">S&amp;P 500</div>
 <div data-benchmark="nifty50tri">Nifty 50 TRI</div>
