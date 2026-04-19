@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T17:33:46.215629+05:30",
+  "generated_at": "2026-04-19T18:01:16.977689+05:30",
   "criteria_file": "docs/specs/frontend-v2-criteria.yaml",
-  "total": 18,
-  "passed": 15,
+  "total": 40,
+  "passed": 31,
   "failed": 0,
-  "skipped": 3,
+  "skipped": 9,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
@@ -28,6 +28,60 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/sectors"
     },
     {
+      "id": "v2fe-be-03",
+      "title": "Backend: /api/v1/stocks/{symbol} returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/stocks/RELIANCE.NS"
+    },
+    {
+      "id": "v2fe-be-04",
+      "title": "Backend: /api/v1/funds/{isin} returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/funds/INF846K01EW2"
+    },
+    {
+      "id": "v2fe-be-05",
+      "title": "Backend: /api/v1/breadth/country returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/breadth/country"
+    },
+    {
+      "id": "v2fe-be-06",
+      "title": "Backend: /api/v1/breadth/sector returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/breadth/sector"
+    },
+    {
+      "id": "v2fe-be-07",
+      "title": "Backend: /api/v1/today/pulse returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/today/pulse"
+    },
+    {
+      "id": "v2fe-be-08",
+      "title": "Backend: /api/v1/global/indices returns 200 or is unreachable",
+      "severity": "high",
+      "check_type": "backend_probe",
+      "passed": true,
+      "status": "SKIP",
+      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/global/indices"
+    },
+    {
       "id": "v2fe-be-09",
       "title": "Backend: /health returns 200 or is unreachable",
       "severity": "medium",
@@ -37,13 +91,121 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/health"
     },
     {
+      "id": "v2fe-pg-01",
+      "title": "today.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/today.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-02",
+      "title": "today.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/today.html: 'atlas-states\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-03",
+      "title": "explore-country.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-country.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-04",
+      "title": "explore-country.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-country.html: 'atlas-states\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-05",
+      "title": "explore-sector.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-sector.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-06",
+      "title": "explore-sector.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-sector.html: 'atlas-states\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-07",
+      "title": "stock-detail.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/stock-detail.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-08",
+      "title": "stock-detail.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/stock-detail.html: 'atlas-states\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-09",
+      "title": "mf-detail.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/mf-detail.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-10",
+      "title": "mf-detail.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/mf-detail.html: 'atlas-states\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-11",
+      "title": "explore-global.html: atlas-data.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-global.html: 'atlas-data\\\\.js'"
+    },
+    {
+      "id": "v2fe-pg-12",
+      "title": "explore-global.html: atlas-states.js script tag is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/explore-global.html: 'atlas-states\\\\.js'"
+    },
+    {
       "id": "v2fe-rg-01",
       "title": "V1FE gate: scripts/check-frontend-criteria.py exits 0 (no regressions)",
       "severity": "critical",
       "check_type": "runner_exits_zero",
       "passed": true,
       "status": "RUN",
-      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python scripts/check-frontend-criteria.py --report-only"
+      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python3 scripts/check-frontend-criteria.py --report-only"
     },
     {
       "id": "v2fe-rg-02",
@@ -134,6 +296,42 @@
       "passed": true,
       "status": "RUN",
       "evidence": "Pattern found in frontend/mockups/assets/atlas-data.js: 'insufficient_data'"
+    },
+    {
+      "id": "v2fe-sc-09",
+      "title": "atlas-data.js: 10-second hard cut-off setTimeout guard is present",
+      "severity": "critical",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/assets/atlas-data.js: '10000'"
+    },
+    {
+      "id": "v2fe-sc-10",
+      "title": "atlas-data.js: data-as-of attribute is synced from _meta.data_as_of",
+      "severity": "high",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/assets/atlas-data.js: 'data-as-of'"
+    },
+    {
+      "id": "v2fe-sc-11",
+      "title": "atlas-data.js: dev-mode ?sim_state= URL param support is present (localhost-gated)",
+      "severity": "high",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/assets/atlas-data.js: 'sim_state'"
+    },
+    {
+      "id": "v2fe-sc-12",
+      "title": "atlas-states.js: renderError includes a retry affordance (data-retry button)",
+      "severity": "high",
+      "check_type": "file_contains",
+      "passed": true,
+      "status": "RUN",
+      "evidence": "Pattern found in frontend/mockups/assets/atlas-states.js: 'data-retry'"
     },
     {
       "id": "v2fe-sm-01",

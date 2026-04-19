@@ -283,6 +283,38 @@ criteria:
     file: "frontend/mockups/assets/atlas-data.js"
     pattern: "insufficient_data"
 
+  - id: v2fe-sc-09
+    title: "atlas-data.js: 10-second hard cut-off setTimeout guard is present"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "10000"
+
+  - id: v2fe-sc-10
+    title: "atlas-data.js: data-as-of attribute is synced from _meta.data_as_of"
+    check_type: file_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "data-as-of"
+
+  - id: v2fe-sc-11
+    title: "atlas-data.js: dev-mode ?sim_state= URL param support is present (localhost-gated)"
+    check_type: file_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "sim_state"
+
+  - id: v2fe-sc-12
+    title: "atlas-states.js: renderError includes a retry affordance (data-retry button)"
+    check_type: file_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "data-retry"
+
 # ============================================================================
 # §8.4 Integration / smoke checks (4 checks)
 # ============================================================================

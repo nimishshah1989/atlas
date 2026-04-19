@@ -130,6 +130,15 @@ function isStale(el, json) {
  * @param {Object}  json
  */
 function _handleSuccess(el, json) {
+  // Sync data-as-of attribute — always set before any state branching
+  var asOf = (json && json._meta && json._meta.data_as_of) ? json._meta.data_as_of : 'unknown';
+  if (asOf === 'unknown') {
+    if (typeof console !== 'undefined') {
+      console.warn('[atlas-data] _meta.data_as_of absent for block:', el);
+    }
+  }
+  el.setAttribute('data-as-of', asOf);
+
   // Known-sparse-source guard: insufficient_data overrides record length
   if (json && json._meta && json._meta.insufficient_data === true) {
     if (typeof window.renderEmpty === 'function') {
@@ -272,6 +281,32 @@ function reloadUniverseBlocks() {
 function loadBlock(el) {
   if (!el) return Promise.resolve();
 
+  // Dev-mode simulation: ?sim_state=loading|empty|stale|error (localhost only)
+  var _isLocalhost = (typeof window !== 'undefined') &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  if (_isLocalhost) {
+    var _searchParams = new URLSearchParams(window.location.search);
+    var _simState = _searchParams.get('sim_state');
+    if (_simState === 'loading') {
+      if (typeof window.renderSkeleton === 'function') { window.renderSkeleton(el); }
+      return Promise.resolve();
+    }
+    if (_simState === 'empty') {
+      if (typeof window.renderEmpty === 'function') { window.renderEmpty(el); }
+      return Promise.resolve();
+    }
+    if (_simState === 'stale') {
+      if (typeof window.renderStaleBanner === 'function') {
+        window.renderStaleBanner(el, { _meta: { data_as_of: 'simulated', staleness_seconds: 99999 } });
+      }
+      return Promise.resolve();
+    }
+    if (_simState === 'error') {
+      _handleError(el, { code: 'SIM_ERROR', message: 'Simulated error state.' });
+      return Promise.resolve();
+    }
+  }
+
   var endpoint = _substituteTemplateVars(el.dataset.endpoint);
   if (!endpoint) {
     var noEndpointErr = { code: 'NO_ENDPOINT', message: 'data-endpoint attribute is missing.' };
@@ -285,6 +320,14 @@ function loadBlock(el) {
   } else {
     el.setAttribute('data-state', 'loading');
   }
+
+  // 1a. Hard cut-off: if block is still loading after 10s, force error
+  el._hardCutoffTimer = setTimeout(function () {
+    if (el.getAttribute('data-state') === 'loading') {
+      el.setAttribute('data-error-code', 'TIMEOUT');
+      _handleError(el, { code: 'TIMEOUT', message: 'Block did not load within 10 seconds.' });
+    }
+  }, 10000);
 
   // Build query params — substitute ${universe} / ${indicator} before JSON.parse
   var params = null;
@@ -302,6 +345,11 @@ function loadBlock(el) {
   // 2. Fetch with 8s timeout
   return fetchWithTimeout(url, LOAD_BLOCK_TIMEOUT_MS)
     .then(function (response) {
+      // Clear hard cut-off timer on any response (success or HTTP error)
+      if (el._hardCutoffTimer) {
+        clearTimeout(el._hardCutoffTimer);
+        el._hardCutoffTimer = null;
+      }
       if (!response.ok) {
         var httpErr = {
           code: 'HTTP_' + response.status,
@@ -315,6 +363,12 @@ function loadBlock(el) {
       });
     })
     .catch(function (err) {
+      // Clear hard cut-off timer on error (avoid double-fire)
+      if (el._hardCutoffTimer) {
+        clearTimeout(el._hardCutoffTimer);
+        el._hardCutoffTimer = null;
+      }
+
       // Offline fixture fallback: only on network errors (not abort/timeout)
       var fixtureUrl = el.dataset.fixture;
       if (_isNetworkError(err) && fixtureUrl) {

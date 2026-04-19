@@ -31,16 +31,35 @@ window.STALENESS_THRESHOLDS = STALENESS_THRESHOLDS;
 /**
  * renderSkeleton(el)
  * Injects a skeleton placeholder while data is loading.
+ * Selects skeleton variant based on el.dataset.blockType:
+ *   "chart"  → square block placeholder
+ *   "table"  → three full-width line placeholders
+ *   (other)  → generic wide/medium/narrow lines (default)
  * Sets data-state="loading" on the element.
  */
 function renderSkeleton(el) {
   el.setAttribute('data-state', 'loading');
-  el.innerHTML =
-    '<div class="skeleton-block" aria-hidden="true">' +
-    '  <div class="skeleton-block__line skeleton-block__line--wide"></div>' +
-    '  <div class="skeleton-block__line skeleton-block__line--medium"></div>' +
-    '  <div class="skeleton-block__line skeleton-block__line--narrow"></div>' +
-    '</div>';
+  var blockType = el.dataset ? el.dataset.blockType : '';
+  var inner;
+  if (blockType === 'chart') {
+    inner = '<div class="skeleton-block skeleton-block--chart" aria-hidden="true">' +
+      '  <div class="skeleton-block__square"></div>' +
+      '</div>';
+  } else if (blockType === 'table') {
+    inner = '<div class="skeleton-block skeleton-block--table" aria-hidden="true">' +
+      '  <div class="skeleton-block__line skeleton-block__line--full"></div>' +
+      '  <div class="skeleton-block__line skeleton-block__line--full"></div>' +
+      '  <div class="skeleton-block__line skeleton-block__line--full"></div>' +
+      '</div>';
+  } else {
+    inner =
+      '<div class="skeleton-block" aria-hidden="true">' +
+      '  <div class="skeleton-block__line skeleton-block__line--wide"></div>' +
+      '  <div class="skeleton-block__line skeleton-block__line--medium"></div>' +
+      '  <div class="skeleton-block__line skeleton-block__line--narrow"></div>' +
+      '</div>';
+  }
+  el.innerHTML = inner;
 }
 
 /**
@@ -90,7 +109,7 @@ function renderStaleBanner(el, json) {
 
 /**
  * renderError(el, err)
- * Injects an error card with err.code.
+ * Injects an error card with err.code and a retry affordance.
  * Sets data-state="error" on the element.
  * @param {Element} el  - the data block element
  * @param {Object}  err - error object with optional .code and .message properties
@@ -108,7 +127,19 @@ function renderError(el, err) {
     '    <span class="error-card__code">' + code + '</span>' +
     '  </div>' +
     '  <p class="error-card__message">' + message + '</p>' +
+    '  <button class="error-card__retry" data-retry="true" aria-label="Retry loading this block">' +
+    '    &#8635; Retry' +
+    '  </button>' +
     '</div>';
+
+  var retryBtn = el.querySelector('[data-retry="true"]');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', function () {
+      if (typeof window.loadBlock === 'function') {
+        window.loadBlock(el);
+      }
+    });
+  }
 }
 
 
