@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T16:32:13.465819+05:30",
+  "generated_at": "2026-04-19T17:18:27.800882+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
   "total": 50,
-  "passed": 33,
+  "passed": 32,
   "failed": 0,
-  "skipped": 17,
+  "skipped": 18,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
@@ -442,8 +442,8 @@
       "status": "SKIP"
     },
     {
-      "id": "fe-p7-01",
-      "title": "stock-detail.html: hero + chart + 4 RRG chips + peers + signal-playback compact",
+      "id": "fe-p8-01",
+      "title": "mf-detail.html: returns + alpha + holdings + weighted-technicals chips + signal-playback compact",
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
@@ -451,13 +451,13 @@
       "status": "RUN"
     },
     {
-      "id": "fe-p7-02",
-      "title": "stock-detail.html: Atlas Insight block removed",
+      "id": "fe-p8-02",
+      "title": "mf-detail.html: Atlas Verdict HOLD/ADD ON DIPS removed",
       "severity": "critical",
-      "check_type": "dom_forbidden",
+      "check_type": "kill_list",
       "passed": true,
-      "evidence": "No forbidden elements in 1 file(s)",
-      "status": "RUN"
+      "evidence": "SKIP: no files matched",
+      "status": "SKIP"
     }
   ]
 }
