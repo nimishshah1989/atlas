@@ -6,6 +6,206 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/stocks/breadth/zone-events": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Breadth Zone Events",
+        "description": "Zone-crossing events for a symbol vs its moving averages (V2FE-1a).\n\nReturns events where the stock price crosses above or below its SMA-20\nand SMA-200. Fault-tolerant: returns data=[] with insufficient_data=True\nwhen JIP returns no data for the symbol.",
+        "operationId": "get_breadth_zone_events_api_v1_stocks_breadth_zone_events_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Stock symbol",
+              "default": "NIFTY",
+              "title": "Symbol"
+            },
+            "description": "Stock symbol"
+          },
+          {
+            "name": "lookback_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Lookback in days",
+              "default": 365,
+              "title": "Lookback Days"
+            },
+            "description": "Lookback in days"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Breadth Zone Events Api V1 Stocks Breadth Zone Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/breadth/divergences": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Breadth Divergences",
+        "description": "Price vs breadth divergence events (V2FE-1a).\n\nBullish divergence: index down, breadth (pct above 50-DMA) up.\nBearish divergence: index up, breadth down.\nReturns insufficient_data=True when price data unavailable.",
+        "operationId": "get_breadth_divergences_api_v1_stocks_breadth_divergences_get",
+        "parameters": [
+          {
+            "name": "universe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Universe",
+              "default": "nifty500",
+              "title": "Universe"
+            },
+            "description": "Universe"
+          },
+          {
+            "name": "lookback_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Lookback in days",
+              "default": 180,
+              "title": "Lookback Days"
+            },
+            "description": "Lookback in days"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Breadth Divergences Api V1 Stocks Breadth Divergences Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/breadth": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Breadth",
+        "description": "Get market breadth and regime data (with regime enrichment).\n\nOptional include=conviction_series adds per-date Gold RS conviction chip state.",
+        "operationId": "get_breadth_api_v1_stocks_breadth_get",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated includes e.g. conviction_series",
+              "title": "Include"
+            },
+            "description": "Comma-separated includes e.g. conviction_series"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketBreadthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/stocks/universe": {
       "get": {
         "tags": [
@@ -92,28 +292,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SectorListResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/stocks/breadth": {
-      "get": {
-        "tags": [
-          "stocks"
-        ],
-        "summary": "Get Breadth",
-        "description": "Get market breadth and regime data (with regime enrichment).",
-        "operationId": "get_breadth_api_v1_stocks_breadth_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketBreadthResponse"
                 }
               }
             }
@@ -1402,6 +1580,170 @@
         }
       }
     },
+    "/api/v1/global/events": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Events",
+        "description": "Return key market events filtered by scope, date range, and category.\n\nReads from atlas_key_events. Supports scope filter (india, global, etc),\ndate range, and category filter.",
+        "operationId": "get_global_events_api_v1_global_events_get",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated scopes e.g. india,global",
+              "title": "Scope"
+            },
+            "description": "Comma-separated scopes e.g. india,global"
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date range: 1y, 5y, all",
+              "default": "5y",
+              "title": "Range"
+            },
+            "description": "Date range: 1y, 5y, all"
+          },
+          {
+            "name": "categories",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated category filter",
+              "title": "Categories"
+            },
+            "description": "Comma-separated category filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Global Events Api V1 Global Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/global/flows": {
+      "get": {
+        "tags": [
+          "global"
+        ],
+        "summary": "Get Global Flows",
+        "description": "Return FII/DII flow series via JIP FII/DII service.\n\nReturns insufficient_data=True in _meta if the source table has 0 rows.\nFinancial values in INR crore as Decimal.",
+        "operationId": "get_global_flows_api_v1_global_flows_get",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated scopes: fii_equity,dii_equity,fii_debt,dii_debt",
+              "title": "Scope"
+            },
+            "description": "Comma-separated scopes: fii_equity,dii_equity,fii_debt,dii_debt"
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date range: 1m, 3m, 6m, 1y, 2y, 5y",
+              "default": "1y",
+              "title": "Range"
+            },
+            "description": "Date range: 1m, 3m, 6m, 1y, 2y, 5y"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Global Flows Api V1 Global Flows Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/global/ratios": {
       "get": {
         "tags": [
@@ -1883,6 +2225,7 @@
           "mf"
         ],
         "summary": "Get Fund Weighted Technicals",
+        "description": "Get latest weighted technicals for a fund.\n\nOptional include=conviction_series adds last 12 months of weekly\nconviction score as a time series (spec \u00a718 include system).\nReturns [] for conviction_series if atlas_gold_rs_cache has no MF rows.",
         "operationId": "get_fund_weighted_technicals_api_v1_mf__mstar_id__weighted_technicals_get",
         "parameters": [
           {
@@ -1893,6 +2236,24 @@
               "type": "string",
               "title": "Mstar Id"
             }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated includes e.g. conviction_series",
+              "title": "Include"
+            },
+            "description": "Comma-separated includes e.g. conviction_series"
           }
         ],
         "responses": {
@@ -4379,7 +4740,7 @@
           "instruments"
         ],
         "summary": "Get Price",
-        "description": "Return OHLCV price series for a symbol, optionally back-adjusted.\n\nBack-adjustment uses corporate action factors from de_corporate_actions\n(split/bonus/rights only, dividend-neutral). Historical prices are multiplied\nby the product of all adj_factors for events occurring after each price date.\n\nWhen adjustment-factor health is degraded, falls back to raw prices and\nincludes a warning in _meta.warnings.",
+        "description": "Return OHLCV price series for a symbol, optionally back-adjusted.\n\nBack-adjustment uses corporate action factors via JIP corporate-actions service\n(split/bonus/rights only, dividend-neutral). Historical prices are multiplied\nby the product of all adj_factors for events occurring after each price date.\n\nWhen adjustment-factor health is degraded, falls back to raw prices and\nincludes a warning in _meta.warnings.",
         "operationId": "get_price_api_instruments__symbol__price_get",
         "parameters": [
           {
@@ -4640,7 +5001,7 @@
           "insider"
         ],
         "summary": "Get Insider Trades",
-        "description": "Return SEBI PIT insider trades for a symbol.\n\nSource: JIP de_insider_trades table via JIPInsiderService.\nReturns 503 when insider data is unavailable/stale.",
+        "description": "Return SEBI PIT insider trades for a symbol.\n\nSource: JIPInsiderService (insider trades).\nReturns 503 when insider data is unavailable/stale.",
         "operationId": "get_insider_trades_api_stocks__symbol__insider_get",
         "parameters": [
           {
@@ -4733,7 +5094,7 @@
           "insider"
         ],
         "summary": "Get Bulk Deals",
-        "description": "Return NSE bulk deals for a symbol.\n\nSource: JIP de_bulk_deals table via JIPInsiderService.\nReturns 503 when bulk deal data is unavailable/stale.",
+        "description": "Return NSE bulk deals for a symbol.\n\nSource: JIPInsiderService (bulk deals).\nReturns 503 when bulk deal data is unavailable/stale.",
         "operationId": "get_bulk_deals_api_stocks__symbol__bulk_deals_get",
         "parameters": [
           {
@@ -4812,7 +5173,7 @@
           "insider"
         ],
         "summary": "Get Block Deals",
-        "description": "Return NSE block deals for a symbol.\n\nSource: JIP de_block_deals table via JIPInsiderService.\nReturns 503 when block deal data is unavailable/stale.",
+        "description": "Return NSE block deals for a symbol.\n\nSource: JIPInsiderService (block deals).\nReturns 503 when block deal data is unavailable/stale.",
         "operationId": "get_block_deals_api_stocks__symbol__block_deals_get",
         "parameters": [
           {
@@ -16441,6 +16802,21 @@
           },
           "staleness": {
             "$ref": "#/components/schemas/Staleness"
+          },
+          "conviction_series": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conviction Series"
           }
         },
         "type": "object",
