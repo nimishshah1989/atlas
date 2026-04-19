@@ -456,6 +456,33 @@ HOLDERS_SQL = """
     LIMIT 50
 """
 
+TOP_RS_SQL = """
+    SELECT DISTINCT ON (m.mstar_id)
+        m.mstar_id, m.fund_name, m.category_name,
+        d.derived_rs_composite AS rs_composite, d.nav_date
+    FROM de_mf_master m
+    LEFT JOIN de_mf_derived_daily d ON d.mstar_id = m.mstar_id
+    WHERE m.is_etf = false
+      AND m.is_active = true
+      AND d.derived_rs_composite IS NOT NULL
+    ORDER BY m.mstar_id, d.nav_date DESC
+"""
+
+RANK_FETCH_SQL = """
+    SELECT DISTINCT ON (d.mstar_id)
+        d.mstar_id, d.nav_date,
+        m.fund_name, m.category_name, m.amc_name,
+        d.derived_rs_composite,
+        d.sharpe_1y, d.volatility_1y, d.max_drawdown_1y, d.information_ratio
+    FROM de_mf_derived_daily d
+    JOIN de_mf_master m ON m.mstar_id = d.mstar_id
+    WHERE m.is_etf = false
+      AND m.is_active = true
+      AND d.derived_rs_composite IS NOT NULL
+      AND d.nav_date >= CURRENT_DATE - INTERVAL '45 days'
+    ORDER BY d.mstar_id, d.nav_date DESC
+"""
+
 from backend.clients.jip_mf_sql_attribution import (  # noqa: E402, F401
     CATEGORY_ALPHA_DECIMAL_FIELDS,
     CATEGORY_ALPHA_SQL,

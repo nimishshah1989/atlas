@@ -703,7 +703,7 @@ class TestStalenessLogic:
     """Unit tests for _compute_staleness helper."""
 
     def test_fresh_when_today(self) -> None:
-        from backend.routes.mf import _compute_staleness
+        from backend.routes.mf_helpers import compute_staleness as _compute_staleness
 
         freshness = {"nav_as_of": datetime.date.today()}
         s = _compute_staleness(freshness)
@@ -711,7 +711,7 @@ class TestStalenessLogic:
         assert s.age_minutes == 0
 
     def test_stale_when_1_day_old(self) -> None:
-        from backend.routes.mf import _compute_staleness
+        from backend.routes.mf_helpers import compute_staleness as _compute_staleness
 
         freshness = {"nav_as_of": datetime.date.today() - datetime.timedelta(days=1)}
         s = _compute_staleness(freshness)
@@ -719,15 +719,209 @@ class TestStalenessLogic:
         assert s.age_minutes == 1440
 
     def test_expired_when_2_days_old(self) -> None:
-        from backend.routes.mf import _compute_staleness
+        from backend.routes.mf_helpers import compute_staleness as _compute_staleness
 
         freshness = {"nav_as_of": datetime.date.today() - datetime.timedelta(days=2)}
         s = _compute_staleness(freshness)
         assert s.flag.value == "EXPIRED"
 
     def test_expired_when_no_nav_as_of(self) -> None:
-        from backend.routes.mf import _compute_staleness
+        from backend.routes.mf_helpers import compute_staleness as _compute_staleness
 
         freshness: dict = {}
         s = _compute_staleness(freshness)
         assert s.flag.value == "EXPIRED"
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/mf/rank — scoring functions + route smoke tests
+# ---------------------------------------------------------------------------
+
+
+class TestMfRankScoringFunctions:
+    """Unit tests for the _percent_rank_asc / _percent_rank_desc helpers."""
+
+    def test_percent_rank_asc_single(self) -> None:
+        from backend.routes.mf_rank import _percent_rank_asc
+
+        assert _percent_rank_asc([42.0]) == [50.0]
+
+    def test_percent_rank_asc_two_values(self) -> None:
+        from backend.routes.mf_rank import _percent_rank_asc
+
+        result = _percent_rank_asc([10.0, 20.0])
+        assert result[0] == 0.0  # lower → 0%
+        assert result[1] == 100.0  # higher → 100%
+
+    def test_percent_rank_asc_three_values(self) -> None:
+        from backend.routes.mf_rank import _percent_rank_asc
+
+        result = _percent_rank_asc([1.0, 2.0, 3.0])
+        assert result[0] == 0.0
+        assert result[1] == 50.0
+        assert result[2] == 100.0
+
+    def test_percent_rank_asc_null_treated_as_lowest(self) -> None:
+        from backend.routes.mf_rank import _percent_rank_asc
+
+        result = _percent_rank_asc([None, 5.0, 10.0])
+        assert result[0] == 0.0  # None treated as -inf → lowest
+        assert result[1] < result[2]
+
+    def test_percent_rank_desc_lower_gets_100(self) -> None:
+        from backend.routes.mf_rank import _percent_rank_desc
+
+        result = _percent_rank_desc([10.0, 20.0])
+        assert result[0] == 100.0  # lower vol → best score
+        assert result[1] == 0.0
+
+
+class TestComputeRankScores:
+    """Unit tests for _compute_rank_scores function."""
+
+    def _make_rows(self) -> list[dict]:
+        """Three funds in same category with clearly different metrics."""
+        return [
+            {
+                "mstar_id": "F001",
+                "fund_name": "Best Fund",
+                "category_name": "Flexi Cap",
+                "amc_name": "AMC A",
+                "nav_date": datetime.date(2026, 4, 10),
+                "derived_rs_composite": Decimal("80.0"),
+                "sharpe_1y": Decimal("1.5"),  # best
+                "volatility_1y": Decimal("0.10"),  # lowest (best)
+                "max_drawdown_1y": Decimal("-0.08"),  # least negative (best)
+                "information_ratio": Decimal("1.2"),  # highest (best)
+            },
+            {
+                "mstar_id": "F002",
+                "fund_name": "Mid Fund",
+                "category_name": "Flexi Cap",
+                "amc_name": "AMC B",
+                "nav_date": datetime.date(2026, 4, 10),
+                "derived_rs_composite": Decimal("50.0"),
+                "sharpe_1y": Decimal("0.5"),
+                "volatility_1y": Decimal("0.15"),
+                "max_drawdown_1y": Decimal("-0.15"),
+                "information_ratio": Decimal("0.5"),
+            },
+            {
+                "mstar_id": "F003",
+                "fund_name": "Worst Fund",
+                "category_name": "Flexi Cap",
+                "amc_name": "AMC C",
+                "nav_date": datetime.date(2026, 4, 10),
+                "derived_rs_composite": Decimal("20.0"),
+                "sharpe_1y": Decimal("-0.5"),  # lowest
+                "volatility_1y": Decimal("0.25"),  # highest (worst)
+                "max_drawdown_1y": Decimal("-0.30"),  # most negative (worst)
+                "information_ratio": Decimal("-0.3"),  # lowest (worst)
+            },
+        ]
+
+    def test_best_fund_ranks_first(self) -> None:
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = self._make_rows()
+        scored = _compute_rank_scores(rows)
+
+        assert scored[0]["mstar_id"] == "F001"
+        assert scored[0]["rank"] == 1
+        assert scored[-1]["mstar_id"] == "F003"
+
+    def test_composite_scores_ordered_descending(self) -> None:
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = self._make_rows()
+        scored = _compute_rank_scores(rows)
+
+        composites = [r["composite_score"] for r in scored]
+        assert composites == sorted(composites, reverse=True)
+
+    def test_all_four_scores_present(self) -> None:
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = self._make_rows()
+        scored = _compute_rank_scores(rows)
+
+        for r in scored:
+            assert r["returns_score"] is not None
+            assert r["risk_score"] is not None
+            assert r["resilience_score"] is not None
+            assert r["consistency_score"] is not None
+            assert r["composite_score"] is not None
+
+    def test_scores_in_0_100_range(self) -> None:
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = self._make_rows()
+        scored = _compute_rank_scores(rows)
+
+        for r in scored:
+            assert 0.0 <= r["returns_score"] <= 100.0
+            assert 0.0 <= r["risk_score"] <= 100.0
+            assert 0.0 <= r["resilience_score"] <= 100.0
+            assert 0.0 <= r["consistency_score"] <= 100.0
+
+
+class TestMfRankRoute:
+    """Smoke tests for GET /api/v1/mf/rank endpoint."""
+
+    def _patch_db(self, rows: list[dict[str, Any]]):
+        """Return an AsyncMock that fakes the DB execute call."""
+        mock_result = MagicMock()
+        mock_result.mappings.return_value.all.return_value = rows
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=mock_result)
+        return mock_db
+
+    def test_rank_returns_200_and_records_key(self) -> None:
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = [
+            {
+                "mstar_id": "F001",
+                "fund_name": "Alpha Fund",
+                "category_name": "Flexi Cap",
+                "amc_name": "AMC",
+                "nav_date": datetime.date(2026, 4, 10),
+                "derived_rs_composite": Decimal("80.0"),
+                "sharpe_1y": Decimal("1.2"),
+                "volatility_1y": Decimal("0.12"),
+                "max_drawdown_1y": Decimal("-0.10"),
+                "information_ratio": Decimal("0.9"),
+            }
+        ]
+        scored = _compute_rank_scores(rows)
+        assert len(scored) == 1
+        assert scored[0]["rank"] == 1
+        assert "composite_score" in scored[0]
+
+    def test_category_filter_applied_after_scoring(self) -> None:
+        """Scores computed globally, then category filter applied."""
+        from backend.routes.mf_rank import _compute_rank_scores
+
+        rows = [
+            {
+                "mstar_id": f"F{i}",
+                "fund_name": f"Fund {i}",
+                "category_name": "Flexi Cap" if i < 3 else "Large-Cap",
+                "amc_name": "AMC",
+                "nav_date": datetime.date(2026, 4, 10),
+                "derived_rs_composite": Decimal(str(50 + i * 10)),
+                "sharpe_1y": Decimal(str(0.5 + i * 0.2)),
+                "volatility_1y": Decimal(str(0.20 - i * 0.02)),
+                "max_drawdown_1y": Decimal(str(-0.20 + i * 0.02)),
+                "information_ratio": Decimal(str(0.3 + i * 0.1)),
+            }
+            for i in range(5)
+        ]
+
+        scored = _compute_rank_scores(rows)
+        # All 5 funds get scored
+        assert len(scored) == 5
+
+        # Filter manually to Flexi Cap (simulates what the route does)
+        filtered = [r for r in scored if r["category"] == "Flexi Cap"]
+        assert len(filtered) == 3

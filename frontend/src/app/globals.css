@@ -1,67 +1,302 @@
 @import "tailwindcss";
 
+/*
+ * ATLAS design tokens — ported from mockups/tokens.css
+ * Single source of visual truth for the entire app.
+ * Direction: "Stripe Dashboard meets Koyfin, with Addepar's institutional weight."
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --teal: #1D9E75;
-  --teal-light: #e6f7f1;
+  /* ─── Surfaces ──────────────────────────────────────────────────────── */
+  --bg-app:           #F7F8FA;
+  --bg-surface:       #FFFFFF;
+  --bg-surface-alt:   #FBFBFC;
+  --bg-inset:         #F2F4F7;
+  --bg-hover:         #F4F6F8;
+  --bg-selected:      #E6EFF1;
 
-  /* Surface tokens */
-  --bg-surface: #ffffff;
-  --bg-surface-alt: #f9fafb;
-  --bg-inset: #f3f4f6;
-  --bg-hover: #f0fdf8;
-  --border-subtle: #f3f4f6;
-  --border-default: #e5e7eb;
-  --border-strong: #d1d5db;
+  /* ─── Borders ───────────────────────────────────────────────────────── */
+  --border-subtle:    #EEF0F3;
+  --border-default:   #E3E6EB;
+  --border-strong:    #CDD2DA;
+  --border-focus:     #134F5C;
+  --border-card:      1px solid var(--border-default);
+  --border-inner:     1px solid var(--border-subtle);
 
-  /* Text tokens */
-  --text-primary: #111827;
-  --text-secondary: #374151;
-  --text-tertiary: #6b7280;
+  /* ─── Text ──────────────────────────────────────────────────────────── */
+  --text-primary:     #1A1F2C;
+  --text-secondary:   #565E6E;
+  --text-tertiary:    #8A909C;
+  --text-disabled:    #B4B9C2;
+  --text-inverse:     #FFFFFF;
+  --text-accent:      #134F5C;
 
-  /* Accent tokens */
-  --accent-700: #0e7c5a;
-  --accent-500: #1D9E75;
-  --accent-300: #6dcba9;
-  --accent-100: #e6f7f1;
+  /* ─── Accent: petrol teal ────────────────────────────────────────────── */
+  --accent-900:       #07252D;
+  --accent-700:       #134F5C;
+  --accent-500:       #2A7A8B;
+  --accent-300:       #9CC3CC;
+  --accent-100:       #E6EFF1;
 
-  /* RAG green */
-  --rag-green-900: #14532d;
-  --rag-green-700: #15803d;
-  --rag-green-100: #dcfce7;
+  /* ─── RAG signals ────────────────────────────────────────────────────── */
+  --rag-green-900:    #06502E;
+  --rag-green-700:    #0B7A4E;
+  --rag-green-500:    #10A368;
+  --rag-green-300:    #7FD4AC;
+  --rag-green-100:    #E4F5EC;
 
-  /* RAG amber */
-  --rag-amber-700: #b45309;
-  --rag-amber-100: #fef3c7;
+  --rag-amber-900:    #5C3A04;
+  --rag-amber-700:    #9A6410;
+  --rag-amber-500:    #D9871A;
+  --rag-amber-300:    #F3C17D;
+  --rag-amber-100:    #FBF1DC;
 
-  /* RAG red */
-  --rag-red-700: #b91c1c;
-  --rag-red-100: #fee2e2;
+  --rag-red-900:      #6E0E0E;
+  --rag-red-700:      #B63030;
+  --rag-red-500:      #DB4343;
+  --rag-red-300:      #F0A0A0;
+  --rag-red-100:      #FBE9E9;
+
+  /* Legacy semantic aliases */
+  --pos-700: var(--rag-green-700);
+  --pos-500: var(--rag-green-500);
+  --pos-100: var(--rag-green-100);
+  --neg-700: var(--rag-red-700);
+  --neg-500: var(--rag-red-500);
+  --neg-100: var(--rag-red-100);
+  --warn-700: var(--rag-amber-700);
+  --warn-500: var(--rag-amber-500);
+  --warn-100: var(--rag-amber-100);
+  --info-700: #134F5C;
+  --info-100: #E6EFF1;
+
+  /* ─── Chart palette ─────────────────────────────────────────────────── */
+  --chart-1: #134F5C;
+  --chart-2: #0B7A4E;
+  --chart-3: #9A6410;
+  --chart-4: #5B3A8A;
+  --chart-5: #A84A4A;
+  --chart-6: #3D6B7A;
+  --chart-grid: #EEF0F3;
+  --chart-axis: #8A909C;
+
+  /* ─── Typography ────────────────────────────────────────────────────── */
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+  --font-sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --fs-xs:    11px;
+  --fs-sm:    12px;
+  --fs-base:  13px;
+  --fs-md:    14px;
+  --fs-lg:    16px;
+  --fs-xl:    20px;
+  --fs-2xl:   26px;
+  --fs-3xl:   34px;
+  --fs-metric: 32px;
+  --fs-metric-lg: 44px;
+
+  --lh-tight:  1.2;
+  --lh-normal: 1.45;
+  --lh-loose:  1.6;
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold: 600;
+  --fw-bold:    700;
+
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+
+  /* ─── Spacing (4px base) ────────────────────────────────────────────── */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ─── Radius ────────────────────────────────────────────────────────── */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* ─── Motion ────────────────────────────────────────────────────────── */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast:   100ms;
+  --dur-normal: 150ms;
+  --dur-slow:   220ms;
+
+  /* ─── Layout ────────────────────────────────────────────────────────── */
+  --maxw-page: 1600px;
+  --maxw-prose: 680px;
+  --rail-w: 320px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+/* Tabular numbers on financial data */
+td, th, .num { font-variant-numeric: tabular-nums; }
+
+/* Eyebrow utility */
+.eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
 }
 
-/* Scrollbar styling for data tables */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ─── Dense metric grid (mgrid / mbox) ──────────────────────────────────── */
+.mgrid {
+  display: grid;
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
+.mgrid--2  { grid-template-columns: repeat(2, 1fr); }
+.mgrid--3  { grid-template-columns: repeat(3, 1fr); }
+.mgrid--4  { grid-template-columns: repeat(4, 1fr); }
+.mgrid--5  { grid-template-columns: repeat(5, 1fr); }
+.mgrid--6  { grid-template-columns: repeat(6, 1fr); }
+.mgrid--10 { grid-template-columns: repeat(10, 1fr); }
+
+.mbox { background: var(--bg-surface); padding: 10px 12px; }
+.mbox__l { font-size: 10px; color: var(--text-tertiary); font-weight: 500; margin-bottom: 3px; }
+.mbox__v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1.2; }
+.mbox__d { font-size: 10px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.mbox__d--pos { color: var(--rag-green-700); }
+.mbox__d--neg { color: var(--rag-red-700); }
+.mbox--g { background: var(--rag-green-100); }
+.mbox--a { background: var(--rag-amber-100); }
+.mbox--r { background: var(--rag-red-100); }
+
+/* ─── Section header ─────────────────────────────────────────────────────── */
+.sec-hd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: var(--space-7) 0 var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--border-default);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+.sec-hd h3 { font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: var(--font-sans); margin: 0; }
+.sec-hd .sec-sub { font-size: 11px; color: var(--text-tertiary); }
+.sec-hd .sec-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--accent-100); color: var(--accent-700); margin-left: auto;
 }
+
+/* ─── Signal strip (3 DMA cards) ─────────────────────────────────────────── */
+.ss-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+.ss-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  position: relative;
+}
+.ss-card--bull { border-top: 3px solid var(--rag-green-500); }
+.ss-card--bear { border-top: 3px solid var(--rag-red-500); }
+.ss-card--neut { border-top: 3px solid var(--rag-amber-500); }
+.ss-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.ss-lbl { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; }
+.ss-sig { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: var(--radius-full); }
+.ss-sig--bull { background: var(--rag-green-100); color: var(--rag-green-700); }
+.ss-sig--bear { background: var(--rag-red-100);   color: var(--rag-red-700); }
+.ss-sig--neut { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+.ss-main { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: 4px; }
+.ss-val  { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: var(--text-primary); }
+.ss-denom { font-size: 16px; color: var(--text-tertiary); font-weight: 400; }
+.ss-foot { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.ss-foot .pos { color: var(--rag-green-700); font-weight: 600; }
+.ss-foot .neg { color: var(--rag-red-700);   font-weight: 600; }
+
+/* ─── Regime banner ──────────────────────────────────────────────────────── */
+.regime-banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-5);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  border-left-width: 4px;
+  margin-bottom: var(--space-4);
+}
+.regime-banner--correction  { border-left-color: var(--rag-amber-500); }
+.regime-banner--expansion   { border-left-color: var(--rag-green-500); }
+.regime-banner--contraction { border-left-color: var(--rag-red-500); }
+.regime-banner--recovery    { border-left-color: var(--accent-500); }
+.regime-banner--bear        { border-left-color: var(--rag-red-500); }
+.regime-banner--bull        { border-left-color: var(--rag-green-500); }
+
+.rb-left { display: flex; flex-direction: column; gap: 2px; min-width: 120px; }
+.rb-label { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; }
+.rb-name  { font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1; }
+.regime-banner--correction  .rb-name { color: var(--rag-amber-700); }
+.regime-banner--expansion   .rb-name { color: var(--rag-green-700); }
+.regime-banner--contraction .rb-name { color: var(--rag-red-700); }
+.regime-banner--recovery    .rb-name { color: var(--accent-700); }
+.regime-banner--bear        .rb-name { color: var(--rag-red-700); }
+.regime-banner--bull        .rb-name { color: var(--rag-green-700); }
+
+.rb-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.rb-text strong { font-weight: 600; }
+.rb-text .hl-amber { color: var(--rag-amber-700); font-weight: 600; }
+.rb-text .hl-green { color: var(--rag-green-700); font-weight: 600; }
+.rb-text .hl-red   { color: var(--rag-red-700);   font-weight: 600; }
+
+.rb-days { text-align: right; flex-shrink: 0; }
+.rb-days .rb-count { font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1; }
+.rb-days .rb-unit  { font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ─── Breadcrumb ─────────────────────────────────────────────────────────── */
+.crumb { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); padding: var(--space-4) 0 var(--space-2); }
+.crumb a { color: var(--text-accent); cursor: pointer; text-decoration: none; }
+.crumb__sep { color: var(--border-strong); }
+
+/* ─── Regime chips ───────────────────────────────────────────────────────── */
+.regime-chip { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); }
+.rc--expansion   { background: var(--rag-green-100); color: var(--rag-green-700); }
+.rc--correction  { background: var(--rag-amber-100); color: var(--rag-amber-700); }
+.rc--contraction { background: var(--rag-red-100);   color: var(--rag-red-700); }
+.rc--recovery    { background: var(--accent-100);    color: var(--accent-700); }
+.rc--bear        { background: var(--rag-red-100);   color: var(--rag-red-700); }
+.rc--bull        { background: var(--rag-green-100); color: var(--rag-green-700); }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ─── Focus ring ─────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--accent-700); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* ─── Selection ──────────────────────────────────────────────────────────── */
+::selection { background: var(--accent-100); color: var(--accent-900); }

@@ -29,6 +29,7 @@ from backend.routes import (
     intelligence,
     macros,
     mf,
+    mf_rank,
     portfolio,
     query,
     screener,
@@ -106,6 +107,7 @@ app.include_router(decisions.router)
 app.include_router(intelligence.router)
 app.include_router(global_intel.router)
 app.include_router(global_v7.router)
+app.include_router(mf_rank.router)  # /top-rs and /rank before /{mstar_id} wildcard
 app.include_router(mf.router)
 app.include_router(simulate.router)
 app.include_router(portfolio.router)

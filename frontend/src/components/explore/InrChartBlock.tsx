@@ -7,37 +7,40 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { useAtlasData } from "@/hooks/useAtlasData";
 import DataBlock from "@/components/ui/DataBlock";
 
-interface InrPoint {
-  date: string;
-  close?: number | null;
-  value?: number | null;
+interface FxRow {
+  rate_date: string;
+  currency_pair: string;
+  reference_rate: string | number | null;
+  source?: string;
   [key: string]: unknown;
 }
 
-interface InrData {
-  series?: InrPoint[];
-  records?: InrPoint[];
-  [key: string]: unknown;
-}
+// /api/macros/fx returns { data: FxRow[], _meta: {...} }
+type FxData = FxRow[];
 
 export default function InrChartBlock() {
-  const { data, meta, state, error } = useAtlasData<InrData>(
-    "/api/v1/query",
-    { entity_type: "timeseries" },
+  const { data, meta, state, error } = useAtlasData<FxData>(
+    "/api/macros/fx",
+    undefined,
     { dataClass: "daily_regime" }
   );
 
-  // DataBlock renders EmptyState automatically when state === "empty"
-  // useAtlasData returns state="empty" when meta.insufficient_data === true
-  // Sparse behavior (USDINR=X has only 3 rows) is handled automatically.
-
-  const points = data?.series ?? data?.records ?? [];
+  // Filter USD/INR rows and sort by date ascending
+  const points =
+    Array.isArray(data)
+      ? [...data]
+          .filter((r) => r.currency_pair === "USD/INR" && r.reference_rate != null)
+          .sort((a, b) => String(a.rate_date).localeCompare(String(b.rate_date)))
+          .map((r) => ({
+            date: String(r.rate_date),
+            rate: parseFloat(String(r.reference_rate)),
+          }))
+      : [];
 
   return (
     <div data-block="inr-chart-block">
@@ -48,9 +51,9 @@ export default function InrChartBlock() {
         errorCode={error?.code}
         errorMessage={error?.message}
         emptyTitle="INR data unavailable"
-        emptyBody="USD/INR timeseries data is sparse. Check back later."
+        emptyBody="USD/INR reference rate data is not available."
       >
-        {data && points.length > 0 && (
+        {points.length > 0 && (
           <div>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={points} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
@@ -58,23 +61,23 @@ export default function InrChartBlock() {
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 11 }}
-                  label={{ value: "Date", position: "insideBottomRight", offset: -4, fontSize: 11 }}
+                  tickFormatter={(v: string) => v.slice(5)} // show MM-DD
                 />
                 <YAxis
                   tick={{ fontSize: 11 }}
-                  label={{ value: "INR/USD", angle: -90, position: "insideLeft", fontSize: 11 }}
+                  domain={["auto", "auto"]}
+                  tickFormatter={(v: number) => `₹${v.toFixed(1)}`}
                 />
                 <Tooltip
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value: any) => [`₹${typeof value === "number" ? value.toFixed(2) : "—"}`, "INR/USD"]}
+                  formatter={(value: any) => [`₹${typeof value === "number" ? value.toFixed(2) : "—"}`, "USD/INR"]}
                   labelStyle={{ fontSize: 11 }}
                   contentStyle={{ fontSize: 11 }}
                 />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Line
                   type="monotone"
-                  dataKey="close"
-                  name="INR/USD"
+                  dataKey="rate"
+                  name="USD/INR"
                   stroke="#1D9E75"
                   dot={false}
                   strokeWidth={1.5}
@@ -82,7 +85,7 @@ export default function InrChartBlock() {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-gray-400 mt-2 text-right">
-              Source: ATLAS global price feed · as of {meta?.data_as_of ?? "—"}
+              Source: RBI reference rate · as of {points[points.length - 1]?.date ?? "—"}
             </p>
           </div>
         )}

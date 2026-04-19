@@ -41,25 +41,24 @@ interface RankTableProps {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-// SWR fetcher for template POST
-async function rankFetcher([, params]: [string, string]): Promise<{ data: RankApiResponse; _meta: { data_as_of: string | null; staleness_seconds: number; source: string } }> {
-  const parsed = JSON.parse(params) as { template: string; params: Record<string, unknown> };
-  const res = await fetch(`${API_BASE}/api/v1/query/template`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(parsed),
-  });
-  if (!res.ok) throw new Error(`rank template: ${res.status}`);
-  return res.json() as Promise<{ data: RankApiResponse; _meta: { data_as_of: string | null; staleness_seconds: number; source: string } }>;
+// SWR fetcher for GET /api/v1/mf/rank
+interface RankApiEnvelope {
+  records: RankRecord[];
+  _meta: { data_as_of: string | null; staleness_seconds: number; source: string; total: number };
 }
 
-function buildParams(filters: RankFilters): Record<string, unknown> {
-  const p: Record<string, unknown> = { limit: 100 };
-  if (filters.category) p.category = filters.category;
-  if (filters.sub_category) p.sub_category = filters.sub_category;
-  if (filters.amc) p.aum_range = filters.amc;
-  if (filters.period) p.period = filters.period;
-  return p;
+async function rankFetcher(url: string): Promise<RankApiEnvelope> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`rank fetch: ${res.status}`);
+  return res.json() as Promise<RankApiEnvelope>;
+}
+
+function buildRankUrl(filters: RankFilters): string {
+  const params = new URLSearchParams();
+  params.set("limit", "100");
+  if (filters.category) params.set("category", filters.category);
+  if (filters.amc) params.set("aum_range", filters.amc);
+  return `${API_BASE}/api/v1/mf/rank?${params.toString()}`;
 }
 
 function exportCsv(records: RankRecord[]) {
@@ -111,21 +110,15 @@ export default function RankTable({ filters }: RankTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("composite_score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  const swrParams = JSON.stringify({
-    template: "mf_rank_composite",
-    params: buildParams(filters),
-  });
+  const rankUrl = buildRankUrl(filters);
 
-  const { data: swrData, error, isValidating } = useSWR<{
-    data: RankApiResponse;
-    _meta: { data_as_of: string | null; staleness_seconds: number; source: string };
-  }>(
-    ["/api/v1/query/template", swrParams],
+  const { data: swrData, error, isValidating } = useSWR<RankApiEnvelope>(
+    rankUrl,
     rankFetcher,
     { revalidateOnFocus: false }
   );
 
-  const records = swrData?.data?.records ?? [];
+  const records = swrData?.records ?? [];
   const dataAsOf = swrData?._meta?.data_as_of ?? null;
   const isLoading = !swrData && isValidating;
 
@@ -163,7 +156,7 @@ export default function RankTable({ filters }: RankTableProps) {
   return (
     <div
       data-block="rank-table"
-      data-endpoint="/api/v1/query/template"
+      data-endpoint="/api/v1/mf/rank"
       data-state={blockState}
       data-data-class="daily_regime"
       className="bg-white border border-gray-200 rounded-lg overflow-hidden"
@@ -274,9 +267,11 @@ export default function RankTable({ filters }: RankTableProps) {
                   <td className="px-2.5 py-2.5">
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
                       row.category === "Flexi Cap" ? "bg-teal-50 text-teal-700" :
-                      row.category === "Large Cap" ? "bg-emerald-50 text-emerald-700" :
-                      row.category === "Mid Cap" ? "bg-amber-50 text-amber-700" :
-                      row.category === "Small Cap" ? "bg-red-50 text-red-700" :
+                      row.category === "Large-Cap" ? "bg-emerald-50 text-emerald-700" :
+                      row.category === "Large & Mid-Cap" ? "bg-emerald-50 text-emerald-700" :
+                      row.category === "Mid-Cap" ? "bg-amber-50 text-amber-700" :
+                      row.category === "Small-Cap" ? "bg-red-50 text-red-700" :
+                      row.category?.includes("ELSS") ? "bg-purple-50 text-purple-700" :
                       "bg-gray-100 text-gray-600"
                     }`}>
                       {row.category}

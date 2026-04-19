@@ -11,11 +11,14 @@ interface FilterRailProps {
 const CATEGORIES = [
   { value: null, label: "All categories" },
   { value: "Flexi Cap", label: "Flexi Cap" },
-  { value: "Large Cap", label: "Large Cap" },
-  { value: "Mid Cap", label: "Mid Cap" },
-  { value: "Small Cap", label: "Small Cap" },
-  { value: "ELSS", label: "ELSS" },
+  { value: "Large-Cap", label: "Large Cap" },
+  { value: "Large & Mid-Cap", label: "Large & Mid Cap" },
+  { value: "Mid-Cap", label: "Mid Cap" },
+  { value: "Small-Cap", label: "Small Cap" },
+  { value: "ELSS (Tax Savings)", label: "ELSS" },
   { value: "Multi Cap", label: "Multi Cap" },
+  { value: "Focused Fund", label: "Focused Fund" },
+  { value: "Value", label: "Value" },
 ];
 
 const AUM_OPTIONS = [

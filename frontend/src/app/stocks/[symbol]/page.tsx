@@ -25,79 +25,82 @@ export default function StockDetailPage({ params }: PageProps) {
   }, [upperSymbol]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <nav className="px-6 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1 text-xs text-gray-400">
-          <li><a href="/" className="text-gray-500 hover:text-teal-700">Global</a></li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li><a href="/explore" className="text-gray-500 hover:text-teal-700">Explorer</a></li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li className="text-gray-900 font-semibold">{upperSymbol}</li>
-        </ol>
-      </nav>
+    <main style={{ background: "var(--bg-app)", minHeight: "100vh" }}>
 
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-6">
+      {/* Page header */}
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-default)", padding: "var(--space-4) var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto" }}>
+          <div className="crumb" style={{ padding: 0, marginBottom: 4 }}>
+            <a href="/explore/country">India</a>
+            <span className="crumb__sep">›</span>
+            {sector && <><span>{sector}</span><span className="crumb__sep">›</span></>}
+            <strong style={{ color: "var(--text-primary)" }}>{upperSymbol}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", padding: "0 var(--space-6) var(--space-10)" }}>
+
         {/* Hero — loads first; extracts sector on success */}
-        <StockHeroBlock symbol={upperSymbol} onSectorLoaded={setSector} />
+        <div style={{ marginTop: "var(--space-5)" }}>
+          <StockHeroBlock symbol={upperSymbol} onSectorLoaded={setSector} />
+        </div>
 
         {/* Signal strip */}
         <SignalStripBlock symbol={upperSymbol} />
 
-        {/* Chart + overlays */}
-        <section aria-label="Price Chart">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Price vs Benchmark (5Y)
-          </h2>
+        {/* Price chart */}
+        <div>
+          <div className="sec-hd">
+            <h3>Price vs Benchmark</h3>
+            <span className="sec-sub">5-year daily</span>
+          </div>
           <StockChartBlock symbol={upperSymbol} />
-        </section>
-
-        {/* Benchmark panels */}
-        <section aria-label="Benchmark Comparison">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Benchmark Comparison
-          </h2>
-          <BenchmarkPanels symbol={upperSymbol} />
-        </section>
-
-        {/* Peers — gated on hero sector */}
-        <section aria-label="Peer Comparison">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Sector Peers
-          </h2>
-          <PeersBlock sector={sector} currentSymbol={upperSymbol} />
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Divergences */}
-          <section aria-label="Divergences">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Divergences
-            </h2>
-            <DivergencesStockBlock symbol={upperSymbol} />
-          </section>
-
-          {/* Signal History */}
-          <section aria-label="Signal History">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Signal History
-            </h2>
-            <SignalHistoryStockBlock symbol={upperSymbol} />
-          </section>
         </div>
 
-        {/* Insider Activity */}
-        <section aria-label="Insider Activity">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Insider &amp; Bulk / Block Activity
-          </h2>
-          <InsiderBlock symbol={upperSymbol} />
-        </section>
+        {/* Benchmark comparison */}
+        <div>
+          <div className="sec-hd">
+            <h3>Benchmark Comparison</h3>
+          </div>
+          <BenchmarkPanels symbol={upperSymbol} />
+        </div>
 
-        {/* data-v2-deferred: rec-slots and signal playback */}
-        <section aria-label="Recommendations" data-v2-deferred="true">
+        {/* Sector peers */}
+        <div>
+          <div className="sec-hd">
+            <h3>Sector Peers</h3>
+            {sector && <span className="sec-sub">{sector}</span>}
+          </div>
+          <PeersBlock sector={sector} currentSymbol={upperSymbol} />
+        </div>
+
+        {/* Divergences + Signal History — 2 col */}
+        <div>
+          <div className="sec-hd"><h3>Divergences &amp; Signal History</h3></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <DivergencesStockBlock symbol={upperSymbol} />
+            <SignalHistoryStockBlock symbol={upperSymbol} />
+          </div>
+        </div>
+
+        {/* Insider activity */}
+        <div>
+          <div className="sec-hd">
+            <h3>Insider &amp; Bulk / Block Activity</h3>
+          </div>
+          <InsiderBlock symbol={upperSymbol} />
+        </div>
+
+        {/* Deferred */}
+        <div data-v2-deferred="true">
+          <div className="sec-hd">
+            <h3>AI Recommendations</h3>
+            <span className="sec-badge">V2</span>
+          </div>
           <EmptyState title="Coming soon" body="AI-powered recommendations will be available in a future release." />
-        </section>
+        </div>
+
       </div>
     </main>
   );

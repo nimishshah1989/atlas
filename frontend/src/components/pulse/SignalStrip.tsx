@@ -2,9 +2,8 @@
 
 import { useAtlasData } from "@/hooks/useAtlasData";
 import DataBlock from "@/components/ui/DataBlock";
-import { formatDecimal } from "@/lib/format";
 
-interface SignalBreadth {
+interface BreadthFields {
   advance: number;
   decline: number;
   pct_above_200dma: string | null;
@@ -13,49 +12,73 @@ interface SignalBreadth {
   new_52w_lows: number;
 }
 
-interface SignalRegime {
+interface RegimeFields {
   regime: string;
-  confidence: string | null;
-  breadth_score: string | null;
-  momentum_score: string | null;
-  volume_score: string | null;
-  global_score: string | null;
-  fii_score: string | null;
 }
 
 interface SignalApiData {
-  breadth: SignalBreadth;
-  regime: SignalRegime;
+  breadth: BreadthFields;
+  regime: RegimeFields;
 }
 
-interface SignalChipProps {
+/**
+ * Convert pct string + total to count.
+ * e.g. "49.0", 500 → 245
+ */
+function pctToCount(pct: string | null, total: number): number | null {
+  if (pct === null) return null;
+  const n = parseFloat(String(pct));
+  if (isNaN(n)) return null;
+  return Math.round((n / 100) * total);
+}
+
+function signalClass(count: number | null, total: number): "bull" | "bear" | "neut" {
+  if (count === null) return "neut";
+  const pct = count / total;
+  if (pct >= 0.6) return "bull";
+  if (pct >= 0.4) return "neut";
+  return "bear";
+}
+
+function signalLabel(cls: "bull" | "bear" | "neut"): string {
+  if (cls === "bull") return "Bullish";
+  if (cls === "bear") return "Bearish";
+  return "Neutral";
+}
+
+interface DmaCardProps {
   label: string;
-  value: string | null;
-  colorClass?: string;
+  tooltip: string;
+  count: number | null;
+  total: number;
+  pctStr: string | null;
 }
 
-function SignalChip({ label, value, colorClass = "bg-gray-100 text-gray-700" }: SignalChipProps) {
+function DmaCard({ label, tooltip, count, total, pctStr }: DmaCardProps) {
+  const sig = signalClass(count, total);
+  const pct = pctStr !== null ? parseFloat(String(pctStr)).toFixed(1) : null;
+
   return (
-    <div className={`flex flex-col items-center px-3 py-2 rounded ${colorClass}`}>
-      <span className="text-xs font-medium opacity-75">{label}</span>
-      <span className="text-sm font-bold">{value ?? "—"}</span>
+    <div className={`ss-card ss-card--${sig}`} title={tooltip}>
+      <div className="ss-top">
+        <div className="ss-lbl">{label}</div>
+        <div className={`ss-sig ss-sig--${sig}`}>{signalLabel(sig)}</div>
+      </div>
+      <div className="ss-main">
+        <div className="ss-val">{count !== null ? count : "—"}</div>
+        {count !== null && <div className="ss-denom">/ {total}</div>}
+      </div>
+      <div className="ss-foot">
+        {pct !== null ? `${pct}% of universe` : "—"}
+      </div>
     </div>
   );
-}
-
-function scoreClass(val: string | null): string {
-  if (val === null) return "bg-gray-100 text-gray-700";
-  const n = parseFloat(val);
-  if (isNaN(n)) return "bg-gray-100 text-gray-700";
-  if (n >= 0.6) return "bg-green-100 text-green-700";
-  if (n >= 0.4) return "bg-amber-100 text-amber-700";
-  return "bg-red-100 text-red-700";
 }
 
 export default function SignalStrip() {
   const { data, meta, state, error } = useAtlasData<SignalApiData>(
     "/api/v1/stocks/breadth",
-    {},
+    { universe: "nifty500" },
     { dataClass: "eod_breadth" }
   );
 
@@ -66,62 +89,55 @@ export default function SignalStrip() {
       dataAsOf={meta?.data_as_of ?? null}
       errorCode={error?.code}
       errorMessage={error?.message}
-      emptyTitle="No signal data"
-      emptyBody="Signal scores are unavailable."
+      emptyTitle="No breadth data"
+      emptyBody="DMA breadth signals are unavailable."
     >
-      {data && (
-        <div
-          className="flex flex-wrap gap-2"
-          data-block="signal-strip"
-        >
-          <SignalChip
-            label="RS"
-            value={formatDecimal(data.breadth.pct_above_200dma)}
-            colorClass={scoreClass(data.breadth.pct_above_200dma !== null
-              ? String(parseFloat(String(data.breadth.pct_above_200dma)) / 100)
-              : null)}
-          />
-          <SignalChip
-            label="Breadth"
-            value={data.regime.breadth_score !== null
-              ? formatDecimal(data.regime.breadth_score)
-              : null}
-            colorClass={scoreClass(data.regime.breadth_score)}
-          />
-          <SignalChip
-            label="Momentum"
-            value={data.regime.momentum_score !== null
-              ? formatDecimal(data.regime.momentum_score)
-              : null}
-            colorClass={scoreClass(data.regime.momentum_score)}
-          />
-          <SignalChip
-            label="Volume"
-            value={data.regime.volume_score !== null
-              ? formatDecimal(data.regime.volume_score)
-              : null}
-            colorClass={scoreClass(data.regime.volume_score)}
-          />
-          <SignalChip
-            label="Global"
-            value={data.regime.global_score !== null
-              ? formatDecimal(data.regime.global_score)
-              : null}
-            colorClass={scoreClass(data.regime.global_score)}
-          />
-          <SignalChip
-            label="FII"
-            value={data.regime.fii_score !== null
-              ? formatDecimal(data.regime.fii_score)
-              : null}
-            colorClass={scoreClass(data.regime.fii_score)}
-          />
-          <SignalChip
-            label="52W H/L"
-            value={`${data.breadth.new_52w_highs}/${data.breadth.new_52w_lows}`}
-          />
-        </div>
-      )}
+      {data && (() => {
+        const total = (data.breadth.advance ?? 0) + (data.breadth.decline ?? 0);
+        const universe = total > 0 ? total : 500;
+        const above50Count = pctToCount(data.breadth.pct_above_50dma, universe);
+        const above200Count = pctToCount(data.breadth.pct_above_200dma, universe);
+
+        return (
+          <div className="ss-strip" data-block="signal-strip">
+            <DmaCard
+              label="Above 50 DMA"
+              tooltip="Medium-term trend breadth. Count of Nifty 500 stocks above their 50-day simple moving average."
+              count={above50Count}
+              total={universe}
+              pctStr={data.breadth.pct_above_50dma}
+            />
+            <DmaCard
+              label="Above 200 DMA"
+              tooltip="Long-term structural breadth. Count of Nifty 500 stocks above their 200-day SMA. Below 50% = structural bear; above 70% = structural bull."
+              count={above200Count}
+              total={universe}
+              pctStr={data.breadth.pct_above_200dma}
+            />
+            {/* 3rd card: 52-week highs vs lows */}
+            <div
+              className={`ss-card ss-card--${data.breadth.new_52w_highs >= data.breadth.new_52w_lows ? "bull" : "bear"}`}
+              title="52-week new highs minus new lows. A positive net reading supports the bullish case."
+            >
+              <div className="ss-top">
+                <div className="ss-lbl">52W High / Low</div>
+                <div className={`ss-sig ss-sig--${data.breadth.new_52w_highs >= data.breadth.new_52w_lows ? "bull" : "bear"}`}>
+                  {data.breadth.new_52w_highs >= data.breadth.new_52w_lows ? "Bullish" : "Bearish"}
+                </div>
+              </div>
+              <div className="ss-main">
+                <div className="ss-val">{data.breadth.new_52w_highs}</div>
+                <div className="ss-denom">H</div>
+              </div>
+              <div className="ss-foot">
+                <span className="neg">{data.breadth.new_52w_lows} new lows</span>
+                {" · "}Net {data.breadth.new_52w_highs - data.breadth.new_52w_lows >= 0 ? "+" : ""}
+                {data.breadth.new_52w_highs - data.breadth.new_52w_lows}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </DataBlock>
   );
 }

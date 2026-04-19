@@ -4,17 +4,20 @@ import { useAtlasData } from "@/hooks/useAtlasData";
 import DataBlock from "@/components/ui/DataBlock";
 import { formatDecimal, formatCurrency } from "@/lib/format";
 
-interface DerivativesData {
-  pcr?: number | string | null;
-  oi_change?: number | string | null;
-  max_pain?: number | string | null;
-  iv_percentile?: number | string | null;
+// PCR endpoint returns { data: [{ trade_date, pcr_oi, pcr_volume, total_oi }], _meta }
+interface PcrRow {
+  trade_date?: string;
+  pcr_oi?: string | number | null;
+  pcr_volume?: string | number | null;
+  total_oi?: number | null;
   [key: string]: unknown;
 }
 
+type DerivativesData = PcrRow[];
+
 export default function DerivativesBlock() {
   const { data, meta, state, error } = useAtlasData<DerivativesData>(
-    "/api/v1/derivatives/summary",
+    "/api/derivatives/pcr/NIFTY",
     undefined,
     { dataClass: "intraday" }
   );
@@ -34,42 +37,40 @@ export default function DerivativesBlock() {
         emptyTitle="Derivatives data unavailable"
         emptyBody="F&O bhavcopy data is not yet available for today's session."
       >
-        {data && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Put/Call Ratio
-              </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatDecimal(data.pcr ?? null, 2)}
-              </p>
+        {Array.isArray(data) && data.length > 0 && (() => {
+          const latest = data[0] as PcrRow;
+          return (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  NIFTY PCR (OI)
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatDecimal(latest.pcr_oi ?? null, 2)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">{latest.trade_date ?? "—"}</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  PCR (Volume)
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {latest.pcr_volume != null ? formatDecimal(latest.pcr_volume, 2) : "—"}
+                </p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  Total OI
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {latest.total_oi != null
+                    ? (latest.total_oi / 1e7).toFixed(1) + " Cr"
+                    : "—"}
+                </p>
+              </div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                OI Change
-              </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatDecimal(data.oi_change ?? null, 0)}
-              </p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Max Pain
-              </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(data.max_pain ?? null)}
-              </p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                IV Percentile
-              </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatDecimal(data.iv_percentile ?? null, 1)}%
-              </p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </DataBlock>
     </div>
   );

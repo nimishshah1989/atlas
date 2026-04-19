@@ -58,6 +58,7 @@ from backend.services.mf_compute import classify_fund_quadrant, compute_category
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/api/v1/mf", tags=["mf"])
+# NOTE: /top-rs and /rank routes live in backend.routes.mf_rank (registered separately)
 
 
 @router.get("/universe", response_model=UniverseResponse)

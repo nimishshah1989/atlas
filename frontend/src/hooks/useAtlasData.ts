@@ -26,12 +26,30 @@ export interface UseAtlasDataResult<T> {
 
 function hasData(json: unknown): boolean {
   if (!json || typeof json !== "object") return false;
-  const obj = json as Record<string, unknown>;
-  return (
-    (Array.isArray(obj.records) && obj.records.length > 0) ||
-    (Array.isArray(obj.series) && obj.series.length > 0) ||
-    (Array.isArray(obj.divergences) && obj.divergences.length > 0)
-  );
+  const wrapper = json as Record<string, unknown>;
+  const inner = wrapper.data;
+
+  // No data field at all
+  if (inner === undefined || inner === null) return false;
+
+  // Array-type data: non-empty means data
+  if (Array.isArray(inner)) return inner.length > 0;
+
+  // Object-type data: check well-known list fields first
+  if (typeof inner === "object") {
+    const d = inner as Record<string, unknown>;
+    if (Array.isArray(d.records) && d.records.length > 0) return true;
+    if (Array.isArray(d.series) && d.series.length > 0) return true;
+    if (Array.isArray(d.divergences) && d.divergences.length > 0) return true;
+    if (Array.isArray(d.events) && d.events.length > 0) return true;
+    if (Array.isArray(d.sectors) && d.sectors.length > 0) return true;
+    if (Array.isArray(d.gainers) && d.gainers.length > 0) return true;
+    // Generic non-empty object with at least one real data key
+    const keys = Object.keys(d).filter(k => k !== "_meta" && k !== "meta");
+    return keys.length > 0;
+  }
+
+  return false;
 }
 
 function computeState<T>(
@@ -46,14 +64,14 @@ function computeState<T>(
 
   const meta = swrData._meta;
 
-  // Known-sparse guard
-  if (meta.insufficient_data === true) return "empty";
+  // Known-sparse guard — null-safe
+  if (meta && meta.insufficient_data === true) return "empty";
 
   // Check for data presence
   if (!hasData(swrData)) return "empty";
 
-  // Staleness check
-  if (dataClass && typeof meta.staleness_seconds === "number") {
+  // Staleness check — null-safe
+  if (dataClass && meta && typeof meta.staleness_seconds === "number") {
     const threshold = STALENESS_THRESHOLDS[dataClass];
     if (typeof threshold === "number" && meta.staleness_seconds > threshold) {
       return "stale";
@@ -79,7 +97,14 @@ export function useAtlasData<T>(
     const parsedParams = p
       ? (JSON.parse(p) as Record<string, string | number | boolean | undefined>)
       : undefined;
-    return apiFetch<T>(ep, parsedParams);
+    const raw = await apiFetch<Record<string, unknown>>(ep, parsedParams as never);
+    const r = raw as Record<string, unknown>;
+    // Normalize: if response has _meta but no `data` key, wrap the whole response.
+    if (!("data" in r)) {
+      const m = (r._meta ?? r.meta ?? { data_as_of: null, staleness_seconds: 0, source: "api" }) as AtlasMeta;
+      return { data: raw as unknown as T, _meta: m };
+    }
+    return raw as unknown as { data: T; _meta: AtlasMeta };
   };
 
   const { data: swrData, error: swrError, isValidating, mutate } = useSWR<

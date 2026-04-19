@@ -16,126 +16,111 @@ export default function BreadthPage() {
   const [indicator, setIndicator] = useState<string>("ema21");
 
   useEffect(() => {
-    document.title = "ATLAS \u00b7 Breadth Terminal";
+    document.title = "ATLAS · Breadth Terminal";
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Breadcrumbs */}
-      <nav className="px-6 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1 text-xs text-gray-400">
-          <li>
-            <a href="/" className="text-gray-500 font-medium hover:text-teal-700">
-              Today
-            </a>
-          </li>
-          <li aria-hidden="true" className="text-gray-300">
-            ›
-          </li>
-          <li className="text-gray-900 font-semibold">Breadth</li>
-        </ol>
-      </nav>
+    <main style={{ background: "var(--bg-app)", minHeight: "100vh" }}>
 
       {/* Page header */}
-      <header className="border-b border-gray-200 bg-white px-6 py-4 mt-2">
-        <h1 className="text-xl font-bold text-gray-900">Breadth Terminal</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Market breadth oscillator, zone history, and divergence signals
-        </p>
-      </header>
-
-      {/* Selector bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Universe
-          </span>
-          <UniverseSelector universe={universe} onUniverseChange={setUniverse} />
-        </div>
-        <div className="w-px h-5 bg-gray-200" aria-hidden="true" />
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Indicator
-          </span>
-          <IndicatorSelector indicator={indicator} onIndicatorChange={setIndicator} />
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-default)", padding: "var(--space-4) var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto" }}>
+          <div className="crumb" style={{ padding: 0, marginBottom: 4 }}>
+            <a href="/pulse">Pulse</a>
+            <span className="crumb__sep">›</span>
+            <a href="/explore/country">India</a>
+            <span className="crumb__sep">›</span>
+            <strong style={{ color: "var(--text-primary)" }}>Breadth Terminal</strong>
+          </div>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "var(--fs-2xl)", fontWeight: 400, color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
+            Breadth Terminal
+          </h1>
+          <p style={{ fontSize: "var(--fs-sm)", color: "var(--text-tertiary)", marginTop: 4, marginBottom: 0 }}>
+            Market breadth oscillator · zone history · divergence signals
+          </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {/* Selector bar */}
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-subtle)", padding: "0 var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", display: "flex", alignItems: "center", gap: "var(--space-6)", height: 44 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em" }}>Universe</span>
+            <UniverseSelector universe={universe} onUniverseChange={setUniverse} />
+          </div>
+          <div style={{ width: 1, height: 20, background: "var(--border-subtle)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em" }}>Indicator</span>
+            <IndicatorSelector indicator={indicator} onIndicatorChange={setIndicator} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", padding: "0 var(--space-6) var(--space-10)" }}>
+
         {/* Hero KPI Row */}
-        <section aria-label="Breadth KPIs">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Current Breadth
-          </h2>
+        <div>
+          <div className="sec-hd">
+            <h3>Current Breadth</h3>
+            <span className="sec-sub">{universe.toUpperCase()}</span>
+          </div>
           <HeroKPIRow universe={universe} />
-        </section>
-
-        {/* Oscillator Panel */}
-        <section aria-label="Breadth Oscillator">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Oscillator (5Y)
-          </h2>
-          <OscillatorPanel universe={universe} indicator={indicator} />
-        </section>
-
-        {/* Zone Labels */}
-        <section aria-label="Zone Reference">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Zone Reference
-          </h2>
-          <ZoneLabelsBlock universe={universe} />
-        </section>
-
-        {/* Describe — methodology note */}
-        <section aria-label="Methodology" className="bg-white border border-gray-200 rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
-            Methodology
-          </h2>
-          <p className="text-xs text-gray-500">
-            Breadth counts the number of stocks in the selected universe trading above the
-            chosen moving average. Overbought zone (≥ 400 of 500) signals broad
-            participation — historically associated with strong trend continuation but
-            also near-term exhaustion risk. Oversold zone (≤ 100 of 500) signals
-            narrow participation — potential capitulation or base-building phase.
-          </p>
-        </section>
-
-        {/* Signal History */}
-        <section aria-label="Signal History">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Zone Transition History
-          </h2>
-          <SignalHistoryBlock universe={universe} />
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Divergences */}
-          <section aria-label="Factor Divergences">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Factor Divergences
-            </h2>
-            <DivergencesBlock universe={universe} />
-          </section>
-
-          {/* Conviction Halo — data-v2-derived */}
-          <section aria-label="Conviction Series" data-v2-derived="true">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Conviction Halo
-            </h2>
-            <ConvictionHaloBlock universe={universe} />
-          </section>
         </div>
 
-        {/* Signal Playback — data-v2-derived EmptyState */}
-        <section aria-label="Signal Playback" data-v2-derived="true">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Signal Playback (Compact)
-          </h2>
-          <EmptyState
-            title="Coming soon"
-            body="Signal playback will be available in a future release."
-          />
-        </section>
+        {/* Oscillator */}
+        <div>
+          <div className="sec-hd">
+            <h3>Breadth Oscillator</h3>
+            <span className="sec-sub">5-year history</span>
+          </div>
+          <OscillatorPanel universe={universe} indicator={indicator} />
+        </div>
+
+        {/* Zone Labels */}
+        <div>
+          <div className="sec-hd">
+            <h3>Zone Reference</h3>
+          </div>
+          <ZoneLabelsBlock universe={universe} />
+        </div>
+
+        {/* Methodology */}
+        <div style={{ background: "var(--bg-surface)", border: "var(--border-card)", borderRadius: "var(--radius-md)", padding: "var(--space-4)", marginBottom: "var(--space-4)" }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "var(--space-2)" }}>Methodology</div>
+          <p style={{ fontSize: "var(--fs-xs)", color: "var(--text-secondary)", lineHeight: "var(--lh-loose)", margin: 0 }}>
+            Breadth counts the number of stocks in the selected universe trading above the chosen moving average.
+            Overbought zone (≥ 400 of 500) signals broad participation — historically associated with strong trend
+            continuation but also near-term exhaustion risk. Oversold zone (≤ 100 of 500) signals narrow participation
+            — potential capitulation or base-building phase.
+          </p>
+        </div>
+
+        {/* Signal History */}
+        <div>
+          <div className="sec-hd">
+            <h3>Zone Transition History</h3>
+          </div>
+          <SignalHistoryBlock universe={universe} />
+        </div>
+
+        {/* Divergences + Conviction Halo — 2 col */}
+        <div>
+          <div className="sec-hd"><h3>Divergences &amp; Conviction</h3></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <DivergencesBlock universe={universe} />
+            <ConvictionHaloBlock universe={universe} />
+          </div>
+        </div>
+
+        {/* Signal Playback — deferred */}
+        <div data-v2-derived="true">
+          <div className="sec-hd">
+            <h3>Signal Playback</h3>
+            <span className="sec-badge">V2</span>
+          </div>
+          <EmptyState title="Coming soon" body="Signal playback simulator will be available in a future release." />
+        </div>
+
       </div>
     </main>
   );

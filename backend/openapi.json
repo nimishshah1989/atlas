@@ -1810,6 +1810,144 @@
         }
       }
     },
+    "/api/v1/mf/top-rs": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Top Rs Funds",
+        "description": "Top N mutual funds by RS composite \u2014 lightweight alternative to /universe.\n\nReturns `{ data: [...], _meta: {...} }` format (spec \u00a718).",
+        "operationId": "get_top_rs_funds_api_v1_mf_top_rs_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 50,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mf/rank": {
+      "get": {
+        "tags": [
+          "mf"
+        ],
+        "summary": "Get Mf Rank",
+        "description": "4-factor composite ranking of active mutual funds.\n\nFactors (25% weight each):\n- Returns: Sharpe 1Y percentile within category (higher = better)\n- Risk: Volatility 1Y inverted percentile (lower vol = better)\n- Resilience: Max drawdown 1Y percentile (less-negative = better)\n- Consistency: Information ratio percentile (higher = better)\n\nScores are percentile-ranked within category (0\u2013100).\nComposite is the simple average; tie-break: Consistency \u2192 Risk \u2192 Returns \u2192 Resilience.",
+        "operationId": "get_mf_rank_api_v1_mf_rank_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category_name",
+              "title": "Category"
+            },
+            "description": "Filter by category_name"
+          },
+          {
+            "name": "aum_range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "large|mid|small \u2014 reserved",
+              "title": "Aum Range"
+            },
+            "description": "large|mid|small \u2014 reserved"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 500,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mf/universe": {
       "get": {
         "tags": [

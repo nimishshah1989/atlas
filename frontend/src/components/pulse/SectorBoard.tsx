@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DataBlock from "@/components/ui/DataBlock";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import EmptyState from "@/components/ui/EmptyState";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
@@ -12,14 +11,39 @@ type PostState = "loading" | "ready" | "empty" | "error";
 interface SectorRow {
   sector: string;
   rs_composite?: string | null;
-  rs_gold?: string | null;
-  conviction?: string | null;
+  sector_quadrant?: string | null;
+  pct_above_50dma?: string | null;
   [key: string]: unknown;
 }
 
 type SortDir = "asc" | "desc";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+function quadrantBadge(q: string | null | undefined): React.ReactNode {
+  if (!q) return <span style={{ color: "var(--text-tertiary)" }}>—</span>;
+  const s = String(q);
+  let bg = "var(--bg-inset)";
+  let col = "var(--text-secondary)";
+  if (s.toLowerCase().includes("leading")) { bg = "var(--rag-green-100)"; col = "var(--rag-green-700)"; }
+  else if (s.toLowerCase().includes("weakening")) { bg = "var(--rag-amber-100)"; col = "var(--rag-amber-700)"; }
+  else if (s.toLowerCase().includes("lagging")) { bg = "var(--rag-red-100)"; col = "var(--rag-red-700)"; }
+  else if (s.toLowerCase().includes("improving")) { bg = "var(--accent-100)"; col = "var(--accent-700)"; }
+  return (
+    <span style={{ background: bg, color: col, padding: "1px 7px", borderRadius: "var(--radius-full)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>
+      {s}
+    </span>
+  );
+}
+
+function pctColor(pct: string | null | undefined): string {
+  if (!pct) return "var(--text-tertiary)";
+  const n = parseFloat(String(pct));
+  if (isNaN(n)) return "var(--text-tertiary)";
+  if (n >= 60) return "var(--rag-green-700)";
+  if (n >= 40) return "var(--rag-amber-700)";
+  return "var(--rag-red-700)";
+}
 
 export default function SectorBoard() {
   const [state, setState] = useState<PostState>("loading");
@@ -28,30 +52,19 @@ export default function SectorBoard() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/v1/query/template`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        template: "sector_rotation",
-        params: { include_gold_rs: true },
-      }),
-    })
+    fetch(`${API_BASE}/api/v1/stocks/sectors`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
       .then((json: unknown) => {
         const j = json as Record<string, unknown>;
-        const inner = (j?.data ?? j) as Record<string, unknown>;
-        const records = (inner?.records as SectorRow[] | undefined) ?? [];
-        if (records.length === 0) {
-          setState("empty");
-        } else {
-          setData(records);
-          setState("ready");
-        }
+        const sectors = (j?.sectors as SectorRow[] | undefined) ?? [];
+        const rows = sectors.map((s) => ({
+          ...s,
+          rs_composite: (s.avg_rs_composite as string | null | undefined) ?? s.rs_composite ?? null,
+        }));
+        if (rows.length === 0) setState("empty");
+        else { setData(rows); setState("ready"); }
       })
-      .catch((e: unknown) => {
-        setErrorMsg(String(e));
-        setState("error");
-      });
+      .catch((e: unknown) => { setErrorMsg(String(e)); setState("error"); });
   }, []);
 
   const sorted = [...data].sort((a, b) => {
@@ -60,66 +73,84 @@ export default function SectorBoard() {
     return sortDir === "desc" ? bv - av : av - bv;
   });
 
-  function toggleSort() {
-    setSortDir((d) => (d === "desc" ? "asc" : "desc"));
-  }
-
   if (state === "loading") return <LoadingSkeleton />;
   if (state === "error") return <ErrorBanner message={errorMsg} />;
-  if (state === "empty") {
-    return (
-      <EmptyState
-        title="No sector data"
-        body="Sector rotation data is unavailable."
-      />
-    );
-  }
+  if (state === "empty") return <EmptyState title="No sector data" body="Sector rotation data is unavailable." />;
 
   return (
-    <DataBlock state="ready" dataClass="daily_regime">
-      <div data-role="sector-board" data-block="sector-board">
-        <table className="w-full text-sm border-collapse">
+    <div
+      data-block="sector-board"
+      style={{
+        background: "var(--bg-surface)",
+        border: "var(--border-card)",
+        borderRadius: "var(--radius-lg)",
+        overflow: "hidden",
+      }}
+    >
+      {/* Card header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px var(--space-4)", borderBottom: "var(--border-inner)" }}>
+        <span style={{ fontSize: "var(--fs-sm)", fontWeight: 600, color: "var(--text-primary)" }}>
+          Sector Rotation
+        </span>
+        <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{data.length} sectors</span>
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
-            <tr className="border-b border-gray-200 text-left">
-              <th className="py-2 px-3 font-semibold text-gray-600">Sector</th>
-              <th
-                className="py-2 px-3 font-semibold text-gray-600 cursor-pointer select-none text-right"
-                onClick={toggleSort}
-                aria-sort={sortDir === "desc" ? "descending" : "ascending"}
-              >
-                RS {sortDir === "desc" ? "▼" : "▲"}
-              </th>
-              <th className="py-2 px-3 font-semibold text-gray-600 text-right">
-                Gold RS
-              </th>
-              <th className="py-2 px-3 font-semibold text-gray-600 text-right">
-                Conviction
-              </th>
+            <tr>
+              {["Sector", "RS Score", ">50 DMA", "Quadrant"].map((col, i) => (
+                <th
+                  key={col}
+                  onClick={col === "RS Score" ? () => setSortDir(d => d === "desc" ? "asc" : "desc") : undefined}
+                  style={{
+                    padding: "6px 10px",
+                    fontSize: 9,
+                    fontWeight: 600,
+                    color: "var(--text-tertiary)",
+                    textTransform: "uppercase",
+                    letterSpacing: ".04em",
+                    borderBottom: "2px solid var(--border-default)",
+                    textAlign: i === 0 ? "left" : "right",
+                    background: "var(--bg-surface)",
+                    cursor: col === "RS Score" ? "pointer" : "default",
+                    whiteSpace: "nowrap",
+                    userSelect: "none",
+                  }}
+                >
+                  {col}{col === "RS Score" ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {sorted.map((row, i) => (
               <tr
                 key={row.sector ?? i}
-                className="border-b border-gray-100 hover:bg-gray-50"
+                style={{ borderBottom: "1px solid var(--border-subtle)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
               >
-                <td className="py-2 px-3 text-gray-800">{row.sector}</td>
-                <td className="py-2 px-3 text-right text-gray-800">
+                <td style={{ padding: "6px 10px", fontWeight: 500, color: "var(--text-primary)", textAlign: "left" }}>
+                  {row.sector}
+                </td>
+                <td style={{ padding: "6px 10px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--text-primary)" }}>
                   {formatDecimal(row.rs_composite ?? null)}
                 </td>
-                <td className="py-2 px-3 text-right text-gray-800">
-                  {formatDecimal(row.rs_gold ?? null)}
-                </td>
-                <td className="py-2 px-3 text-right text-gray-600">
-                  {row.conviction !== null && row.conviction !== undefined
-                    ? String(row.conviction)
+                <td style={{ padding: "6px 10px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: pctColor(row.pct_above_50dma) }}>
+                  {row.pct_above_50dma != null
+                    ? `${formatDecimal(String(row.pct_above_50dma))}%`
                     : "—"}
+                </td>
+                <td style={{ padding: "6px 10px", textAlign: "right" }}>
+                  {quadrantBadge(row.sector_quadrant)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </DataBlock>
+    </div>
   );
 }

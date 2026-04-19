@@ -2,7 +2,6 @@
 
 import { useAtlasData } from "@/hooks/useAtlasData";
 import DataBlock from "@/components/ui/DataBlock";
-import { formatDecimal } from "@/lib/format";
 
 interface BreadthFields {
   advance: number;
@@ -24,16 +23,34 @@ interface BreadthApiData {
   regime: RegimeFields;
 }
 
-function regimeBannerClass(regime: string): string {
-  const upper = regime.toUpperCase();
-  if (upper.includes("BULL") || upper.includes("EXPANSION")) {
-    return "bg-green-100 text-green-700 border-l-4 border-green-500";
+/** Returns lowercase slug for CSS modifier class */
+function regimeSlug(regime: string): string {
+  const u = regime.toUpperCase();
+  if (u.includes("BULL") || u.includes("EXPANSION")) return "expansion";
+  if (u.includes("BEAR") || u.includes("CONTRACTION")) return "contraction";
+  if (u.includes("RECOVERY")) return "recovery";
+  return "correction";
+}
+
+/** Short narrative text for each regime type */
+function regimeNarrative(regime: string, breadth: BreadthFields): string {
+  const slug = regimeSlug(regime);
+  const above200 = breadth.pct_above_200dma !== null
+    ? parseFloat(String(breadth.pct_above_200dma)).toFixed(0) + "%"
+    : "—";
+  const adNet = breadth.advance - breadth.decline;
+  const adSign = adNet >= 0 ? "+" : "";
+
+  switch (slug) {
+    case "expansion":
+      return `Breadth is expanding — ${above200} of universe above 200-DMA. A/D net ${adSign}${adNet}. Conditions favour new long positions and sector rotation into leaders.`;
+    case "contraction":
+      return `Structural breadth has weakened — only ${above200} of universe above 200-DMA. A/D net ${adSign}${adNet}. Reduce position sizing, tighten stops, and wait for breadth recovery before adding exposure.`;
+    case "recovery":
+      return `Breadth is recovering — ${above200} above 200-DMA and A/D net ${adSign}${adNet}. Early-stage improvement visible; wait for confirmation above 60% before adding new exposure.`;
+    default: // correction
+      return `Breadth is under pressure — ${above200} above 200-DMA. A/D net ${adSign}${adNet}. Many stocks in individual downtrends even as headline indices hold. Tighten stops and reduce new exposure.`;
   }
-  if (upper.includes("BEAR") || upper.includes("CONTRACTION")) {
-    return "bg-red-100 text-red-700 border-l-4 border-red-500";
-  }
-  // CORRECTION, NEUTRAL, SIDEWAYS, RECOVERY, etc.
-  return "bg-amber-100 text-amber-700 border-l-4 border-amber-500";
 }
 
 export default function RegimeBanner() {
@@ -53,44 +70,45 @@ export default function RegimeBanner() {
       emptyTitle="No regime data"
       emptyBody="Breadth data is unavailable for this universe."
     >
-      {data && (
-        <div
-          className={`p-4 rounded ${regimeBannerClass(data.regime.regime)}`}
-          data-block="regime-banner"
-        >
-          <div className="flex items-center gap-4">
-            <span className="text-xl font-bold">{data.regime.regime}</span>
-            {data.regime.confidence !== null && (
-              <span className="text-sm">
-                Confidence: {formatDecimal(data.regime.confidence)}%
-              </span>
-            )}
-            {typeof data.regime.days_in_regime === "number" && (
-              <span className="text-sm">
-                {data.regime.days_in_regime}d in regime
-              </span>
+      {data && (() => {
+        const slug = regimeSlug(data.regime.regime);
+        const days = data.regime.days_in_regime;
+        return (
+          <div
+            className={`regime-banner regime-banner--${slug}`}
+            data-block="regime-banner"
+          >
+            {/* Left: label + serif regime name */}
+            <div className="rb-left">
+              <div className="rb-label">Market Regime</div>
+              <div className="rb-name">{data.regime.regime}</div>
+            </div>
+
+            {/* Centre: narrative */}
+            <div className="rb-text">
+              {regimeNarrative(data.regime.regime, data.breadth)}
+              {data.regime.confidence !== null && (
+                <span style={{ marginLeft: 6, fontSize: 11, color: "var(--text-tertiary)" }}>
+                  Confidence: {parseFloat(String(data.regime.confidence)).toFixed(0)}%
+                </span>
+              )}
+            </div>
+
+            {/* Right: days counter */}
+            {typeof days === "number" && days > 0 ? (
+              <div className="rb-days">
+                <div className="rb-count">{days}</div>
+                <div className="rb-unit">Days in Regime</div>
+              </div>
+            ) : (
+              <div className="rb-days">
+                <div className="rb-count" style={{ fontSize: 20, color: "var(--text-tertiary)" }}>—</div>
+                <div className="rb-unit">Days in Regime</div>
+              </div>
             )}
           </div>
-          <div className="flex gap-6 mt-2 text-sm">
-            <span>A/D: {data.breadth.advance}/{data.breadth.decline}</span>
-            <span>
-              &gt;200DMA:{" "}
-              {data.breadth.pct_above_200dma !== null
-                ? `${formatDecimal(data.breadth.pct_above_200dma)}%`
-                : "—"}
-            </span>
-            <span>
-              &gt;50DMA:{" "}
-              {data.breadth.pct_above_50dma !== null
-                ? `${formatDecimal(data.breadth.pct_above_50dma)}%`
-                : "—"}
-            </span>
-            <span>
-              52W H/L: {data.breadth.new_52w_highs}/{data.breadth.new_52w_lows}
-            </span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </DataBlock>
   );
 }

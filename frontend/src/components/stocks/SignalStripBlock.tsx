@@ -3,15 +3,28 @@
 import { useAtlasData } from "@/hooks/useAtlasData";
 import DataBlock from "@/components/ui/DataBlock";
 
-interface SignalStripData {
-  rs?: number | string | null;
-  momentum?: number | string | null;
-  volume?: number | string | null;
-  breadth?: number | string | null;
-  rs_label?: string | null;
-  momentum_label?: string | null;
-  volume_label?: string | null;
-  breadth_label?: string | null;
+interface ApiShape {
+  stock?: {
+    conviction?: {
+      rs?: {
+        rs_composite?: number | string | null;
+        rs_1w?: number | string | null;
+        rs_1m?: number | string | null;
+        rs_3m?: number | string | null;
+        rs_6m?: number | string | null;
+        rs_12m?: number | string | null;
+        quadrant?: string | null;
+        benchmark?: string | null;
+      } | null;
+      technical?: {
+        checks_passing?: number;
+        checks_total?: number;
+      } | null;
+    } | null;
+    above_200dma?: boolean | null;
+    above_50dma?: boolean | null;
+    rsi_14?: number | string | null;
+  };
   [key: string]: unknown;
 }
 
@@ -19,31 +32,74 @@ interface SignalStripBlockProps {
   symbol: string;
 }
 
-function chipColor(label: string | null | undefined): string {
-  const l = (label ?? "").toLowerCase();
-  if (l.includes("bull") || l.includes("strong") || l.includes("high") || l.includes("above")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-  if (l.includes("bear") || l.includes("weak") || l.includes("low") || l.includes("below")) return "bg-red-100 text-red-700 border-red-200";
-  return "bg-amber-100 text-amber-700 border-amber-200";
+function chipStyle(isPositive: boolean | null): React.CSSProperties {
+  if (isPositive === true)  return { background: "var(--rag-green-100)", color: "var(--rag-green-700)", border: "1px solid var(--rag-green-200)" };
+  if (isPositive === false) return { background: "var(--rag-red-100)",   color: "var(--rag-red-700)",   border: "1px solid var(--rag-red-200)" };
+  return { background: "var(--bg-inset)", color: "var(--text-secondary)", border: "1px solid var(--border-default)" };
+}
+
+function numColor(v: number | null): string {
+  if (v === null) return "var(--text-secondary)";
+  return v >= 0 ? "var(--rag-green-700)" : "var(--rag-red-700)";
 }
 
 export default function SignalStripBlock({ symbol }: SignalStripBlockProps) {
-  const { data, meta, state, error } = useAtlasData<SignalStripData>(
+  const { data: rawData, meta, state, error } = useAtlasData<ApiShape>(
     `/api/v1/stocks/${symbol}`,
-    { include: "rs_strip" },
+    {},
     { dataClass: "intraday" }
   );
 
+  const stock = rawData?.stock;
+  const rs = stock?.conviction?.rs;
+  const tech = stock?.conviction?.technical;
+
+  const rsComposite = rs?.rs_composite != null ? Number(rs.rs_composite) : null;
+  const rs1m = rs?.rs_1m != null ? Number(rs.rs_1m) : null;
+  const rs3m = rs?.rs_3m != null ? Number(rs.rs_3m) : null;
+  const rsPositive = rsComposite !== null ? rsComposite >= 0 : null;
+
   const chips = [
-    { label: "RS", value: data?.rs_label ?? (data?.rs != null ? String(data.rs) : null) },
-    { label: "Momentum", value: data?.momentum_label ?? (data?.momentum != null ? String(data.momentum) : null) },
-    { label: "Volume", value: data?.volume_label ?? (data?.volume != null ? String(data.volume) : null) },
-    { label: "Breadth", value: data?.breadth_label ?? (data?.breadth != null ? String(data.breadth) : null) },
+    {
+      label: `RS vs ${rs?.benchmark ?? "Nifty 500"}`,
+      value: rsComposite != null ? rsComposite.toFixed(1) : "—",
+      positive: rsPositive,
+    },
+    {
+      label: "RS 1M",
+      value: rs1m != null ? rs1m.toFixed(1) : "—",
+      positive: rs1m !== null ? rs1m >= 0 : null,
+    },
+    {
+      label: "RS 3M",
+      value: rs3m != null ? rs3m.toFixed(1) : "—",
+      positive: rs3m !== null ? rs3m >= 0 : null,
+    },
+    {
+      label: "Quadrant",
+      value: rs?.quadrant ?? "—",
+      positive: rs?.quadrant === "LEADING" ? true : rs?.quadrant === "LAGGING" || rs?.quadrant === "WEAKENING" ? false : null,
+    },
+    {
+      label: "Tech Checks",
+      value: tech ? `${tech.checks_passing ?? 0}/${tech.checks_total ?? 10}` : "—",
+      positive: tech?.checks_passing != null ? tech.checks_passing >= 5 : null,
+    },
+    {
+      label: "200 DMA",
+      value: stock?.above_200dma == null ? "—" : stock.above_200dma ? "Above" : "Below",
+      positive: stock?.above_200dma ?? null,
+    },
   ];
 
-  const effectiveState = state === "ready" && chips.every(c => c.value === null) ? "empty" : state;
+  const hasAnyData = chips.some(c => c.value !== "—");
+  const effectiveState = state === "ready" && !hasAnyData ? "empty" : state;
 
   return (
-    <div data-component="signal-strip" className="flex gap-3 flex-wrap">
+    <div
+      data-component="signal-strip"
+      style={{ marginTop: "var(--space-4)", marginBottom: "var(--space-1)" }}
+    >
       <DataBlock
         state={effectiveState}
         dataClass="intraday"
@@ -53,15 +109,27 @@ export default function SignalStripBlock({ symbol }: SignalStripBlockProps) {
         emptyTitle="No signal data"
       >
         {(state === "ready" || state === "stale") && (
-          <div className="flex gap-3 flex-wrap">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
             {chips.map((chip) => (
               <span
                 key={chip.label}
-                data-chip={chip.label.toLowerCase()}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${chipColor(chip.value)}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "4px 10px",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  ...chipStyle(chip.positive),
+                }}
               >
-                <span className="text-gray-500 font-normal">{chip.label}</span>
-                {chip.value ?? "—"}
+                <span style={{ fontWeight: 400, color: "var(--text-tertiary)" }}>{chip.label}</span>
+                <span style={{ color: chip.value === "—" ? "var(--text-tertiary)" : numColor(
+                  chip.value !== "—" && !isNaN(Number(chip.value.replace(/\//g, ""))) ? Number(chip.value) : null
+                ) }}>
+                  {chip.value}
+                </span>
               </span>
             ))}
           </div>

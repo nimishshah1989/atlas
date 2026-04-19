@@ -35,7 +35,9 @@ from backend.clients.jip_mf_sql import (  # type: ignore[attr-defined]
     RS_HISTORY_SQL,
     RS_MOMENTUM_DECIMAL_FIELDS,
     RS_MOMENTUM_SQL,
+    RANK_FETCH_SQL,
     SECTORS_SQL,
+    TOP_RS_SQL,
     UNIVERSE_DECIMAL_FIELDS,
     UNIVERSE_SQL,
     WEIGHTED_TECHNICALS_SQL,
@@ -434,3 +436,13 @@ class JIPMFService:
         if row:
             out.update(dict(row))
         return out
+
+    async def get_top_rs_funds(self) -> list[dict[str, Any]]:
+        """All active non-ETF funds with their most-recent RS composite."""
+        cursor = await self.session.execute(text(TOP_RS_SQL))
+        return [dict(r) for r in cursor.mappings().all()]
+
+    async def get_mf_rank_data(self) -> list[dict[str, Any]]:
+        """Fetch rank scoring inputs: sharpe/vol/drawdown/IR for active funds."""
+        cursor = await self.session.execute(text(RANK_FETCH_SQL))
+        return [dict(r) for r in cursor.mappings().all()]

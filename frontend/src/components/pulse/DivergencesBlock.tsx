@@ -11,8 +11,13 @@ interface DivergenceEntry {
   [key: string]: unknown;
 }
 
-interface DivergenceData {
-  divergences: DivergenceEntry[];
+// API returns { data: DivergenceEntry[] } or { data: { divergences: DivergenceEntry[] } }
+type DivergenceData = DivergenceEntry[] | { divergences: DivergenceEntry[] };
+
+function extractDivergences(data: DivergenceData | null): DivergenceEntry[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return data.divergences ?? [];
 }
 
 export default function DivergencesBlock() {
@@ -32,9 +37,9 @@ export default function DivergencesBlock() {
       emptyTitle="No divergences"
       emptyBody="No factor divergences detected in the current universe."
     >
-      {data && (
-        <>
-          {data.divergences.length === 0 ? (
+      {data && (() => {
+        const divs = extractDivergences(data);
+        return divs.length === 0 ? (
             <EmptyState
               title="No divergences"
               body="No factor divergences detected in the current universe."
@@ -44,7 +49,7 @@ export default function DivergencesBlock() {
               className="divide-y divide-gray-100"
               data-block="divergences-block"
             >
-              {data.divergences.map((d, i) => (
+              {divs.map((d, i) => (
                 <li key={i} className="py-3 flex flex-col gap-0.5">
                   {d.symbol !== undefined && (
                     <span className="font-semibold text-gray-800 text-sm">
@@ -60,9 +65,8 @@ export default function DivergencesBlock() {
                 </li>
               ))}
             </ul>
-          )}
-        </>
-      )}
+          );
+      })()}
     </DataBlock>
   );
 }

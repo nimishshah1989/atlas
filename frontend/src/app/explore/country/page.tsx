@@ -1,17 +1,5 @@
 "use client";
 
-// data-endpoint blocks from explore-country.html:
-// 1. /api/v1/stocks/breadth {universe:"nifty500"} → Regime section (RegimeBanner-style)
-// 2. /api/v1/stocks/breadth {universe:"nifty500",range:"5y"} → BreadthCompactBlock
-// 3. /api/v1/derivatives/summary → DerivativesBlock (data-sparse="true")
-// 4. /api/v1/macros/yield-curve {tenors:"2Y,10Y,30Y,real"} → YieldCurveBlock
-// 5. /api/v1/query {entity_type:"timeseries"} → InrChartBlock (data-sparse="true")
-// 6. /api/v1/global/flows {scope:"india",range:"5y"} → FlowsBlock
-// 7. /api/v1/sectors/rrg {include:"gold_rs,conviction"} → SectorsRRGBlock
-// 8. /api/v1/stocks/breadth/zone-events {universe:"nifty500",range:"5y"} → ZoneEventsTable
-// 9. /api/v1/stocks/breadth/divergences {universe:"nifty500"} → DivergencesCountryBlock
-// data-v2-derived="true" → EmptyState title="Coming soon"
-
 import { useEffect } from "react";
 import BreadthCompactBlock from "@/components/explore/BreadthCompactBlock";
 import DerivativesBlock from "@/components/explore/DerivativesBlock";
@@ -29,111 +17,101 @@ export default function ExploreCountryPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <title>ATLAS · Explore India</title>
-
-      {/* Breadcrumbs */}
-      <nav className="px-6 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1 text-xs text-gray-400">
-          <li>
-            <a href="/" className="text-gray-500 font-medium hover:text-teal-700">
-              Today
-            </a>
-          </li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li>
-            <a href="/explore" className="text-gray-500 font-medium hover:text-teal-700">
-              Explore
-            </a>
-          </li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li className="text-gray-900 font-semibold">India</li>
-        </ol>
-      </nav>
+    <main style={{ background: "var(--bg-app)", minHeight: "100vh" }}>
 
       {/* Page header */}
-      <header className="border-b border-gray-200 bg-white px-6 py-4 mt-2">
-        <h1 className="text-xl font-bold text-gray-900">India market landscape</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Regime, breadth, derivatives, macro, flows, and sector rotation
-        </p>
-      </header>
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-default)", padding: "var(--space-4) var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto" }}>
+          <div className="crumb" style={{ padding: 0, marginBottom: 4 }}>
+            <span>Global</span>
+            <span className="crumb__sep">›</span>
+            <strong style={{ color: "var(--text-primary)" }}>India</strong>
+          </div>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "var(--fs-2xl)", fontWeight: 400, color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
+            India Market Landscape
+          </h1>
+          <p style={{ fontSize: "var(--fs-sm)", color: "var(--text-tertiary)", marginTop: 4, marginBottom: 0 }}>
+            Regime · Breadth · Derivatives · Macro · Flows · Sector Rotation
+          </p>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* Breadth Compact Section */}
-        <section aria-label="Market Breadth">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Market Breadth
-          </h2>
+      <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", padding: "0 var(--space-6) var(--space-10)" }}>
+
+        {/* Market Breadth */}
+        <div>
+          <div className="sec-hd">
+            <h3>Market Breadth</h3>
+            <span className="sec-sub">Nifty 500</span>
+          </div>
           <BreadthCompactBlock />
-        </section>
-
-        {/* Derivatives Section */}
-        <section aria-label="Derivatives">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Derivatives
-          </h2>
-          <DerivativesBlock />
-        </section>
-
-        {/* G-Sec / Yield Curve Section */}
-        <section aria-label="G-Sec / Yield Curve">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            G-Sec / Yield Curve
-          </h2>
-          <YieldCurveBlock />
-        </section>
-
-        {/* INR Section */}
-        <section aria-label="INR">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            INR
-          </h2>
-          <InrChartBlock />
-        </section>
-
-        {/* FII/DII Flows Section */}
-        <section aria-label="FII/DII Flows">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            FII / DII Flows
-          </h2>
-          <FlowsBlock />
-        </section>
-
-        {/* Sectors RRG + Zone Events + Divergences */}
-        <section aria-label="Sector Rotation (RRG)">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Sectors RRG
-          </h2>
-          <SectorsRRGBlock />
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <section aria-label="Zone Events">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Zone Events
-            </h2>
-            <ZoneEventsTable />
-          </section>
-
-          <section aria-label="Divergences">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Factor Divergences
-            </h2>
-            <DivergencesCountryBlock />
-          </section>
         </div>
 
-        {/* data-v2-derived="true" block → EmptyState */}
-        <section aria-label="Signal Playback" data-v2-derived="true">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Signal Playback (Compact)
-          </h2>
-          <EmptyState
-            title="Coming soon"
-            body="Signal playback will be available in a future release."
-          />
-        </section>
+        {/* Derivatives */}
+        <div>
+          <div className="sec-hd">
+            <h3>Derivatives (F&amp;O)</h3>
+            <span className="sec-sub">NIFTY Put-Call Ratio</span>
+          </div>
+          <DerivativesBlock />
+        </div>
+
+        {/* Yield Curve + INR — 2 col */}
+        <div>
+          <div className="sec-hd">
+            <h3>Fixed Income &amp; Currency</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "var(--space-3)" }}>
+                G-SEC Yield Curve
+              </div>
+              <YieldCurveBlock />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "var(--space-3)" }}>
+                USD / INR
+              </div>
+              <InrChartBlock />
+            </div>
+          </div>
+        </div>
+
+        {/* FII / DII Flows */}
+        <div>
+          <div className="sec-hd">
+            <h3>FII / DII Flows</h3>
+            <span className="sec-sub">Net cash flows</span>
+          </div>
+          <FlowsBlock />
+        </div>
+
+        {/* Sectors RRG */}
+        <div>
+          <div className="sec-hd">
+            <h3>Sector Rotation (RRG)</h3>
+          </div>
+          <SectorsRRGBlock />
+        </div>
+
+        {/* Zone Events + Divergences — 2 col */}
+        <div>
+          <div className="sec-hd"><h3>Zone Events &amp; Divergences</h3></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <ZoneEventsTable />
+            <DivergencesCountryBlock />
+          </div>
+        </div>
+
+        {/* Signal Playback — deferred */}
+        <div data-v2-derived="true">
+          <div className="sec-hd">
+            <h3>Signal Playback</h3>
+            <span className="sec-badge">V2</span>
+          </div>
+          <EmptyState title="Coming soon" body="Signal playback will be available in a future release." />
+        </div>
+
       </div>
     </main>
   );

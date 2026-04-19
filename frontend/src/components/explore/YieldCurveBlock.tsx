@@ -30,7 +30,7 @@ interface YieldCurveData {
 
 export default function YieldCurveBlock() {
   const { data, meta, state, error } = useAtlasData<YieldCurveData>(
-    "/api/v1/macros/yield-curve",
+    "/api/macros/yield-curve",
     { tenors: "2Y,10Y,30Y,real" },
     { dataClass: "daily_regime" }
   );

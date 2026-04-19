@@ -26,123 +26,89 @@ export default function FundDetailPage({ params }: PageProps) {
   }, [fundName]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <nav className="px-6 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1 text-xs text-gray-400">
-          <li>
-            <a href="/" className="text-gray-500 hover:text-teal-700">
-              India
-            </a>
-          </li>
-          <li aria-hidden="true" className="text-gray-300">
-            ›
-          </li>
-          <li>
-            <a href="/funds" className="text-gray-500 hover:text-teal-700">
-              Mutual Funds
-            </a>
-          </li>
-          <li aria-hidden="true" className="text-gray-300">
-            ›
-          </li>
-          <li className="text-gray-900 font-semibold truncate max-w-xs">
-            {id}
-          </li>
-        </ol>
-      </nav>
+    <main style={{ background: "var(--bg-app)", minHeight: "100vh" }}>
 
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-6">
-        {/* Hero — loads first; extracts category and name on success */}
-        <FundHeroBlock
-          id={id}
-          onCategoryLoaded={setCategory}
-          onNameLoaded={setFundName}
-        />
+      {/* Page header */}
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-default)", padding: "var(--space-4) var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto" }}>
+          <div className="crumb" style={{ padding: 0, marginBottom: 4 }}>
+            <a href="/funds/rank">Funds</a>
+            <span className="crumb__sep">›</span>
+            {category && <><span>{category}</span><span className="crumb__sep">›</span></>}
+            <strong style={{ color: "var(--text-primary)", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {fundName !== id ? fundName : id}
+            </strong>
+          </div>
+        </div>
+      </div>
 
-        {/* Returns / NAV summary table */}
-        <section aria-label="Rolling Returns">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Rolling Returns
-          </h2>
-          <ReturnsBlock id={id} />
-        </section>
+      <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", padding: "0 var(--space-6) var(--space-10)" }}>
 
-        {/* NAV Chart */}
-        <section aria-label="NAV History">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            NAV vs Benchmark (5Y)
-          </h2>
-          <NavChartBlock id={id} />
-        </section>
-
-        {/* Alpha / Risk metrics */}
-        <section aria-label="Alpha and Risk">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Alpha &amp; Risk Metrics
-          </h2>
-          <AlphaRiskBlock id={id} />
-        </section>
-
-        {/* Rolling Alpha / Beta chart */}
-        <section aria-label="Rolling Alpha and Beta">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Rolling Alpha &amp; Beta (5Y)
-          </h2>
-          <RollingAlphaBetaBlock id={id} />
-        </section>
-
-        {/* Holdings table — top 20 */}
-        <section aria-label="Top Holdings">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Top Holdings
-          </h2>
-          <HoldingsBlock id={id} />
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Weighted Technicals */}
-          <section aria-label="Weighted Technicals">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Weighted Technicals
-            </h2>
-            <WeightedTechnicalsBlock id={id} />
-          </section>
-
-          {/* Sector Allocation */}
-          <section aria-label="Sector Allocation">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Sector Allocation
-            </h2>
-            <SectorAllocationBlock id={id} />
-          </section>
+        {/* Hero */}
+        <div style={{ marginTop: "var(--space-5)" }}>
+          <FundHeroBlock id={id} onCategoryLoaded={setCategory} onNameLoaded={setFundName} />
         </div>
 
-        {/* Suitability */}
-        <section aria-label="Suitability">
-          <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            Suitability
-          </h2>
+        {/* Section A: Performance */}
+        <div>
+          <div className="sec-hd">
+            <h3>Performance</h3>
+            <span className="sec-sub">Rolling returns vs benchmark</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <ReturnsBlock id={id} />
+            <NavChartBlock id={id} />
+          </div>
+        </div>
+
+        {/* Section B: Alpha Quality */}
+        <div>
+          <div className="sec-hd">
+            <h3>Alpha Quality &amp; Manager Skill</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <AlphaRiskBlock id={id} />
+            <RollingAlphaBetaBlock id={id} />
+          </div>
+        </div>
+
+        {/* Section C: Holdings */}
+        <div>
+          <div className="sec-hd">
+            <h3>Top Holdings</h3>
+            <span className="sec-sub">Latest disclosed portfolio</span>
+          </div>
+          <HoldingsBlock id={id} />
+        </div>
+
+        {/* Section D: Sector Allocation + Weighted Technicals */}
+        <div>
+          <div className="sec-hd">
+            <h3>Sector Allocation &amp; Technicals</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <SectorAllocationBlock id={id} />
+            <WeightedTechnicalsBlock id={id} />
+          </div>
+        </div>
+
+        {/* Section E: Suitability */}
+        <div>
+          <div className="sec-hd">
+            <h3>Suitability</h3>
+          </div>
           <SuitabilityBlock id={id} />
-        </section>
+        </div>
 
-        {/* Category info if available */}
-        {category && (
-          <p className="text-xs text-gray-400">
-            Category: {category}
-          </p>
-        )}
+        {/* Deferred */}
+        <div data-v2-deferred="true">
+          <div className="sec-hd">
+            <h3>AI Recommendations</h3>
+            <span className="sec-badge">V2</span>
+          </div>
+          <EmptyState title="Coming soon" body="AI-powered recommendations will be available in a future release." />
+        </div>
 
-        {/* data-v2-deferred slots */}
-        <section
-          aria-label="Recommendations"
-          data-v2-deferred="true"
-        >
-          <EmptyState
-            title="Coming soon"
-            body="AI-powered recommendations will be available in a future release."
-          />
-        </section>
       </div>
     </main>
   );

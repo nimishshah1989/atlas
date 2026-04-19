@@ -12,6 +12,33 @@ export interface RankFilters {
   period: string | null;
 }
 
+const FACTORS = [
+  {
+    key: "returns",
+    label: "Returns",
+    desc: "Excess return vs benchmark: 1Y, 3Y, 5Y weighted.",
+    color: "var(--rag-green-500)",
+  },
+  {
+    key: "risk",
+    label: "Risk",
+    desc: "Volatility, downside deviation, max drawdown. Lower = higher score.",
+    color: "var(--rag-amber-500)",
+  },
+  {
+    key: "resilience",
+    label: "Resilience",
+    desc: "Downside capture ratio, worst rolling 6-month return.",
+    color: "var(--rag-red-500)",
+  },
+  {
+    key: "consistency",
+    label: "Consistency",
+    desc: "% of rolling 12-month periods beating the benchmark.",
+    color: "var(--accent-700)",
+  },
+];
+
 export default function MFRankPage() {
   const [filters, setFilters] = useState<RankFilters>({
     category: null,
@@ -25,69 +52,93 @@ export default function MFRankPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <nav className="px-6 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1 text-xs text-gray-400">
-          <li><a href="/" className="text-gray-500 hover:text-teal-700">Today</a></li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li><a href="/explore" className="text-gray-500 hover:text-teal-700">Explore</a></li>
-          <li aria-hidden="true" className="text-gray-300">›</li>
-          <li className="text-gray-900 font-semibold">MF Rank</li>
-        </ol>
-      </nav>
+    <main style={{ background: "var(--bg-app)", minHeight: "100vh" }}>
 
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
-        {/* Page header */}
-        <div className="border-b border-gray-200 pb-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+      {/* Page header */}
+      <div style={{ background: "var(--bg-surface)", borderBottom: "1px solid var(--border-default)", padding: "var(--space-4) var(--space-6)" }}>
+        <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto" }}>
+          <div className="crumb" style={{ padding: 0, marginBottom: 4 }}>
+            <a href="/pulse">Pulse</a>
+            <span className="crumb__sep">›</span>
+            <strong style={{ color: "var(--text-primary)" }}>MF Rank</strong>
+          </div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 4 }}>
             Mutual Funds · 4-Factor Composite Ranking · v1.1
-          </p>
-          <h1 className="font-serif text-3xl text-gray-900 font-normal mt-1 mb-2">MF Rank</h1>
-          <p className="text-sm text-gray-500 max-w-3xl leading-relaxed">
-            Cross-sectional ranking of mutual funds within SEBI categories using four independently
-            scored factors: <strong className="text-gray-700">Returns, Risk, Resilience, Consistency.</strong>{" "}
-            Each factor is z-scored within category, converted to a 0–100 percentile score via Φ
-            (normal CDF), then averaged into a composite.
+          </div>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "var(--fs-2xl)", fontWeight: 400, color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
+            MF Rank
+          </h1>
+          <p style={{ fontSize: "var(--fs-sm)", color: "var(--text-tertiary)", marginTop: 6, marginBottom: 0, maxWidth: 680, lineHeight: "var(--lh-loose)" }}>
+            Cross-sectional ranking using four independently scored factors: <strong style={{ color: "var(--text-secondary)", fontWeight: 600 }}>Returns, Risk, Resilience, Consistency.</strong>{" "}
+            Each factor is z-scored within category, converted to a 0–100 percentile via Φ (normal CDF), then averaged into a composite.
           </p>
         </div>
+      </div>
+
+      <div style={{ maxWidth: "var(--maxw-page)", margin: "0 auto", padding: "0 var(--space-6) var(--space-10)" }}>
 
         {/* Regime banner */}
-        <RegimeBannerRank />
+        <div style={{ marginTop: "var(--space-5)", marginBottom: "var(--space-5)" }}>
+          <RegimeBannerRank />
+        </div>
 
-        {/* Factor legend */}
-        <div className="flex gap-3 flex-wrap">
-          {[
-            { key: "returns", label: "Returns", desc: "Excess return vs benchmark: 1Y, 3Y, 5Y weighted.", color: "border-t-emerald-500" },
-            { key: "risk", label: "Risk", desc: "Volatility, downside deviation, max drawdown. Lower = higher score.", color: "border-t-amber-500" },
-            { key: "resilience", label: "Resilience", desc: "Downside capture ratio, worst rolling 6-month return.", color: "border-t-red-500" },
-            { key: "consistency", label: "Consistency", desc: "% of rolling 12-month periods beating the benchmark.", color: "border-t-teal-600" },
-          ].map((f) => (
-            <div key={f.key} className={`bg-white border border-gray-200 border-t-4 ${f.color} rounded-lg p-3 min-w-[160px] flex-1`} data-factor={f.key}>
-              <div className="text-xs font-bold uppercase tracking-widest text-gray-400">{f.label}</div>
-              <div className="text-xs text-gray-500 mt-1 leading-relaxed">{f.desc}</div>
-              <div className="text-xs font-bold text-teal-700 mt-1">Weight: 25%</div>
+        {/* Factor legend — 4 cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--space-3)", marginBottom: "var(--space-4)" }}>
+          {FACTORS.map((f) => (
+            <div
+              key={f.key}
+              data-factor={f.key}
+              style={{
+                background: "var(--bg-surface)",
+                border: "var(--border-card)",
+                borderTop: `3px solid ${f.color}`,
+                borderRadius: "var(--radius-md)",
+                padding: "var(--space-3) var(--space-4)",
+              }}
+            >
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--text-tertiary)", marginBottom: 4 }}>
+                {f.label}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: "var(--lh-loose)" }}>
+                {f.desc}
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--accent-700)", marginTop: 6 }}>
+                Weight: 25%
+              </div>
             </div>
           ))}
         </div>
 
         {/* Tie-break bar */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500">
-          <span className="font-bold text-gray-700 uppercase tracking-wider text-xs">Tie-break order</span>
-          <span className="text-gray-300">→</span>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "8px var(--space-4)",
+          background: "var(--bg-inset)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)",
+          marginBottom: "var(--space-5)", fontSize: 11,
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".07em", color: "var(--text-secondary)" }}>
+            Tie-break order
+          </span>
+          <span style={{ color: "var(--border-strong)" }}>→</span>
           {["Consistency", "Risk", "Returns", "Resilience"].map((item, i, arr) => (
             <React.Fragment key={item}>
-              <span className="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded text-xs font-bold">{item}</span>
-              {i < arr.length - 1 && <span className="text-gray-300">→</span>}
+              <span style={{
+                padding: "2px 9px", background: "var(--accent-100)", color: "var(--accent-700)",
+                border: "1px solid var(--accent-300)", borderRadius: "var(--radius-full)",
+                fontSize: 11, fontWeight: 700,
+              }}>
+                {item}
+              </span>
+              {i < arr.length - 1 && <span style={{ color: "var(--border-strong)" }}>→</span>}
             </React.Fragment>
           ))}
         </div>
 
         {/* Main layout: filter rail + rank table */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: "240px 1fr" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "var(--space-5)" }}>
           <FilterRail filters={filters} onFiltersChange={setFilters} />
           <RankTable filters={filters} />
         </div>
+
       </div>
     </main>
   );
