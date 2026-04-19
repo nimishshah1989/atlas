@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T05:45:15.905163+05:30",
+  "generated_at": "2026-04-19T06:07:29.930140+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
-  "total": 65,
-  "passed": 38,
+  "total": 63,
+  "passed": 36,
   "failed": 9,
   "skipped": 18,
   "critical_fail_count": 8,
@@ -78,7 +78,7 @@
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
-      "evidence": "\"[data-chip='gold-rs'], .gold-rs-chip\": 6 element(s) in 6 file(s)",
+      "evidence": "\"[data-chip='gold-rs'], .gold-rs-chip\": 7 element(s) in 6 file(s)",
       "status": "RUN"
     },
     {
@@ -240,7 +240,7 @@
       "severity": "critical",
       "check_type": "kill_list",
       "passed": false,
-      "evidence": "Forbidden patterns found: explore-sector.html: 'AI commentary' (1 match); pulse-breadth.html: '\\\\bSELL\\\\b' (1 match); pulse-sectors.html: '\\\\bBUY\\\\b' (3 match); pulse-sectors.html: '\\\\bHOLD\\\\b' (4 match); mf-detail.html: '\\\\bHOLD\\\\b' (2 match)",
+      "evidence": "Forbidden patterns found: pulse-breadth.html: '\\\\bSELL\\\\b' (1 match); pulse-sectors.html: '\\\\bBUY\\\\b' (3 match); pulse-sectors.html: '\\\\bHOLD\\\\b' (4 match); mf-detail.html: '\\\\bHOLD\\\\b' (2 match); mf-detail.html: 'ADD ON DIPS' (2 match)",
       "status": "RUN"
     },
     {
@@ -249,7 +249,7 @@
       "severity": "critical",
       "check_type": "i18n_indian",
       "passed": false,
-      "evidence": "Forbidden i18n patterns found: portfolio-detail.html: '\\\\$[0-9]' (1 match); explore-sector.html: '\\\\$[0-9]' (3 match); explorer.html: '\\\\$[0-9]' (1 match); portfolios.html: '\\\\$[0-9]' (1 match)",
+      "evidence": "Forbidden i18n patterns found: portfolio-detail.html: '\\\\$[0-9]' (1 match); explorer.html: '\\\\$[0-9]' (1 match); portfolios.html: '\\\\$[0-9]' (1 match)",
       "status": "RUN"
     },
     {
@@ -456,7 +456,7 @@
       "severity": "high",
       "check_type": "dom_required",
       "passed": false,
-      "evidence": "FAIL \u2014 mf-rank.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; explore-sector.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; portfolios.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"",
+      "evidence": "FAIL \u2014 mf-rank.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; portfolios.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"",
       "status": "RUN"
     },
     {
@@ -469,26 +469,8 @@
       "status": "SKIP"
     },
     {
-      "id": "fe-p5-01",
-      "title": "explore-country.html: embedded breadth panel per \u00a75.1",
-      "severity": "critical",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "'[data-block=breadth-compact]': 1 element(s) in 1 file(s)",
-      "status": "RUN"
-    },
-    {
-      "id": "fe-p5-02",
-      "title": "explore-country.html: compact signal-playback embed present",
-      "severity": "high",
-      "check_type": "dom_required",
-      "passed": true,
-      "evidence": "'[data-component=signal-playback][data-mode=compact]': 1 element(s) in 1 file(s)",
-      "status": "RUN"
-    },
-    {
-      "id": "fe-p5-03",
-      "title": "explore-country.html: sectors RRG + flows blocks present",
+      "id": "fe-p6-01",
+      "title": "explore-sector.html: full breadth panel + full signal-playback present",
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
@@ -496,12 +478,12 @@
       "status": "RUN"
     },
     {
-      "id": "fe-p5-04",
-      "title": "explore-country.html: stripped of sect-comm, sect-alloc narrative",
-      "severity": "critical",
-      "check_type": "dom_forbidden",
+      "id": "fe-p6-02",
+      "title": "explore-sector.html: members table + sector RS/Mom/Vol chips",
+      "severity": "high",
+      "check_type": "dom_required",
       "passed": true,
-      "evidence": "No forbidden elements in 1 file(s)",
+      "evidence": "All selectors matched in 1 file(s)",
       "status": "RUN"
     },
     {

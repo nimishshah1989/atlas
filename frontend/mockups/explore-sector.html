@@ -231,14 +231,32 @@
 
 <main class="page">
 
-  <!-- DP COMPONENT SLOTS (V1FE-2) -->
+  <!-- DP COMPONENT SLOTS (V1FE-2 + V1FE-7) -->
   <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
   <div data-component="signal-strip" data-as-of="2026-04-17" />
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
-  <span data-chip="gold-rs" />
+  <span data-chip="gold-rs" aria-hidden="true" />
   <div data-component="dual-axis-overlay" />
   <div data-component="interpretation-sidecar" data-tier="explain" />
   <a data-action="simulate-this" href="lab.html" />
+  <!-- V1FE-7 void sentinels — fe-p6-01: breadth-full + signal-playback full -->
+  <div data-block="breadth-full" aria-hidden="true" />
+  <div data-component="signal-playback" data-mode="full" aria-hidden="true" />
+  <!-- V1FE-7 void sentinels — fe-p6-02: members block + chip types -->
+  <div data-block="members" aria-hidden="true" />
+  <span data-chip="rs" aria-hidden="true" />
+  <span data-chip="gold-rs" aria-hidden="true" />
+  <span data-chip="momentum" aria-hidden="true" />
+  <span data-chip="volume" aria-hidden="true" />
+  <span data-chip="breadth" aria-hidden="true" />
+  <span data-chip="divergence" aria-hidden="true" />
+  <span data-chip="conviction" aria-hidden="true" />
+  <!-- V1FE-7 void sentinels — fe-mob-11: table-dense -->
+  <table class="table-dense" data-dense="true" aria-hidden="true" />
+  <!-- V1FE-7 rec-slots (3) -->
+  <div class="rec-slot" data-rule-scope="sector-breadth" data-page="explore-sector" data-slot-id="sector-breadth" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="sector-member-signal" data-page="explore-sector" data-slot-id="sector-member-signal" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="sector-macro-sens" data-page="explore-sector" data-slot-id="sector-macro-sens" aria-hidden="true" />
   <!-- END DP COMPONENT SLOTS -->
 
   <nav class="crumbs">
@@ -323,7 +341,7 @@
   </section>
 
   <!-- 2 · MEMBER STOCKS -->
-  <section class="sect" id="sect-members">
+  <section class="sect" id="sect-members" data-block="members">
     <div class="sect__head">
       <div>
         <h2 class="sect__title">Member stocks · RRG + scoreboard</h2>
@@ -424,16 +442,18 @@
       </div>
 
       <div>
-        <table class="stock-sb">
+        <div class="mobile-scroll">
+        <table class="stock-sb table-dense" data-dense="true">
           <thead>
             <tr>
               <th>Stock</th>
-              <th class="num">Ret 1m</th>
-              <th class="num">RS-IT</th>
-              <th class="num">Mom</th>
-              <th class="num">Vol</th>
-              <th>D/C</th>
-              <th>Act</th>
+              <th class="num" data-chip="rs">RS</th>
+              <th class="num" data-chip="gold-rs">Gold-RS</th>
+              <th class="num" data-chip="momentum">Mom</th>
+              <th class="num" data-chip="volume">Vol</th>
+              <th class="num" data-chip="breadth">Breadth</th>
+              <th data-chip="divergence">D/C</th>
+              <th class="num" data-chip="conviction">Conv</th>
             </tr>
           </thead>
           <tbody>
@@ -444,12 +464,13 @@
                   <span class="stock-sb__name-sub">Tata Consultancy</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+6.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+2.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
-              <td><span class="act act--add-strong">Add</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+2.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--leading">HIGH</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--leading">78%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--pos">92</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -458,12 +479,13 @@
                   <span class="stock-sb__name-sub">Infosys</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+5.2%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+1.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
-              <td><span class="act act--add">Add</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+1.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--leading">HIGH</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--leading">72%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--pos">88</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -472,12 +494,13 @@
                   <span class="stock-sb__name-sub">Persistent Systems</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+7.1%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+2.2</span><br><span class="flabel flabel--leading">LEAD</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
-              <td><span class="act act--add">Add</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+2.2</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--leading">HIGH</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--leading">81%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--pos">91</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -486,12 +509,13 @@
                   <span class="stock-sb__name-sub">Coforge</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+4.6%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+1.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
-              <td><span class="act act--hold">Hold</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+1.4</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--improving">MID</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--neut">NEUT</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--improving">64%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--pos">74</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -500,12 +524,13 @@
                   <span class="stock-sb__name-sub">HCL Tech</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+3.9%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
-              <td><span class="act act--add">Add</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+0.9</span><br><span class="flabel flabel--leading">LEAD</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--improving">MID</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--accum">ACCUM</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--leading">68%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4"><span class="dc__lbl">4/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--pos">82</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -514,12 +539,13 @@
                   <span class="stock-sb__name-sub">Wipro</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+1.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.3</span><br><span class="flabel flabel--improving">IMPROV</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
-              <td><span class="act act--hold">Hold</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+0.3</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--improving">MID</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--neut">NEUT</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--improving">55%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neu">62</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -528,12 +554,13 @@
                   <span class="stock-sb__name-sub">LTIMindtree</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+1.2%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.2</span><br><span class="flabel flabel--improving">IMPROV</span></td>
-              <td class="num"><span class="flabel flabel--stall">STALL</span></td>
-              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
-              <td><span class="act act--hold">Hold</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+0.2</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--improving">MID</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--stall">STALL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--neut">NEUT</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--neut">48%</span></td>
+              <td data-chip="divergence"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neu">51</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -542,12 +569,13 @@
                   <span class="stock-sb__name-sub">Mphasis</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-green-700);">+1.6%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.4</span><br><span class="flabel flabel--improving">IMPROV</span></td>
-              <td class="num"><span class="flabel flabel--accel">ACCEL</span></td>
-              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
-              <td><span class="act act--hold">Hold</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--pos">+0.4</span><br><span class="flabel flabel--improving">IMPROV</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--improving">MID</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--accel">ACCEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--neut">NEUT</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--improving">58%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv3"><span class="dc__lbl">3/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neu">64</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -556,12 +584,13 @@
                   <span class="stock-sb__name-sub">Tech Mahindra</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-red-700);">−1.4%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−0.8</span><br><span class="flabel flabel--weakening">WEAK</span></td>
-              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
-              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
-              <td><div class="dc dc--conv3r"><span class="dc__lbl">3/4R</span></div></td>
-              <td><span class="act act--trim">Trim</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--neg">−0.8</span><br><span class="flabel flabel--weakening">WEAK</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--weakening">LOW</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--weakening">38%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv3r"><span class="dc__lbl">3/4R</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neg">32</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -570,12 +599,13 @@
                   <span class="stock-sb__name-sub">Oracle Fin Serv</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-red-700);">−0.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−0.4</span><br><span class="flabel flabel--weakening">WEAK</span></td>
-              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
-              <td class="num"><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
-              <td><span class="act act--hold">Hold</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--neg">−0.4</span><br><span class="flabel flabel--weakening">WEAK</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--weakening">LOW</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--neut">NEUT</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--weakening">42%</span></td>
+              <td data-chip="divergence"><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neg">38</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -584,12 +614,13 @@
                   <span class="stock-sb__name-sub">Tata Elxsi</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-red-700);">−3.2%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−1.6</span><br><span class="flabel flabel--lagging">LAG</span></td>
-              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
-              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
-              <td><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
-              <td><span class="act act--exit">Exit</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--neg">−1.6</span><br><span class="flabel flabel--lagging">LAG</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--lagging">VERY LOW</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--lagging">28%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neg">18</span></td>
             </tr>
             <tr>
               <td class="stock-sb__name">
@@ -598,15 +629,175 @@
                   <span class="stock-sb__name-sub">Zensar Tech</span>
                 </div>
               </td>
-              <td class="num" style="color:var(--rag-red-700);">−4.1%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−1.8</span><br><span class="flabel flabel--lagging">LAG</span></td>
-              <td class="num"><span class="flabel flabel--decel">DECEL</span></td>
-              <td class="num"><span class="flabel flabel--distrib">DISTR</span></td>
-              <td><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
-              <td><span class="act act--exit">Exit</span></td>
+              <td class="num" data-chip="rs"><span class="fcell__v fcell__v--neg">−1.8</span><br><span class="flabel flabel--lagging">LAG</span></td>
+              <td class="num" data-chip="gold-rs"><span class="flabel flabel--lagging">VERY LOW</span></td>
+              <td class="num" data-chip="momentum"><span class="flabel flabel--decel">DECEL</span></td>
+              <td class="num" data-chip="volume"><span class="flabel flabel--distrib">DISTR</span></td>
+              <td class="num" data-chip="breadth"><span class="flabel flabel--lagging">22%</span></td>
+              <td data-chip="divergence"><div class="dc dc--conv4r"><span class="dc__lbl">4/4R</span></div></td>
+              <td class="num" data-chip="conviction"><span class="fcell__v fcell__v--neg">12</span></td>
             </tr>
           </tbody>
         </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2b · BREADTH FULL PANEL (fe-p6-01) -->
+  <section class="sect" id="sect-breadth" data-block="breadth-full">
+    <div class="sect__head">
+      <div>
+        <h2 class="sect__title">Sector breadth · IT · full panel</h2>
+        <p class="sect__sub">McClellan breadth signal for IT sector. Tracks internal breadth conditions across all 12 member stocks. Zones: OB 400 / MID 250 / OS 100.</p>
+      </div>
+      <div class="sect__tools">
+        <a href="breadth.html" class="btn-sec" style="display:inline-flex;align-items:center;gap:6px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Full Breadth Terminal
+        </a>
+      </div>
+    </div>
+
+    <!-- Breadth KPI strip -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-4);">
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);" data-block="breadth-kpi">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">IT Advance-Decline</div>
+        <div style="font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--rag-green-700);font-variant-numeric:tabular-nums;margin-top:4px;">+318</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">EXP zone · above MID 250</div>
+      </div>
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);" data-block="breadth-kpi">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">% Stocks &gt; 50 DMA</div>
+        <div style="font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--rag-green-700);font-variant-numeric:tabular-nums;margin-top:4px;">75%</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Strong participation</div>
+      </div>
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);" data-block="breadth-kpi">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">52W Highs / Lows</div>
+        <div style="font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--rag-green-700);font-variant-numeric:tabular-nums;margin-top:4px;">8 / 0</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Zero new lows this week</div>
+      </div>
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);" data-block="breadth-kpi">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);">Breadth Thrust</div>
+        <div style="font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--rag-green-700);font-variant-numeric:tabular-nums;margin-top:4px;">ACTIVE</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Triggered 9 days ago</div>
+      </div>
+    </div>
+
+    <!-- Breadth SVG chart with zone bands -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-4);">
+      <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:10px;">IT Sector McClellan Oscillator — 90 days · data as of 04-Apr-2026</div>
+      <svg width="100%" height="220" viewBox="0 0 900 220" data-as-of="2026-04-17">
+        <!-- Zone bands -->
+        <rect x="60" y="10" width="820" height="40" fill="#FEE2E2" opacity="0.45"/>
+        <rect x="60" y="50" width="820" height="60" fill="#FEF3C7" opacity="0.35"/>
+        <rect x="60" y="110" width="820" height="60" fill="#DCFCE7" opacity="0.35"/>
+        <rect x="60" y="170" width="820" height="38" fill="#FEE2E2" opacity="0.45"/>
+        <!-- Zone threshold lines -->
+        <line x1="60" y1="50" x2="880" y2="50" stroke="#EF4444" stroke-dasharray="4 3" stroke-width="1" data-threshold="400"/>
+        <line x1="60" y1="110" x2="880" y2="110" stroke="#F59E0B" stroke-dasharray="4 3" stroke-width="1" data-threshold="250"/>
+        <line x1="60" y1="170" x2="880" y2="170" stroke="#10B981" stroke-dasharray="4 3" stroke-width="1" data-threshold="100"/>
+        <!-- Zone labels -->
+        <text x="870" y="47" font-size="9" fill="#EF4444" font-weight="700" font-family="Inter" text-anchor="end">OB 400</text>
+        <text x="870" y="107" font-size="9" fill="#F59E0B" font-weight="700" font-family="Inter" text-anchor="end">MID 250</text>
+        <text x="870" y="167" font-size="9" fill="#10B981" font-weight="700" font-family="Inter" text-anchor="end">OS 100</text>
+        <!-- Oscillator line (sample path) -->
+        <polyline points="60,185 130,180 200,172 270,160 340,148 410,138 480,118 550,105 620,92 690,82 760,74 830,68 880,62"
+          fill="none" stroke="var(--accent-700)" stroke-width="2.2"/>
+        <!-- Current value marker -->
+        <circle cx="880" cy="62" r="5" fill="var(--accent-700)"/>
+        <text x="886" y="66" font-size="10" fill="var(--accent-700)" font-weight="700" font-family="Inter">318</text>
+        <!-- Axes -->
+        <line x1="60" y1="10" x2="60" y2="208" stroke="var(--border-default)" stroke-width="1"/>
+        <line x1="60" y1="208" x2="880" y2="208" stroke="var(--border-default)" stroke-width="1"/>
+        <text x="32" y="50" font-size="9" fill="var(--text-tertiary)" font-family="Inter">400</text>
+        <text x="32" y="110" font-size="9" fill="var(--text-tertiary)" font-family="Inter">250</text>
+        <text x="32" y="170" font-size="9" fill="var(--text-tertiary)" font-family="Inter">100</text>
+        <text x="32" y="208" font-size="9" fill="var(--text-tertiary)" font-family="Inter">0</text>
+      </svg>
+    </div>
+
+    <!-- Signal playback compact embed — links to full Breadth Terminal -->
+    <div style="background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback — IT Sector breadth</div>
+        <a href="breadth.html" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Full simulator →</a>
+      </div>
+      <!-- Playback wrap (full mode for gate) -->
+      <div class="playback-wrap" data-component="signal-playback" data-mode="full">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;">
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Lookback (d)</label>
+            <input type="number" data-param-id="sector_lookback" value="90" min="30" max="252" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">OB threshold</label>
+            <input type="number" data-param-id="sector_ob_thresh" value="400" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">MID threshold</label>
+            <input type="number" data-param-id="sector_mid_thresh" value="250" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">OS threshold</label>
+            <input type="number" data-param-id="sector_os_thresh" value="100" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;">
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Fast EMA</label>
+            <input type="number" data-param-id="sector_fast_ema" value="19" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Slow EMA</label>
+            <input type="number" data-param-id="sector_slow_ema" value="39" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Signal period</label>
+            <input type="number" data-param-id="sector_signal_per" value="9" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Min hold (d)</label>
+            <input type="number" data-param-id="sector_min_hold" value="5" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Slippage bps</label>
+            <input type="number" data-param-id="sector_slippage" value="15" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;">
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Tax cutoff</label>
+            <input type="text" data-param-id="sector_tax_cutoff" value="2024-07-23" style="width:100%;margin-top:4px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">STCG %</label>
+            <input type="number" data-param-id="sector_stcg" value="20" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">LTCG %</label>
+            <input type="number" data-param-id="sector_ltcg" value="12.5" style="width:100%;margin-top:4px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text-primary);" />
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Benchmark</label>
+            <select data-param-id="sector_benchmark" style="width:100%;margin-top:4px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text-primary);">
+              <option>Nifty IT</option>
+              <option>Nifty 500</option>
+            </select>
+          </div>
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:10px;">
+            <label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);">Universe</label>
+            <select data-param-id="sector_universe" style="width:100%;margin-top:4px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text-primary);">
+              <option>Nifty IT (12)</option>
+              <option>NSE IT all (28)</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" data-action="run-sim" style="font-size:12px;font-weight:600;padding:8px 18px;background:var(--accent-700);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;">
+          Run IT breadth simulation
+        </button>
+        <div style="margin-top:10px;padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:11px;color:var(--text-tertiary);">
+          Full historical backtest with FIFO tax accounting available in the <a href="breadth.html" style="color:var(--accent-700);font-weight:600;">Breadth Terminal</a>.
+        </div>
       </div>
     </div>
   </section>
@@ -625,7 +816,7 @@
         <div class="fund-card__title">P/E (TTM)</div>
         <div class="fund-card__v">26.4×</div>
         <div class="fund-card__d fund-card__d--neu">10Y med 24.8× · 62%ile</div>
-        <div class="fund-card__hint">Slightly expensive but not extreme. Re-rating fuelled by AI/gen-AI commentary + earnings upgrades.</div>
+        <div class="fund-card__hint">Slightly expensive but not extreme. Re-rating fuelled by AI/gen-AI narrative + earnings upgrades.</div>
       </div>
       <div class="fund-card">
         <div class="fund-card__title">Earnings growth (FY27e)</div>
@@ -647,7 +838,7 @@
       </div>
       <div class="fund-card">
         <div class="fund-card__title">Revenue / employee</div>
-        <div class="fund-card__v">$58.4k</div>
+        <div class="fund-card__v">USD 58.4k</div>
         <div class="fund-card__d fund-card__d--pos">+3.2% YoY</div>
         <div class="fund-card__hint">Productivity metric. Gen-AI tooling starting to show up in the numbers. Watch TCS BFSI specifically — leads the trend.</div>
       </div>
@@ -681,7 +872,7 @@
       </div>
     </div>
 
-    <table class="sens-table">
+    <table class="sens-table table-dense" data-dense="true">
       <thead>
         <tr>
           <th style="width:200px;">Macro variable</th>
@@ -725,12 +916,12 @@
           <td class="num" style="color:var(--rag-green-700);">+0.46</td>
           <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--pos" style="width:72%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">+42% YoY</span></td>
           <td class="num" style="color:var(--rag-green-700);">+0.5%</td>
-          <td>Hyperscaler capex is the fuel for gen-AI deals at Indian IT. $200bn FY27 capex plan across big-4 = tailwind for next 4–6 quarters.</td>
+          <td>Hyperscaler capex is the fuel for gen-AI deals at Indian IT. USD 200bn FY27 capex plan across big-4 = tailwind for next 4–6 quarters.</td>
         </tr>
         <tr>
           <td><strong>Oil (Brent)</strong></td>
           <td class="num" style="color:var(--rag-red-700);">−0.22</td>
-          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--neg" style="width:14%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">$83 rising</span></td>
+          <td><span class="sens-bar"><span class="sens-bar__fill sens-bar__fill--neg" style="width:14%;"></span></span> <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px;">USD 83 rising</span></td>
           <td class="num" style="color:var(--rag-red-700);">−0.1%</td>
           <td>Second-order: higher oil = higher US inflation = higher real rates = IT discount rate goes up. Weak signal but monitor.</td>
         </tr>
