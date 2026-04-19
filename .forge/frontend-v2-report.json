@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T15:42:44.330500+05:30",
+  "generated_at": "2026-04-19T16:02:24.315145+05:30",
   "criteria_file": "docs/specs/frontend-v2-criteria.yaml",
-  "total": 21,
-  "passed": 17,
+  "total": 18,
+  "passed": 15,
   "failed": 0,
-  "skipped": 4,
+  "skipped": 3,
   "critical_fail_count": 0,
   "high_fail_count": 0,
   "results": [
@@ -28,15 +28,6 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/sectors"
     },
     {
-      "id": "v2fe-be-05",
-      "title": "Backend: /api/v1/breadth/country returns 200 or is unreachable",
-      "severity": "high",
-      "check_type": "backend_probe",
-      "passed": true,
-      "status": "SKIP",
-      "evidence": "SKIP: backend unreachable at http://localhost:8000/api/v1/breadth/country"
-    },
-    {
       "id": "v2fe-be-09",
       "title": "Backend: /health returns 200 or is unreachable",
       "severity": "medium",
@@ -46,31 +37,13 @@
       "evidence": "SKIP: backend unreachable at http://localhost:8000/health"
     },
     {
-      "id": "v2fe-pg-03",
-      "title": "explore-country.html: atlas-data.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-country.html: 'atlas-data\\\\.js'"
-    },
-    {
-      "id": "v2fe-pg-04",
-      "title": "explore-country.html: atlas-states.js script tag is present",
-      "severity": "critical",
-      "check_type": "file_contains",
-      "passed": true,
-      "status": "RUN",
-      "evidence": "Pattern found in frontend/mockups/explore-country.html: 'atlas-states\\\\.js'"
-    },
-    {
       "id": "v2fe-rg-01",
       "title": "V1FE gate: scripts/check-frontend-criteria.py exits 0 (no regressions)",
       "severity": "critical",
       "check_type": "runner_exits_zero",
       "passed": true,
       "status": "RUN",
-      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python3 scripts/check-frontend-criteria.py --report-only"
+      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python scripts/check-frontend-criteria.py --report-only"
     },
     {
       "id": "v2fe-rg-02",

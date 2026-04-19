@@ -193,12 +193,49 @@ function _isNetworkError(err) {
 
 
 /**
+ * _substituteTemplateVars(str)
+ * Replaces ${universe} and ${indicator} in a params string
+ * with the current window.__breadthUniverse / window.__breadthIndicator values.
+ * @param {string} str - raw data-params string (JSON with template vars)
+ * @returns {string} - substituted string ready for JSON.parse
+ */
+function _substituteTemplateVars(str) {
+  if (!str) return str;
+  var universe = (typeof window !== 'undefined' && window.__breadthUniverse)
+    ? window.__breadthUniverse
+    : 'nifty500';
+  var indicator = (typeof window !== 'undefined' && window.__breadthIndicator)
+    ? window.__breadthIndicator
+    : 'ema21';
+  return str
+    .replace(/\$\{universe\}/g, universe)
+    .replace(/\$\{indicator\}/g, indicator);
+}
+
+
+/**
+ * reloadUniverseBlocks()
+ * Re-fires loadBlock() on all blocks whose data-params reference ${universe}
+ * or ${indicator}. Called when universe-selector or ma-selector pill changes.
+ */
+function reloadUniverseBlocks() {
+  var blocks = document.querySelectorAll('[data-endpoint][data-params]');
+  blocks.forEach(function (el) {
+    var rawParams = el.getAttribute('data-params') || '';
+    if (rawParams.indexOf('${universe}') !== -1 || rawParams.indexOf('${indicator}') !== -1) {
+      loadBlock(el);
+    }
+  });
+}
+
+
+/**
  * loadBlock(el)
  * Main entry point. Fetches data-endpoint, manages state transitions.
  *
  * Reads from element dataset:
  *   el.dataset.endpoint    — API endpoint path (required)
- *   el.dataset.params      — JSON-encoded query params (optional)
+ *   el.dataset.params      — JSON-encoded query params (optional, supports ${universe}/${indicator} templates)
  *   el.dataset.dataClass   — staleness threshold key (optional)
  *   el.dataset.fixture     — offline fallback fixture URL (optional)
  *
@@ -222,11 +259,12 @@ function loadBlock(el) {
     el.setAttribute('data-state', 'loading');
   }
 
-  // Build query params
+  // Build query params — substitute ${universe} / ${indicator} before JSON.parse
   var params = null;
   try {
     if (el.dataset.params) {
-      params = JSON.parse(el.dataset.params);
+      var substituted = _substituteTemplateVars(el.dataset.params);
+      params = JSON.parse(substituted);
     }
   } catch (_) {
     // Ignore malformed params
@@ -306,3 +344,5 @@ window.fetchWithTimeout = fetchWithTimeout;
 window.buildUrl = buildUrl;
 window.hasData = hasData;
 window.isStale = isStale;
+window.reloadUniverseBlocks = reloadUniverseBlocks;
+window._substituteTemplateVars = _substituteTemplateVars;
