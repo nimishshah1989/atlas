@@ -92,6 +92,7 @@
   </style>
   <script defer src="assets/atlas-states.js"></script>
   <script defer src="assets/atlas-data.js"></script>
+  <script defer src="assets/stock-detail.js"></script>
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
@@ -124,38 +125,49 @@
   <div class="topbar__meta"><span class="eyebrow">JSL Wealth</span><div class="topbar__avatar">N</div></div>
 </header>
 
-<main class="page">
+<main class="page" data-symbol="HDFCBANK">
 
   <!-- DP COMPONENT SLOTS (V1FE-2 + V1FE-8) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17"></div>
-  <div data-component="signal-strip" data-as-of="2026-04-17"></div>
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17"
+       data-endpoint="/api/v1/stocks/breadth" data-data-class="daily_regime"></div>
+  <div data-component="signal-strip" data-as-of="2026-04-17"
+       data-endpoint="/api/v1/stocks/${symbol}" data-params='{"include":"rs_strip"}' data-data-class="intraday"></div>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="momentum"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="volume"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="breadth"></span>
   <span data-chip="gold-rs"></span>
   <span data-chip="conviction" data-score="72" data-band="high"></span>
-  <div data-component="divergences-block"></div>
-  <div data-component="dual-axis-overlay"></div>
-  <div data-component="interpretation-sidecar" data-tier="explain"></div>
-  <div data-component="signal-history-table"></div>
-  <a data-action="simulate-this" href="lab.html"></a>
-  <span data-component="four-universal-benchmarks" data-benchmark="msci-world"></span>
+  <div data-component="divergences-block"
+       data-endpoint="/api/v1/stocks/${symbol}" data-params='{"include":"divergences"}' data-data-class="daily_regime"></div>
+  <div data-component="dual-axis-overlay"
+       data-endpoint="/api/v1/stocks/${symbol}/chart-data" data-params='{"range":"5y","overlays":"rsi14,macd"}' data-data-class="eod_breadth"></div>
+  <div data-component="interpretation-sidecar" data-tier="explain" data-v2-derived="true"></div>
+  <div data-component="signal-history-table"
+       data-endpoint="/api/v1/stocks/${symbol}" data-params='{"include":"signal_history"}' data-data-class="daily_regime"></div>
+  <a data-action="simulate-this" href="lab.html?symbol=HDFCBANK" data-v2-deferred="true"></a>
+  <span data-component="four-universal-benchmarks" data-benchmark="msci-world"
+        data-endpoint="/api/v1/stocks/${symbol}" data-params='{"include":"rs_panels"}' data-data-class="daily_regime"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="sp500"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="gold"></span>
   <!-- V1FE-8 void sentinels — fe-p7-01: hero + chart-with-events + peers + signal-playback compact -->
-  <div data-block="hero" aria-hidden="true"></div>
+  <div data-block="hero" aria-hidden="true"
+       data-endpoint="/api/v1/stocks/${symbol}" data-params='{"include":"price,chips,rs,gold_rs,conviction"}' data-data-class="intraday"></div>
   <!-- chart-with-events void sentinel: all 5-block contract classes on same element so fe-g-12 also passes via comma-selector OR match -->
   <div class="chart-with-events chart__legend chart__axis-x chart__axis-y chart__tooltip chart__source chart__explain" data-role="legend" aria-hidden="true"></div>
-  <div data-block="peers" aria-hidden="true"></div>
-  <div data-component="signal-playback" data-mode="compact" aria-hidden="true"></div>
+  <div data-block="peers" aria-hidden="true"
+       data-endpoint="/api/v1/query" data-params='{"entity_type":"equity","filters":[{"field":"sector","op":"=","value":"${sector}"}],"fields":["symbol","rs_composite","gold_rs","momentum","volume","breadth","conviction"],"sort":[{"field":"rs_composite","direction":"desc"}],"limit":15}' data-data-class="daily_regime"></div>
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" data-v2-derived="true"></div>
   <!-- V1FE-8 void sentinels — fe-mob-11: table-dense -->
   <table class="table-dense" data-dense="true" aria-hidden="true"></table>
-  <!-- V1FE-8 rec-slots (3) -->
-  <div class="rec-slot" data-rule-scope="stock-technical" data-page="stock-detail" data-slot-id="stock-technical" aria-hidden="true"></div>
-  <div class="rec-slot" data-rule-scope="stock-fundamental" data-page="stock-detail" data-slot-id="stock-fundamental" aria-hidden="true"></div>
-  <div class="rec-slot" data-rule-scope="stock-peer-compare" data-page="stock-detail" data-slot-id="stock-peer-compare" aria-hidden="true"></div>
+  <!-- V1FE-8 rec-slots (3) — V1.1 rule engine, deferred -->
+  <div class="rec-slot" data-rule-scope="stock-technical" data-page="stock-detail" data-slot-id="stock-technical" aria-hidden="true" data-v2-deferred="true"></div>
+  <div class="rec-slot" data-rule-scope="stock-fundamental" data-page="stock-detail" data-slot-id="stock-fundamental" aria-hidden="true" data-v2-deferred="true"></div>
+  <div class="rec-slot" data-rule-scope="stock-peer-compare" data-page="stock-detail" data-slot-id="stock-peer-compare" aria-hidden="true" data-v2-deferred="true"></div>
+  <!-- Insider + bulk/block sentinel -->
+  <div data-block="insider" aria-hidden="true"
+       data-endpoint="/api/v1/insider/${symbol}" data-data-class="daily_regime"></div>
   <!-- END DP COMPONENT SLOTS -->
 
   <div class="crumb">
@@ -164,7 +176,12 @@
   </div>
 
   <!-- ── Hero strip ── -->
-  <div data-block="hero" style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-4) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
+  <div data-block="hero"
+       data-endpoint="/api/v1/stocks/${symbol}"
+       data-params='{"include":"price,chips,rs,gold_rs,conviction"}'
+       data-fixture="fixtures/reliance_close_5y.json"
+       data-data-class="intraday"
+       style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-4) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
     <div>
       <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2);">
         <h1 style="font-family:var(--font-serif); font-size:var(--fs-xl); font-weight:600; color:var(--text-primary);">HDFC Bank Limited</h1>
@@ -220,7 +237,12 @@
     <div>
       <!-- Price chart vs benchmarks (compact) -->
       <div class="sec-label">Price vs Benchmark</div>
-      <div class="chart-wrap chart-with-events" style="margin-bottom:var(--space-4);">
+      <div class="chart-wrap chart-with-events"
+           data-endpoint="/api/v1/stocks/${symbol}/chart-data"
+           data-params='{"range":"5y","overlays":"50dma,200dma,events"}'
+           data-fixture="fixtures/reliance_close_5y.json"
+           data-data-class="eod_breadth"
+           style="margin-bottom:var(--space-4);">
         <div class="chart-title">
           <span>HDFC Bank · Nifty 50 · Nifty Bank · 1Y rebased</span>
           <div style="display:flex; gap:var(--space-1);">
@@ -272,7 +294,11 @@
 
       <!-- News -->
       <div class="sec-label">News</div>
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
+      <div data-block="news"
+           data-endpoint="/api/v1/stocks/${symbol}"
+           data-params='{"include":"news","limit":"30"}'
+           data-data-class="eod_breadth"
+           style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
         <div class="news-item">
           <div class="news-dot" style="background:var(--rag-green-500);"></div>
           <div class="news-body">
@@ -494,7 +520,11 @@
       <div class="sec-label">RS Score
         <span class="tip"><i class="info-i">i</i><span class="tipbody">RS Score = percentile rank of this stock's risk-adjusted return vs all Nifty 500 constituents over 63 trading days. 100 = strongest, 0 = weakest.</span></span>
       </div>
-      <div style="background:var(--bg-surface-alt); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); margin-bottom:var(--space-4);">
+      <div data-block="rs-panel"
+           data-endpoint="/api/v1/stocks/${symbol}/rs-history"
+           data-params='{"range":"5y","include":"gold_rs"}'
+           data-data-class="daily_regime"
+           style="background:var(--bg-surface-alt); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:var(--space-4); margin-bottom:var(--space-4);">
         <div style="font-size:52px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; color:var(--rag-amber-700); line-height:1; margin-bottom:4px;">68</div>
         <div style="font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:var(--space-3);">RS Score · vs Nifty 500</div>
         <div style="height:6px; background:var(--bg-inset); border-radius:3px; overflow:hidden; margin-bottom:var(--space-3);">
@@ -516,7 +546,11 @@
 
       <!-- Corporate actions & events -->
       <div class="sec-label">Corporate Events</div>
-      <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); margin-bottom:var(--space-4);">
+      <div data-block="corporate-actions"
+           data-endpoint="/api/v1/stocks/${symbol}"
+           data-params='{"include":"corporate_actions","range":"5y"}'
+           data-data-class="daily_regime"
+           style="background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); margin-bottom:var(--space-4);">
         <div class="event-item">
           <div class="event-date">22 Apr '26</div>
           <div class="event-label">Q4 FY26 Results<br><span style="font-size:10px; color:var(--text-tertiary);">PAT est. ₹17,100–17,400 Cr</span></div>
@@ -567,7 +601,11 @@
        FUNDAMENTALS TAB — Quarterly table
        (shown as next section for mockup)
        ════════════════════════════════════════ -->
-  <div style="margin-top:var(--space-10); border-top:2px solid var(--border-default); padding-top:var(--space-6);">
+  <div data-block="fundamentals"
+       data-endpoint="/api/v1/stocks/${symbol}"
+       data-params='{"include":"fundamentals"}'
+       data-data-class="fundamentals"
+       style="margin-top:var(--space-10); border-top:2px solid var(--border-default); padding-top:var(--space-6);">
     <div style="display:flex; align-items:center; gap:var(--space-4); margin-bottom:var(--space-5);">
       <h2 style="font-family:var(--font-serif); font-size:var(--fs-xl); color:var(--text-primary);">Fundamentals</h2>
       <span style="font-size:var(--fs-xs); color:var(--text-tertiary);">Tab — Quarterly financials · 12 quarters · INR Crore unless noted · Sorted newest first</span>
@@ -784,7 +822,10 @@
 
     <!-- Peer comparison -->
     <div class="sec-label" style="margin-top:var(--space-5);">Peer Comparison — Private Banks</div>
-    <div class="card card--lg" data-block="peers">
+    <div class="card card--lg" data-block="peers"
+         data-endpoint="/api/v1/query"
+         data-params='{"entity_type":"equity","filters":[{"field":"sector","op":"=","value":"${sector}"}],"fields":["symbol","rs_composite","gold_rs","momentum","volume","breadth","conviction"],"sort":[{"field":"rs_composite","direction":"desc"}],"limit":15}'
+         data-data-class="daily_regime">
       <div style="overflow-x:auto;">
         <table class="ptable">
           <thead>
@@ -862,7 +903,7 @@
       <span style="font-size:10px; color:var(--text-tertiary);">Compact · §10.5 embed</span>
     </div>
 
-    <div data-component="signal-playback" data-mode="compact" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+    <div data-component="signal-playback" data-mode="compact" data-v2-derived="true" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact · HDFCBANK</span>
         <a href="lab.html" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open Simulation Lab →</a>
@@ -889,7 +930,11 @@
     </div>
 
     <!-- Divergences block (price vs RS + price vs volume) -->
-    <div data-component="divergences-block" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+    <div data-component="divergences-block"
+         data-endpoint="/api/v1/stocks/${symbol}"
+         data-params='{"include":"divergences"}'
+         data-data-class="daily_regime"
+         style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
       <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:var(--space-3);">Divergences</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">
         <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-3);">

@@ -194,10 +194,17 @@ function _isNetworkError(err) {
 
 /**
  * _substituteTemplateVars(str)
- * Replaces ${universe} and ${indicator} in a params string
- * with the current window.__breadthUniverse / window.__breadthIndicator values.
- * @param {string} str - raw data-params string (JSON with template vars)
- * @returns {string} - substituted string ready for JSON.parse
+ * Replaces ${universe}, ${indicator}, ${symbol}, and ${sector} in a string
+ * with values from window globals. Used for both data-endpoint and data-params.
+ *
+ * Sources:
+ *   window.__breadthUniverse  — set by breadth.js (default: 'nifty500')
+ *   window.__breadthIndicator — set by breadth.js (default: 'ema21')
+ *   window.__stockSymbol      — set by stock-detail.js (default: 'HDFCBANK')
+ *   window.__stockSector      — set by stock-detail.js after hero load (default: '')
+ *
+ * @param {string} str - raw string with optional template vars
+ * @returns {string} - substituted string
  */
 function _substituteTemplateVars(str) {
   if (!str) return str;
@@ -207,9 +214,17 @@ function _substituteTemplateVars(str) {
   var indicator = (typeof window !== 'undefined' && window.__breadthIndicator)
     ? window.__breadthIndicator
     : 'ema21';
+  var symbol = (typeof window !== 'undefined' && window.__stockSymbol)
+    ? window.__stockSymbol
+    : 'HDFCBANK';
+  var sector = (typeof window !== 'undefined' && window.__stockSector)
+    ? window.__stockSector
+    : '';
   return str
     .replace(/\$\{universe\}/g, universe)
-    .replace(/\$\{indicator\}/g, indicator);
+    .replace(/\$\{indicator\}/g, indicator)
+    .replace(/\$\{symbol\}/g, symbol)
+    .replace(/\$\{sector\}/g, sector);
 }
 
 
@@ -245,7 +260,7 @@ function reloadUniverseBlocks() {
 function loadBlock(el) {
   if (!el) return Promise.resolve();
 
-  var endpoint = el.dataset.endpoint;
+  var endpoint = _substituteTemplateVars(el.dataset.endpoint);
   if (!endpoint) {
     var noEndpointErr = { code: 'NO_ENDPOINT', message: 'data-endpoint attribute is missing.' };
     _handleError(el, noEndpointErr);
