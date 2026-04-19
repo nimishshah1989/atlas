@@ -194,14 +194,17 @@ function _isNetworkError(err) {
 
 /**
  * _substituteTemplateVars(str)
- * Replaces ${universe}, ${indicator}, ${symbol}, and ${sector} in a string
- * with values from window globals. Used for both data-endpoint and data-params.
+ * Replaces ${universe}, ${indicator}, ${symbol}, ${sector}, ${mstar_id}, and
+ * ${category} in a string with values from window globals. Used for both
+ * data-endpoint and data-params.
  *
  * Sources:
  *   window.__breadthUniverse  — set by breadth.js (default: 'nifty500')
  *   window.__breadthIndicator — set by breadth.js (default: 'ema21')
  *   window.__stockSymbol      — set by stock-detail.js (default: 'HDFCBANK')
  *   window.__stockSector      — set by stock-detail.js after hero load (default: '')
+ *   window.__mfMstarId        — set by mf-detail.js (default: 'ppfas-flexi-cap-direct-growth')
+ *   window.__mfCategory       — set by mf-detail.js after hero load (default: '')
  *
  * @param {string} str - raw string with optional template vars
  * @returns {string} - substituted string
@@ -220,11 +223,19 @@ function _substituteTemplateVars(str) {
   var sector = (typeof window !== 'undefined' && window.__stockSector)
     ? window.__stockSector
     : '';
+  var mstarId = (typeof window !== 'undefined' && window.__mfMstarId)
+    ? window.__mfMstarId
+    : 'ppfas-flexi-cap-direct-growth';
+  var category = (typeof window !== 'undefined' && window.__mfCategory)
+    ? window.__mfCategory
+    : '';
   return str
     .replace(/\$\{universe\}/g, universe)
     .replace(/\$\{indicator\}/g, indicator)
     .replace(/\$\{symbol\}/g, symbol)
-    .replace(/\$\{sector\}/g, sector);
+    .replace(/\$\{sector\}/g, sector)
+    .replace(/\$\{mstar_id\}/g, mstarId)
+    .replace(/\$\{category\}/g, category);
 }
 
 
@@ -237,7 +248,8 @@ function reloadUniverseBlocks() {
   var blocks = document.querySelectorAll('[data-endpoint][data-params]');
   blocks.forEach(function (el) {
     var rawParams = el.getAttribute('data-params') || '';
-    if (rawParams.indexOf('${universe}') !== -1 || rawParams.indexOf('${indicator}') !== -1) {
+    if (rawParams.indexOf('${universe}') !== -1 || rawParams.indexOf('${indicator}') !== -1
+        || rawParams.indexOf('${mstar_id}') !== -1 || rawParams.indexOf('${category}') !== -1) {
       loadBlock(el);
     }
   });

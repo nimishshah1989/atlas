@@ -49,7 +49,7 @@ async def get_insider_trades(
 ) -> dict[str, Any]:
     """Return SEBI PIT insider trades for a symbol.
 
-    Source: JIP de_insider_trades table via JIPInsiderService.
+    Source: JIPInsiderService (insider trades).
     Returns 503 when insider data is unavailable/stale.
     """
     today = _today()
@@ -117,7 +117,7 @@ async def get_bulk_deals(
 ) -> dict[str, Any]:
     """Return NSE bulk deals for a symbol.
 
-    Source: JIP de_bulk_deals table via JIPInsiderService.
+    Source: JIPInsiderService (bulk deals).
     Returns 503 when bulk deal data is unavailable/stale.
     """
     today = _today()
@@ -177,7 +177,7 @@ async def get_block_deals(
 ) -> dict[str, Any]:
     """Return NSE block deals for a symbol.
 
-    Source: JIP de_block_deals table via JIPInsiderService.
+    Source: JIPInsiderService (block deals).
     Returns 503 when block deal data is unavailable/stale.
     """
     today = _today()

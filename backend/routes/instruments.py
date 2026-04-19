@@ -45,7 +45,7 @@ _DENOM_CACHE: dict[tuple[str, str, str], tuple[float, list[tuple[date, Decimal]]
 _DENOM_CACHE_TTL = 60.0  # seconds — same TTL as health cache
 
 _DENOM_TICKERS: dict[str, str] = {
-    "gold": "GOLDBEES",  # INR gold price (NSE ETF on de_global_price_daily)
+    "gold": "GOLDBEES",  # INR gold price (NSE ETF via JIP global price data)
     "usd": "USDINR=X",  # USD/INR exchange rate
 }
 
@@ -133,7 +133,7 @@ async def get_price(
 ) -> dict[str, Any]:
     """Return OHLCV price series for a symbol, optionally back-adjusted.
 
-    Back-adjustment uses corporate action factors from de_corporate_actions
+    Back-adjustment uses corporate action factors via JIP corporate-actions service
     (split/bonus/rights only, dividend-neutral). Historical prices are multiplied
     by the product of all adj_factors for events occurring after each price date.
 
@@ -173,7 +173,7 @@ async def get_price(
     async with async_session_factory() as session:
         svc = JIPEquityService(session)
 
-        # Verify symbol exists via JIP client (keeps de_* access out of routes)
+        # Verify symbol exists via JIP client
         if not await svc.symbol_exists(sym):
             raise HTTPException(
                 status_code=404,

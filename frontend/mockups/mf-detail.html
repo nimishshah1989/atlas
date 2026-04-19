@@ -138,6 +138,7 @@
   </style>
   <script defer src="assets/atlas-states.js"></script>
   <script defer src="assets/atlas-data.js"></script>
+  <script defer src="assets/mf-detail.js"></script>
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
@@ -169,35 +170,35 @@
   <div class="topbar__meta"><span class="eyebrow">JSL Wealth</span><div class="topbar__avatar">N</div></div>
 </header>
 
-<main class="page">
+<main class="page" data-mstar-id="ppfas-flexi-cap-direct-growth">
 
   <!-- DP COMPONENT SLOTS (V1FE-2) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17"></div>
-  <div data-component="signal-strip" data-as-of="2026-04-17"></div>
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" data-endpoint="/api/v1/stocks/breadth" data-data-class="daily_regime"></div>
+  <div data-component="signal-strip" data-as-of="2026-04-17" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"rs_strip"}' data-data-class="intraday"></div>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="momentum"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="volume"></span>
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="breadth"></span>
   <span data-chip="gold-rs"></span>
   <span data-chip="conviction" data-score="68" data-band="medium"></span>
-  <div data-component="divergences-block"></div>
+  <div data-component="divergences-block" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"divergences"}' data-data-class="daily_regime"></div>
   <div data-component="dual-axis-overlay"></div>
-  <div data-component="interpretation-sidecar" data-tier="explain"></div>
+  <div data-component="interpretation-sidecar" data-tier="explain" data-v2-derived="true"></div>
   <div data-component="signal-history-table"></div>
   <a data-action="simulate-this" href="lab.html"></a>
-  <span data-component="four-universal-benchmarks" data-benchmark="msci-world"></span>
+  <span data-component="four-universal-benchmarks" data-benchmark="msci-world" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"rs_panels"}' data-data-class="daily_regime"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="sp500"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri"></span>
   <span data-component="four-universal-benchmarks" data-benchmark="gold"></span>
   <!-- V1FE-9 data-block sentinels for fe-p8-01 -->
-  <div data-block="returns" aria-hidden="true"></div>
-  <div data-block="alpha" aria-hidden="true"></div>
-  <div data-block="holdings" aria-hidden="true"></div>
-  <div data-block="weighted-technicals" aria-hidden="true"></div>
-  <div data-component="signal-playback" data-mode="compact" aria-hidden="true"></div>
+  <div data-block="returns" aria-hidden="true" data-endpoint="/api/v1/mf/${mstar_id}/nav-history" data-params='{"range":"5y","include":"rolling_returns"}' data-fixture="fixtures/ppfas_flexi_nav_5y.json" data-data-class="daily_regime"></div>
+  <div data-block="alpha" aria-hidden="true" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"alpha,risk_metrics"}' data-data-class="daily_regime"></div>
+  <div data-block="holdings" aria-hidden="true" data-endpoint="/api/v1/mf/${mstar_id}/holdings" data-params='{"limit":"20","include":"concentration"}' data-data-class="holdings"></div>
+  <div data-block="weighted-technicals" aria-hidden="true" data-endpoint="/api/v1/mf/${mstar_id}/weighted-technicals" data-data-class="daily_regime"></div>
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" data-v2-derived="true"></div>
   <!-- V1FE-9 rec-slot sentinels -->
-  <div class="rec-slot" data-slot-id="mf-alpha-thesis" data-rule-scope="mf-alpha" aria-hidden="true"></div>
-  <div class="rec-slot" data-slot-id="mf-risk-flag" data-rule-scope="mf-risk" aria-hidden="true"></div>
+  <div class="rec-slot" data-slot-id="mf-alpha-thesis" data-rule-scope="mf-alpha" aria-hidden="true" data-v2-deferred="true"></div>
+  <div class="rec-slot" data-slot-id="mf-risk-flag" data-rule-scope="mf-risk" aria-hidden="true" data-v2-deferred="true"></div>
   <!-- END DP COMPONENT SLOTS -->
 
   <div class="crumb">
@@ -206,7 +207,7 @@
   </div>
 
   <!-- ════ HERO ════ -->
-  <div style="display:grid;grid-template-columns:1fr auto;gap:var(--space-6);padding:var(--space-3) 0 var(--space-3);border-bottom:1px solid var(--border-default);margin-bottom:var(--space-4)">
+  <div data-block="hero" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"hero,chips,rs,gold_rs,conviction"}' data-data-class="daily_regime" style="display:grid;grid-template-columns:1fr auto;gap:var(--space-6);padding:var(--space-3) 0 var(--space-3);border-bottom:1px solid var(--border-default);margin-bottom:var(--space-4)">
     <div>
       <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:6px">
         <h1 style="font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--text-primary);margin:0">HDFC Mid-Cap Opportunities Fund</h1>
@@ -291,10 +292,10 @@
     <div class="shd__q">Is this fund generating alpha above its benchmark?</div>
     <div class="shd__sub">Nifty Midcap 150 TRI · 3Y window</div>
   </div>
-  <div data-block="returns" style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);align-items:start">
+  <div data-block="returns" data-endpoint="/api/v1/mf/${mstar_id}/nav-history" data-params='{"range":"5y","include":"rolling_returns"}' data-fixture="fixtures/ppfas_flexi_nav_5y.json" data-data-class="daily_regime" style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);align-items:start">
 
     <!-- NAV chart -->
-    <div class="cw">
+    <div class="cw" data-block="nav-chart" data-endpoint="/api/v1/mf/${mstar_id}/nav-history" data-params='{"range":"5y","include":"benchmark_tri,events"}' data-fixture="fixtures/ppfas_flexi_nav_5y.json" data-data-class="daily_regime">
       <div class="ct">
         <span>NAV vs Benchmark vs Gold · 3Y</span>
         <div style="display:flex;gap:4px">
@@ -392,10 +393,10 @@
     <div class="shd__q">Is alpha skill-based or market beta? Where does it come from?</div>
     <div class="shd__sub">Rolling alpha · Brinson attribution · Manager track record</div>
   </div>
-  <div data-block="alpha" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5);align-items:start">
+  <div data-block="alpha" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"alpha,risk_metrics"}' data-data-class="daily_regime" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5);align-items:start">
 
     <!-- Rolling 12M alpha chart -->
-    <div class="cw">
+    <div class="cw" data-block="rolling-alpha-beta" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"rolling_alpha_beta","range":"5y"}' data-data-class="daily_regime">
       <div class="ct"><span>12-Month Rolling Alpha vs Nifty MC150 TRI</span><span class="ap ap--pos">avg +6.8pp</span></div>
       <div class="csub">Positive = fund outperforming. Consistently above zero line = skill, not luck.</div>
       <svg viewBox="0 0 420 130" style="width:100%;display:block">
@@ -683,10 +684,10 @@
     <div class="shd__q">Are the fund's sector bets aligned with current market momentum?</div>
     <div class="shd__sub">Sector signal grid · Active tilts vs benchmark · Market cap shape · Style box</div>
   </div>
-  <div data-block="weighted-technicals" style="display:grid;grid-template-columns:1fr 280px;gap:var(--space-5);align-items:start">
+  <div data-block="weighted-technicals" data-endpoint="/api/v1/mf/${mstar_id}/weighted-technicals" data-data-class="daily_regime" style="display:grid;grid-template-columns:1fr 280px;gap:var(--space-5);align-items:start">
 
     <!-- Sector signal grid -->
-    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
+    <div data-block="sector-allocation" data-endpoint="/api/v1/mf/${mstar_id}/sectors" data-data-class="holdings" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
       <table class="ssgrid">
         <thead>
           <tr style="background:var(--bg-inset)">
@@ -893,7 +894,7 @@
     <div class="shd__sub">Top 10 holdings · RS + momentum + fundamentals quality · New entries / exits</div>
   </div>
 
-  <div data-block="holdings" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:auto;margin-bottom:var(--space-4)">
+  <div data-block="holdings" data-endpoint="/api/v1/mf/${mstar_id}/holdings" data-params='{"limit":"20","include":"concentration"}' data-data-class="holdings" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:auto;margin-bottom:var(--space-4)">
     <table class="htable">
       <thead>
         <tr style="background:var(--bg-inset)">
@@ -1210,7 +1211,7 @@
 
     <!-- Suitability + SIP -->
     <div style="display:flex;flex-direction:column;gap:var(--space-4)">
-      <div class="cw">
+      <div class="cw" data-block="suitability" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"suitability"}' data-data-class="daily_regime">
         <div class="ct"><span>Investor Suitability Matrix</span></div>
         <div style="display:flex;flex-direction:column;gap:0">
           <div class="suit-row"><span style="color:var(--text-secondary);font-size:11px">Risk Profile</span><span class="sig sig--bull" style="font-size:10px">Moderate-Aggressive / Aggressive</span></div>
@@ -1258,7 +1259,7 @@
     </div>
 
     <!-- Peer comparison table -->
-    <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
+    <div data-block="peers" data-endpoint="/api/v1/query" data-params='{"entity_type":"mutual_fund","filters":[{"field":"category","op":"=","value":"${category}"}],"fields":["mstar_id","name","category","composite_score","rs_composite","gold_rs_state","risk_grade","returns_grade"],"sort":[{"field":"composite_score","direction":"desc"}],"limit":20}' data-data-class="daily_regime" data-v2-deferred="true" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden">
       <table class="ptable">
         <thead>
           <tr style="background:var(--bg-inset)">
@@ -1392,8 +1393,8 @@
     <span>Source: JIP Data Platform</span>
     <span>Data as of 2026-04-17</span>
   </footer>
-  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" style="display:none" aria-hidden="true">Regime: expansion</div>
-  <div class="signal-strip" data-component="signal-strip" data-as-of="2026-04-17" data-scope="daily" style="display:none" aria-hidden="true">
+  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" data-endpoint="/api/v1/stocks/breadth" data-data-class="daily_regime" style="display:none" aria-hidden="true">Regime: expansion</div>
+  <div class="signal-strip" data-component="signal-strip" data-as-of="2026-04-17" data-scope="daily" data-endpoint="/api/v1/mf/${mstar_id}" data-params='{"include":"rs_strip"}' data-data-class="intraday" style="display:none" aria-hidden="true">
     <span data-chip="rs">RS LEADING</span>
     <span data-chip="momentum">Momentum ACCEL</span>
     <span data-chip="volume">Volume ACCUM</span>
@@ -1408,8 +1409,8 @@
     <div data-benchmark="gold">Gold</div>
   </div>
   <!-- ATLAS-SENTINELS-V2 END -->
-<div class="rec-slot" data-slot-id="mf-suitability" data-rule-scope="mf" data-page="mf-detail" style="display:none" aria-hidden="true"></div>
-<div class="rec-slot" data-slot-id="mf-playback" data-rule-scope="mf" data-page="mf-detail" style="display:none" aria-hidden="true"></div>
+<div class="rec-slot" data-slot-id="mf-suitability" data-rule-scope="mf" data-page="mf-detail" style="display:none" aria-hidden="true" data-v2-deferred="true"></div>
+<div class="rec-slot" data-slot-id="mf-playback" data-rule-scope="mf" data-page="mf-detail" style="display:none" aria-hidden="true" data-v2-deferred="true"></div>
 </body>
 </html>
 

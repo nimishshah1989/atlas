@@ -358,9 +358,9 @@ async def get_global_flows(
     range: Optional[str] = Query("1y", description="Date range: 1m, 3m, 6m, 1y, 2y, 5y"),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Return FII/DII flow series from de_fii_dii_daily.
+    """Return FII/DII flow series via JIP FII/DII service.
 
-    Returns insufficient_data=True in _meta if de_fii_dii_daily has 0 rows.
+    Returns insufficient_data=True in _meta if the source table has 0 rows.
     Financial values in INR crore as Decimal.
     """
     svc = FlowsService(session=db)

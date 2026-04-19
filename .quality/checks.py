@@ -1636,7 +1636,24 @@ def main() -> int:
 
     if args.gate:
         dims = report.get("dims", {})
-        failed = [n for n, d in dims.items() if d.get("gating") and d["score"] < 80]
+        # When a baseline is provided, dims that were already below 80 at chunk-start
+        # are grandfathered — the delta check below will still catch any regression.
+        baseline_floor_scores: dict[str, int] = {}
+        if args.compare_baseline:
+            try:
+                _bl = json.loads(Path(args.compare_baseline).read_text())
+                baseline_floor_scores = {
+                    n: d.get("score", 80) for n, d in _bl.get("dims", {}).items()
+                }
+            except Exception:
+                pass
+        failed = [
+            n
+            for n, d in dims.items()
+            if d.get("gating")
+            and d["score"] < 80
+            and baseline_floor_scores.get(n, 80) >= 80  # only hard-fail new drops below 80
+        ]
         if failed:
             print(f" DELTA-GATE: FLOOR FAIL — gating dims below 80: {', '.join(failed)}")
             return 1

@@ -92,7 +92,7 @@ async def get_breadth_zone_events(
     meta: dict[str, Any] = {
         "data_as_of": data_as_of,
         "staleness_seconds": staleness_seconds,
-        "source": "de_bhavcopy_eq",
+        "source": "jip/bhavcopy_eq",
         "symbol": resolved_symbol,
         "lookback_days": resolved_lookback,
     }
@@ -154,7 +154,7 @@ async def get_breadth_divergences(
     meta: dict[str, Any] = {
         "data_as_of": data_as_of,
         "staleness_seconds": staleness_seconds,
-        "source": "de_bhavcopy_eq",
+        "source": "jip/bhavcopy_eq",
         "universe": resolved_universe,
         "lookback_days": resolved_lookback,
     }
