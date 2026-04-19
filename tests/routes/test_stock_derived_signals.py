@@ -343,9 +343,9 @@ async def test_breadth_response_includes_regime_enrichment() -> None:
 
     try:
         with (
-            patch("backend.routes.stocks.JIPDataService") as MockJIP,
+            patch("backend.routes.breadth.JIPDataService") as MockJIP,
             patch(
-                "backend.routes.stocks.compute_regime_enrichment",
+                "backend.routes.breadth.compute_regime_enrichment",
                 new=AsyncMock(return_value=(42, [mock_transition])),
             ),
         ):

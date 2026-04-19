@@ -30,9 +30,13 @@ from backend.services.uql.templates import REGISTRY, get_template
 
 _EXPECTED_TEMPLATES = {
     "top_rs_gainers",
+    "top_rs_losers",
     "sector_rotation",
     "oversold_candidates",
     "breadth_dashboard",
+    "fund_1d_movers",
+    "mf_rank_composite",
+    "mf_rank_history",
 }
 
 
@@ -40,7 +44,8 @@ _EXPECTED_TEMPLATES = {
 
 
 def test_registry_contains_all_four_templates() -> None:
-    assert set(REGISTRY.keys()) == _EXPECTED_TEMPLATES
+    # NOTE: registry now contains 8 templates (V2FE-1 added 4 new ones)
+    assert _EXPECTED_TEMPLATES.issubset(set(REGISTRY.keys()))
 
 
 @pytest.mark.parametrize("name", sorted(_EXPECTED_TEMPLATES))

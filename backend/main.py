@@ -17,6 +17,7 @@ from slowapi.util import get_remote_address
 from backend.config import get_settings
 from backend.routes import (
     alerts,
+    breadth,
     decisions,
     derivatives,
     errors as uql_errors,
@@ -96,6 +97,7 @@ async def _enforce_api_rate_limit(request: Request, call_next: Any) -> Any:
 
 uql_errors.register(app)
 
+app.include_router(breadth.router)  # breadth sub-routes BEFORE stocks (static-before-param)
 app.include_router(stocks.router)
 app.include_router(stock_analysis.router)
 app.include_router(screener.router)

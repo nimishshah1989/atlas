@@ -339,6 +339,7 @@ class MarketBreadthResponse(BaseModel):
     breadth: BreadthSnapshot
     regime: RegimeSnapshot
     meta: ResponseMeta
+    conviction_series: Optional[list[dict[str, Any]]] = None
 
 
 # --- RS History ---

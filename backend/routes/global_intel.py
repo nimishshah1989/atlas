@@ -1,4 +1,4 @@
-"""Global Intelligence API routes — 5 read-only routes (V5-9).
+"""Global Intelligence API routes — 7 read-only routes (V5-9 + V2FE-1).
 
 Routes:
     GET /api/v1/global/briefing   — latest LLM briefing from atlas_briefings
@@ -6,11 +6,13 @@ Routes:
     GET /api/v1/global/rs-heatmap — global instruments RS + price
     GET /api/v1/global/regime     — current regime + breadth summary
     GET /api/v1/global/patterns   — inter-market patterns from atlas_intelligence
+    GET /api/v1/global/events     — key market events (V2FE-1)
+    GET /api/v1/global/flows      — FII/DII flow data (V2FE-1)
 """
 
 import time
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 import structlog
 from fastapi import APIRouter, Depends, Query
@@ -19,6 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.clients.jip_data_service import JIPDataService
 from backend.db.session import get_db
+from backend.services.event_marker_service import EventMarkerService
+from backend.services.flows_service import FlowsService
 from backend.models.global_intel import (
     BreadthSummary,
     BriefingDetail,
@@ -321,3 +325,44 @@ async def get_global_patterns(
         patterns=patterns,
         meta=ResponseMeta(record_count=len(patterns), query_ms=elapsed),
     )
+
+
+@router.get("/events")
+async def get_global_events(
+    scope: Optional[str] = Query(None, description="Comma-separated scopes e.g. india,global"),
+    range: Optional[str] = Query("5y", description="Date range: 1y, 5y, all"),
+    categories: Optional[str] = Query(None, description="Comma-separated category filter"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Return key market events filtered by scope, date range, and category.
+
+    Reads from atlas_key_events. Supports scope filter (india, global, etc),
+    date range, and category filter.
+    """
+    svc = EventMarkerService(session=db)
+    resolved_scope = scope or "india,global"
+    resolved_range = range or "5y"
+    return await svc.get_events(
+        scope=resolved_scope,
+        range_=resolved_range,
+        categories=categories,
+    )
+
+
+@router.get("/flows")
+async def get_global_flows(
+    scope: Optional[str] = Query(
+        None,
+        description="Comma-separated scopes: fii_equity,dii_equity,fii_debt,dii_debt",
+    ),
+    range: Optional[str] = Query("1y", description="Date range: 1m, 3m, 6m, 1y, 2y, 5y"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Return FII/DII flow series from de_fii_dii_daily.
+
+    Returns insufficient_data=True in _meta if de_fii_dii_daily has 0 rows.
+    Financial values in INR crore as Decimal.
+    """
+    svc = FlowsService(session=db)
+    resolved_range = range or "1y"
+    return await svc.get_flows(scope=scope, range_=resolved_range)

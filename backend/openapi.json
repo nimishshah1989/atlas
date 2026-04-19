@@ -10423,6 +10423,21 @@
           },
           "meta": {
             "$ref": "#/components/schemas/ResponseMeta"
+          },
+          "conviction_series": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conviction Series"
           }
         },
         "type": "object",

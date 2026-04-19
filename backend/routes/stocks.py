@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Optional
 
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,22 +17,18 @@ from backend.db.session import async_session_factory, get_db
 from backend.models.conviction import FourFactorConviction
 from backend.services.conviction_engine import compute_four_factor
 from backend.services.derived_signals import compute_gold_rs, compute_piotroski
-from backend.services.regime_service import compute_regime_enrichment
 from backend.services.tv.bridge import TVBridgeClient, TVBridgeUnavailableError
 from backend.services.tv.cache_service import TVCacheService
 from backend.services.uql import engine as uql_engine, includes as uql_includes
 from backend.models.schemas import (
-    BreadthSnapshot,
     ChartDataPoint,
     ChartDataResponse,
     GoldRS,
-    MarketBreadthResponse,
     MoverEntry,
     MoversResponse,
     Piotroski,
     RSDataPoint,
     RSHistoryResponse,
-    RegimeSnapshot,
     ResponseMeta,
     SectorGroup,
     SectorListResponse,
@@ -184,62 +181,6 @@ async def get_sectors(
     return SectorListResponse(
         sectors=sectors,
         meta=ResponseMeta(record_count=len(sectors), query_ms=elapsed),
-    )
-
-
-@router.get("/breadth", response_model=MarketBreadthResponse)
-async def get_breadth(
-    db: AsyncSession = Depends(get_db),
-) -> MarketBreadthResponse:
-    """Get market breadth and regime data (with regime enrichment)."""
-    t0 = time.monotonic()
-    svc = JIPDataService(db)
-
-    breadth_data = await svc.get_market_breadth()
-    regime_data = await svc.get_market_regime()
-
-    if not breadth_data or not regime_data:
-        raise HTTPException(status_code=503, detail="Market data not available")
-
-    # Regime enrichment via isolated sessions (asyncpg cannot multiplex).
-    days_val, history_val = await compute_regime_enrichment(async_session_factory)
-    breadth = BreadthSnapshot(
-        date=breadth_data["date"],
-        advance=breadth_data["advance"],
-        decline=breadth_data["decline"],
-        unchanged=breadth_data["unchanged"],
-        total_stocks=breadth_data["total_stocks"],
-        ad_ratio=_dec(breadth_data.get("ad_ratio")),
-        pct_above_200dma=_dec(breadth_data.get("pct_above_200dma")),
-        pct_above_50dma=_dec(breadth_data.get("pct_above_50dma")),
-        new_52w_highs=breadth_data.get("new_52w_highs", 0),
-        new_52w_lows=breadth_data.get("new_52w_lows", 0),
-        mcclellan_oscillator=_dec(breadth_data.get("mcclellan_oscillator")),
-        mcclellan_summation=_dec(breadth_data.get("mcclellan_summation")),
-    )
-
-    regime = RegimeSnapshot(
-        date=regime_data["date"],
-        regime=regime_data["regime"],
-        confidence=_dec(regime_data.get("confidence")),
-        breadth_score=_dec(regime_data.get("breadth_score")),
-        momentum_score=_dec(regime_data.get("momentum_score")),
-        volume_score=_dec(regime_data.get("volume_score")),
-        global_score=_dec(regime_data.get("global_score")),
-        fii_score=_dec(regime_data.get("fii_score")),
-        days_in_regime=days_val,
-        regime_history=history_val,
-    )
-
-    elapsed = int((time.monotonic() - t0) * 1000)
-    return MarketBreadthResponse(
-        breadth=breadth,
-        regime=regime,
-        meta=ResponseMeta(
-            data_as_of=breadth_data["date"],
-            record_count=1,
-            query_ms=elapsed,
-        ),
     )
 
 

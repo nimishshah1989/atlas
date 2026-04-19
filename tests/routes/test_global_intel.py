@@ -630,3 +630,245 @@ class TestGetGlobalPatterns:
 
         body = resp.json()
         assert "patterns" in body
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/global/events (V2FE-1)
+# ---------------------------------------------------------------------------
+
+
+class TestGetGlobalEvents:
+    """Tests for /api/v1/global/events — V2FE-1."""
+
+    _SVC_MOD = "backend.routes.global_intel.EventMarkerService"
+
+    def test_events_returns_200(self) -> None:
+        """GET /events returns 200."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_events = AsyncMock(
+                    return_value={
+                        "data_as_of": "2026-04-17",
+                        "source": "ATLAS key events",
+                        "events": [],
+                        "_meta": {"data_as_of": "2026-04-17", "record_count": 0, "query_ms": 5},
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/events")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        assert resp.status_code == 200
+
+    def test_events_returns_events_array(self) -> None:
+        """Response contains events array."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        sample_events = [
+            {
+                "date": "2024-01-01",
+                "category": "rbi_policy",
+                "severity": "high",
+                "affects": ["india"],
+                "label": "RBI Rate Cut",
+                "source": None,
+                "description": None,
+                "display_color": None,
+                "source_url": None,
+            }
+        ]
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_events = AsyncMock(
+                    return_value={
+                        "data_as_of": "2026-04-17",
+                        "source": "ATLAS key events",
+                        "events": sample_events,
+                        "_meta": {"data_as_of": "2026-04-17", "record_count": 1, "query_ms": 5},
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/events")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        body = resp.json()
+        assert "events" in body
+        assert len(body["events"]) == 1
+        assert body["events"][0]["label"] == "RBI Rate Cut"
+
+    def test_events_with_scope_filter(self) -> None:
+        """Scope filter is passed to EventMarkerService."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_events = AsyncMock(
+                    return_value={
+                        "data_as_of": "2026-04-17",
+                        "source": "ATLAS key events",
+                        "events": [],
+                        "_meta": {"data_as_of": "2026-04-17", "record_count": 0, "query_ms": 5},
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/events?scope=india")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        assert resp.status_code == 200
+        # Verify scope was forwarded to service
+        call_kwargs = instance.get_events.call_args
+        assert call_kwargs is not None
+        assert "india" in str(call_kwargs)
+
+    def test_events_empty_returns_200(self) -> None:
+        """Empty events list still returns 200 (no 404)."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_events = AsyncMock(
+                    return_value={
+                        "data_as_of": "2026-04-17",
+                        "source": "ATLAS key events",
+                        "events": [],
+                        "_meta": {"data_as_of": "2026-04-17", "record_count": 0, "query_ms": 2},
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/events?scope=global&categories=budget")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["events"] == []
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/global/flows (V2FE-1)
+# ---------------------------------------------------------------------------
+
+
+class TestGetGlobalFlows:
+    """Tests for /api/v1/global/flows — V2FE-1."""
+
+    _SVC_MOD = "backend.routes.global_intel.FlowsService"
+
+    def test_flows_returns_200(self) -> None:
+        """GET /flows returns 200."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_flows = AsyncMock(
+                    return_value={
+                        "_meta": {
+                            "data_as_of": "2026-04-17",
+                            "insufficient_data": False,
+                            "record_count": 0,
+                            "query_ms": 5,
+                        },
+                        "series": [],
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/flows")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        assert resp.status_code == 200
+
+    def test_flows_with_insufficient_data_returns_200(self) -> None:
+        """When table is empty, still returns 200 with insufficient_data=True."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_flows = AsyncMock(
+                    return_value={
+                        "_meta": {
+                            "data_as_of": None,
+                            "insufficient_data": True,
+                            "record_count": 0,
+                            "query_ms": 3,
+                        },
+                        "series": [],
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/flows")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["_meta"]["insufficient_data"] is True
+        assert body["series"] == []
+
+    def test_flows_returns_series_key(self) -> None:
+        """Response contains 'series' key."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_flows = AsyncMock(
+                    return_value={
+                        "_meta": {
+                            "data_as_of": "2026-04-17",
+                            "insufficient_data": False,
+                            "record_count": 2,
+                            "query_ms": 8,
+                        },
+                        "series": [
+                            {"date": "2026-04-01", "scope": "fii_equity", "value_crore": "1500.00"},
+                            {"date": "2026-04-01", "scope": "dii_equity", "value_crore": "800.00"},
+                        ],
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/flows?scope=fii_equity,dii_equity")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        body = resp.json()
+        assert "series" in body
+        assert len(body["series"]) == 2
+
+    def test_flows_meta_present(self) -> None:
+        """Response always has _meta envelope."""
+        session = _make_mock_session()
+        app.dependency_overrides[get_db] = _override_db(session)
+        try:
+            with patch(self._SVC_MOD) as MockSvc:
+                instance = MockSvc.return_value
+                instance.get_flows = AsyncMock(
+                    return_value={
+                        "_meta": {
+                            "data_as_of": "2026-04-17",
+                            "insufficient_data": False,
+                            "record_count": 0,
+                            "query_ms": 5,
+                        },
+                        "series": [],
+                    }
+                )
+                client = TestClient(app)
+                resp = client.get("/api/v1/global/flows")
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+        body = resp.json()
+        assert "_meta" in body
+        assert "insufficient_data" in body["_meta"]
