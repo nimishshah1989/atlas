@@ -21,6 +21,8 @@ from backend.models.mf import (
     FundIdentity,
     Holding,
     MFLifecycleEvent,
+    NAVHistoryResponse,
+    NAVPoint,
     PillarFlows,
     PillarHoldingsQuality,
     PillarPerformance,
@@ -28,6 +30,7 @@ from backend.models.mf import (
     Staleness,
     StalenessFlag,
     WeightedTechnicalsSummary,
+    WeightedTechnicalsResponse,
 )
 from backend.services.mf_compute import classify_fund_quadrant
 from backend.services.uql import engine as uql_engine
@@ -338,4 +341,99 @@ def build_lifecycle_event(
         event_type=str(first.get("event_type", "")),
         effective_date=effective_date,
         detail=first.get("detail"),
+    )
+
+
+async def fetch_mf_conviction_series(
+    db: AsyncSession,
+    mstar_id: str,
+) -> list[dict[str, Any]]:
+    """Fetch last 52 weeks of MF conviction scores from atlas_gold_rs_cache.
+
+    Returns [] if the table is not yet populated or on any error (spec §18
+    fault-tolerance: partial data > 500).
+    """
+    from sqlalchemy import text as sa_text
+
+    try:
+        cs_result = await db.execute(
+            sa_text(
+                """
+                SELECT date::text AS date,
+                       gold_rs_signal AS signal,
+                       entity_id
+                FROM atlas_gold_rs_cache
+                WHERE entity_type = 'mf'
+                  AND entity_id = :mstar_id
+                ORDER BY date DESC
+                LIMIT 52
+                """
+            ),
+            {"mstar_id": mstar_id},
+        )
+        return [dict(r) for r in cs_result.mappings().all()]
+    except Exception as exc:
+        log.warning("fetch_mf_conviction_series_failed", mstar_id=mstar_id, error=str(exc)[:300])
+        return []
+
+
+def build_weighted_technicals_response(
+    mstar_id: str,
+    wt: Optional[dict[str, Any]],
+    data_as_of: datetime.date,
+    staleness: Staleness,
+    conviction_series: Optional[list[dict[str, Any]]] = None,
+) -> WeightedTechnicalsResponse:
+    """Construct WeightedTechnicalsResponse from raw JIP row + metadata."""
+    if wt is not None:
+        raw_as_of: Any = wt.get("as_of_date") or data_as_of
+        if isinstance(raw_as_of, datetime.datetime):
+            as_of_date: datetime.date = raw_as_of.date()
+        else:
+            as_of_date = raw_as_of
+    else:
+        as_of_date = data_as_of
+
+    return WeightedTechnicalsResponse(
+        mstar_id=mstar_id,
+        weighted_rsi=wt.get("weighted_rsi") if wt else None,
+        weighted_breadth_pct_above_200dma=(
+            wt.get("weighted_breadth_pct_above_200dma") if wt else None
+        ),
+        weighted_macd_bullish_pct=wt.get("weighted_macd_bullish_pct") if wt else None,
+        as_of_date=as_of_date,
+        data_as_of=data_as_of,
+        staleness=staleness,
+        conviction_series=conviction_series,
+    )
+
+
+def build_nav_history(
+    nav_rows: list[dict[str, Any]],
+    mstar_id: str,
+    data_as_of: datetime.date,
+    staleness: Staleness,
+) -> NAVHistoryResponse:
+    """Build NAVHistoryResponse from raw JIP rows."""
+    points: list[NAVPoint] = []
+    for row in nav_rows:
+        nav_val = safe_decimal(row.get("nav"))
+        nav_date = row.get("nav_date")
+        if nav_val is None or nav_date is None:
+            continue
+        if isinstance(nav_date, datetime.datetime):
+            nav_date = nav_date.date()
+        points.append(NAVPoint(nav_date=nav_date, nav=nav_val))
+
+    if len(points) >= 2:
+        gap_days = max(0, (points[-1].nav_date - points[0].nav_date).days + 1 - len(points))
+    else:
+        gap_days = 0
+
+    return NAVHistoryResponse(
+        mstar_id=mstar_id,
+        points=points,
+        coverage_gap_days=gap_days,
+        data_as_of=data_as_of,
+        staleness=staleness,
     )

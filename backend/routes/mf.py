@@ -26,7 +26,6 @@ from backend.models.mf import (
     HoldingsResponse,
     HoldingStockResponse,
     NAVHistoryResponse,
-    NAVPoint,
     OverlapHolding,
     OverlapResponse,
     SectorExposureSummary,
@@ -38,13 +37,16 @@ from backend.routes.mf_helpers import (
     build_deep_dive_identity,
     build_deep_dive_pillars,
     build_lifecycle_event,
+    build_nav_history,
     build_weighted_technicals,
+    build_weighted_technicals_response,
     compute_staleness,
     data_as_of_from_freshness,
     fetch_deep_dive_detail,
     fetch_deep_dive_freshness,
     fetch_deep_dive_lifecycle,
     fetch_deep_dive_rs_batch,
+    fetch_mf_conviction_series,
     gather_universe_data,
     group_funds_by_broad_category,
     map_holding_row,
@@ -377,8 +379,32 @@ async def get_fund_rs_history(
 
 
 @router.get("/{mstar_id}/weighted-technicals", response_model=WeightedTechnicalsResponse)
-async def get_fund_weighted_technicals(mstar_id: str) -> WeightedTechnicalsResponse:
-    raise not_implemented()
+async def get_fund_weighted_technicals(
+    mstar_id: str,
+    include: Optional[str] = Query(
+        None, description="Comma-separated includes e.g. conviction_series"
+    ),
+    db: AsyncSession = Depends(get_db),
+) -> WeightedTechnicalsResponse:
+    """Get latest weighted technicals for a fund.
+
+    Optional include=conviction_series adds last 12 months of weekly
+    conviction score as a time series (spec §18 include system).
+    Returns [] for conviction_series if atlas_gold_rs_cache has no MF rows.
+    """
+    svc = JIPDataService(db)
+    freshness = await svc.get_mf_data_freshness()
+    data_as_of = data_as_of_from_freshness(freshness)
+    staleness = compute_staleness(freshness)
+    wt = await svc.get_fund_weighted_technicals(mstar_id)
+
+    conviction_series: Optional[list[dict[str, Any]]] = None
+    if include and "conviction_series" in [t.strip() for t in include.split(",")]:
+        conviction_series = await fetch_mf_conviction_series(db, mstar_id)
+
+    return build_weighted_technicals_response(
+        mstar_id, wt, data_as_of, staleness, conviction_series
+    )
 
 
 @router.get("/{mstar_id}/nav-history", response_model=NAVHistoryResponse)
@@ -397,42 +423,8 @@ async def get_fund_nav_history(
     svc = JIPDataService(db)
     nav_rows = await svc.get_fund_nav_history(mstar_id, date_from=date_from, date_to=date_to)
     freshness = await svc.get_mf_data_freshness()
-
-    points = []
-    for row in nav_rows:
-        nav_val = safe_decimal(row.get("nav"))
-        nav_date = row.get("nav_date")
-        if nav_val is None or nav_date is None:
-            continue
-        if isinstance(nav_date, datetime.datetime):
-            nav_date = nav_date.date()
-        points.append(NAVPoint(nav_date=nav_date, nav=nav_val))
-
-    # Gap detection: calendar days between first and last point minus actual count
-    if len(points) >= 2:
-        min_date = points[0].nav_date
-        max_date = points[-1].nav_date
-        coverage_gap_days = (max_date - min_date).days + 1 - len(points)
-        coverage_gap_days = max(0, coverage_gap_days)
-    else:
-        coverage_gap_days = 0
-
-    data_as_of = data_as_of_from_freshness(freshness)
-    staleness = compute_staleness(freshness)
-
-    log.info(
-        "mf_nav_history_route_complete",
-        mstar_id=mstar_id,
-        point_count=len(points),
-        coverage_gap_days=coverage_gap_days,
-    )
-
-    return NAVHistoryResponse(
-        mstar_id=mstar_id,
-        points=points,
-        coverage_gap_days=coverage_gap_days,
-        data_as_of=data_as_of,
-        staleness=staleness,
+    return build_nav_history(
+        nav_rows, mstar_id, data_as_of_from_freshness(freshness), compute_staleness(freshness)
     )
 
 

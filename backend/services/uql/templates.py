@@ -195,27 +195,73 @@ def _fund_1d_movers(params: dict[str, Any]) -> UQLRequest:
 
 
 def _mf_rank_composite(params: dict[str, Any]) -> UQLRequest:
-    """MF funds ranked by 4-factor composite score descending.
+    """MF funds ranked by RS composite score descending (4-factor proxy).
 
-    Optional params: ``limit`` (default 200).
+    Optional params: ``category`` (filter by category_name),
+    ``period`` (1y/3y/5y — informational; rs_composite is always the sort key),
+    ``limit`` (default 50).
     """
-    limit = int(_optional(params, "limit", 200))
+    category = _optional(params, "category", None)
+    limit = int(_optional(params, "limit", 50))
+    filters: list[UQLFilter] = [
+        UQLFilter(field="is_active", op=UQLOperator.EQ, value=True),
+    ]
+    if category is not None:
+        filters.append(UQLFilter(field="category_name", op=UQLOperator.EQ, value=category))
     return UQLRequest(
         entity_type="mf",
-        filters=[
-            UQLFilter(field="is_active", op=UQLOperator.EQ, value=True),
-        ],
-        sort=[UQLSort(field="composite_score", direction=SortDirection.DESC)],
+        filters=filters,
+        sort=[UQLSort(field="rs_composite", direction=SortDirection.DESC)],
         fields=[
             "mstar_id",
-            "name",
-            "category",
-            "composite_score",
-            "return_score",
-            "risk_score",
-            "resilience_score",
-            "consistency_score",
+            "fund_name",
+            "category_name",
+            "rs_composite",
+            "rs_momentum_28d",
+            "manager_alpha",
         ],
+        limit=limit,
+    )
+
+
+def _stock_peers(params: dict[str, Any]) -> UQLRequest:
+    """Equities in similar sector/market-cap band — peer comparison starting point.
+
+    Required params: ``symbol`` (the anchor stock).
+    Optional params: ``limit`` (default 10).
+    """
+    symbol = _require(params, "symbol", "stock_peers")
+    limit = int(_optional(params, "limit", 10))
+    return UQLRequest(
+        entity_type="equity",
+        filters=[
+            UQLFilter(field="is_active", op=UQLOperator.EQ, value=True),
+            UQLFilter(field="symbol", op=UQLOperator.NEQ, value=symbol),
+        ],
+        sort=[UQLSort(field="rs_composite", direction=SortDirection.DESC)],
+        fields=["symbol", "company_name", "sector", "industry", "rs_composite", "cap_category"],
+        limit=limit,
+    )
+
+
+def _sector_breadth_template(params: dict[str, Any]) -> UQLRequest:
+    """Per-sector breadth: pct above 50DMA and 200DMA.
+
+    Optional params: ``universe`` (nifty50/nifty200/nifty500, default nifty500) —
+    accepted for frontend context; sector entity aggregates all equities in the
+    JIP partition so this does not narrow the SQL.
+    ``limit`` (default 30).
+    """
+    limit = int(_optional(params, "limit", 30))
+    return UQLRequest(
+        entity_type="sector",
+        group_by=["sector"],
+        aggregations=[
+            UQLAggregation(field="above_50dma", function="pct_true", alias="pct_above_50dma"),
+            UQLAggregation(field="above_200dma", function="pct_true", alias="pct_above_200dma"),
+            UQLAggregation(field="rs_composite", function="avg", alias="avg_rs"),
+        ],
+        sort=[UQLSort(field="pct_above_50dma", direction=SortDirection.DESC)],
         limit=limit,
     )
 
@@ -253,6 +299,8 @@ REGISTRY: Final[dict[str, TemplateBuilder]] = {
     "fund_1d_movers": _fund_1d_movers,
     "mf_rank_composite": _mf_rank_composite,
     "mf_rank_history": _mf_rank_history,
+    "stock_peers": _stock_peers,
+    "sector_breadth_template": _sector_breadth_template,
 }
 
 

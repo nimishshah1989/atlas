@@ -8,7 +8,7 @@ response carries `data_as_of` + `staleness`. Decimal-only — no IEEE-754.
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -272,6 +272,7 @@ class WeightedTechnicalsResponse(BaseModel):
     as_of_date: date
     data_as_of: date
     staleness: Staleness
+    conviction_series: Optional[list[dict[str, Any]]] = None
 
 
 # --- /{mstar_id}/nav-history -----------------------------------------------
