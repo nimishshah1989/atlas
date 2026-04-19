@@ -5,6 +5,39 @@
   --foreground: #171717;
   --teal: #1D9E75;
   --teal-light: #e6f7f1;
+
+  /* Surface tokens */
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #f9fafb;
+  --bg-inset: #f3f4f6;
+  --bg-hover: #f0fdf8;
+  --border-subtle: #f3f4f6;
+  --border-default: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  /* Text tokens */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+
+  /* Accent tokens */
+  --accent-700: #0e7c5a;
+  --accent-500: #1D9E75;
+  --accent-300: #6dcba9;
+  --accent-100: #e6f7f1;
+
+  /* RAG green */
+  --rag-green-900: #14532d;
+  --rag-green-700: #15803d;
+  --rag-green-100: #dcfce7;
+
+  /* RAG amber */
+  --rag-amber-700: #b45309;
+  --rag-amber-100: #fef3c7;
+
+  /* RAG red */
+  --rag-red-700: #b91c1c;
+  --rag-red-100: #fee2e2;
 }
 
 @theme inline {

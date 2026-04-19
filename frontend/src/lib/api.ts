@@ -432,3 +432,69 @@ export {
   type MFOverlapHolding,
   type MFOverlapResponse,
 } from "./api-mf";
+
+// ─── Atlas unified fetch infrastructure ──────────────────────────────────────
+
+export interface AtlasMeta {
+  data_as_of: string;
+  staleness_seconds: number;
+  source: string;
+  insufficient_data?: boolean;
+  from_fixture?: boolean;
+  includes_loaded?: string[];
+}
+
+export class AtlasApiError extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = "AtlasApiError";
+    this.code = code;
+  }
+}
+
+export async function apiFetch<T>(
+  endpoint: string,
+  params?: Record<string, string | number | boolean | undefined>
+): Promise<{ data: T; _meta: AtlasMeta }> {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+  // Build URL with params
+  let url = `${base}${endpoint}`;
+  if (params && Object.keys(params).length > 0) {
+    const qs = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join("&");
+    if (qs) url = `${url}?${qs}`;
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      const e = err as Error;
+      if (e.name === "AbortError") {
+        throw new AtlasApiError("TIMEOUT", "Request timed out after 8 seconds");
+      }
+      throw new AtlasApiError("NETWORK_ERROR", e.message || "Network error");
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!res.ok) {
+      throw new AtlasApiError(
+        `HTTP_${res.status}`,
+        `Server returned ${res.status} ${res.statusText}`
+      );
+    }
+
+    return res.json() as Promise<{ data: T; _meta: AtlasMeta }>;
+  } finally {
+    clearTimeout(timer);
+  }
+}

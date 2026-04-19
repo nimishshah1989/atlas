@@ -112,3 +112,47 @@ export function signColor(val: string | number | null): string {
   if (isNaN(num)) return "";
   return num > 0 ? "text-emerald-600" : num < 0 ? "text-red-600" : "";
 }
+
+export function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    // Display in IST (UTC+5:30)
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Kolkata",
+    };
+    const parts = new Intl.DateTimeFormat("en-IN", options).formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    const month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
+    // Capitalize month
+    const monthCap = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+    return `${day}-${monthCap}-${year}`;
+  } catch {
+    return "—";
+  }
+}
+
+export function formatSign(val: number | null): "+" | "-" | "" {
+  if (val === null || val === undefined) return "";
+  if (val > 0) return "+";
+  if (val < 0) return "-";
+  return "";
+}
+
+export function formatStaleness(seconds: number): string {
+  if (seconds < 3600) {
+    const mins = Math.round(seconds / 60);
+    return `${mins}m ago`;
+  }
+  if (seconds < 86400) {
+    const hours = Math.round(seconds / 3600);
+    return `${hours}h ago`;
+  }
+  const days = Math.round(seconds / 86400);
+  return `${days}d ago`;
+}
