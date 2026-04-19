@@ -48,6 +48,7 @@ criteria:
     check_type: backend_probe
     severity: high
     page: global
+    source_spec_section: "§15"
     endpoint: "/api/v1/breadth/global"
     timeout_seconds: 3
 

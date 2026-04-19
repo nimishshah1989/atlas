@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-04-19T18:18:41.130787+05:30",
+  "tool": "v2fe-lighthouse-scaffold (ttfb-proxy; real Lighthouse requires headless browser)",
+  "budget": {
+    "lcp_max_seconds": 2.5,
+    "cls_max": 0.1,
+    "regression_tolerance_seconds": 0.2
+  },
+  "summary": {
+    "pages_measured": 0,
+    "pages_not_measured": 6,
+    "all_within_budget": true
+  },
+  "results": [
+    {
+      "page": "today",
+      "path": "/",
+      "url": "http://localhost:8000/",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    },
+    {
+      "page": "explore-country",
+      "path": "/",
+      "url": "http://localhost:8000/",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    },
+    {
+      "page": "breadth",
+      "path": "/",
+      "url": "http://localhost:8000/",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    },
+    {
+      "page": "stock-detail",
+      "path": "/api/v1/stocks/RELIANCE",
+      "url": "http://localhost:8000/api/v1/stocks/RELIANCE",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    },
+    {
+      "page": "mf-detail",
+      "path": "/api/v1/funds/INF846K01EW2",
+      "url": "http://localhost:8000/api/v1/funds/INF846K01EW2",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    },
+    {
+      "page": "mf-rank",
+      "path": "/api/v1/funds/universe",
+      "url": "http://localhost:8000/api/v1/funds/universe",
+      "status": "not_measured",
+      "reason": "backend unreachable",
+      "ttfb_seconds": null,
+      "lcp_proxy_seconds": null,
+      "cls_proxy": null
+    }
+  ],
+  "note": "Real Lighthouse metrics require a headless browser. This report uses TTFB as an LCP floor proxy. Run Lighthouse CLI against https://atlas.jslwealth.in for production metrics."
+}

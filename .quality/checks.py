@@ -1493,6 +1493,67 @@ def dim_frontend() -> DimensionResult:
             )
         )
 
+    # 5.11 Frontend V2 criteria gate (reads .forge/frontend-v2-report.json if exists)
+    fe_v2_report_path = ROOT / ".forge" / "frontend-v2-report.json"
+    if fe_v2_report_path.exists():
+        try:
+            fe_v2_report = json.loads(fe_v2_report_path.read_text(encoding="utf-8"))
+            v2_total = fe_v2_report.get("total", 0)
+            v2_passed = fe_v2_report.get("passed", 0)
+            v2_failed = fe_v2_report.get("failed", 0)
+            v2_critical_fail = fe_v2_report.get("critical_fail_count", 0)
+            v2_high_fail = fe_v2_report.get("high_fail_count", 0)
+            if v2_total > 0:
+                v2_run_total = v2_passed + v2_failed
+                v2_pass_rate = (v2_passed / v2_run_total) if v2_run_total > 0 else 1.0
+                v2_fe_score = max(0, min(30, round(v2_pass_rate * 30)))
+            else:
+                v2_fe_score = 0
+            v2_evidence = (
+                f"fe-v2-criteria: {v2_passed}/{v2_passed + v2_failed} passed "
+                f"(critical_fail={v2_critical_fail}, high_fail={v2_high_fail})"
+            )
+            checks.append(
+                CheckResult(
+                    "5.11",
+                    "Frontend V2 criteria gate",
+                    v2_fe_score,
+                    30,
+                    v2_evidence,
+                    "Does the frontend meet V2 acceptance criteria (§8.1-§8.5)?",
+                    "Run python scripts/check-frontend-v2.py to see failures.",
+                    "critical" if v2_critical_fail > 0 else "high" if v2_high_fail > 0 else "info",
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            checks.append(
+                CheckResult(
+                    "5.11",
+                    "Frontend V2 criteria gate",
+                    0,
+                    30,
+                    f"error reading v2 report: {exc}",
+                    "Does the frontend meet V2 acceptance criteria?",
+                    "Run python scripts/check-frontend-v2.py.",
+                    "high",
+                    status="ERROR",
+                )
+            )
+    else:
+        checks.append(
+            CheckResult(
+                "5.11",
+                "Frontend V2 criteria gate",
+                0,
+                30,
+                "no .forge/frontend-v2-report.json — run check-frontend-v2.py",
+                "Does the frontend meet V2 acceptance criteria (§8.1-§8.5)?",
+                "Run python scripts/check-frontend-v2.py.",
+                "info",
+                status="SKIP",
+            )
+        )
+
     # Remaining checks require headless browser/live service
     for cid, name, pts in [
         ("5.2", "Bundle size", 10),

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T18:01:16.977689+05:30",
+  "generated_at": "2026-04-19T18:41:44.119559+05:30",
   "criteria_file": "docs/specs/frontend-v2-criteria.yaml",
   "total": 40,
   "passed": 31,
@@ -205,7 +205,7 @@
       "check_type": "runner_exits_zero",
       "passed": true,
       "status": "RUN",
-      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python3 scripts/check-frontend-criteria.py --report-only"
+      "evidence": "Command exited 0: /home/ubuntu/atlas/venv/bin/python scripts/check-frontend-criteria.py --report-only"
     },
     {
       "id": "v2fe-rg-02",

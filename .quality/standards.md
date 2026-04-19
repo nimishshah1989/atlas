@@ -387,6 +387,17 @@ acceptance criteria defined in `docs/specs/frontend-v1-criteria.yaml`?"
 **Severity:** critical if any critical failure, high if any high failure,
 info otherwise.
 
+### 5.11 Frontend V2 criteria gate
+
+Reads `.forge/frontend-v2-report.json` (produced by
+`scripts/check-frontend-v2.py`). Computes pass rate from the `results[]`
+array — `round(pass_rate × 30)`, clamped to [0, 30]. SKIP when the report
+is absent. **Plain English:** "Does the frontend meet the V2 acceptance
+criteria defined in `docs/specs/frontend-v2-criteria.yaml`
+(§8.1–§8.5)?" **Fix:** `python scripts/check-frontend-v2.py` to see
+failures. **Severity:** critical if any critical failure, high if any
+high failure, info otherwise.
+
 ---
 
 ## Dimension 6 — Backend  *(informational until V1.6)*
