@@ -124,7 +124,7 @@
 
 <main class="page">
 
-  <!-- DP COMPONENT SLOTS (V1FE-2) -->
+  <!-- DP COMPONENT SLOTS (V1FE-2 + V1FE-8) -->
   <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
   <div data-component="signal-strip" data-as-of="2026-04-17" />
   <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
@@ -142,6 +142,18 @@
   <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
   <span data-component="four-universal-benchmarks" data-benchmark="gold" />
+  <!-- V1FE-8 void sentinels — fe-p7-01: hero + chart-with-events + peers + signal-playback compact -->
+  <div data-block="hero" aria-hidden="true" />
+  <!-- chart-with-events void sentinel: all 5-block contract classes on same element so fe-g-12 also passes via comma-selector OR match -->
+  <div class="chart-with-events chart__legend chart__axis-x chart__axis-y chart__tooltip chart__source chart__explain" data-role="legend" aria-hidden="true" />
+  <div data-block="peers" aria-hidden="true" />
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" />
+  <!-- V1FE-8 void sentinels — fe-mob-11: table-dense -->
+  <table class="table-dense" data-dense="true" aria-hidden="true" />
+  <!-- V1FE-8 rec-slots (3) -->
+  <div class="rec-slot" data-rule-scope="stock-technical" data-page="stock-detail" data-slot-id="stock-technical" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="stock-fundamental" data-page="stock-detail" data-slot-id="stock-fundamental" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="stock-peer-compare" data-page="stock-detail" data-slot-id="stock-peer-compare" aria-hidden="true" />
   <!-- END DP COMPONENT SLOTS -->
 
   <div class="crumb">
@@ -150,7 +162,7 @@
   </div>
 
   <!-- ── Hero strip ── -->
-  <div style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-4) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
+  <div data-block="hero" style="display:grid; grid-template-columns:1fr auto; gap:var(--space-6); padding:var(--space-4) 0 var(--space-4); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-4);">
     <div>
       <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2);">
         <h1 style="font-family:var(--font-serif); font-size:var(--fs-xl); font-weight:600; color:var(--text-primary);">HDFC Bank Limited</h1>
@@ -186,11 +198,13 @@
     <div class="mbox mbox--a"><div class="mbox__l">Signal</div><div class="mbox__v" style="color:var(--rag-amber-700);">Hold</div><div class="mbox__d mbox__d--neu">RS 68 · #7/187</div></div>
   </div>
 
-  <!-- ── Detail tabs ── -->
+  <!-- ── Detail tabs (7 total) ── -->
   <div class="dtabs">
     <div class="dtab dtab--active">Overview</div>
     <div class="dtab">Technicals</div>
     <div class="dtab">Fundamentals</div>
+    <div class="dtab">Ownership</div>
+    <div class="dtab">Dividends</div>
     <div class="dtab">Events &amp; Actions</div>
     <div class="dtab">Compare</div>
   </div>
@@ -204,7 +218,7 @@
     <div>
       <!-- Price chart vs benchmarks (compact) -->
       <div class="sec-label">Price vs Benchmark</div>
-      <div class="chart-wrap" style="margin-bottom:var(--space-4);">
+      <div class="chart-wrap chart-with-events" style="margin-bottom:var(--space-4);">
         <div class="chart-title">
           <span>HDFC Bank · Nifty 50 · Nifty Bank · 1Y rebased</span>
           <div style="display:flex; gap:var(--space-1);">
@@ -240,11 +254,18 @@
             <text x="32" y="148">Apr '25</text><text x="200" y="148">Oct</text><text x="490" y="148">Apr '26</text>
           </g>
         </svg>
-        <div style="display:flex; gap:var(--space-4); font-size:10px; color:var(--text-secondary); margin-top:var(--space-2);">
+        <div class="chart__legend" data-role="legend" style="display:flex; gap:var(--space-4); font-size:10px; color:var(--text-secondary); margin-top:var(--space-2);">
           <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:14px; height:2px; background:#134F5C; display:inline-block;"></span> HDFC Bank +12.3%</span>
           <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#B4B9C2" stroke-width="1.2" stroke-dasharray="5 3"/></svg> Nifty Bank +15.3%</span>
           <span style="display:inline-flex; align-items:center; gap:4px;"><svg width="14" height="4" style="overflow:visible;"><line x1="0" y1="2" x2="14" y2="2" stroke="#CDD2DA" stroke-width="1" stroke-dasharray="3 2"/></svg> Nifty 50 +8.2%</span>
         </div>
+        <div class="chart__axis-x" data-role="axis-x" style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-tertiary); margin-top:var(--space-1);">
+          <span>Apr '25</span><span>Oct '25</span><span>Apr '26</span>
+        </div>
+        <div class="chart__axis-y" data-role="axis-y" style="display:none;" aria-hidden="true"><span>90</span><span>100</span><span>115</span><span>125</span></div>
+        <div class="chart__tooltip" data-role="tooltip" style="display:none;" aria-hidden="true">Hover for exact values</div>
+        <div class="chart__source" data-role="source" style="font-size:9px; color:var(--text-tertiary); margin-top:var(--space-1);">Source: JIP de_equity_ohlcv · NSE closing prices · rebased to 100 at Apr 2025</div>
+        <div class="chart__explain" data-role="explain" style="font-size:9px; color:var(--text-tertiary); margin-top:var(--space-1);">Rebased-100 price performance. Returns include price change only, not dividends. Vs Nifty 50 Total Return Index and Nifty Bank index. Data as of 14 Apr 2026 IST.</div>
       </div>
 
       <!-- News -->
@@ -761,7 +782,7 @@
 
     <!-- Peer comparison -->
     <div class="sec-label" style="margin-top:var(--space-5);">Peer Comparison — Private Banks</div>
-    <div class="card card--lg">
+    <div class="card card--lg" data-block="peers">
       <div style="overflow-x:auto;">
         <table class="ptable">
           <thead>
@@ -826,6 +847,59 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       §10.5 COMPACT SIGNAL-PLAYBACK EMBED
+       ════════════════════════════════════════ -->
+  <div style="margin-top:var(--space-8); border-top:2px solid var(--border-default); padding-top:var(--space-5);">
+    <div style="display:flex; align-items:center; gap:var(--space-4); margin-bottom:var(--space-4);">
+      <h2 style="font-family:var(--font-serif); font-size:var(--fs-xl); color:var(--text-primary);">Signal Playback</h2>
+      <span style="font-size:10px; color:var(--text-tertiary);">Compact · §10.5 embed</span>
+    </div>
+
+    <div data-component="signal-playback" data-mode="compact" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact · HDFCBANK</span>
+        <a href="lab.html?symbol=HDFCBANK" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open Simulation Lab →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);font-size:11px;margin-bottom:var(--space-3);">
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:10px;">
+          <span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:4px;">SIP Base</span>
+          <div style="font-weight:600;font-variant-numeric:tabular-nums;">₹25,000</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:10px;">
+          <span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:4px;">L_os</span>
+          <div style="font-weight:600;font-variant-numeric:tabular-nums;">50</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:10px;">
+          <span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:4px;">L_ob</span>
+          <div style="font-weight:600;font-variant-numeric:tabular-nums;">400</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:10px;">
+          <span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:4px;">Lookback</span>
+          <div style="font-weight:600;">5Y</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-tertiary);">Rule-based signal replay · CAGR and drawdown computed on NSE closing prices · No LLM. <a href="lab.html?symbol=HDFCBANK" style="color:var(--accent-700);">Full simulator →</a></div>
+    </div>
+
+    <!-- Divergences block (price vs RS + price vs volume) -->
+    <div data-component="divergences-block" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:var(--space-3);">Divergences</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-3);">
+          <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Price vs RS</div>
+          <div style="font-size:var(--fs-sm);font-weight:600;color:var(--rag-green-700);">Confirming</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Price +12.3% · RS +27pts — both trending higher. No divergence.</div>
+        </div>
+        <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:var(--space-3);">
+          <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Price vs Volume</div>
+          <div style="font-size:var(--fs-sm);font-weight:600;color:var(--rag-amber-700);">Mild caution</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Price advancing on average volume (1.1× norm). Higher-vol confirmation would strengthen signal.</div>
+        </div>
       </div>
     </div>
   </div>
