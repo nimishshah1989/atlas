@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-04-19T05:14:44.574230+05:30",
+  "generated_at": "2026-04-19T05:45:15.905163+05:30",
   "criteria_file": "docs/specs/frontend-v1-criteria.yaml",
-  "total": 63,
-  "passed": 35,
+  "total": 65,
+  "passed": 38,
   "failed": 9,
-  "skipped": 19,
+  "skipped": 18,
   "critical_fail_count": 8,
   "high_fail_count": 1,
   "results": [
@@ -249,7 +249,7 @@
       "severity": "critical",
       "check_type": "i18n_indian",
       "passed": false,
-      "evidence": "Forbidden i18n patterns found: portfolio-detail.html: '\\\\$[0-9]' (1 match); explore-sector.html: '\\\\$[0-9]' (3 match); explore-country.html: '\\\\$[0-9]' (2 match); explorer.html: '\\\\$[0-9]' (1 match); portfolios.html: '\\\\$[0-9]' (1 match)",
+      "evidence": "Forbidden i18n patterns found: portfolio-detail.html: '\\\\$[0-9]' (1 match); explore-sector.html: '\\\\$[0-9]' (3 match); explorer.html: '\\\\$[0-9]' (1 match); portfolios.html: '\\\\$[0-9]' (1 match)",
       "status": "RUN"
     },
     {
@@ -456,7 +456,7 @@
       "severity": "high",
       "check_type": "dom_required",
       "passed": false,
-      "evidence": "FAIL \u2014 mf-rank.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; explore-country.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; explore-sector.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; portfolios.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"",
+      "evidence": "FAIL \u2014 mf-rank.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; explore-sector.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"; portfolios.html: found 0, need 1 for \".table-dense, table[data-dense='true']\"",
       "status": "RUN"
     },
     {
@@ -469,8 +469,26 @@
       "status": "SKIP"
     },
     {
-      "id": "fe-p4-01",
-      "title": "explore-global.html: macros/rates/FX/commod/credit blocks all present",
+      "id": "fe-p5-01",
+      "title": "explore-country.html: embedded breadth panel per \u00a75.1",
+      "severity": "critical",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'[data-block=breadth-compact]': 1 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p5-02",
+      "title": "explore-country.html: compact signal-playback embed present",
+      "severity": "high",
+      "check_type": "dom_required",
+      "passed": true,
+      "evidence": "'[data-component=signal-playback][data-mode=compact]': 1 element(s) in 1 file(s)",
+      "status": "RUN"
+    },
+    {
+      "id": "fe-p5-03",
+      "title": "explore-country.html: sectors RRG + flows blocks present",
       "severity": "critical",
       "check_type": "dom_required",
       "passed": true,
@@ -478,13 +496,13 @@
       "status": "RUN"
     },
     {
-      "id": "fe-p4-02",
-      "title": "explore-global.html: stripped of verdict language + commentary blocks",
+      "id": "fe-p5-04",
+      "title": "explore-country.html: stripped of sect-comm, sect-alloc narrative",
       "severity": "critical",
-      "check_type": "kill_list",
+      "check_type": "dom_forbidden",
       "passed": true,
-      "evidence": "SKIP: no files matched",
-      "status": "SKIP"
+      "evidence": "No forbidden elements in 1 file(s)",
+      "status": "RUN"
     },
     {
       "id": "fe-state-01",

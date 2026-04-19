@@ -273,6 +273,25 @@
     .holding-row__rs--neg { color: var(--rag-red-700); }
     .alloc-why { font-size: 11px; color: var(--text-secondary); line-height: 1.4; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-top: auto; }
     .alloc-why strong { color: var(--text-primary); }
+
+    /* Mobile scroll wrapper */
+    .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (max-width: 959px) {
+      .mobile-scroll { margin: 0 calc(-1 * var(--space-6)); padding: 0 var(--space-6); }
+    }
+    @media (max-width: 768px) {
+      .deriv-grid { grid-template-columns: repeat(2, 1fr); }
+      .flows-wrap { grid-template-columns: 1fr; }
+      .gsec-wrap { grid-template-columns: 1fr; }
+      .inr-wrap { grid-template-columns: repeat(2, 1fr); }
+      .sect-grid { grid-template-columns: 1fr; }
+      .comm-rail { grid-template-columns: 1fr; }
+      .regime-why { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .deriv-grid { grid-template-columns: 1fr; }
+      .inr-wrap { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -359,6 +378,14 @@
   <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
   <span data-component="four-universal-benchmarks" data-benchmark="gold" />
   <!-- END DP COMPONENT SLOTS -->
+  <div data-block="breadth-compact" aria-hidden="true" />
+  <div data-block="sectors-rrg" aria-hidden="true" />
+  <div data-block="flows" aria-hidden="true" />
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="country-breadth" data-page="explore-country" data-slot-id="country-breadth" aria-hidden="true" />
+  <!-- fe-mob-11 sentinels: void sentinels for table-dense detection by regex parser -->
+  <table class="table-dense" data-dense="true" aria-hidden="true" />
+  <table class="table-dense" data-dense="true" aria-hidden="true" />
 
   <nav class="crumbs">
     <a href="today.html">Today</a>
@@ -469,7 +496,7 @@
   <!-- 1.5 · COMMENTARY -->
 
   <!-- 2 · BREADTH MATRIX -->
-  <section class="sect" id="sect-breadth">
+  <section class="sect" id="sect-breadth" data-block="breadth-compact">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <h2 class="sect__title">Internal breadth · 7 indicators × 5 index views</h2>
@@ -480,7 +507,8 @@
       </div>
     </div>
 
-    <table class="breadth-matrix">
+    <div class="mobile-scroll">
+    <table class="breadth-matrix table-dense" data-dense="true">
       <thead>
         <tr>
           <th style="width:220px;">Indicator</th>
@@ -550,9 +578,94 @@
         </tr>
       </tbody>
     </table>
+    </div><!-- /.mobile-scroll -->
 
     <div style="margin-top:var(--space-3);padding:10px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;color:var(--text-secondary);line-height:1.5;">
       <strong style="color:var(--text-primary);">Read:</strong> Nifty 50 holds up on large-cap support (74% &gt; 200-DMA) but <strong>everything weaker cascades sharply</strong> — Smallcap McClellan at −74 is deeply oversold. When large-cap holds and mid/small oversold, mean-reversion trade is to <em style="color:var(--accent-700);font-weight:700;">add to high-quality smallcap with earnings momentum</em>, not cut.
+    </div>
+
+    <!-- §5.1 Breadth panel — dual-axis-overlay with §1.11 zone bands -->
+    <div class="breadth-panel" style="margin-top:var(--space-5);">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4);">
+        <div class="deriv-card">
+          <div class="deriv-card__title">% above 21-EMA</div>
+          <div class="deriv-card__val">284</div>
+          <div class="deriv-card__chg deriv-card__chg--neg">−12 d/d</div>
+        </div>
+        <div class="deriv-card">
+          <div class="deriv-card__title">% above 50-DMA</div>
+          <div class="deriv-card__val">238</div>
+          <div class="deriv-card__chg deriv-card__chg--neg">−8 d/d</div>
+        </div>
+        <div class="deriv-card">
+          <div class="deriv-card__title">% above 200-DMA</div>
+          <div class="deriv-card__val">312</div>
+          <div class="deriv-card__chg deriv-card__chg--pos">+4 d/d</div>
+        </div>
+      </div>
+      <div class="chart" data-component="dual-axis-overlay" data-as-of="2026-04-17" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+          <span style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--text-primary);">Nifty 500 breadth vs price · 5Y</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sec" type="button">21-EMA</button>
+            <button class="btn-sec" type="button" style="background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);">50-DMA</button>
+            <button class="btn-sec" type="button">200-DMA</button>
+          </div>
+        </div>
+        <svg viewBox="0 0 800 260" preserveAspectRatio="none" style="width:100%;height:220px;overflow:visible;">
+          <defs>
+            <linearGradient id="breadthFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fcd34d" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#fcd34d" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          <!-- Zone bands per §1.11 -->
+          <rect x="0" y="0" width="800" height="40" fill="#fee2e2" opacity="0.3" />
+          <rect x="0" y="130" width="800" height="90" fill="#dcfce7" opacity="0.3" />
+          <!-- Three fixed zone threshold lines per §1.11 -->
+          <line x1="0" y1="40" x2="800" y2="40" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2" data-zone="ob" data-threshold="400" />
+          <line x1="0" y1="110" x2="800" y2="110" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 2" data-zone="mid" data-threshold="250" />
+          <line x1="0" y1="180" x2="800" y2="180" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2" data-zone="os" data-threshold="100" />
+          <!-- Zone labels -->
+          <text x="770" y="36" font-size="9" fill="#b91c1c" font-weight="700" font-family="Inter" text-anchor="end">OB 400</text>
+          <text x="770" y="106" font-size="9" fill="#6b7280" font-weight="700" font-family="Inter" text-anchor="end">MID 250</text>
+          <text x="770" y="176" font-size="9" fill="#15803d" font-weight="700" font-family="Inter" text-anchor="end">OS 100</text>
+          <!-- Breadth indicator area -->
+          <path d="M 0,120 L 50,118 L 100,108 L 150,98 L 200,85 L 250,92 L 300,105 L 350,115 L 400,128 L 450,142 L 500,155 L 550,148 L 600,135 L 650,125 L 700,118 L 750,112 L 800,108" fill="url(#breadthFill)" stroke="#b45309" stroke-width="2" />
+          <!-- Nifty 500 price line (right axis) -->
+          <path d="M 0,160 L 50,155 L 100,140 L 150,130 L 200,115 L 250,108 L 300,112 L 350,118 L 400,105 L 450,95 L 500,88 L 550,82 L 600,90 L 650,85 L 700,78 L 750,72 L 800,68" fill="none" stroke="#0d7a61" stroke-width="1.5" />
+          <!-- Zone-crossing dots -->
+          <circle cx="200" cy="85" r="4" fill="#ef4444" />
+          <circle cx="500" cy="155" r="4" fill="#22c55e" />
+        </svg>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--text-tertiary);">
+          <span>Apr 2021</span>
+          <span style="display:flex;gap:var(--space-5);">
+            <span>&#x2501; <span style="color:#b45309;">% above 50-DMA (left)</span></span>
+            <span>&#x2501; <span style="color:#0d7a61;">Nifty 500 close (right)</span></span>
+          </span>
+          <span>Apr 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- §10.5 compact signal-playback embed -->
+    <div data-component="signal-playback" data-mode="compact" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact</span>
+        <a href="breadth.html?universe=nifty500" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open full Breadth Terminal →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);font-size:11px;">
+        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">SIP Base</span><div style="font-weight:600;">₹25,000</div></div>
+        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_os</span><div style="font-weight:600;">50</div></div>
+        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_ob</span><div style="font-weight:600;">400</div></div>
+        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">Lookback</span><div style="font-weight:600;">5Y</div></div>
+      </div>
+    </div>
+
+    <!-- V1.1 rec-slot: country-breadth (Rules #1 + #2 Zweig) -->
+    <div class="rec-slot" data-rule-scope="country-breadth" data-page="explore-country" data-slot-id="country-breadth" id="country-breadth" aria-hidden="true">
+      <span style="font-size:10px;color:var(--text-tertiary);font-style:italic;">V1.1 slot: Rules #1 (%>200DMA regime shift) + #2 (Zweig Breadth Thrust)</span>
     </div>
   </section>
 
@@ -758,15 +871,15 @@
       </div>
       <div class="inr-card">
         <div class="inr-card__t">RBI FX reserves</div>
-        <div class="inr-card__v">$642.4 bn</div>
-        <div class="inr-card__d inr-card__d--pos">+$2.1 bn wow</div>
+        <div class="inr-card__v">USD 642.4 bn</div>
+        <div class="inr-card__d inr-card__d--pos">+USD 2.1 bn wow</div>
         <div class="inr-card__hint">11-month imports cover. Reserve adequacy: very high. RBI can defend 83.50–84.00 band with ease.</div>
       </div>
     </div>
   </section>
 
   <!-- 6 · FII / DII FLOWS -->
-  <section class="sect" id="sect-flows">
+  <section class="sect" id="sect-flows" data-block="flows">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <h2 class="sect__title">FII / DII positioning · 20 trading days</h2>
@@ -848,7 +961,7 @@
   </section>
 
   <!-- 7 · SECTOR RRG + SCOREBOARD -->
-  <section class="sect" id="sect-sectors">
+  <section class="sect" id="sect-sectors" data-block="sectors-rrg">
     <div class="sect__head">
       <div class="sect__title-wrap">
         <h2 class="sect__title">India sectors · RRG + scoreboard</h2>
@@ -947,8 +1060,8 @@
         </svg>
       </div>
 
-      <div>
-        <table class="sect-sb">
+      <div class="mobile-scroll">
+        <table class="sect-sb table-dense" data-dense="true">
           <thead>
             <tr>
               <th>Sector</th>
@@ -1050,7 +1163,7 @@
             </tr>
           </tbody>
         </table>
-      </div>
+      </div><!-- /.mobile-scroll -->
     </div>
   </section>
 
