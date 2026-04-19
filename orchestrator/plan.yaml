@@ -2266,3 +2266,198 @@ chunks:
       - ".quality/checks.py --dim frontend ≥ 95"
       - "curl -sf https://atlas.jslwealth.in/mockups/<page> | grep -q ATLAS green for every page"
 
+
+  # --- V2FE — Stage 2 Data Wiring -------------------------------------------------
+  # V2FE-0 and V2FE-1 run in parallel (no inter-dependency).
+  # V2FE-2..V2FE-7 are per-page and run in parallel once V2FE-0 + V2FE-1 are done.
+  # V2FE-8 (states rollout) follows all per-page chunks.
+  # V2FE-9 (integration gate) is the slice DONE signal.
+  # Spec: docs/design/frontend-v2-spec.md §9
+
+  - id: V2FE-0
+    title: "Criteria YAML + loader skeleton + §6 states contract"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-0.md
+    depends_on: []
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "docs/specs/frontend-v2-criteria.yaml exists and parses without error (≥30 entries)"
+      - "scripts/check-frontend-v2.py --list prints ≥9 backend check IDs"
+      - "frontend/mockups/assets/atlas-data.js exports loadBlock, fetchWithTimeout, buildUrl, hasData, isStale"
+      - "frontend/mockups/assets/atlas-states.js exports STALENESS_THRESHOLDS keyed per §6.3 data class"
+      - "STALENESS_THRESHOLDS values match §6.3 exactly (intraday=3600, eod_breadth=21600, daily_regime=86400, fundamentals=604800, events=604800, holdings=604800, system=21600)"
+      - "pytest tests/unit/v2fe/test_atlas_data_js.py -v passes ≥8 tests"
+      - "scripts/check-frontend-criteria.py exits 0 (V1 gate unchanged)"
+
+  - id: V2FE-1
+    title: "Backend gaps: zone-events + global-events + divergences + flows + UQL templates + conviction_series"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-1.md
+    depends_on: []
+    estimated_hours: 10
+    quality_targets:
+      api: 85
+      architecture: 85
+      code: 80
+      security: 85
+    punch_list:
+      - "GET /api/v1/stocks/breadth/zone-events?universe=nifty500&range=5y returns 200 with zone_events.schema.json-valid payload"
+      - "GET /api/v1/global/events?scope=india,global returns 200 with events.schema.json-valid payload"
+      - "GET /api/v1/stocks/breadth/divergences?universe=nifty500 returns 200 with divergences[] array and _meta.insufficient_data field"
+      - "GET /api/v1/global/flows returns 200 or empty + insufficient_data:true when de_fii_dii_daily empty"
+      - "POST /api/v1/query/template {template:'sector_rotation'} returns ≥11 rows with sector_id, rs, rs_gold, conviction"
+      - "POST /api/v1/query/template {template:'top_rs_gainers', params:{limit:10}} returns exactly 10 rows ordered desc by delta_pct"
+      - "POST /api/v1/query/template {template:'fund_1d_movers', params:{limit:5}} returns 5 rows with rs_composite + gold_rs_state"
+      - "POST /api/v1/query/template {template:'mf_rank_composite'} rows parse against mf_rank_universe.schema.json"
+      - "GET /api/v1/stocks/breadth?include=conviction_series returns conviction_series field in response"
+      - "Every new response carries _meta envelope per §6.4 with data_as_of, source, staleness_seconds, includes_loaded"
+      - "alembic upgrade head and alembic downgrade -1 both succeed for atlas_key_events migration"
+      - "No float in any new service file (grep clean)"
+      - "scripts/check-api-standard.py exits 0 for all new routes"
+      - "pytest tests/services/test_breadth_zone_detector.py tests/services/test_breadth_divergence_detector.py tests/services/test_event_marker_service.py tests/services/test_flows_service.py -v green"
+
+  - id: V2FE-2
+    title: "Today / Pulse page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-2.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' today.html returns ≥8"
+      - "pytest tests/unit/v2fe/test_today_bindings.py -v passes ≥6 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p1-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "Four-decision-card slots carry data-v2-deferred='true' (not data-endpoint)"
+      - "No data-endpoint value points at a URL outside §4.1 or §4.2"
+      - "atlas-data.js and atlas-states.js script tags present in today.html"
+
+  - id: V2FE-3
+    title: "Explore · Country (India deep dive) page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-3.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' explore-country.html returns ≥10"
+      - "pytest tests/unit/v2fe/test_explore_country_bindings.py -v passes ≥6 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p5-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "Derivatives block carries data-sparse='true' (de_fo_bhavcopy 0 rows)"
+      - "INR chart block carries data-sparse='true' (USDINR 3 rows)"
+      - "signal-history-table binds to /api/v1/stocks/breadth/zone-events"
+
+  - id: V2FE-4
+    title: "Breadth Terminal page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-4.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' breadth.html returns ≥9"
+      - "pytest tests/unit/v2fe/test_breadth_bindings.py -v passes ≥8 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p10-*,fe-p10_5-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "[data-block=signal-history] carries data-endpoint='/api/v1/stocks/breadth/zone-events'"
+      - "Conviction halo block binds to breadth endpoint with include=conviction_series"
+      - "Universe-selector pill change re-fires loadBlock on universe-dependent blocks"
+      - "14 data-param-id sentinel inputs unchanged from V1FE-11"
+
+  - id: V2FE-5
+    title: "Stock detail (hub-and-spoke equity terminal) page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-5.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' stock-detail.html returns ≥12"
+      - "pytest tests/unit/v2fe/test_stock_detail_bindings.py -v passes ≥8 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p7-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "[data-block=peers] carries data-endpoint='/api/v1/query' with entity_type=equity in data-params"
+      - "3 rec-slots carry data-v2-deferred='true'"
+      - "simulate-this affordance links to lab.html?symbol=... (not a backend endpoint)"
+      - "All 7 tabs and 3 rec-slots DOM contract from V1FE-8 intact"
+
+  - id: V2FE-6
+    title: "MF detail (hub-and-spoke MF terminal) page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-6.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 4
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' mf-detail.html returns ≥12"
+      - "pytest tests/unit/v2fe/test_mf_detail_bindings.py -v passes ≥8 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p8-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "[data-block=returns] carries data-endpoint pointing to /api/v1/mf/{id}/nav-history with include=rolling_returns"
+      - "[data-block=peers] carries data-endpoint='/api/v1/query' with entity_type=mutual_fund"
+      - "2 rec-slots carry data-v2-deferred='true'"
+      - "V1FE-9 kill-list tokens absent (Atlas Verdict, HOLD / ADD ON DIPS)"
+
+  - id: V2FE-7
+    title: "MF rank (4-factor composite ranking) page data wiring"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-7.md
+    depends_on: [V2FE-0, V2FE-1]
+    estimated_hours: 3
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "grep -c 'data-endpoint' mf-rank.html returns ≥5"
+      - "pytest tests/unit/v2fe/test_mf_rank_bindings.py -v passes ≥6 tests"
+      - "scripts/check-frontend-criteria.py --only 'fe-p9-*,fe-g-*,fe-dp-*,fe-mob-*' exits 0"
+      - "[data-block=rank-table] carries data-endpoint='/api/v1/query/template' with template=mf_rank_composite in data-params"
+      - "footer.methodology-footer carries data-endpoint='/api/v1/system/data-health'"
+      - "[data-role=formula] has no data-endpoint (whitelisted as static)"
+      - "Sparkline loading uses single batched template call (not N individual calls)"
+
+  - id: V2FE-8
+    title: "States rollout: loading/empty/stale/error across all 6 pages + staleness banners"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-8.md
+    depends_on: [V2FE-2, V2FE-3, V2FE-4, V2FE-5, V2FE-6, V2FE-7]
+    estimated_hours: 3
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "pytest tests/unit/v2fe/test_states_contract.py -v passes ≥10 tests"
+      - "atlas-data.js contains 10s hard cut-off setTimeout guard for loading state"
+      - "atlas-data.js contains ?sim_state= dev-mode support gated to localhost"
+      - "renderSkeleton, renderEmpty, renderStaleBanner, renderError all verified on at least one block per page"
+      - "Known-sparse blocks (data-sparse='true') render empty-state on insufficient_data:true (not error)"
+      - "data-as-of attribute updated from _meta.data_as_of on every successful loadBlock"
+      - "scripts/check-frontend-criteria.py exits 0 for all 6 pages (no V1 regression)"
+
+  - id: V2FE-9
+    title: "Integration gate: Playwright E2E + Lighthouse regression + API-standard + spec-coverage"
+    status: PENDING
+    spec: docs/specs/chunks/V2FE-9.md
+    depends_on: [V2FE-8]
+    estimated_hours: 3
+    quality_targets:
+      code: 80
+      frontend: 95
+    punch_list:
+      - "npx playwright test tests/e2e/v2fe_*.spec.ts exits 0 (7 spec files: 1 backend + 6 page)"
+      - ".forge/v2fe-lighthouse-report.json exists with LCP < 2.5s and CLS < 0.1 for all 6 pages"
+      - "Deterministic replay: two consecutive loads return identical _meta.data_as_of and records (modulo cache_hit)"
+      - "scripts/check-api-standard.py exits 0"
+      - "scripts/check-spec-coverage.py exits 0 (frontend-v2-criteria.yaml registered + linked to spec §15)"
+      - "scripts/check-frontend-criteria.py exits 0 with critical_fail_count==0"
+      - "scripts/check-frontend-v2.py exits 0"
+      - "python .quality/checks.py frontend dim ≥ 95"

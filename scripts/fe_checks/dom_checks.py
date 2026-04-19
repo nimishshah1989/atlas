@@ -46,7 +46,85 @@ _ATTR_RE = re.compile(
     r"""(?P<name>[a-zA-Z_:][a-zA-Z0-9_:.-]*)"""
     r"""(?:\s*=\s*(?P<val>"[^"]*"|'[^']*'|[^\s>'"=]+))?""",
 )
+# HTML5 void elements — the only HTML tags allowed to self-close.
+# Non-void tags written as `<tag />` are parsed by browsers as unclosed
+# opening tags, which silently destroys the DOM tree. Historically the
+# gate accepted any `<tag />` form as a "present" element, letting agents
+# satisfy dom_required via sentinel-spam while pages broke at render time.
+_HTML_VOID_TAGS = frozenset(
+    {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
+)
+# SVG leaf elements legitimately self-close in XML-mode SVG parsing.
+_SVG_SELF_CLOSING = frozenset(
+    {
+        "circle",
+        "ellipse",
+        "line",
+        "path",
+        "polygon",
+        "polyline",
+        "rect",
+        "stop",
+        "use",
+        "image",
+        "animate",
+        "animateTransform",
+        "animateMotion",
+        "feBlend",
+        "feColorMatrix",
+        "feComposite",
+        "feFlood",
+        "feGaussianBlur",
+        "feMerge",
+        "feMergeNode",
+        "feMorphology",
+        "feOffset",
+        "feTurbulence",
+        "mpath",
+        "set",
+    }
+)
 _VOID_TAG_RE = re.compile(r"<(?P<tag>[a-zA-Z][a-zA-Z0-9_-]*)(?P<attrs>[^>]*?)/>", re.DOTALL)
+# Same shape but restricted to the allow-list. Used by _find_all_tags so
+# fake-void sentinels are *not* indexed as present, and so a regression
+# check can enumerate them.
+_LEGAL_VOID_TAG_RE = re.compile(
+    r"<(?P<tag>"
+    + "|".join(sorted(_HTML_VOID_TAGS | _SVG_SELF_CLOSING, key=len, reverse=True))
+    + r")(?P<attrs>[^>]*?)/>",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def find_fake_void_tags(html: str) -> list[tuple[str, int]]:
+    """Return list of (tag_name, offset) for every non-void self-closing tag.
+
+    Used both by the gate's regression check and by the runtime parser so
+    agents cannot satisfy dom_required via `<div data-x=... />` sentinels
+    that browsers parse as unclosed opening tags.
+    """
+    legal = _HTML_VOID_TAGS | _SVG_SELF_CLOSING
+    hits: list[tuple[str, int]] = []
+    for m in _VOID_TAG_RE.finditer(html):
+        tag = m.group("tag").lower()
+        if tag not in legal:
+            hits.append((tag, m.start()))
+    return hits
 
 
 def _parse_attrs(attrs_str: str) -> dict[str, str]:
@@ -103,8 +181,12 @@ def _extract_element_section(html: str, start: int, tag: str) -> str:
 def _find_all_tags(html: str) -> list[Element]:
     """Find all HTML elements with tag, attrs, text content."""
     elements: list[Element] = []
-    # Match self-closing void tags
-    for m in _VOID_TAG_RE.finditer(html):
+    # Match self-closing tags, but ONLY real HTML5 void tags and SVG leaf
+    # elements. Non-void HTML tags written as `<tag />` are silently
+    # skipped here so they cannot satisfy dom_required via sentinel-spam;
+    # the top-level scan in check-frontend-criteria.py also hard-fails on
+    # any such occurrence.
+    for m in _LEGAL_VOID_TAG_RE.finditer(html):
         attrs = _parse_attrs(m.group("attrs"))
         elements.append(Element(m.group("tag").lower(), attrs, "", m.group(0)))
     # Match open/close tag pairs
@@ -188,37 +270,43 @@ def _matches_single_selector(el: Element, selector: str) -> bool:
     return True
 
 
-def find_elements(html: str, selector: str) -> list[Element]:
-    """Find all elements matching a CSS selector.
+def _bs4_tag_to_element(tag: Any) -> Element:
+    """Convert a BeautifulSoup Tag into the dom_checks Element shape."""
+    attrs: dict[str, str] = {}
+    for k, v in (tag.attrs or {}).items():
+        if isinstance(v, list):
+            attrs[k.lower()] = " ".join(str(x) for x in v)
+        elif v is None:
+            attrs[k.lower()] = ""
+        else:
+            attrs[k.lower()] = str(v)
+    text = tag.get_text(" ", strip=True)
+    outer = str(tag)
+    return Element(tag.name.lower(), attrs, text, outer)
 
-    Supported:
-    - .class, #id, tag, tag.class, [attr], [attr=value]
-    - Compound: [attr1=v1][attr2=v2]
-    - Comma-separated: ".foo, .bar" (union)
-    - Single-level selectors only (no descendant/child combinators in single string)
+
+def find_elements(html: str, selector: str) -> list[Element]:
+    """Find all elements matching a CSS selector via BeautifulSoup.
+
+    Supports the full soupsieve selector grammar — `tag`, `.class`, `#id`,
+    `[attr]`, `[attr=value]`, `[attr*=value]`, `[attr|=value]`, descendants,
+    comma-separated unions, `:has()`, etc.
+
+    A previous regex-based implementation silently failed on any page whose
+    `<html>` → `</html>` greedy match swallowed all nested tags, returning
+    empty result sets while the real DOM contained the sought elements.
     """
-    all_elements = _find_all_tags(html)
-    if not all_elements:
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
         return []
 
-    # Handle comma-separated selectors
-    sub_selectors = [s.strip() for s in selector.split(",")]
-    matched: list[Element] = []
-    seen_ids: set[int] = set()
-
-    for sub_sel in sub_selectors:
-        sub_sel = sub_sel.strip()
-        if not sub_sel:
-            continue
-        for el in all_elements:
-            eid = id(el)
-            if eid in seen_ids:
-                continue
-            if _matches_single_selector(el, sub_sel):
-                matched.append(el)
-                seen_ids.add(eid)
-
-    return matched
+    soup = BeautifulSoup(html, "html.parser")
+    try:
+        matched_tags = soup.select(selector)
+    except Exception:  # noqa: BLE001  # BeautifulSoup raises various parse errors
+        return []
+    return [_bs4_tag_to_element(t) for t in matched_tags]
 
 
 def _find_elements_in_file(file_path: Path, selector: str) -> list[Element]:

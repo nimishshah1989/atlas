@@ -91,13 +91,16 @@ _FONT_FAMILY_RE = re.compile(r"font-family\s*:", re.IGNORECASE)
 def design_tokens_only(spec: dict[str, Any]) -> tuple[bool, str]:
     """Check files contain no raw hex/rgb/hsl colors outside tokens.css.
 
-    Supports allow_inline_style_properties list.
+    Supports allow_inline_style_properties list and exceptions_files list —
+    the latter is for files that legitimately contain raw colors as subject
+    matter (e.g. `styleguide.html` renders each token as a colour swatch).
     """
     files_pattern = spec.get("files", "")
     if not files_pattern:
         return True, "SKIP: no files specified"
 
     allow_properties: list[str] = spec.get("allow_inline_style_properties", [])
+    exceptions: set[str] = set(spec.get("exceptions_files", []))
 
     violations: list[str] = []
     matched_count = 0
@@ -107,6 +110,8 @@ def design_tokens_only(spec: dict[str, Any]) -> tuple[bool, str]:
         for f in files:
             if f.name == "tokens.css":
                 continue  # tokens.css is allowed to define raw colors
+            if f.name in exceptions:
+                continue  # explicitly exempted showcase files
             if not f.exists():
                 continue
             matched_count += 1

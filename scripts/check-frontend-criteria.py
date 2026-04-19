@@ -272,6 +272,38 @@ def main() -> None:
         print(f"ERROR: unknown check types in criteria: {unknown}", file=sys.stderr)
         sys.exit(1)
 
+    # Preflight: reject fake-void HTML sentinels across frontend/mockups/.
+    # Non-void tags written as `<tag />` break the browser DOM; historically
+    # the gate's regex was tolerant enough to let agents satisfy dom_required
+    # with sentinel-spam while pages rendered blank. Hard-fail the whole gate
+    # if any appear — this is a structural contract, not a content check.
+    from fe_checks.dom_checks import find_fake_void_tags  # noqa: E402
+    import glob as _glob  # noqa: E402
+
+    _mockups_dir = ROOT / "frontend" / "mockups"
+    _fake_void_total = 0
+    _fake_void_detail: list[str] = []
+    for _path in sorted(_glob.glob(str(_mockups_dir / "*.html"))):
+        _txt = Path(_path).read_text(encoding="utf-8")
+        _hits = find_fake_void_tags(_txt)
+        if _hits:
+            _fake_void_total += len(_hits)
+            _tags = sorted({t for t, _ in _hits})
+            _fake_void_detail.append(
+                f"  {Path(_path).name}: {len(_hits)} fake-void [{','.join(_tags)}]"
+            )
+    if _fake_void_total:
+        print(
+            f"ERROR: {_fake_void_total} fake-void HTML self-closing tags found. "
+            "Non-void tags like <nav/>, <a/>, <div/>, <footer/> break the "
+            "browser DOM tree — browsers parse them as unclosed opening tags. "
+            "Use <tag></tag> with explicit close, or remove the sentinel.",
+            file=sys.stderr,
+        )
+        for _line in _fake_void_detail:
+            print(_line, file=sys.stderr)
+        sys.exit(1)
+
     # Run criteria
     id_filter = args.only
     results = _run_criteria(criteria, id_filter=id_filter)

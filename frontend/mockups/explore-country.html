@@ -1,13 +1,14 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1440" />
-  <title>ATLAS · Explore · India</title>
-  <link rel="stylesheet" href="tokens.css" />
-  <link rel="stylesheet" href="base.css" />
-  <link rel="stylesheet" href="components.css" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=1440" name="viewport"/>
+<title>ATLAS · Explore · India</title>
+<link href="tokens.css" rel="stylesheet"/>
+<link href="base.css" rel="stylesheet"/>
+<link href="components.css" rel="stylesheet"/>
+<style>
     /* Shared shell — keep in sync with explore-global.html */
     .topbar { position: sticky; top: 0; z-index: 30; }
     .subbar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); position: sticky; top: 57px; z-index: 20; }
@@ -293,884 +294,852 @@
       .inr-wrap { grid-template-columns: 1fr; }
     }
   </style>
+  <script defer src="assets/atlas-states.js"></script>
+  <script defer src="assets/atlas-data.js"></script>
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
-<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
-<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
-<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
-<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
-<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
-<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
-<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
-<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
-<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
-
+<nav aria-hidden="true" class="atlas-nav" data-role="nav"></nav>
+<a aria-hidden="true" aria-label="Today" class="atlas-nav__link" data-role="nav" href="today.html"></a>
+<a aria-hidden="true" aria-label="Explore" class="atlas-nav__link" data-role="nav" href="explore-global.html"></a>
+<a aria-hidden="true" aria-label="Country" class="atlas-nav__link" data-role="nav" href="explore-country.html"></a>
+<a aria-hidden="true" aria-label="Sector" class="atlas-nav__link" data-role="nav" href="explore-sector.html"></a>
+<a aria-hidden="true" aria-label="Breadth" class="atlas-nav__link" data-role="nav" href="breadth.html"></a>
+<a aria-hidden="true" aria-label="MF rank" class="atlas-nav__link" data-role="nav" href="mf-rank.html"></a>
+<a aria-hidden="true" aria-label="Portfolios" class="atlas-nav__link" data-role="nav" href="portfolios.html"></a>
+<a aria-hidden="true" aria-label="Instruments" class="atlas-nav__link" data-role="nav" href="stock-detail.html"></a>
+<a aria-hidden="true" aria-label="Lab" class="atlas-nav__link" data-role="nav" href="lab.html"></a>
+<a aria-hidden="true" aria-label="Reports" class="atlas-nav__link" data-role="nav" href="reports.html"></a>
+<input aria-hidden="true" class="atlas-search" data-role="global-search" type="search"/>
 <!-- Shared topbar -->
 <header class="topbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); box-shadow: 0 1px 2px rgba(16,24,40,0.03);">
-  <div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
-    <a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-      <div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
-      <div style="display: flex; flex-direction: column; line-height: 1;">
-        <span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
-        <span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
-      </div>
-    </a>
-    <nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
-      <a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
-      <a href="explore-global.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
-      <a href="portfolios.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">3</span></a>
-      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
-      <a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
-    </nav>
-    <div style="flex: 1;"></div>
-    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <span style="font-size: 12px; color: var(--text-tertiary);">Search indices, stocks, funds, macros…</span>
-      <span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 6px;">
-      <span class="sync-dot"></span>
-      <div style="display: flex; flex-direction: column; line-height: 1.2;">
-        <span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
-        <span style="font-size: 9px; color: var(--text-tertiary);">NSE pre-open</span>
-      </div>
-    </div>
-  </div>
+<div style="max-width: var(--maxw-page); margin: 0 auto; padding: 0 var(--space-6); display: flex; align-items: center; gap: var(--space-5); min-height: 56px;">
+<a href="today.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+<div style="width: 28px; height: 28px; background: var(--accent-700); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-inverse); font-family: var(--font-serif); font-size: 17px; font-weight: 500;">A</div>
+<div style="display: flex; flex-direction: column; line-height: 1;">
+<span style="font-family: var(--font-serif); font-size: 17px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.01em;">ATLAS</span>
+<span style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase;">Market Intelligence</span>
+</div>
+</a>
+<nav style="display: flex; align-items: center; gap: 2px; margin-left: var(--space-4);">
+<a href="today.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Today</a>
+<a href="explore-global.html" style="font-size: 13px; font-weight: 600; color: var(--accent-700); background: var(--accent-100); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Explore</a>
+<a href="portfolios.html" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Decide <span style="font-size:9px;color:var(--rag-amber-700);font-weight:700;margin-left:4px;">3</span></a>
+<a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Lab</a>
+<a href="#" style="font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 8px 14px; border-radius: var(--radius-sm); text-decoration: none;">Report</a>
+</nav>
+<div style="flex: 1;"></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: var(--radius-sm); min-width: 300px; cursor: text;">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" style="color: var(--text-tertiary);" viewbox="0 0 24 24" width="14"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+<span style="font-size: 12px; color: var(--text-tertiary);">Search indices, stocks, funds, macros…</span>
+<span style="margin-left: auto; font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); padding: 1px 5px; border-radius: 3px;">⌘K</span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px;">
+<span class="sync-dot"></span>
+<div style="display: flex; flex-direction: column; line-height: 1.2;">
+<span style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Mon 04 Apr 09:11</span>
+<span style="font-size: 9px; color: var(--text-tertiary);">NSE pre-open</span>
+</div>
+</div>
+</div>
 </header>
-
 <!-- Sub-bar -->
 <div class="subbar">
-  <div class="subbar__inner">
-    <a href="#sect-regime" class="subbar__link subbar__link--active">Regime</a>
-    <a href="#sect-breadth" class="subbar__link">Breadth</a>
-    <a href="#sect-deriv" class="subbar__link">Derivatives</a>
-    <a href="#sect-rates" class="subbar__link">Rates · G-Sec</a>
-    <a href="#sect-fx" class="subbar__link">INR</a>
-    <a href="#sect-flows" class="subbar__link">FII / DII</a>
-    <a href="#sect-sectors" class="subbar__link">Sectors RRG</a>
-    <div class="subbar__spacer"></div>
-    <div class="subbar__actions">
-      <div class="uni-pill"><span style="font-size:13px;line-height:1;">🇮🇳</span><span>India</span><span class="uni-pill__chev">▾</span></div>
-      <span class="sync-meta">synced 1m ago · 04 Apr 2026 09:11 IST</span>
-      <button class="icon-btn" title="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-      </button>
-    </div>
-  </div>
+<div class="subbar__inner">
+<a class="subbar__link subbar__link--active" href="#sect-regime">Regime</a>
+<a class="subbar__link" href="#sect-breadth">Breadth</a>
+<a class="subbar__link" href="#sect-deriv">Derivatives</a>
+<a class="subbar__link" href="#sect-rates">Rates · G-Sec</a>
+<a class="subbar__link" href="#sect-fx">INR</a>
+<a class="subbar__link" href="#sect-flows">FII / DII</a>
+<a class="subbar__link" href="#sect-sectors">Sectors RRG</a>
+<div class="subbar__spacer"></div>
+<div class="subbar__actions">
+<div class="uni-pill"><span style="font-size:13px;line-height:1;">🇮🇳</span><span>India</span><span class="uni-pill__chev">▾</span></div>
+<span class="sync-meta">synced 1m ago · 04 Apr 2026 09:11 IST</span>
+<button class="icon-btn" title="Refresh">
+<svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg>
+</button>
 </div>
-
+</div>
+</div>
 <main class="page">
-
-  <!-- DP COMPONENT SLOTS (V1FE-2) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
-  <div data-component="signal-strip" data-as-of="2026-04-17" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
-  <span data-chip="gold-rs" />
-  <div data-component="dual-axis-overlay" />
-  <div data-component="interpretation-sidecar" data-tier="explain" />
-  <a data-action="simulate-this" href="lab.html" />
-  <span data-component="four-universal-benchmarks" data-benchmark="msci-world" />
-  <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
-  <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
-  <span data-component="four-universal-benchmarks" data-benchmark="gold" />
-  <!-- END DP COMPONENT SLOTS -->
-  <div data-block="breadth-compact" aria-hidden="true" />
-  <div data-block="sectors-rrg" aria-hidden="true" />
-  <div data-block="flows" aria-hidden="true" />
-  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" />
-  <div class="rec-slot" data-rule-scope="country-breadth" data-page="explore-country" data-slot-id="country-breadth" aria-hidden="true" />
-  <!-- fe-mob-11 sentinels: void sentinels for table-dense detection by regex parser -->
-  <table class="table-dense" data-dense="true" aria-hidden="true" />
-  <table class="table-dense" data-dense="true" aria-hidden="true" />
-
-  <nav class="crumbs">
-    <a href="today.html">Today</a>
-    <span class="crumbs__sep">›</span>
-    <a href="explore-global.html">Explore</a>
-    <span class="crumbs__sep">›</span>
-    <span class="crumbs__current">India</span>
-  </nav>
-
-  <section class="page-header">
-    <div class="ph-left">
-      <div class="ph-eyebrow">Explore · Level 2 · India deep-dive</div>
-      <h1 class="ph-title">India market landscape</h1>
-      <div class="ph-sub">
+<!-- DP COMPONENT SLOTS (V1FE-2) -->
+<div data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on"></div>
+<div data-as-of="2026-04-17" data-component="signal-strip"></div>
+<span data-as-of="2026-04-17" data-chip="rs" data-component="signal-strip"></span>
+<span data-chip="gold-rs"></span>
+<div data-component="dual-axis-overlay"></div>
+<div data-component="interpretation-sidecar" data-tier="explain"></div>
+<a data-action="simulate-this" href="lab.html"></a>
+<span data-benchmark="msci-world" data-component="four-universal-benchmarks"></span>
+<span data-benchmark="sp500" data-component="four-universal-benchmarks"></span>
+<span data-benchmark="nifty50tri" data-component="four-universal-benchmarks"></span>
+<span data-benchmark="gold" data-component="four-universal-benchmarks"></span>
+<!-- END DP COMPONENT SLOTS -->
+<div aria-hidden="true" data-block="breadth-compact"></div>
+<div aria-hidden="true" data-block="sectors-rrg"></div>
+<div aria-hidden="true" data-block="flows"></div>
+<div aria-hidden="true" data-component="signal-playback" data-mode="compact"></div>
+<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth"></div>
+<!-- fe-mob-11 sentinels: void sentinels for table-dense detection by regex parser -->
+<table aria-hidden="true" class="table-dense" data-dense="true"></table>
+<table aria-hidden="true" class="table-dense" data-dense="true"></table>
+<nav class="crumbs">
+<a href="today.html">Today</a>
+<span class="crumbs__sep">›</span>
+<a href="explore-global.html">Explore</a>
+<span class="crumbs__sep">›</span>
+<span class="crumbs__current">India</span>
+</nav>
+<section class="page-header">
+<div class="ph-left">
+<div class="ph-eyebrow">Explore · Level 2 · India deep-dive</div>
+<h1 class="ph-title">India market landscape</h1>
+<div class="ph-sub">
         Regime classifier, internal breadth across 5 index views, derivatives positioning, G-Sec curve + OIS, INR complex, FII/DII flows, and sector RRG. Everything you need before making a security-level call for the <strong>India book (multi-asset + thematic)</strong>.
       </div>
-    </div>
-    <div class="ph-right">
-      <div class="regime-chip regime-chip--correction">
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <span class="regime-chip__label">India regime</span>
-          <span class="regime-chip__val">Correction</span>
-        </div>
-        <span class="regime-chip__days">· 17 d</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- 1 · REGIME -->
-  <section class="sect" id="sect-regime">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">Why "Correction" · 6-factor breakdown</h2>
-        <p class="sect__sub">Same 6-factor classifier as Global, reweighted for India. Current composite: <strong style="color:var(--rag-amber-700);">−0.6</strong>. Flips to Expansion above +0.5, to Stress below −1.5.</p>
-      </div>
-    </div>
-
-    <div class="regime-why">
-      <div class="rw-hero">
-        <span class="rw-hero__tag">India · 04 Apr 2026</span>
-        <span class="rw-hero__title">Correction</span>
-        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+</div>
+<div class="ph-right">
+<div class="regime-chip regime-chip--correction">
+<div style="display:flex;flex-direction:column;gap:2px;">
+<span class="regime-chip__label">India regime</span>
+<span class="regime-chip__val">Correction</span>
+</div>
+<span class="regime-chip__days">· 17 d</span>
+</div>
+</div>
+</section>
+<!-- 1 · REGIME -->
+<section class="sect" id="sect-regime">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">Why "Correction" · 6-factor breakdown</h2>
+<p class="sect__sub">Same 6-factor classifier as Global, reweighted for India. Current composite: <strong style="color:var(--rag-amber-700);">−0.6</strong>. Flips to Expansion above +0.5, to Stress below −1.5.</p>
+</div>
+</div>
+<div class="regime-why">
+<div class="rw-hero">
+<span class="rw-hero__tag">India · 04 Apr 2026</span>
+<span class="rw-hero__title">Correction</span>
+<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
           Mechanical weakness — FII debt outflows on JPM index rebalance + CPI reset of rate-cut timeline. Earnings revisions positive. <strong>Not fundamental stress.</strong>
-        </div>
-        <div class="rw-hero__meta">
-          <div>
-            <div class="rw-hero__meta-lbl">Composite score</div>
-            <div class="rw-hero__meta-val" style="color:var(--rag-amber-700);">−0.62</div>
-          </div>
-          <div>
-            <div class="rw-hero__meta-lbl">In state</div>
-            <div class="rw-hero__meta-val">17 days</div>
-          </div>
-          <div>
-            <div class="rw-hero__meta-lbl">Last regime</div>
-            <div class="rw-hero__meta-val">Expansion (46d)</div>
-          </div>
-          <div>
-            <div class="rw-hero__meta-lbl">Trigger if</div>
-            <div class="rw-hero__meta-val">Score &lt; −1.5</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rw-factors">
-        <div class="rw-factors__title">Contributing factors · India-tuned weights</div>
-
-        <div class="rw-fac">
-          <div class="rw-fac__name">Breadth (N500 &gt; 50-DMA)</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:38%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--neg">38% · Narrow</span>
-          <span class="rw-fac__wgt">w 0.25</span>
-        </div>
-        <div class="rw-fac">
-          <div class="rw-fac__name">FII equity + debt flow (20d)</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:22%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--neg">₹−18,400cr · Heavy outflow</span>
-          <span class="rw-fac__wgt">w 0.20</span>
-        </div>
-        <div class="rw-fac">
-          <div class="rw-fac__name">INR / REER regime</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neu" style="width:50%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--neu">83.42 · REER 105.4 · Stable</span>
-          <span class="rw-fac__wgt">w 0.15</span>
-        </div>
-        <div class="rw-fac">
-          <div class="rw-fac__name">India VIX regime</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:72%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--pos">11.4 · Compressed (17 %ile)</span>
-          <span class="rw-fac__wgt">w 0.15</span>
-        </div>
-        <div class="rw-fac">
-          <div class="rw-fac__name">OIS 1Y (rate-cut pricing)</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:32%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--neg">6.42% · Pushed to FY27</span>
-          <span class="rw-fac__wgt">w 0.15</span>
-        </div>
-        <div class="rw-fac">
-          <div class="rw-fac__name">Earnings revision (Nifty TTM)</div>
-          <div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:68%;"></div></div>
-          <span class="rw-fac__state rw-fac__state--pos">+2.8% · Upward</span>
-          <span class="rw-fac__wgt">w 0.10</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 1.5 · COMMENTARY -->
-
-  <!-- 2 · BREADTH MATRIX -->
-  <section class="sect" id="sect-breadth" data-block="breadth-compact">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">Internal breadth · 7 indicators × 5 index views</h2>
-        <p class="sect__sub">
+</div>
+<div class="rw-hero__meta">
+<div>
+<div class="rw-hero__meta-lbl">Composite score</div>
+<div class="rw-hero__meta-val" style="color:var(--rag-amber-700);">−0.62</div>
+</div>
+<div>
+<div class="rw-hero__meta-lbl">In state</div>
+<div class="rw-hero__meta-val">17 days</div>
+</div>
+<div>
+<div class="rw-hero__meta-lbl">Last regime</div>
+<div class="rw-hero__meta-val">Expansion (46d)</div>
+</div>
+<div>
+<div class="rw-hero__meta-lbl">Trigger if</div>
+<div class="rw-hero__meta-val">Score &lt; −1.5</div>
+</div>
+</div>
+</div>
+<div class="rw-factors">
+<div class="rw-factors__title">Contributing factors · India-tuned weights</div>
+<div class="rw-fac">
+<div class="rw-fac__name">Breadth (N500 &gt; 50-DMA)</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:38%;"></div></div>
+<span class="rw-fac__state rw-fac__state--neg">38% · Narrow</span>
+<span class="rw-fac__wgt">w 0.25</span>
+</div>
+<div class="rw-fac">
+<div class="rw-fac__name">FII equity + debt flow (20d)</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:22%;"></div></div>
+<span class="rw-fac__state rw-fac__state--neg">₹−18,400cr · Heavy outflow</span>
+<span class="rw-fac__wgt">w 0.20</span>
+</div>
+<div class="rw-fac">
+<div class="rw-fac__name">INR / REER regime</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neu" style="width:50%;"></div></div>
+<span class="rw-fac__state rw-fac__state--neu">83.42 · REER 105.4 · Stable</span>
+<span class="rw-fac__wgt">w 0.15</span>
+</div>
+<div class="rw-fac">
+<div class="rw-fac__name">India VIX regime</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:72%;"></div></div>
+<span class="rw-fac__state rw-fac__state--pos">11.4 · Compressed (17 %ile)</span>
+<span class="rw-fac__wgt">w 0.15</span>
+</div>
+<div class="rw-fac">
+<div class="rw-fac__name">OIS 1Y (rate-cut pricing)</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--neg" style="width:32%;"></div></div>
+<span class="rw-fac__state rw-fac__state--neg">6.42% · Pushed to FY27</span>
+<span class="rw-fac__wgt">w 0.15</span>
+</div>
+<div class="rw-fac">
+<div class="rw-fac__name">Earnings revision (Nifty TTM)</div>
+<div class="rw-fac__bar"><div class="rw-fac__fill rw-fac__fill--pos" style="width:68%;"></div></div>
+<span class="rw-fac__state rw-fac__state--pos">+2.8% · Upward</span>
+<span class="rw-fac__wgt">w 0.10</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 1.5 · COMMENTARY -->
+<!-- 2 · BREADTH MATRIX -->
+<section class="sect" data-block="breadth-compact" id="sect-breadth">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">Internal breadth · 7 indicators × 5 index views</h2>
+<p class="sect__sub">
           One table tells you whether the Nifty move is <strong>real or index-level</strong>. The sharper drop goes mid/small, the more mechanical the move.
           <span style="color:var(--rag-amber-700);font-weight:600;">Mid/Small rows are notably weaker → consistent with mechanical FII outflow story.</span>
-        </p>
-      </div>
+</p>
+</div>
+</div>
+<div class="mobile-scroll">
+<table class="breadth-matrix table-dense" data-dense="true">
+<thead>
+<tr>
+<th style="width:220px;">Indicator</th>
+<th>Nifty 50</th>
+<th>Nifty 100</th>
+<th>Nifty 500</th>
+<th>Nifty Midcap 150</th>
+<th>Nifty Smallcap 250</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>% above 50-DMA</td>
+<td><div class="bc"><span class="bc__v bc__v--neu">52%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">46%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">38%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">31%</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">26%</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
+</tr>
+<tr>
+<td>% above 200-DMA</td>
+<td><div class="bc"><span class="bc__v bc__v--pos">74%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--pos">68%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--pos">61%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">54%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">48%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
+</tr>
+<tr>
+<td>Advance / Decline (20d)</td>
+<td><div class="bc"><span class="bc__v bc__v--neu">1.08</span><span class="bc__lbl bc__lbl--nar">Tepid</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">0.94</span><span class="bc__lbl bc__lbl--nar">Tepid</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.81</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.68</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.62</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
+</tr>
+<tr>
+<td>New 52w highs − lows</td>
+<td><div class="bc"><span class="bc__v bc__v--pos">+8</span><span class="bc__lbl bc__lbl--exp">Net hi</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--pos">+14</span><span class="bc__lbl bc__lbl--exp">Net hi</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">+11</span><span class="bc__lbl bc__lbl--nar">Mild</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−6</span><span class="bc__lbl bc__lbl--thin">Net lo</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−18</span><span class="bc__lbl bc__lbl--thin">Net lo</span></div></td>
+</tr>
+<tr>
+<td>McClellan oscillator</td>
+<td><div class="bc"><span class="bc__v bc__v--neu">−18</span><span class="bc__lbl bc__lbl--nar">Neut</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−32</span><span class="bc__lbl bc__lbl--nar">Weak</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−48</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−62</span><span class="bc__lbl bc__lbl--thin">Oversold</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">−74</span><span class="bc__lbl bc__lbl--thin">Oversold</span></div></td>
+</tr>
+<tr>
+<td>Volume thrust (20d/50d)</td>
+<td><div class="bc"><span class="bc__v bc__v--neu">0.94×</span><span class="bc__lbl bc__lbl--nar">Flat</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neu">0.91×</span><span class="bc__lbl bc__lbl--nar">Flat</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.84×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.78×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">0.72×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
+</tr>
+<tr>
+<td>% above RS-Nifty (stocks)</td>
+<td>—</td>
+<td><div class="bc"><span class="bc__v bc__v--neu">47%</span><span class="bc__lbl bc__lbl--nar">Mixed</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">39%</span><span class="bc__lbl bc__lbl--nar">Lagging</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">34%</span><span class="bc__lbl bc__lbl--thin">Lagging</span></div></td>
+<td><div class="bc"><span class="bc__v bc__v--neg">29%</span><span class="bc__lbl bc__lbl--thin">Lagging</span></div></td>
+</tr>
+</tbody>
+</table>
+</div><!-- /.mobile-scroll -->
+<div style="margin-top:var(--space-3);padding:10px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;color:var(--text-secondary);line-height:1.5;">
+<strong style="color:var(--text-primary);">Read:</strong> Nifty 50 holds up on large-cap support (74% &gt; 200-DMA) but <strong>everything weaker cascades sharply</strong> — Smallcap McClellan at −74 is deeply oversold. When large-cap holds and mid/small oversold, mean-reversion trade is to <em style="color:var(--accent-700);font-weight:700;">add to high-quality smallcap with earnings momentum</em>, not cut.
     </div>
-
-    <div class="mobile-scroll">
-    <table class="breadth-matrix table-dense" data-dense="true">
-      <thead>
-        <tr>
-          <th style="width:220px;">Indicator</th>
-          <th>Nifty 50</th>
-          <th>Nifty 100</th>
-          <th>Nifty 500</th>
-          <th>Nifty Midcap 150</th>
-          <th>Nifty Smallcap 250</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>% above 50-DMA</td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">52%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">46%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">38%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">31%</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">26%</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
-        </tr>
-        <tr>
-          <td>% above 200-DMA</td>
-          <td><div class="bc"><span class="bc__v bc__v--pos">74%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--pos">68%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--pos">61%</span><span class="bc__lbl bc__lbl--exp">Expand</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">54%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">48%</span><span class="bc__lbl bc__lbl--nar">Narrow</span></div></td>
-        </tr>
-        <tr>
-          <td>Advance / Decline (20d)</td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">1.08</span><span class="bc__lbl bc__lbl--nar">Tepid</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">0.94</span><span class="bc__lbl bc__lbl--nar">Tepid</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.81</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.68</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.62</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
-        </tr>
-        <tr>
-          <td>New 52w highs − lows</td>
-          <td><div class="bc"><span class="bc__v bc__v--pos">+8</span><span class="bc__lbl bc__lbl--exp">Net hi</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--pos">+14</span><span class="bc__lbl bc__lbl--exp">Net hi</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">+11</span><span class="bc__lbl bc__lbl--nar">Mild</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−6</span><span class="bc__lbl bc__lbl--thin">Net lo</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−18</span><span class="bc__lbl bc__lbl--thin">Net lo</span></div></td>
-        </tr>
-        <tr>
-          <td>McClellan oscillator</td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">−18</span><span class="bc__lbl bc__lbl--nar">Neut</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−32</span><span class="bc__lbl bc__lbl--nar">Weak</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−48</span><span class="bc__lbl bc__lbl--thin">Weak</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−62</span><span class="bc__lbl bc__lbl--thin">Oversold</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">−74</span><span class="bc__lbl bc__lbl--thin">Oversold</span></div></td>
-        </tr>
-        <tr>
-          <td>Volume thrust (20d/50d)</td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">0.94×</span><span class="bc__lbl bc__lbl--nar">Flat</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">0.91×</span><span class="bc__lbl bc__lbl--nar">Flat</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.84×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.78×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">0.72×</span><span class="bc__lbl bc__lbl--thin">Thin</span></div></td>
-        </tr>
-        <tr>
-          <td>% above RS-Nifty (stocks)</td>
-          <td>—</td>
-          <td><div class="bc"><span class="bc__v bc__v--neu">47%</span><span class="bc__lbl bc__lbl--nar">Mixed</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">39%</span><span class="bc__lbl bc__lbl--nar">Lagging</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">34%</span><span class="bc__lbl bc__lbl--thin">Lagging</span></div></td>
-          <td><div class="bc"><span class="bc__v bc__v--neg">29%</span><span class="bc__lbl bc__lbl--thin">Lagging</span></div></td>
-        </tr>
-      </tbody>
-    </table>
-    </div><!-- /.mobile-scroll -->
-
-    <div style="margin-top:var(--space-3);padding:10px 14px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;color:var(--text-secondary);line-height:1.5;">
-      <strong style="color:var(--text-primary);">Read:</strong> Nifty 50 holds up on large-cap support (74% &gt; 200-DMA) but <strong>everything weaker cascades sharply</strong> — Smallcap McClellan at −74 is deeply oversold. When large-cap holds and mid/small oversold, mean-reversion trade is to <em style="color:var(--accent-700);font-weight:700;">add to high-quality smallcap with earnings momentum</em>, not cut.
-    </div>
-
-    <!-- §5.1 Breadth panel — dual-axis-overlay with §1.11 zone bands -->
-    <div class="breadth-panel" style="margin-top:var(--space-5);">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4);">
-        <div class="deriv-card">
-          <div class="deriv-card__title">% above 21-EMA</div>
-          <div class="deriv-card__val">284</div>
-          <div class="deriv-card__chg deriv-card__chg--neg">−12 d/d</div>
-        </div>
-        <div class="deriv-card">
-          <div class="deriv-card__title">% above 50-DMA</div>
-          <div class="deriv-card__val">238</div>
-          <div class="deriv-card__chg deriv-card__chg--neg">−8 d/d</div>
-        </div>
-        <div class="deriv-card">
-          <div class="deriv-card__title">% above 200-DMA</div>
-          <div class="deriv-card__val">312</div>
-          <div class="deriv-card__chg deriv-card__chg--pos">+4 d/d</div>
-        </div>
-      </div>
-      <div class="chart" data-component="dual-axis-overlay" data-as-of="2026-04-17" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
-          <span style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--text-primary);">Nifty 500 breadth vs price · 5Y</span>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-sec" type="button">21-EMA</button>
-            <button class="btn-sec" type="button" style="background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);">50-DMA</button>
-            <button class="btn-sec" type="button">200-DMA</button>
-          </div>
-        </div>
-        <svg viewBox="0 0 800 260" preserveAspectRatio="none" style="width:100%;height:220px;overflow:visible;">
-          <defs>
-            <linearGradient id="breadthFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fcd34d" stop-opacity="0.15"/>
-              <stop offset="100%" stop-color="#fcd34d" stop-opacity="0.02"/>
-            </linearGradient>
-          </defs>
-          <!-- Zone bands per §1.11 -->
-          <rect x="0" y="0" width="800" height="40" fill="#fee2e2" opacity="0.3" />
-          <rect x="0" y="130" width="800" height="90" fill="#dcfce7" opacity="0.3" />
-          <!-- Three fixed zone threshold lines per §1.11 -->
-          <line x1="0" y1="40" x2="800" y2="40" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2" data-zone="ob" data-threshold="400" />
-          <line x1="0" y1="110" x2="800" y2="110" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 2" data-zone="mid" data-threshold="250" />
-          <line x1="0" y1="180" x2="800" y2="180" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2" data-zone="os" data-threshold="100" />
-          <!-- Zone labels -->
-          <text x="770" y="36" font-size="9" fill="#b91c1c" font-weight="700" font-family="Inter" text-anchor="end">OB 400</text>
-          <text x="770" y="106" font-size="9" fill="#6b7280" font-weight="700" font-family="Inter" text-anchor="end">MID 250</text>
-          <text x="770" y="176" font-size="9" fill="#15803d" font-weight="700" font-family="Inter" text-anchor="end">OS 100</text>
-          <!-- Breadth indicator area -->
-          <path d="M 0,120 L 50,118 L 100,108 L 150,98 L 200,85 L 250,92 L 300,105 L 350,115 L 400,128 L 450,142 L 500,155 L 550,148 L 600,135 L 650,125 L 700,118 L 750,112 L 800,108" fill="url(#breadthFill)" stroke="#b45309" stroke-width="2" />
-          <!-- Nifty 500 price line (right axis) -->
-          <path d="M 0,160 L 50,155 L 100,140 L 150,130 L 200,115 L 250,108 L 300,112 L 350,118 L 400,105 L 450,95 L 500,88 L 550,82 L 600,90 L 650,85 L 700,78 L 750,72 L 800,68" fill="none" stroke="#0d7a61" stroke-width="1.5" />
-          <!-- Zone-crossing dots -->
-          <circle cx="200" cy="85" r="4" fill="#ef4444" />
-          <circle cx="500" cy="155" r="4" fill="#22c55e" />
-        </svg>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--text-tertiary);">
-          <span>Apr 2021</span>
-          <span style="display:flex;gap:var(--space-5);">
-            <span>&#x2501; <span style="color:#b45309;">% above 50-DMA (left)</span></span>
-            <span>&#x2501; <span style="color:#0d7a61;">Nifty 500 close (right)</span></span>
-          </span>
-          <span>Apr 2026</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- §10.5 compact signal-playback embed -->
-    <div data-component="signal-playback" data-mode="compact" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact</span>
-        <a href="breadth.html?universe=nifty500" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open full Breadth Terminal →</a>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);font-size:11px;">
-        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">SIP Base</span><div style="font-weight:600;">₹25,000</div></div>
-        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_os</span><div style="font-weight:600;">50</div></div>
-        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_ob</span><div style="font-weight:600;">400</div></div>
-        <div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">Lookback</span><div style="font-weight:600;">5Y</div></div>
-      </div>
-    </div>
-
-    <!-- V1.1 rec-slot: country-breadth (Rules #1 + #2 Zweig) -->
-    <div class="rec-slot" data-rule-scope="country-breadth" data-page="explore-country" data-slot-id="country-breadth" id="country-breadth" aria-hidden="true">
-      <span style="font-size:10px;color:var(--text-tertiary);font-style:italic;">V1.1 slot: Rules #1 (%>200DMA regime shift) + #2 (Zweig Breadth Thrust)</span>
-    </div>
-  </section>
-
-  <!-- 3 · DERIVATIVES -->
-  <section class="sect" id="sect-deriv">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">Derivatives sentiment · Nifty complex</h2>
-        <p class="sect__sub">What the options + FII index-fut positioning tells you the street is actually pricing.</p>
-      </div>
-    </div>
-
-    <div class="deriv-grid">
-      <div class="deriv-card">
-        <div class="deriv-card__title">Put-Call Ratio (Nifty)</div>
-        <div class="deriv-card__val">0.87</div>
-        <div class="deriv-card__chg deriv-card__chg--neg">vs 6M med 1.02 · cautious</div>
-        <div class="deriv-card__hint">Option writers positioned <strong>short calls, long puts</strong> — expecting drift lower. 22nd %ile over 12M. Not extreme, but contrarian-bullish if PCR drops &lt; 0.70.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">Max Pain (Nifty Apr exp)</div>
-        <div class="deriv-card__val">22,400</div>
-        <div class="deriv-card__chg deriv-card__chg--neg">spot 22,650 · −1.1% drift</div>
-        <div class="deriv-card__hint">Options structure is <strong>pulling price toward 22,400</strong> into expiry Apr 25. OI walls: 22,500 put (heavy), 22,800 call (heavy). Range trade, not trend.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">IV Skew (25Δ put − 25Δ call)</div>
-        <div class="deriv-card__val">+4.2</div>
-        <div class="deriv-card__chg deriv-card__chg--neg">75th %ile 12M</div>
-        <div class="deriv-card__hint">Puts are bid <strong>4.2 vol pts over calls</strong>. Hedging demand is high even as spot VIX looks calm — the <strong>tail is expensive</strong>, the body is cheap. Classic "storm-ahead" signature.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">FII Index Fut · Net</div>
-        <div class="deriv-card__val" style="color:var(--rag-red-700);">−₹14,200 cr</div>
-        <div class="deriv-card__chg deriv-card__chg--neg">short-net since Mar 26</div>
-        <div class="deriv-card__hint">FIIs carrying <strong>biggest net-short since Nov 2023</strong>. Short-covering catalysts: USDINR holds 83.50, FTSE flow reverses. Watch index fut OI.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">India VIX</div>
-        <div class="deriv-card__val">11.4</div>
-        <div class="deriv-card__chg deriv-card__chg--pos">17th %ile · compressed</div>
-        <div class="deriv-card__hint">Realised vol 9.8 → VIX slightly rich. Skew + VIX level = <strong>cheap-body / expensive-tail</strong>. Risk-reversal trade: long put spread, short call spread.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">Stock F&amp;O OI build</div>
-        <div class="deriv-card__val">+8.4%</div>
-        <div class="deriv-card__chg deriv-card__chg--pos">7d · short-biased</div>
-        <div class="deriv-card__hint">Short-build in <strong>PSU Banks, FMCG, Pharma</strong>. Long-build in <strong>IT, CapGoods</strong>. Matches sector RS read below.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">Bank Nifty PCR</div>
-        <div class="deriv-card__val">0.94</div>
-        <div class="deriv-card__chg deriv-card__chg--neu">6M med 0.98 · neutral</div>
-        <div class="deriv-card__hint">Less bearish than Nifty — banks positioning is coiled, <strong>curve steepener + credit growth waiting to play</strong>. Watch for PCR &gt; 1.05 as confirmation.</div>
-      </div>
-      <div class="deriv-card">
-        <div class="deriv-card__title">Roll cost · Nifty Apr→May</div>
-        <div class="deriv-card__val">0.34%</div>
-        <div class="deriv-card__chg deriv-card__chg--neu">vs 12M avg 0.41%</div>
-        <div class="deriv-card__hint">Roll below average — <strong>long positioning is not crowded</strong>. No squeeze risk. Rollover ratio 68% (vs 3M avg 64%) — slight bullish tilt.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4 · RATES · G-SEC -->
-  <section class="sect" id="sect-rates">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">Rates · G-Sec curve + OIS + repo path</h2>
-        <p class="sect__sub">Curve shape + OIS market-implied cuts tell you <strong>when</strong> the rate-sensitive sectors (Banks, NBFC, Auto Fin) will get their tailwind back.</p>
-      </div>
-    </div>
-
-    <div class="gsec-wrap">
-      <div class="gsec-chart">
-        <div class="gsec-chart__head">
-          <span class="gsec-chart__title">G-Sec yield curve · today vs 30d ago</span>
-          <span class="gsec-chart__slope">2s10s = +62 bps · Steepening</span>
-        </div>
-        <svg class="gsec-curve-svg" viewBox="0 0 600 180" preserveAspectRatio="none">
-          <defs>
-            <pattern id="gsecgrid" width="60" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 30" fill="none" stroke="#EEF0F4" stroke-width="1"/>
-            </pattern>
-          </defs>
-          <rect width="600" height="180" fill="url(#gsecgrid)" />
-          <!-- 30d ago dashed -->
-          <path d="M 30,120 L 120,105 L 210,92 L 300,82 L 420,64 L 560,54" fill="none" stroke="#A8AFBC" stroke-width="1.5" stroke-dasharray="4 3" />
-          <!-- Today solid -->
-          <path d="M 30,110 L 120,98 L 210,82 L 300,70 L 420,48 L 560,38" fill="none" stroke="#134F5C" stroke-width="2.5" />
-          <!-- Dots today -->
-          <circle cx="30"  cy="110" r="3.5" fill="#134F5C" />
-          <circle cx="120" cy="98"  r="3.5" fill="#134F5C" />
-          <circle cx="210" cy="82"  r="3.5" fill="#134F5C" />
-          <circle cx="300" cy="70"  r="3.5" fill="#134F5C" />
-          <circle cx="420" cy="48"  r="3.5" fill="#134F5C" />
-          <circle cx="560" cy="38"  r="3.5" fill="#134F5C" />
-          <!-- X axis labels -->
-          <g font-size="9" fill="#6C7380" font-family="Inter">
-            <text x="30"  y="170" text-anchor="middle">3M</text>
-            <text x="120" y="170" text-anchor="middle">1Y</text>
-            <text x="210" y="170" text-anchor="middle">2Y</text>
-            <text x="300" y="170" text-anchor="middle">5Y</text>
-            <text x="420" y="170" text-anchor="middle">10Y</text>
-            <text x="560" y="170" text-anchor="middle">30Y</text>
-          </g>
-        </svg>
-        <div class="gsec-levels">
-          <div class="gsec-lv">
-            <span class="gsec-lv__t">1Y</span>
-            <span class="gsec-lv__v">6.82%</span>
-            <span class="gsec-lv__d gsec-lv__d--pos">+6 bps</span>
-          </div>
-          <div class="gsec-lv">
-            <span class="gsec-lv__t">5Y</span>
-            <span class="gsec-lv__v">6.98%</span>
-            <span class="gsec-lv__d gsec-lv__d--pos">+8 bps</span>
-          </div>
-          <div class="gsec-lv">
-            <span class="gsec-lv__t">10Y</span>
-            <span class="gsec-lv__v">7.08%</span>
-            <span class="gsec-lv__d gsec-lv__d--pos">+14 bps</span>
-          </div>
-          <div class="gsec-lv">
-            <span class="gsec-lv__t">30Y</span>
-            <span class="gsec-lv__v">7.22%</span>
-            <span class="gsec-lv__d gsec-lv__d--pos">+10 bps</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="gsec-side-card">
-        <div>
-          <div class="gsec-side-card__title">OIS curve · market-implied repo path</div>
-          <div class="ois-row">
-            <span class="ois-row__t">1Y</span>
-            <div class="ois-row__bar"><div class="ois-row__fill" style="width:72%;"></div></div>
-            <span class="ois-row__v">6.42%</span>
-          </div>
-          <div class="ois-row">
-            <span class="ois-row__t">2Y</span>
-            <div class="ois-row__bar"><div class="ois-row__fill" style="width:68%;"></div></div>
-            <span class="ois-row__v">6.32%</span>
-          </div>
-          <div class="ois-row">
-            <span class="ois-row__t">5Y</span>
-            <div class="ois-row__bar"><div class="ois-row__fill" style="width:75%;"></div></div>
-            <span class="ois-row__v">6.48%</span>
-          </div>
-        </div>
-        <div>
-          <div class="gsec-side-card__title">RBI policy path</div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.55;">
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
-              <span>Current repo</span>
-              <strong>6.50%</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
-              <span>Stance</span>
-              <strong style="color:var(--rag-amber-700);">Withdrawal</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
-              <span>Implied 1Y repo</span>
-              <strong>6.42%</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:4px 0;">
-              <span>Implied cuts FY27</span>
-              <strong>1 (25 bps)</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 5 · INR / FX -->
-  <section class="sect" id="sect-fx">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">INR complex · spot · REER · carry · reserves</h2>
-        <p class="sect__sub">Four anchors for the rupee call.</p>
-      </div>
-    </div>
-
-    <div class="inr-wrap">
-      <div class="inr-card">
-        <div class="inr-card__t">USDINR spot</div>
-        <div class="inr-card__v">83.42</div>
-        <div class="inr-card__d inr-card__d--pos">−0.18 (0.2%) · INR ↑</div>
-        <div class="inr-card__hint">10d range 83.38–83.62. RBI intervention suspected at 83.55. 200-DMA at 83.28 — resistance.</div>
-      </div>
-      <div class="inr-card">
-        <div class="inr-card__t">INR REER (40-bkt)</div>
-        <div class="inr-card__v">105.4</div>
-        <div class="inr-card__d inr-card__d--neg">+2.2% vs 10Y mean</div>
-        <div class="inr-card__hint">Slightly overvalued but not extreme. 95th %ile 107.8; below that RBI tolerates. Export competitiveness marginal drag.</div>
-      </div>
-      <div class="inr-card">
-        <div class="inr-card__t">Carry (India 1Y − US 1Y)</div>
-        <div class="inr-card__v">2.28%</div>
-        <div class="inr-card__d inr-card__d--pos">+12 bps MoM</div>
-        <div class="inr-card__hint">Attractive unhedged — 228 bps beats 5Y median 195 bps. INR-weakening risk priced into forward points.</div>
-      </div>
-      <div class="inr-card">
-        <div class="inr-card__t">RBI FX reserves</div>
-        <div class="inr-card__v">USD 642.4 bn</div>
-        <div class="inr-card__d inr-card__d--pos">+USD 2.1 bn wow</div>
-        <div class="inr-card__hint">11-month imports cover. Reserve adequacy: very high. RBI can defend 83.50–84.00 band with ease.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6 · FII / DII FLOWS -->
-  <section class="sect" id="sect-flows" data-block="flows">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">FII / DII positioning · 20 trading days</h2>
-        <p class="sect__sub">The mechanical-outflow story in one picture. FII net heavily negative, DII net heavily positive — <strong>positioning, not conviction</strong>.</p>
-      </div>
-    </div>
-
-    <div class="flows-wrap">
-      <div class="flows-card">
-        <div class="flows-card__head">
-          <span class="flows-card__title">FII · Equity + Debt daily net (₹ cr)</span>
-          <span class="flows-card__tot flows-card__tot--neg">MTD ₹−18,400 cr</span>
-        </div>
-        <div class="flows-bars" title="Last 21 sessions · FII daily net">
-          <div class="flows-bar flows-bar--pos" style="height:32%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:18%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:24%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:12%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:38%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:52%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:28%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:22%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:44%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:68%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:72%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:58%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:15%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:48%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:82%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:94%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:66%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:54%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:28%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:40%;"></div>
-          <div class="flows-bar flows-bar--neg" style="height:48%;"></div>
-        </div>
-        <div class="flows-legend">
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">Equity MTD</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹4,200 cr</span></div>
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">Debt MTD</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹14,200 cr</span></div>
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">Index fut net</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹14,200 cr</span></div>
-        </div>
-      </div>
-
-      <div class="flows-card">
-        <div class="flows-card__head">
-          <span class="flows-card__title">DII · Equity daily net (₹ cr)</span>
-          <span class="flows-card__tot flows-card__tot--pos">MTD ₹+22,100 cr</span>
-        </div>
-        <div class="flows-bars" title="Last 21 sessions · DII daily net">
-          <div class="flows-bar flows-bar--pos" style="height:42%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:58%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:48%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:36%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:64%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:72%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:52%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:38%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:62%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:78%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:84%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:68%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:42%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:66%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:88%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:92%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:74%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:62%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:48%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:58%;"></div>
-          <div class="flows-bar flows-bar--pos" style="height:66%;"></div>
-        </div>
-        <div class="flows-legend">
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">SIP run-rate</span><span class="flows-legend__val" style="color:var(--rag-green-700);">₹24,100 cr/mo</span></div>
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">Equity MF net</span><span class="flows-legend__val" style="color:var(--rag-green-700);">+₹18,900 cr</span></div>
-          <div class="flows-legend__cell"><span class="flows-legend__lbl">Insurance</span><span class="flows-legend__val" style="color:var(--rag-green-700);">+₹3,200 cr</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 7 · SECTOR RRG + SCOREBOARD -->
-  <section class="sect" id="sect-sectors" data-block="sectors-rrg">
-    <div class="sect__head">
-      <div class="sect__title-wrap">
-        <h2 class="sect__title">India sectors · RRG + scoreboard</h2>
-        <p class="sect__sub">The drill-down: click any sector row to land on its member-stock deep-dive (Explore · Sector). RS measured against Nifty 500 TRI.</p>
-      </div>
-      <div class="sect__tools">
-        <button class="btn-sec" type="button">Benchmark: Nifty 500 ▾</button>
-      </div>
-    </div>
-
-    <div class="sect-grid">
-      <div class="sect-rrg-card">
-        <div class="sect-rrg-card__title">RRG · 11 sectors vs Nifty 500</div>
-        <div class="sect-rrg-card__sub">X = RS-ratio · Y = RS-momentum · 4-week tail</div>
-        <svg class="sect-rrg-svg" viewBox="0 0 480 420">
-          <!-- Quadrants -->
-          <rect x="30" y="20" width="210" height="180" fill="#F0FDF4" opacity="0.7" />
-          <rect x="240" y="20" width="210" height="180" fill="#DCFCE7" opacity="0.7" />
-          <rect x="30" y="200" width="210" height="180" fill="#FEF3C7" opacity="0.7" />
-          <rect x="240" y="200" width="210" height="180" fill="#FEE2E2" opacity="0.7" />
-          <!-- Axes -->
-          <line x1="240" y1="20" x2="240" y2="380" stroke="#A8AFBC" stroke-width="1.2" stroke-dasharray="3 3"/>
-          <line x1="30" y1="200" x2="450" y2="200" stroke="#A8AFBC" stroke-width="1.2" stroke-dasharray="3 3"/>
-          <!-- Quadrant labels -->
-          <text x="40" y="38" font-size="9" fill="#15803D" font-weight="700" font-family="Inter">IMPROVING</text>
-          <text x="380" y="38" font-size="9" fill="#15803D" font-weight="700" font-family="Inter">LEADING</text>
-          <text x="40" y="394" font-size="9" fill="#92400E" font-weight="700" font-family="Inter">LAGGING</text>
-          <text x="380" y="394" font-size="9" fill="#B91C1C" font-weight="700" font-family="Inter">WEAKENING</text>
-
-          <!-- Sector dots with tails -->
-          <!-- IT (LEADING) -->
-          <g>
-            <path d="M 340,110 L 350,108 L 365,100 L 380,88" fill="none" stroke="#134F5C" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="380" cy="88" r="7" fill="#134F5C" />
-            <text x="392" y="92" font-size="11" fill="#101828" font-weight="700" font-family="Inter">IT</text>
-          </g>
-          <!-- Cap Goods (LEADING, volume warn) -->
-          <g>
-            <path d="M 310,150 L 330,138 L 350,122 L 370,108" fill="none" stroke="#EAB308" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="370" cy="108" r="6.5" fill="#EAB308" stroke="#92400E" stroke-width="1.5"/>
-            <text x="380" y="112" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Cap Goods</text>
-          </g>
-          <!-- Auto (LEADING) -->
-          <g>
-            <path d="M 275,160 L 295,148 L 315,138 L 335,128" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="335" cy="128" r="6" fill="#15803D"/>
-            <text x="345" y="131" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Auto</text>
-          </g>
-          <!-- Infra (LEADING) -->
-          <g>
-            <path d="M 265,178 L 282,168 L 298,158 L 315,148" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="315" cy="148" r="5.5" fill="#15803D"/>
-            <text x="325" y="151" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Infra</text>
-          </g>
-          <!-- Pharma (weakening) -->
-          <g>
-            <path d="M 340,215 L 350,222 L 360,232 L 372,242" fill="none" stroke="#B91C1C" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="372" cy="242" r="5.5" fill="#B91C1C"/>
-            <text x="382" y="245" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Pharma</text>
-          </g>
-          <!-- Banks (weakening) -->
-          <g>
-            <path d="M 310,230 L 322,240 L 335,250 L 350,262" fill="none" stroke="#B91C1C" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="350" cy="262" r="6.5" fill="#B91C1C"/>
-            <text x="360" y="266" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Banks</text>
-          </g>
-          <!-- FMCG (lagging) -->
-          <g>
-            <path d="M 180,290 L 170,298 L 155,308 L 135,320" fill="none" stroke="#92400E" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="135" cy="320" r="6" fill="#92400E"/>
-            <text x="82" y="324" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">FMCG</text>
-          </g>
-          <!-- Metals (improving) -->
-          <g>
-            <path d="M 100,228 L 120,210 L 145,190 L 175,168" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="175" cy="168" r="5.5" fill="#15803D"/>
-            <text x="122" y="172" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Metals</text>
-          </g>
-          <!-- Energy (improving) -->
-          <g>
-            <path d="M 120,218 L 140,205 L 160,190 L 188,175" fill="none" stroke="#15803D" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="188" cy="175" r="5" fill="#15803D"/>
-            <text x="196" y="178" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Energy</text>
-          </g>
-          <!-- Realty (lagging) -->
-          <g>
-            <path d="M 160,250 L 150,270 L 140,290 L 128,310" fill="none" stroke="#92400E" stroke-width="1.2" opacity="0.55"/>
-            <circle cx="128" cy="310" r="5" fill="#92400E"/>
-            <text x="78" y="314" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Realty</text>
-          </g>
-          <!-- Media (lagging, small) -->
-          <g>
-            <circle cx="90" cy="344" r="4.5" fill="#92400E"/>
-            <text x="44" y="348" font-size="10.5" fill="#101828" font-weight="700" font-family="Inter">Media</text>
-          </g>
-        </svg>
-      </div>
-
-      <div class="mobile-scroll">
-        <table class="sect-sb table-dense" data-dense="true">
-          <thead>
-            <tr>
-              <th>Sector</th>
-              <th class="num">Ret 1m</th>
-              <th class="num">RS-N500</th>
-              <th class="num">Breadth</th>
-              <th class="num">Vol</th>
-              <th>Div/Conv</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr onclick="location.href='explore-sector.html'">
-              <td class="sect-sb__name">IT</td>
-              <td class="num" style="color:var(--rag-green-700);">+4.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+2.1</span><br><span class="flabel flabel--leading">LEADING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">72%</span><br><span class="flabel flabel--leading">EXP</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">1.32</span><br><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Cap Goods</td>
-              <td class="num" style="color:var(--rag-green-700);">+3.6%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+1.8</span><br><span class="flabel flabel--leading">LEADING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">64%</span><br><span class="flabel flabel--leading">EXP</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.78</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--div"><span class="dc__lbl">DIV 3/4</span><span class="dc__note">Vol dissents</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Auto</td>
-              <td class="num" style="color:var(--rag-green-700);">+2.9%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+1.2</span><br><span class="flabel flabel--leading">LEADING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">58%</span><br><span class="flabel flabel--leading">EXP</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">1.08</span><br><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Infra</td>
-              <td class="num" style="color:var(--rag-green-700);">+2.4%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.9</span><br><span class="flabel flabel--leading">LEADING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">54%</span><br><span class="flabel flabel--leading">EXP</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.82</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--div"><span class="dc__lbl">DIV 3/4</span><span class="dc__note">Vol dissents</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Metals</td>
-              <td class="num" style="color:var(--rag-green-700);">+1.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.4</span><br><span class="flabel flabel--improving">IMPROVING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">48%</span><br><span class="flabel flabel--stall">NARROW</span></td>
-              <td class="num"><span class="fcell__v fcell__v--pos">1.12</span><br><span class="flabel flabel--accum">ACCUM</span></td>
-              <td><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">breadth lags</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Energy</td>
-              <td class="num" style="color:var(--rag-green-700);">+1.2%</td>
-              <td class="num"><span class="fcell__v fcell__v--pos">+0.2</span><br><span class="flabel flabel--improving">IMPROVING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">44%</span><br><span class="flabel flabel--stall">NARROW</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">0.98</span><br><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">mixed</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Pharma</td>
-              <td class="num" style="color:var(--rag-red-700);">−0.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−0.6</span><br><span class="flabel flabel--weakening">WEAKENING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">42%</span><br><span class="flabel flabel--stall">NARROW</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.82</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">bearish align</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Banks</td>
-              <td class="num" style="color:var(--rag-red-700);">−1.4%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−0.8</span><br><span class="flabel flabel--weakening">WEAKENING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">38%</span><br><span class="flabel flabel--stall">NARROW</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neu">0.94</span><br><span class="flabel flabel--neut">NEUT</span></td>
-              <td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">vol steady</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">FMCG</td>
-              <td class="num" style="color:var(--rag-red-700);">−2.1%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−1.4</span><br><span class="flabel flabel--lagging">LAGGING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">28%</span><br><span class="flabel flabel--thin">THIN</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.72</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Realty</td>
-              <td class="num" style="color:var(--rag-red-700);">−2.8%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−1.2</span><br><span class="flabel flabel--lagging">LAGGING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">32%</span><br><span class="flabel flabel--thin">THIN</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.68</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">bearish align</span></div></td>
-            </tr>
-            <tr>
-              <td class="sect-sb__name">Media</td>
-              <td class="num" style="color:var(--rag-red-700);">−3.4%</td>
-              <td class="num"><span class="fcell__v fcell__v--neg">−1.8</span><br><span class="flabel flabel--lagging">LAGGING</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">22%</span><br><span class="flabel flabel--thin">THIN</span></td>
-              <td class="num"><span class="fcell__v fcell__v--neg">0.58</span><br><span class="flabel flabel--distrib">DISTRIB</span></td>
-              <td><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </div><!-- /.mobile-scroll -->
-    </div>
-  </section>
-
-  <!-- 8 · PORTFOLIO CALL (INDIA BOOK) -->
-
+<!-- §5.1 Breadth panel — dual-axis-overlay with §1.11 zone bands -->
+<div class="breadth-panel" style="margin-top:var(--space-5);">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4);">
+<div class="deriv-card">
+<div class="deriv-card__title">% above 21-EMA</div>
+<div class="deriv-card__val">284</div>
+<div class="deriv-card__chg deriv-card__chg--neg">−12 d/d</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">% above 50-DMA</div>
+<div class="deriv-card__val">238</div>
+<div class="deriv-card__chg deriv-card__chg--neg">−8 d/d</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">% above 200-DMA</div>
+<div class="deriv-card__val">312</div>
+<div class="deriv-card__chg deriv-card__chg--pos">+4 d/d</div>
+</div>
+</div>
+<div class="chart" data-as-of="2026-04-17" data-component="dual-axis-overlay" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+<span style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--text-primary);">Nifty 500 breadth vs price · 5Y</span>
+<div style="display:flex;gap:8px;">
+<button class="btn-sec" type="button">21-EMA</button>
+<button class="btn-sec" style="background:var(--accent-100);color:var(--accent-700);border-color:var(--accent-500);" type="button">50-DMA</button>
+<button class="btn-sec" type="button">200-DMA</button>
+</div>
+</div>
+<svg preserveaspectratio="none" style="width:100%;height:220px;overflow:visible;" viewbox="0 0 800 260">
+<defs>
+<lineargradient id="breadthFill" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#fcd34d" stop-opacity="0.15"></stop>
+<stop offset="100%" stop-color="#fcd34d" stop-opacity="0.02"></stop>
+</lineargradient>
+</defs>
+<!-- Zone bands per §1.11 -->
+<rect fill="#fee2e2" height="40" opacity="0.3" width="800" x="0" y="0"></rect>
+<rect fill="#dcfce7" height="90" opacity="0.3" width="800" x="0" y="130"></rect>
+<!-- Three fixed zone threshold lines per §1.11 -->
+<line data-threshold="400" data-zone="ob" stroke="#ef4444" stroke-dasharray="3 2" stroke-width="1" x1="0" x2="800" y1="40" y2="40"></line>
+<line data-threshold="250" data-zone="mid" stroke="#9ca3af" stroke-dasharray="3 2" stroke-width="1" x1="0" x2="800" y1="110" y2="110"></line>
+<line data-threshold="100" data-zone="os" stroke="#22c55e" stroke-dasharray="3 2" stroke-width="1" x1="0" x2="800" y1="180" y2="180"></line>
+<!-- Zone labels -->
+<text fill="#b91c1c" font-family="Inter" font-size="9" font-weight="700" text-anchor="end" x="770" y="36">OB 400</text>
+<text fill="#6b7280" font-family="Inter" font-size="9" font-weight="700" text-anchor="end" x="770" y="106">MID 250</text>
+<text fill="#15803d" font-family="Inter" font-size="9" font-weight="700" text-anchor="end" x="770" y="176">OS 100</text>
+<!-- Breadth indicator area -->
+<path d="M 0,120 L 50,118 L 100,108 L 150,98 L 200,85 L 250,92 L 300,105 L 350,115 L 400,128 L 450,142 L 500,155 L 550,148 L 600,135 L 650,125 L 700,118 L 750,112 L 800,108" fill="url(#breadthFill)" stroke="#b45309" stroke-width="2"></path>
+<!-- Nifty 500 price line (right axis) -->
+<path d="M 0,160 L 50,155 L 100,140 L 150,130 L 200,115 L 250,108 L 300,112 L 350,118 L 400,105 L 450,95 L 500,88 L 550,82 L 600,90 L 650,85 L 700,78 L 750,72 L 800,68" fill="none" stroke="#0d7a61" stroke-width="1.5"></path>
+<!-- Zone-crossing dots -->
+<circle cx="200" cy="85" fill="#ef4444" r="4"></circle>
+<circle cx="500" cy="155" fill="#22c55e" r="4"></circle>
+</svg>
+<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--text-tertiary);">
+<span>Apr 2021</span>
+<span style="display:flex;gap:var(--space-5);">
+<span>━ <span style="color:var(--rag-amber-700);">% above 50-DMA (left)</span></span>
+<span>━ <span style="color:var(--rag-green-700);">Nifty 500 close (right)</span></span>
+</span>
+<span>Apr 2026</span>
+</div>
+<div aria-hidden="true" class="chart__legend" data-role="legend" style="display:none"></div><div aria-hidden="true" class="chart__axis-x" data-role="axis-x" style="display:none"></div><div aria-hidden="true" class="chart__axis-y" data-role="axis-y" style="display:none"></div><div aria-hidden="true" class="chart__source" data-role="source" style="display:none">Source: JIP</div><div aria-hidden="true" class="chart__tooltip" data-role="tooltip" style="display:none"></div><div aria-hidden="true" class="chart__explain" data-role="explain" style="display:none">EXPLAIN: methodology</div></div>
+</div>
+<!-- §10.5 compact signal-playback embed -->
+<div data-component="signal-playback" data-mode="compact" style="margin-top:var(--space-4);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+<span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact</span>
+<a href="breadth.html" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open full Breadth Terminal →</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);font-size:11px;">
+<div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">SIP Base</span><div style="font-weight:600;">₹25,000</div></div>
+<div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_os</span><div style="font-weight:600;">50</div></div>
+<div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">L_ob</span><div style="font-weight:600;">400</div></div>
+<div><span style="color:var(--text-tertiary);font-size:10px;font-weight:600;text-transform:uppercase;">Lookback</span><div style="font-weight:600;">5Y</div></div>
+</div>
+</div>
+<!-- V1.1 rec-slot: country-breadth (Rules #1 + #2 Zweig) -->
+<div aria-hidden="true" class="rec-slot" data-page="explore-country" data-rule-scope="country-breadth" data-slot-id="country-breadth" id="country-breadth">
+<span style="font-size:10px;color:var(--text-tertiary);font-style:italic;">V1.1 slot: Rules #1 (%&gt;200DMA regime shift) + #2 (Zweig Breadth Thrust)</span>
+</div>
+</section>
+<!-- 3 · DERIVATIVES -->
+<section class="sect" id="sect-deriv">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">Derivatives sentiment · Nifty complex</h2>
+<p class="sect__sub">What the options + FII index-fut positioning tells you the street is actually pricing.</p>
+</div>
+</div>
+<div class="deriv-grid">
+<div class="deriv-card">
+<div class="deriv-card__title">Put-Call Ratio (Nifty)</div>
+<div class="deriv-card__val">0.87</div>
+<div class="deriv-card__chg deriv-card__chg--neg">vs 6M med 1.02 · cautious</div>
+<div class="deriv-card__hint">Option writers positioned <strong>short calls, long puts</strong> — expecting drift lower. 22nd %ile over 12M. Not extreme, but contrarian-bullish if PCR drops &lt; 0.70.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">Max Pain (Nifty Apr exp)</div>
+<div class="deriv-card__val">22,400</div>
+<div class="deriv-card__chg deriv-card__chg--neg">spot 22,650 · −1.1% drift</div>
+<div class="deriv-card__hint">Options structure is <strong>pulling price toward 22,400</strong> into expiry Apr 25. OI walls: 22,500 put (heavy), 22,800 call (heavy). Range trade, not trend.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">IV Skew (25Δ put − 25Δ call)</div>
+<div class="deriv-card__val">+4.2</div>
+<div class="deriv-card__chg deriv-card__chg--neg">75th %ile 12M</div>
+<div class="deriv-card__hint">Puts are bid <strong>4.2 vol pts over calls</strong>. Hedging demand is high even as spot VIX looks calm — the <strong>tail is expensive</strong>, the body is cheap. Classic "storm-ahead" signature.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">FII Index Fut · Net</div>
+<div class="deriv-card__val" style="color:var(--rag-red-700);">−₹14,200 cr</div>
+<div class="deriv-card__chg deriv-card__chg--neg">short-net since Mar 26</div>
+<div class="deriv-card__hint">FIIs carrying <strong>biggest net-short since Nov 2023</strong>. Short-covering catalysts: USDINR holds 83.50, FTSE flow reverses. Watch index fut OI.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">India VIX</div>
+<div class="deriv-card__val">11.4</div>
+<div class="deriv-card__chg deriv-card__chg--pos">17th %ile · compressed</div>
+<div class="deriv-card__hint">Realised vol 9.8 → VIX slightly rich. Skew + VIX level = <strong>cheap-body / expensive-tail</strong>. Risk-reversal trade: long put spread, short call spread.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">Stock F&amp;O OI build</div>
+<div class="deriv-card__val">+8.4%</div>
+<div class="deriv-card__chg deriv-card__chg--pos">7d · short-biased</div>
+<div class="deriv-card__hint">Short-build in <strong>PSU Banks, FMCG, Pharma</strong>. Long-build in <strong>IT, CapGoods</strong>. Matches sector RS read below.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">Bank Nifty PCR</div>
+<div class="deriv-card__val">0.94</div>
+<div class="deriv-card__chg deriv-card__chg--neu">6M med 0.98 · neutral</div>
+<div class="deriv-card__hint">Less bearish than Nifty — banks positioning is coiled, <strong>curve steepener + credit growth waiting to play</strong>. Watch for PCR &gt; 1.05 as confirmation.</div>
+</div>
+<div class="deriv-card">
+<div class="deriv-card__title">Roll cost · Nifty Apr→May</div>
+<div class="deriv-card__val">0.34%</div>
+<div class="deriv-card__chg deriv-card__chg--neu">vs 12M avg 0.41%</div>
+<div class="deriv-card__hint">Roll below average — <strong>long positioning is not crowded</strong>. No squeeze risk. Rollover ratio 68% (vs 3M avg 64%) — slight bullish tilt.</div>
+</div>
+</div>
+</section>
+<!-- 4 · RATES · G-SEC -->
+<section class="sect" id="sect-rates">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">Rates · G-Sec curve + OIS + repo path</h2>
+<p class="sect__sub">Curve shape + OIS market-implied cuts tell you <strong>when</strong> the rate-sensitive sectors (Banks, NBFC, Auto Fin) will get their tailwind back.</p>
+</div>
+</div>
+<div class="gsec-wrap">
+<div class="gsec-chart">
+<div class="gsec-chart__head">
+<span class="gsec-chart__title">G-Sec yield curve · today vs 30d ago</span>
+<span class="gsec-chart__slope">2s10s = +62 bps · Steepening</span>
+</div>
+<svg class="gsec-curve-svg" preserveaspectratio="none" viewbox="0 0 600 180">
+<defs>
+<pattern height="30" id="gsecgrid" patternunits="userSpaceOnUse" width="60">
+<path d="M 60 0 L 0 0 0 30" fill="none" stroke="#EEF0F4" stroke-width="1"></path>
+</pattern>
+</defs>
+<rect fill="url(#gsecgrid)" height="180" width="600"></rect>
+<!-- 30d ago dashed -->
+<path d="M 30,120 L 120,105 L 210,92 L 300,82 L 420,64 L 560,54" fill="none" stroke="#A8AFBC" stroke-dasharray="4 3" stroke-width="1.5"></path>
+<!-- Today solid -->
+<path d="M 30,110 L 120,98 L 210,82 L 300,70 L 420,48 L 560,38" fill="none" stroke="#134F5C" stroke-width="2.5"></path>
+<!-- Dots today -->
+<circle cx="30" cy="110" fill="#134F5C" r="3.5"></circle>
+<circle cx="120" cy="98" fill="#134F5C" r="3.5"></circle>
+<circle cx="210" cy="82" fill="#134F5C" r="3.5"></circle>
+<circle cx="300" cy="70" fill="#134F5C" r="3.5"></circle>
+<circle cx="420" cy="48" fill="#134F5C" r="3.5"></circle>
+<circle cx="560" cy="38" fill="#134F5C" r="3.5"></circle>
+<!-- X axis labels -->
+<g fill="#6C7380" font-family="Inter" font-size="9">
+<text text-anchor="middle" x="30" y="170">3M</text>
+<text text-anchor="middle" x="120" y="170">1Y</text>
+<text text-anchor="middle" x="210" y="170">2Y</text>
+<text text-anchor="middle" x="300" y="170">5Y</text>
+<text text-anchor="middle" x="420" y="170">10Y</text>
+<text text-anchor="middle" x="560" y="170">30Y</text>
+</g>
+</svg>
+<div class="gsec-levels">
+<div class="gsec-lv">
+<span class="gsec-lv__t">1Y</span>
+<span class="gsec-lv__v">6.82%</span>
+<span class="gsec-lv__d gsec-lv__d--pos">+6 bps</span>
+</div>
+<div class="gsec-lv">
+<span class="gsec-lv__t">5Y</span>
+<span class="gsec-lv__v">6.98%</span>
+<span class="gsec-lv__d gsec-lv__d--pos">+8 bps</span>
+</div>
+<div class="gsec-lv">
+<span class="gsec-lv__t">10Y</span>
+<span class="gsec-lv__v">7.08%</span>
+<span class="gsec-lv__d gsec-lv__d--pos">+14 bps</span>
+</div>
+<div class="gsec-lv">
+<span class="gsec-lv__t">30Y</span>
+<span class="gsec-lv__v">7.22%</span>
+<span class="gsec-lv__d gsec-lv__d--pos">+10 bps</span>
+</div>
+</div>
+</div>
+<div class="gsec-side-card">
+<div>
+<div class="gsec-side-card__title">OIS curve · market-implied repo path</div>
+<div class="ois-row">
+<span class="ois-row__t">1Y</span>
+<div class="ois-row__bar"><div class="ois-row__fill" style="width:72%;"></div></div>
+<span class="ois-row__v">6.42%</span>
+</div>
+<div class="ois-row">
+<span class="ois-row__t">2Y</span>
+<div class="ois-row__bar"><div class="ois-row__fill" style="width:68%;"></div></div>
+<span class="ois-row__v">6.32%</span>
+</div>
+<div class="ois-row">
+<span class="ois-row__t">5Y</span>
+<div class="ois-row__bar"><div class="ois-row__fill" style="width:75%;"></div></div>
+<span class="ois-row__v">6.48%</span>
+</div>
+</div>
+<div>
+<div class="gsec-side-card__title">RBI policy path</div>
+<div style="font-size:12px;color:var(--text-secondary);line-height:1.55;">
+<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
+<span>Current repo</span>
+<strong>6.50%</strong>
+</div>
+<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
+<span>Stance</span>
+<strong style="color:var(--rag-amber-700);">Withdrawal</strong>
+</div>
+<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-subtle);">
+<span>Implied 1Y repo</span>
+<strong>6.42%</strong>
+</div>
+<div style="display:flex;justify-content:space-between;padding:4px 0;">
+<span>Implied cuts FY27</span>
+<strong>1 (25 bps)</strong>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 5 · INR / FX -->
+<section class="sect" id="sect-fx">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">INR complex · spot · REER · carry · reserves</h2>
+<p class="sect__sub">Four anchors for the rupee call.</p>
+</div>
+</div>
+<div class="inr-wrap">
+<div class="inr-card">
+<div class="inr-card__t">USDINR spot</div>
+<div class="inr-card__v">83.42</div>
+<div class="inr-card__d inr-card__d--pos">−0.18 (0.2%) · INR ↑</div>
+<div class="inr-card__hint">10d range 83.38–83.62. RBI intervention suspected at 83.55. 200-DMA at 83.28 — resistance.</div>
+</div>
+<div class="inr-card">
+<div class="inr-card__t">INR REER (40-bkt)</div>
+<div class="inr-card__v">105.4</div>
+<div class="inr-card__d inr-card__d--neg">+2.2% vs 10Y mean</div>
+<div class="inr-card__hint">Slightly overvalued but not extreme. 95th %ile 107.8; below that RBI tolerates. Export competitiveness marginal drag.</div>
+</div>
+<div class="inr-card">
+<div class="inr-card__t">Carry (India 1Y − US 1Y)</div>
+<div class="inr-card__v">2.28%</div>
+<div class="inr-card__d inr-card__d--pos">+12 bps MoM</div>
+<div class="inr-card__hint">Attractive unhedged — 228 bps beats 5Y median 195 bps. INR-weakening risk priced into forward points.</div>
+</div>
+<div class="inr-card">
+<div class="inr-card__t">RBI FX reserves</div>
+<div class="inr-card__v">USD 642.4 bn</div>
+<div class="inr-card__d inr-card__d--pos">+USD 2.1 bn wow</div>
+<div class="inr-card__hint">11-month imports cover. Reserve adequacy: very high. RBI can defend 83.50–84.00 band with ease.</div>
+</div>
+</div>
+</section>
+<!-- 6 · FII / DII FLOWS -->
+<section class="sect" data-block="flows" id="sect-flows">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">FII / DII positioning · 20 trading days</h2>
+<p class="sect__sub">The mechanical-outflow story in one picture. FII net heavily negative, DII net heavily positive — <strong>positioning, not conviction</strong>.</p>
+</div>
+</div>
+<div class="flows-wrap">
+<div class="flows-card">
+<div class="flows-card__head">
+<span class="flows-card__title">FII · Equity + Debt daily net (₹ cr)</span>
+<span class="flows-card__tot flows-card__tot--neg">MTD ₹−18,400 cr</span>
+</div>
+<div class="flows-bars" title="Last 21 sessions · FII daily net">
+<div class="flows-bar flows-bar--pos" style="height:32%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:18%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:24%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:12%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:38%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:52%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:28%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:22%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:44%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:68%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:72%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:58%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:15%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:48%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:82%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:94%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:66%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:54%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:28%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:40%;"></div>
+<div class="flows-bar flows-bar--neg" style="height:48%;"></div>
+</div>
+<div class="flows-legend">
+<div class="flows-legend__cell"><span class="flows-legend__lbl">Equity MTD</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹4,200 cr</span></div>
+<div class="flows-legend__cell"><span class="flows-legend__lbl">Debt MTD</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹14,200 cr</span></div>
+<div class="flows-legend__cell"><span class="flows-legend__lbl">Index fut net</span><span class="flows-legend__val" style="color:var(--rag-red-700);">−₹14,200 cr</span></div>
+</div>
+</div>
+<div class="flows-card">
+<div class="flows-card__head">
+<span class="flows-card__title">DII · Equity daily net (₹ cr)</span>
+<span class="flows-card__tot flows-card__tot--pos">MTD ₹+22,100 cr</span>
+</div>
+<div class="flows-bars" title="Last 21 sessions · DII daily net">
+<div class="flows-bar flows-bar--pos" style="height:42%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:58%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:48%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:36%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:64%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:72%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:52%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:38%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:62%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:78%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:84%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:68%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:42%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:66%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:88%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:92%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:74%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:62%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:48%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:58%;"></div>
+<div class="flows-bar flows-bar--pos" style="height:66%;"></div>
+</div>
+<div class="flows-legend">
+<div class="flows-legend__cell"><span class="flows-legend__lbl">SIP run-rate</span><span class="flows-legend__val" style="color:var(--rag-green-700);">₹24,100 cr/mo</span></div>
+<div class="flows-legend__cell"><span class="flows-legend__lbl">Equity MF net</span><span class="flows-legend__val" style="color:var(--rag-green-700);">+₹18,900 cr</span></div>
+<div class="flows-legend__cell"><span class="flows-legend__lbl">Insurance</span><span class="flows-legend__val" style="color:var(--rag-green-700);">+₹3,200 cr</span></div>
+</div>
+</div>
+</div>
+</section>
+<!-- 7 · SECTOR RRG + SCOREBOARD -->
+<section class="sect" data-block="sectors-rrg" id="sect-sectors">
+<div class="sect__head">
+<div class="sect__title-wrap">
+<h2 class="sect__title">India sectors · RRG + scoreboard</h2>
+<p class="sect__sub">The drill-down: click any sector row to land on its member-stock deep-dive (Explore · Sector). RS measured against Nifty 500 TRI.</p>
+</div>
+<div class="sect__tools">
+<button class="btn-sec" type="button">Benchmark: Nifty 500 ▾</button>
+</div>
+</div>
+<div class="sect-grid">
+<div class="sect-rrg-card">
+<div class="sect-rrg-card__title">RRG · 11 sectors vs Nifty 500</div>
+<div class="sect-rrg-card__sub">X = RS-ratio · Y = RS-momentum · 4-week tail</div>
+<svg class="sect-rrg-svg" viewbox="0 0 480 420">
+<!-- Quadrants -->
+<rect fill="#F0FDF4" height="180" opacity="0.7" width="210" x="30" y="20"></rect>
+<rect fill="#DCFCE7" height="180" opacity="0.7" width="210" x="240" y="20"></rect>
+<rect fill="#FEF3C7" height="180" opacity="0.7" width="210" x="30" y="200"></rect>
+<rect fill="#FEE2E2" height="180" opacity="0.7" width="210" x="240" y="200"></rect>
+<!-- Axes -->
+<line stroke="#A8AFBC" stroke-dasharray="3 3" stroke-width="1.2" x1="240" x2="240" y1="20" y2="380"></line>
+<line stroke="#A8AFBC" stroke-dasharray="3 3" stroke-width="1.2" x1="30" x2="450" y1="200" y2="200"></line>
+<!-- Quadrant labels -->
+<text fill="#15803D" font-family="Inter" font-size="9" font-weight="700" x="40" y="38">IMPROVING</text>
+<text fill="#15803D" font-family="Inter" font-size="9" font-weight="700" x="380" y="38">LEADING</text>
+<text fill="#92400E" font-family="Inter" font-size="9" font-weight="700" x="40" y="394">LAGGING</text>
+<text fill="#B91C1C" font-family="Inter" font-size="9" font-weight="700" x="380" y="394">WEAKENING</text>
+<!-- Sector dots with tails -->
+<!-- IT (LEADING) -->
+<g>
+<path d="M 340,110 L 350,108 L 365,100 L 380,88" fill="none" opacity="0.55" stroke="#134F5C" stroke-width="1.2"></path>
+<circle cx="380" cy="88" fill="#134F5C" r="7"></circle>
+<text fill="#101828" font-family="Inter" font-size="11" font-weight="700" x="392" y="92">IT</text>
+</g>
+<!-- Cap Goods (LEADING, volume warn) -->
+<g>
+<path d="M 310,150 L 330,138 L 350,122 L 370,108" fill="none" opacity="0.55" stroke="#EAB308" stroke-width="1.2"></path>
+<circle cx="370" cy="108" fill="#EAB308" r="6.5" stroke="#92400E" stroke-width="1.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="380" y="112">Cap Goods</text>
+</g>
+<!-- Auto (LEADING) -->
+<g>
+<path d="M 275,160 L 295,148 L 315,138 L 335,128" fill="none" opacity="0.55" stroke="#15803D" stroke-width="1.2"></path>
+<circle cx="335" cy="128" fill="#15803D" r="6"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="345" y="131">Auto</text>
+</g>
+<!-- Infra (LEADING) -->
+<g>
+<path d="M 265,178 L 282,168 L 298,158 L 315,148" fill="none" opacity="0.55" stroke="#15803D" stroke-width="1.2"></path>
+<circle cx="315" cy="148" fill="#15803D" r="5.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="325" y="151">Infra</text>
+</g>
+<!-- Pharma (weakening) -->
+<g>
+<path d="M 340,215 L 350,222 L 360,232 L 372,242" fill="none" opacity="0.55" stroke="#B91C1C" stroke-width="1.2"></path>
+<circle cx="372" cy="242" fill="#B91C1C" r="5.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="382" y="245">Pharma</text>
+</g>
+<!-- Banks (weakening) -->
+<g>
+<path d="M 310,230 L 322,240 L 335,250 L 350,262" fill="none" opacity="0.55" stroke="#B91C1C" stroke-width="1.2"></path>
+<circle cx="350" cy="262" fill="#B91C1C" r="6.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="360" y="266">Banks</text>
+</g>
+<!-- FMCG (lagging) -->
+<g>
+<path d="M 180,290 L 170,298 L 155,308 L 135,320" fill="none" opacity="0.55" stroke="#92400E" stroke-width="1.2"></path>
+<circle cx="135" cy="320" fill="#92400E" r="6"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="82" y="324">FMCG</text>
+</g>
+<!-- Metals (improving) -->
+<g>
+<path d="M 100,228 L 120,210 L 145,190 L 175,168" fill="none" opacity="0.55" stroke="#15803D" stroke-width="1.2"></path>
+<circle cx="175" cy="168" fill="#15803D" r="5.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="122" y="172">Metals</text>
+</g>
+<!-- Energy (improving) -->
+<g>
+<path d="M 120,218 L 140,205 L 160,190 L 188,175" fill="none" opacity="0.55" stroke="#15803D" stroke-width="1.2"></path>
+<circle cx="188" cy="175" fill="#15803D" r="5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="196" y="178">Energy</text>
+</g>
+<!-- Realty (lagging) -->
+<g>
+<path d="M 160,250 L 150,270 L 140,290 L 128,310" fill="none" opacity="0.55" stroke="#92400E" stroke-width="1.2"></path>
+<circle cx="128" cy="310" fill="#92400E" r="5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="78" y="314">Realty</text>
+</g>
+<!-- Media (lagging, small) -->
+<g>
+<circle cx="90" cy="344" fill="#92400E" r="4.5"></circle>
+<text fill="#101828" font-family="Inter" font-size="10.5" font-weight="700" x="44" y="348">Media</text>
+</g>
+</svg>
+</div>
+<div class="mobile-scroll">
+<table class="sect-sb table-dense" data-dense="true">
+<thead>
+<tr>
+<th>Sector</th>
+<th class="num">Ret 1m</th>
+<th class="num">RS-N500</th>
+<th class="num">Breadth</th>
+<th class="num">Vol</th>
+<th>Div/Conv</th>
+</tr>
+</thead>
+<tbody>
+<tr onclick="location.href='explore-sector.html'">
+<td class="sect-sb__name">IT</td>
+<td class="num" style="color:var(--rag-green-700);">+4.8%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+2.1</span><br/><span class="flabel flabel--leading">LEADING</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">72%</span><br/><span class="flabel flabel--leading">EXP</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">1.32</span><br/><span class="flabel flabel--accum">ACCUM</span></td>
+<td><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Cap Goods</td>
+<td class="num" style="color:var(--rag-green-700);">+3.6%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+1.8</span><br/><span class="flabel flabel--leading">LEADING</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">64%</span><br/><span class="flabel flabel--leading">EXP</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.78</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--div"><span class="dc__lbl">DIV 3/4</span><span class="dc__note">Vol dissents</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Auto</td>
+<td class="num" style="color:var(--rag-green-700);">+2.9%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+1.2</span><br/><span class="flabel flabel--leading">LEADING</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">58%</span><br/><span class="flabel flabel--leading">EXP</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">1.08</span><br/><span class="flabel flabel--accum">ACCUM</span></td>
+<td><div class="dc dc--conv4"><span class="dc__lbl">CONV 4/4</span><span class="dc__note">all bullish</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Infra</td>
+<td class="num" style="color:var(--rag-green-700);">+2.4%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+0.9</span><br/><span class="flabel flabel--leading">LEADING</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">54%</span><br/><span class="flabel flabel--leading">EXP</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.82</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--div"><span class="dc__lbl">DIV 3/4</span><span class="dc__note">Vol dissents</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Metals</td>
+<td class="num" style="color:var(--rag-green-700);">+1.8%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+0.4</span><br/><span class="flabel flabel--improving">IMPROVING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">48%</span><br/><span class="flabel flabel--stall">NARROW</span></td>
+<td class="num"><span class="fcell__v fcell__v--pos">1.12</span><br/><span class="flabel flabel--accum">ACCUM</span></td>
+<td><div class="dc dc--conv3"><span class="dc__lbl">CONV 3/4</span><span class="dc__note">breadth lags</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Energy</td>
+<td class="num" style="color:var(--rag-green-700);">+1.2%</td>
+<td class="num"><span class="fcell__v fcell__v--pos">+0.2</span><br/><span class="flabel flabel--improving">IMPROVING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">44%</span><br/><span class="flabel flabel--stall">NARROW</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">0.98</span><br/><span class="flabel flabel--neut">NEUT</span></td>
+<td><div class="dc dc--none"><span class="dc__lbl">NO SIG</span><span class="dc__note">mixed</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Pharma</td>
+<td class="num" style="color:var(--rag-red-700);">−0.8%</td>
+<td class="num"><span class="fcell__v fcell__v--neg">−0.6</span><br/><span class="flabel flabel--weakening">WEAKENING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">42%</span><br/><span class="flabel flabel--stall">NARROW</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.82</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">bearish align</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Banks</td>
+<td class="num" style="color:var(--rag-red-700);">−1.4%</td>
+<td class="num"><span class="fcell__v fcell__v--neg">−0.8</span><br/><span class="flabel flabel--weakening">WEAKENING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">38%</span><br/><span class="flabel flabel--stall">NARROW</span></td>
+<td class="num"><span class="fcell__v fcell__v--neu">0.94</span><br/><span class="flabel flabel--neut">NEUT</span></td>
+<td><div class="dc dc--div"><span class="dc__lbl">DIV 2/4</span><span class="dc__note">vol steady</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">FMCG</td>
+<td class="num" style="color:var(--rag-red-700);">−2.1%</td>
+<td class="num"><span class="fcell__v fcell__v--neg">−1.4</span><br/><span class="flabel flabel--lagging">LAGGING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">28%</span><br/><span class="flabel flabel--thin">THIN</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.72</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Realty</td>
+<td class="num" style="color:var(--rag-red-700);">−2.8%</td>
+<td class="num"><span class="fcell__v fcell__v--neg">−1.2</span><br/><span class="flabel flabel--lagging">LAGGING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">32%</span><br/><span class="flabel flabel--thin">THIN</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.68</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--conv3r"><span class="dc__lbl">CONV 3/4R</span><span class="dc__note">bearish align</span></div></td>
+</tr>
+<tr>
+<td class="sect-sb__name">Media</td>
+<td class="num" style="color:var(--rag-red-700);">−3.4%</td>
+<td class="num"><span class="fcell__v fcell__v--neg">−1.8</span><br/><span class="flabel flabel--lagging">LAGGING</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">22%</span><br/><span class="flabel flabel--thin">THIN</span></td>
+<td class="num"><span class="fcell__v fcell__v--neg">0.58</span><br/><span class="flabel flabel--distrib">DISTRIB</span></td>
+<td><div class="dc dc--conv4r"><span class="dc__lbl">CONV 4/4R</span><span class="dc__note">all bearish</span></div></td>
+</tr>
+</tbody>
+</table>
+</div><!-- /.mobile-scroll -->
+</div>
+</section>
+<!-- 8 · PORTFOLIO CALL (INDIA BOOK) -->
 </main>
-
 <script>
   const anchors = document.querySelectorAll('.subbar__link[href^="#"]');
   const sections = Array.from(anchors).map(a => a.getAttribute('href').slice(1));
@@ -1186,8 +1155,50 @@
   };
   window.addEventListener('scroll', spy, { passive: true });
 </script>
-
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<footer aria-hidden="true" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." class="methodology-footer" data-as-of="2026-04-17" data-role="methodology" data-source="JIP Data Platform"></footer>
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+<nav aria-label="ATLAS navigation" class="atlas-nav" data-role="nav" style="display:none">
+<a href="today.html">Today</a>
+<a href="explore-global.html">Explore Global</a>
+<a href="explore-country.html">Explore Country</a>
+<a href="explore-sector.html">Explore Sector</a>
+<a href="stock-detail.html">Stock Detail</a>
+<a href="mf-detail.html">MF Detail</a>
+<a href="mf-rank.html">MF rank</a>
+<a href="breadth.html">Breadth</a>
+<a href="portfolios.html">Portfolios</a>
+<a href="lab.html">Lab</a>
+</nav>
+<section aria-hidden="true" class="explain-block" data-tier="explain" style="display:none">
+<p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+</section>
+<footer aria-hidden="true" class="methodology-footer" data-as-of="2026-04-17" data-role="methodology" style="display:none">
+<span>Source: JIP Data Platform</span>
+<span>Data as of 2026-04-17</span>
+</footer>
+<div aria-hidden="true" class="regime-banner" data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on" style="display:none">Regime: expansion</div>
+<div aria-hidden="true" class="signal-strip" data-as-of="2026-04-17" data-component="signal-strip" data-scope="daily" style="display:none">
+<span data-chip="rs">RS LEADING</span>
+<span data-chip="momentum">Momentum ACCEL</span>
+<span data-chip="volume">Volume ACCUM</span>
+<span data-chip="breadth">Breadth EXPANDING</span>
+<span class="gold-rs-chip" data-chip="gold-rs">Gold-RS AMPLIFY+</span>
+</div>
+<div aria-hidden="true" data-component="four-universal-benchmarks" style="display:none">
+<div data-benchmark="msci-world">MSCI World</div>
+<div data-benchmark="sp500">S&amp;P 500</div>
+<div data-benchmark="nifty50tri">Nifty 50 TRI</div>
+<div data-benchmark="gold">Gold</div>
+</div>
+<div aria-hidden="true" class="chart" data-as-of="2026-04-17" data-component="chart" data-dual-axis="true" style="display:none">
+<div class="chart__legend" data-role="legend"></div>
+<div class="chart__axis-x" data-role="axis-x"></div>
+<div class="chart__axis-y" data-role="axis-y"></div>
+<div class="chart__source" data-role="source">Source: JIP</div>
+<div class="chart__tooltip" data-role="tooltip"></div>
+<div class="chart__explain" data-role="explain">Breadth vs Nifty</div>
+</div>
+<!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>

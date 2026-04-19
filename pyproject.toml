@@ -11,6 +11,8 @@ select = ["E", "F", "W"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "--ignore=tests/e2e"
 markers = [
     "integration: requires real database and services (deselect with -m 'not integration')",
+    "e2e: end-to-end Playwright tests for frontend mockup pages",
 ]

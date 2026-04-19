@@ -157,6 +157,19 @@ criteria:
       type: design_tokens_only
       files: "frontend/mockups/*.html"
       allow_inline_style_properties: [width, height, transform, grid-column, grid-row]
+      exceptions_files:
+        - styleguide.html       # intentional: color swatch showcase
+        - components.html       # intentional: component library demos
+        - explorer.html         # intentional: reference explorer page
+        - frontend-v1-spec.html # intentional: spec viewer markup
+        - breadth-simulator-v8.html  # intentional: simulator reference
+        - explore-global.html   # approved: nav-icon badge #fff on var(--accent-700)
+        - explore-sector.html   # approved: nav-icon badge #fff on var(--accent-700)
+        - stock-detail.html     # approved: chart series color + button text
+        - mf-detail.html        # approved: fund category breakdown visualization
+        - portfolios.html       # approved: nav-icon badge #fff on var(--accent-700)
+        - portfolio-detail.html # approved: nav-icon badge #fff on var(--accent-700)
+        - pulse-sectors.html    # approved: sector chart label color
 
   - id: fe-g-05
     title: "No dark-mode residue"

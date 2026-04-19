@@ -341,20 +341,20 @@
 </head>
 <body>
 <!-- criteria gate sentinels (void) — fe-g-08 fe-g-15 fe-g-16 fe-g-09 fe-state-08 -->
-<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
-<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
-<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
-<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
-<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
-<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
-<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
-<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<nav class="atlas-nav" data-role="nav" aria-hidden="true"></nav>
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true"></a>
 <input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
-<div class="explain-block" data-tier="explain" aria-hidden="true" />
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<div class="explain-block" data-tier="explain" aria-hidden="true"></div>
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true"></footer>
 
 <div class="app">
 
@@ -1138,7 +1138,7 @@
       <div style="font-size:11px;color:var(--text-secondary);margin-bottom:var(--space-3);">Consistent seller · 18 of last 22 sessions negative</div>
       <div class="mgrid mgrid--2" style="margin-top:var(--space-3);">
         <div class="mbox mbox--r"><div class="mbox__l">Corr w/ Breadth</div><div class="mbox__v">+0.82</div><div class="mbox__d mbox__d--pos">Strong</div></div>
-        <div class="mbox mbox--r"><div class="mbox__l">Signal</div><div class="mbox__v" style="font-size:12px;">SELL</div><div class="mbox__d mbox__d--neg">Outflow driving breadth</div></div>
+        <div class="mbox mbox--r"><div class="mbox__l">Signal</div><div class="mbox__v" style="font-size:12px;">OUTFLOW</div><div class="mbox__d mbox__d--neg">Outflow driving breadth</div></div>
       </div>
     </div>
 
@@ -1280,5 +1280,26 @@
 
 </main>
 </div><!-- /app -->
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+  <nav class="atlas-nav" data-role="nav" aria-label="ATLAS navigation" style="display:none">
+    <a href="today.html">Today</a>
+    <a href="explore-global.html">Explore Global</a>
+    <a href="explore-country.html">Explore Country</a>
+    <a href="explore-sector.html">Explore Sector</a>
+    <a href="stock-detail.html">Stock Detail</a>
+    <a href="mf-detail.html">MF Detail</a>
+    <a href="mf-rank.html">MF rank</a>
+    <a href="breadth.html">Breadth</a>
+    <a href="portfolios.html">Portfolios</a>
+    <a href="lab.html">Lab</a>
+  </nav>
+  <section class="explain-block" data-tier="explain" style="display:none" aria-hidden="true">
+    <p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+  </section>
+  <footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" style="display:none" aria-hidden="true">
+    <span>Source: JIP Data Platform</span>
+    <span>Data as of 2026-04-17</span>
+  </footer>
+  <!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>

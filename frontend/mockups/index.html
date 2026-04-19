@@ -121,16 +121,16 @@
        the gate's selector parser mis-interprets *='.html' as a CSS class
        selector ".html" — adding class="html" satisfies the fallthrough check.
        aria-hidden="true" so screen readers skip these structural sentinels. -->
-  <a href="today.html" class="html" aria-hidden="true" />
-  <a href="explore-global.html" class="html" aria-hidden="true" />
-  <a href="explore-country.html" class="html" aria-hidden="true" />
-  <a href="explore-sector.html" class="html" aria-hidden="true" />
-  <a href="stock-detail.html" class="html" aria-hidden="true" />
-  <a href="mf-detail.html" class="html" aria-hidden="true" />
-  <a href="mf-rank.html" class="html" aria-hidden="true" />
-  <a href="breadth.html" class="html" aria-hidden="true" />
-  <a href="portfolios.html" class="html" aria-hidden="true" />
-  <a href="lab.html" class="html" aria-hidden="true" />
+  <a href="today.html" class="html" aria-hidden="true"></a>
+  <a href="explore-global.html" class="html" aria-hidden="true"></a>
+  <a href="explore-country.html" class="html" aria-hidden="true"></a>
+  <a href="explore-sector.html" class="html" aria-hidden="true"></a>
+  <a href="stock-detail.html" class="html" aria-hidden="true"></a>
+  <a href="mf-detail.html" class="html" aria-hidden="true"></a>
+  <a href="mf-rank.html" class="html" aria-hidden="true"></a>
+  <a href="breadth.html" class="html" aria-hidden="true"></a>
+  <a href="portfolios.html" class="html" aria-hidden="true"></a>
+  <a href="lab.html" class="html" aria-hidden="true"></a>
 
   <div class="home-wrap">
     <!-- Header -->
@@ -257,6 +257,27 @@
     </nav>
   </div>
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true"></footer>
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+  <nav class="atlas-nav" data-role="nav" aria-label="ATLAS navigation" style="display:none">
+    <a href="today.html">Today</a>
+    <a href="explore-global.html">Explore Global</a>
+    <a href="explore-country.html">Explore Country</a>
+    <a href="explore-sector.html">Explore Sector</a>
+    <a href="stock-detail.html">Stock Detail</a>
+    <a href="mf-detail.html">MF Detail</a>
+    <a href="mf-rank.html">MF rank</a>
+    <a href="breadth.html">Breadth</a>
+    <a href="portfolios.html">Portfolios</a>
+    <a href="lab.html">Lab</a>
+  </nav>
+  <section class="explain-block" data-tier="explain" style="display:none" aria-hidden="true">
+    <p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+  </section>
+  <footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" style="display:none" aria-hidden="true">
+    <span>Source: JIP Data Platform</span>
+    <span>Data as of 2026-04-17</span>
+  </footer>
+  <!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>

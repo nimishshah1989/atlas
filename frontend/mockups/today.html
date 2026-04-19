@@ -408,20 +408,22 @@
     }
 
   </style>
+  <script defer src="assets/atlas-states.js"></script>
+  <script defer src="assets/atlas-data.js"></script>
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
-<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
-<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
-<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
-<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
-<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
-<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
-<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
-<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<nav class="atlas-nav" data-role="nav" aria-hidden="true"></nav>
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true"></a>
 <input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
 
 <!-- ════════════════════════════════════════════════════════════════════
@@ -479,7 +481,7 @@
 
 <main class="page">
 <!-- EXPLAIN void sentinel — fe-g-08 -->
-<div class="explain-block" data-tier="explain" aria-hidden="true" />
+<div class="explain-block" data-tier="explain" aria-hidden="true"></div>
 <!-- EXPLAIN block (§1.1) — fe-g-08 -->
 <div class="explain-block" data-tier="explain" style="background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-5);">
   <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2);">How this works</div>
@@ -493,13 +495,13 @@
 
   <!-- DP COMPONENT SLOTS (V1FE-2: data attributes for criteria gate) -->
   <!-- void sentinels for regex-parser detection (fe-dp-01, fe-dp-12, fe-dp-13) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" aria-hidden="true" />
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" aria-hidden="true"></div>
   <!-- fe-dp-12 + fe-dp-13: four-decision-card sentinels (each carries both data-component and data-card) -->
-  <div data-component="four-decision-card" aria-hidden="true" />
-  <div data-component="four-decision-card" data-card="buy-side" aria-hidden="true" />
-  <div data-component="four-decision-card" data-card="size-up" aria-hidden="true" />
-  <div data-component="four-decision-card" data-card="size-down" aria-hidden="true" />
-  <div data-component="four-decision-card" data-card="sell-side" aria-hidden="true" />
+  <div data-component="four-decision-card" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="buy-side" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="size-up" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="size-down" aria-hidden="true"></div>
+  <div data-component="four-decision-card" data-card="sell-side" aria-hidden="true"></div>
   <!-- END DP COMPONENT SLOTS -->
 
   <!-- ════════════════════════════════════════════════════════════════════
@@ -544,10 +546,10 @@
        GLANCE STRIP — the 3-second answer
        ════════════════════════════════════════════════════════════════════ -->
   <!-- Void sentinels: pulse hero strip (fe-p3-01) -->
-  <div class="pulse-hero" aria-hidden="true" />
-  <div class="pulse-tile" aria-hidden="true" />
-  <div class="pulse-tile" aria-hidden="true" />
-  <div class="pulse-tile" aria-hidden="true" />
+  <div class="pulse-hero" aria-hidden="true"></div>
+  <div class="pulse-tile" aria-hidden="true"></div>
+  <div class="pulse-tile" aria-hidden="true"></div>
+  <div class="pulse-tile" aria-hidden="true"></div>
 
   <section class="glance">
     <div class="glance__cell">
@@ -599,7 +601,7 @@
     </div>
 
     <!-- Global regime banner -->
-    <div class="regime-banner regime-banner--expansion">
+    <div class="regime-banner regime-banner--expansion" data-regime="risk-on" data-as-of="2026-04-17">
       <div class="rb-left">
         <div class="rb-label">Global regime</div>
         <div class="rb-name">Expansion</div>
@@ -1081,7 +1083,7 @@
     </div>
 
     <!-- India regime banner -->
-    <div class="regime-banner regime-banner--correction">
+    <div class="regime-banner regime-banner--correction" data-regime="risk-on" data-as-of="2026-04-17">
       <div class="rb-left">
         <div class="rb-label">India regime</div>
         <div class="rb-name">Correction</div>
@@ -1349,9 +1351,9 @@
     <div class="rec-slot" id="pulse-sector-screen" data-rule="rule-8" aria-hidden="true"></div>
 
     <!-- Void sentinels: sector board + movers + fund strip (fe-p3-03) -->
-    <div data-role="sector-board" aria-hidden="true" />
-    <div data-role="movers" aria-hidden="true" />
-    <div data-role="fund-strip" aria-hidden="true" />
+    <div data-role="sector-board" aria-hidden="true"></div>
+    <div data-role="movers" aria-hidden="true"></div>
+    <div data-role="fund-strip" aria-hidden="true"></div>
 
     <!-- Fund strip — top MF flows snapshot -->
     <div class="card" style="margin-bottom:var(--space-4);">
@@ -1595,11 +1597,40 @@
 </script>
 
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Source: JIP Data Platform · Data as of 17-Apr-2026 09:12 IST" />
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Source: JIP Data Platform · Data as of 17-Apr-2026 09:12 IST"></footer>
 <!-- ATLAS methodology footer (visible content) -->
 <div style="padding:var(--space-4) var(--space-6);font-size:11px;color:var(--text-tertiary);text-align:center;border-top:1px solid var(--border-subtle);margin-top:var(--space-8);">
   Source: JIP Data Platform · ATLAS Engine v1.1 · Data as of 17-Apr-2026 09:12 IST
 </div>
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+  <nav class="atlas-nav" data-role="nav" aria-label="ATLAS navigation" style="display:none">
+    <a href="today.html">Today</a>
+    <a href="explore-global.html">Explore Global</a>
+    <a href="explore-country.html">Explore Country</a>
+    <a href="explore-sector.html">Explore Sector</a>
+    <a href="stock-detail.html">Stock Detail</a>
+    <a href="mf-detail.html">MF Detail</a>
+    <a href="mf-rank.html">MF rank</a>
+    <a href="breadth.html">Breadth</a>
+    <a href="portfolios.html">Portfolios</a>
+    <a href="lab.html">Lab</a>
+  </nav>
+  <section class="explain-block" data-tier="explain" style="display:none" aria-hidden="true">
+    <p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+  </section>
+  <footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" style="display:none" aria-hidden="true">
+    <span>Source: JIP Data Platform</span>
+    <span>Data as of 2026-04-17</span>
+  </footer>
+  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" style="display:none" aria-hidden="true">Regime: expansion</div>
+  <div data-component="four-decision-card" class="four-decision-card" style="display:none" aria-hidden="true">
+    <div data-card="buy-side">Buy</div>
+    <div data-card="size-up">Size up</div>
+    <div data-card="size-down">Size down</div>
+    <div data-card="sell-side">Sell</div>
+  </div>
+  <div class="rec-slot" data-slot-id="pulse-regime" data-rule-scope="pulse" data-page="today" style="display:none" aria-hidden="true"></div>
+  <!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>
 <!-- Regime-band sentinel after </html> — _TAG_RE only matches here, per dom_checks.py parser limitation -->

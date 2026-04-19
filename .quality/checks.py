@@ -1438,10 +1438,64 @@ def dim_frontend() -> DimensionResult:
             )
         )
 
+    # 5.3 Accessibility — runs via check-fe-a11y.py (static regex, no browser needed)
+    a11y_report_path = ROOT / ".forge" / "a11y-report.json"
+    if a11y_report_path.exists():
+        try:
+            a11y_data = json.loads(a11y_report_path.read_text())
+            a11y_critical = a11y_data.get("critical_count", 0)
+            a11y_fail = a11y_data.get("fail_count", 0)
+            a11y_files = a11y_data.get("files_checked", 0)
+            if a11y_critical == 0 and a11y_fail == 0:
+                a11y_score = 10
+                a11y_evidence = f"a11y PASS: {a11y_files} files, 0 critical issues"
+            else:
+                a11y_score = 0
+                a11y_evidence = f"a11y FAIL: {a11y_critical} critical issues in {a11y_fail} files"
+            checks.append(
+                CheckResult(
+                    "5.3",
+                    "Accessibility",
+                    a11y_score,
+                    10,
+                    a11y_evidence,
+                    "Static HTML a11y checks (alt attrs, lang, viewport, duplicate IDs)",
+                    "Run python scripts/check-fe-a11y.py to see issues.",
+                    "critical" if a11y_critical > 0 else "info",
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            checks.append(
+                CheckResult(
+                    "5.3",
+                    "Accessibility",
+                    0,
+                    10,
+                    f"error reading a11y report: {exc}",
+                    "Static HTML a11y checks",
+                    "Run python scripts/check-fe-a11y.py.",
+                    "high",
+                    status="ERROR",
+                )
+            )
+    else:
+        checks.append(
+            CheckResult(
+                "5.3",
+                "Accessibility",
+                0,
+                10,
+                "no .forge/a11y-report.json — run check-fe-a11y.py",
+                "Static HTML a11y checks (alt attrs, lang, viewport, duplicate IDs)",
+                "Run python scripts/check-fe-a11y.py.",
+                "info",
+                status="SKIP",
+            )
+        )
+
     # Remaining checks require headless browser/live service
     for cid, name, pts in [
         ("5.2", "Bundle size", 10),
-        ("5.3", "Accessibility", 10),
         ("5.4", "Mobile responsive", 10),
         ("5.5", "Console errors", 10),
         ("5.7", "Loading states", 10),

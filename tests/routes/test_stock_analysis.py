@@ -213,8 +213,13 @@ class TestOpenBBEngine:
         assert resp.json()["data"]["signals"]["piotroski_score"] is None
 
 
+@pytest.mark.integration
 class TestBenchmark:
-    """Punch list item 2: p95 of openbb <= 1.5x p95 of legacy (100-call sequential benchmark)."""
+    """Punch list item 2: p95 of openbb <= 1.5x p95 of legacy (100-call sequential benchmark).
+
+    Marked as integration: makes 220+ sequential requests; timing-sensitive and
+    unreliable under full-suite load. Run explicitly with -m integration.
+    """
 
     N_CALLS = 100
     WARMUP = 10

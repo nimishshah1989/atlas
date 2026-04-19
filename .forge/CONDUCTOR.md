@@ -11,22 +11,14 @@ A single line at the end of this file names the chunk you are building:
 
 ---
 
-## Step 0 — Boot context (non-negotiable)
+## Step 0 — Boot context (fast — max 5 reads total)
 
-Read in order before planning or editing anything:
+1. `CLAUDE.md` (project root) — skim headings only, do NOT read end-to-end.
+2. `~/.claude/projects/-home-ubuntu-atlas/memory/MEMORY.md` — read index only; follow at most 2 links relevant to this chunk's files.
+3. `docs/specs/chunks/<chunk_id>.md` — the chunk spec IS your context; trust it.
+4. Skip wiki and ATLAS-DEFINITIVE-SPEC.md unless the spec explicitly names a section you must read.
 
-1. `CLAUDE.md` (project root) — ops rulebook
-2. `~/.claude/projects/-home-ubuntu-atlas/memory/MEMORY.md` and the specific
-   files it indexes that are relevant to this chunk.  Always include:
-   - `project_v15_chunk_status.md`
-   - `feedback_forge_ship_protocol.md`
-   - `feedback_post_chunk_sync.md`
-   - `feedback_commit_hook.md`
-3. `~/.forge/knowledge/wiki/index.md` — pick ONLY 1–2 articles whose
-   filenames match the chunk's files/tech.  Do NOT read the full wiki.
-4. Only the sections of `ATLAS-DEFINITIVE-SPEC.md` the punch list touches.
-
-Do not read files end-to-end.  Targeted reads only.
+**Do not read feedback_*, project_v15_chunk_status.md, or any spec section not named in the punch list. Get to implementation inside 10 turns.**
 
 ---
 

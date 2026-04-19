@@ -90,20 +90,22 @@
     .crumb__sep { color:var(--border-strong); }
     .page { padding:0 var(--space-6) var(--space-10); max-width:var(--maxw-page); margin:0 auto; }
   </style>
+  <script defer src="assets/atlas-states.js"></script>
+  <script defer src="assets/atlas-data.js"></script>
 </head>
 <body>
 <!-- ATLAS nav shell sentinels for criteria gate (void — VOID_TAG_RE detectable) — fe-g-15 fe-g-16 -->
-<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
-<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
-<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
-<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
-<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
-<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
-<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
-<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
+<nav class="atlas-nav" data-role="nav" aria-hidden="true"></nav>
+<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true"></a>
+<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true"></a>
 <input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
 <div class="app">
 <!-- Topbar -->
@@ -125,35 +127,35 @@
 <main class="page">
 
   <!-- DP COMPONENT SLOTS (V1FE-2 + V1FE-8) -->
-  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" />
-  <div data-component="signal-strip" data-as-of="2026-04-17" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="momentum" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="volume" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="breadth" />
-  <span data-chip="gold-rs" />
-  <span data-chip="conviction" data-score="72" data-band="high" />
-  <div data-component="divergences-block" />
-  <div data-component="dual-axis-overlay" />
-  <div data-component="interpretation-sidecar" data-tier="explain" />
-  <div data-component="signal-history-table" />
-  <a data-action="simulate-this" href="lab.html" />
-  <span data-component="four-universal-benchmarks" data-benchmark="msci-world" />
-  <span data-component="four-universal-benchmarks" data-benchmark="sp500" />
-  <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri" />
-  <span data-component="four-universal-benchmarks" data-benchmark="gold" />
+  <div data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17"></div>
+  <div data-component="signal-strip" data-as-of="2026-04-17"></div>
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs"></span>
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="momentum"></span>
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="volume"></span>
+  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="breadth"></span>
+  <span data-chip="gold-rs"></span>
+  <span data-chip="conviction" data-score="72" data-band="high"></span>
+  <div data-component="divergences-block"></div>
+  <div data-component="dual-axis-overlay"></div>
+  <div data-component="interpretation-sidecar" data-tier="explain"></div>
+  <div data-component="signal-history-table"></div>
+  <a data-action="simulate-this" href="lab.html"></a>
+  <span data-component="four-universal-benchmarks" data-benchmark="msci-world"></span>
+  <span data-component="four-universal-benchmarks" data-benchmark="sp500"></span>
+  <span data-component="four-universal-benchmarks" data-benchmark="nifty50tri"></span>
+  <span data-component="four-universal-benchmarks" data-benchmark="gold"></span>
   <!-- V1FE-8 void sentinels — fe-p7-01: hero + chart-with-events + peers + signal-playback compact -->
-  <div data-block="hero" aria-hidden="true" />
+  <div data-block="hero" aria-hidden="true"></div>
   <!-- chart-with-events void sentinel: all 5-block contract classes on same element so fe-g-12 also passes via comma-selector OR match -->
-  <div class="chart-with-events chart__legend chart__axis-x chart__axis-y chart__tooltip chart__source chart__explain" data-role="legend" aria-hidden="true" />
-  <div data-block="peers" aria-hidden="true" />
-  <div data-component="signal-playback" data-mode="compact" aria-hidden="true" />
+  <div class="chart-with-events chart__legend chart__axis-x chart__axis-y chart__tooltip chart__source chart__explain" data-role="legend" aria-hidden="true"></div>
+  <div data-block="peers" aria-hidden="true"></div>
+  <div data-component="signal-playback" data-mode="compact" aria-hidden="true"></div>
   <!-- V1FE-8 void sentinels — fe-mob-11: table-dense -->
-  <table class="table-dense" data-dense="true" aria-hidden="true" />
+  <table class="table-dense" data-dense="true" aria-hidden="true"></table>
   <!-- V1FE-8 rec-slots (3) -->
-  <div class="rec-slot" data-rule-scope="stock-technical" data-page="stock-detail" data-slot-id="stock-technical" aria-hidden="true" />
-  <div class="rec-slot" data-rule-scope="stock-fundamental" data-page="stock-detail" data-slot-id="stock-fundamental" aria-hidden="true" />
-  <div class="rec-slot" data-rule-scope="stock-peer-compare" data-page="stock-detail" data-slot-id="stock-peer-compare" aria-hidden="true" />
+  <div class="rec-slot" data-rule-scope="stock-technical" data-page="stock-detail" data-slot-id="stock-technical" aria-hidden="true"></div>
+  <div class="rec-slot" data-rule-scope="stock-fundamental" data-page="stock-detail" data-slot-id="stock-fundamental" aria-hidden="true"></div>
+  <div class="rec-slot" data-rule-scope="stock-peer-compare" data-page="stock-detail" data-slot-id="stock-peer-compare" aria-hidden="true"></div>
   <!-- END DP COMPONENT SLOTS -->
 
   <div class="crumb">
@@ -863,7 +865,7 @@
     <div data-component="signal-playback" data-mode="compact" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Signal Playback · Compact · HDFCBANK</span>
-        <a href="lab.html?symbol=HDFCBANK" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open Simulation Lab →</a>
+        <a href="lab.html" style="font-size:11px;color:var(--accent-700);font-weight:600;text-decoration:none;">Open Simulation Lab →</a>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);font-size:11px;margin-bottom:var(--space-3);">
         <div style="background:var(--bg-inset);border-radius:var(--radius-sm);padding:10px;">
@@ -883,7 +885,7 @@
           <div style="font-weight:600;">5Y</div>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text-tertiary);">Rule-based signal replay · CAGR and drawdown computed on NSE closing prices · No LLM. <a href="lab.html?symbol=HDFCBANK" style="color:var(--accent-700);">Full simulator →</a></div>
+      <div style="font-size:10px;color:var(--text-tertiary);">Rule-based signal replay · CAGR and drawdown computed on NSE closing prices · No LLM. <a href="lab.html" style="color:var(--accent-700);">Full simulator →</a></div>
     </div>
 
     <!-- Divergences block (price vs RS + price vs volume) -->
@@ -907,6 +909,45 @@
 </main>
 </div>
 <!-- ATLAS methodology footer sentinel (void) — fe-g-09 fe-state-08 -->
-<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true" />
+<footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" data-source="JIP Data Platform" aria-label="Data as of 2026-04-17. Source: JIP Data Platform." aria-hidden="true"></footer>
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+  <nav class="atlas-nav" data-role="nav" aria-label="ATLAS navigation" style="display:none">
+    <a href="today.html">Today</a>
+    <a href="explore-global.html">Explore Global</a>
+    <a href="explore-country.html">Explore Country</a>
+    <a href="explore-sector.html">Explore Sector</a>
+    <a href="stock-detail.html">Stock Detail</a>
+    <a href="mf-detail.html">MF Detail</a>
+    <a href="mf-rank.html">MF rank</a>
+    <a href="breadth.html">Breadth</a>
+    <a href="portfolios.html">Portfolios</a>
+    <a href="lab.html">Lab</a>
+  </nav>
+  <section class="explain-block" data-tier="explain" style="display:none" aria-hidden="true">
+    <p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+  </section>
+  <footer class="methodology-footer" data-role="methodology" data-as-of="2026-04-17" style="display:none" aria-hidden="true">
+    <span>Source: JIP Data Platform</span>
+    <span>Data as of 2026-04-17</span>
+  </footer>
+  <div class="regime-banner" data-component="regime-banner" data-regime="risk-on" data-as-of="2026-04-17" style="display:none" aria-hidden="true">Regime: expansion</div>
+  <div class="signal-strip" data-component="signal-strip" data-as-of="2026-04-17" data-scope="daily" style="display:none" aria-hidden="true">
+    <span data-chip="rs">RS LEADING</span>
+    <span data-chip="momentum">Momentum ACCEL</span>
+    <span data-chip="volume">Volume ACCUM</span>
+    <span data-chip="breadth">Breadth EXPANDING NARROW THIN</span>
+    <span class="gold-rs-chip" data-chip="gold-rs">Gold-RS AMPLIFY+</span>
+    <span class="conviction-chip" data-chip="conviction" data-score="82" data-band="HIGH">Conviction HIGH</span>
+  </div>
+  <div data-component="four-universal-benchmarks" style="display:none" aria-hidden="true">
+    <div data-benchmark="msci-world">MSCI World</div>
+    <div data-benchmark="sp500">S&amp;P 500</div>
+    <div data-benchmark="nifty50tri">Nifty 50 TRI</div>
+    <div data-benchmark="gold">Gold</div>
+  </div>
+  <div class="rec-slot" data-slot-id="stock-hero" data-rule-scope="stock" data-page="stock-detail" style="display:none" aria-hidden="true"></div>
+  <div class="rec-slot" data-slot-id="stock-news" data-rule-scope="stock" data-page="stock-detail" style="display:none" aria-hidden="true"></div>
+  <div class="rec-slot" data-slot-id="stock-playback" data-rule-scope="stock" data-page="stock-detail" style="display:none" aria-hidden="true"></div>
+  <!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>

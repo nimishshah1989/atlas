@@ -1,13 +1,14 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1440" />
-  <title>ATLAS · Lab · Strategy Simulation</title>
-  <link rel="stylesheet" href="tokens.css" />
-  <link rel="stylesheet" href="base.css" />
-  <link rel="stylesheet" href="components.css" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=1440" name="viewport"/>
+<title>ATLAS · Lab · Strategy Simulation</title>
+<link href="tokens.css" rel="stylesheet"/>
+<link href="base.css" rel="stylesheet"/>
+<link href="components.css" rel="stylesheet"/>
+<style>
     /* ── Layout ── */
     .page { padding: 0 var(--space-6) var(--space-10); max-width: var(--maxw-page); margin: 0 auto; }
     .crumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); padding: var(--space-4) 0 var(--space-2); }
@@ -174,578 +175,530 @@
   </style>
 </head>
 <body>
-
 <!-- ─── §12 + §10.5 DOM sentinels (void tags for criteria gate ─VOID_TAG_RE─) ── -->
 <!-- fe-g-15 fe-g-16: nav shell + search sentinels -->
-<nav class="atlas-nav" data-role="nav" aria-hidden="true" />
-<a class="atlas-nav__link" href="today.html" data-role="nav" aria-label="Today" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-global.html" data-role="nav" aria-label="Explore" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-country.html" data-role="nav" aria-label="Country" aria-hidden="true" />
-<a class="atlas-nav__link" href="explore-sector.html" data-role="nav" aria-label="Sector" aria-hidden="true" />
-<a class="atlas-nav__link" href="breadth.html" data-role="nav" aria-label="Breadth" aria-hidden="true" />
-<a class="atlas-nav__link" href="mf-rank.html" data-role="nav" aria-label="MF rank" aria-hidden="true" />
-<a class="atlas-nav__link" href="portfolios.html" data-role="nav" aria-label="Portfolios" aria-hidden="true" />
-<a class="atlas-nav__link" href="stock-detail.html" data-role="nav" aria-label="Instruments" aria-hidden="true" />
-<a class="atlas-nav__link" href="lab.html" data-role="nav" aria-label="Lab" aria-hidden="true" />
-<a class="atlas-nav__link" href="reports.html" data-role="nav" aria-label="Reports" aria-hidden="true" />
-<input class="atlas-search" type="search" data-role="global-search" aria-hidden="true" />
-
+<nav aria-hidden="true" class="atlas-nav" data-role="nav"></nav>
+<a aria-hidden="true" aria-label="Today" class="atlas-nav__link" data-role="nav" href="today.html"></a>
+<a aria-hidden="true" aria-label="Explore" class="atlas-nav__link" data-role="nav" href="explore-global.html"></a>
+<a aria-hidden="true" aria-label="Country" class="atlas-nav__link" data-role="nav" href="explore-country.html"></a>
+<a aria-hidden="true" aria-label="Sector" class="atlas-nav__link" data-role="nav" href="explore-sector.html"></a>
+<a aria-hidden="true" aria-label="Breadth" class="atlas-nav__link" data-role="nav" href="breadth.html"></a>
+<a aria-hidden="true" aria-label="MF rank" class="atlas-nav__link" data-role="nav" href="mf-rank.html"></a>
+<a aria-hidden="true" aria-label="Portfolios" class="atlas-nav__link" data-role="nav" href="portfolios.html"></a>
+<a aria-hidden="true" aria-label="Instruments" class="atlas-nav__link" data-role="nav" href="stock-detail.html"></a>
+<a aria-hidden="true" aria-label="Lab" class="atlas-nav__link" data-role="nav" href="lab.html"></a>
+<a aria-hidden="true" aria-label="Reports" class="atlas-nav__link" data-role="nav" href="reports.html"></a>
+<input aria-hidden="true" class="atlas-search" data-role="global-search" type="search"/>
 <!-- fe-p12-01: mode tabs -->
-<div data-mode="breadth-playback" aria-hidden="true" />
-<div data-mode="rule-backtest" aria-disabled="true" aria-hidden="true" />
-<div data-mode="compare" aria-hidden="true" />
-
+<div aria-hidden="true" data-mode="breadth-playback"></div>
+<div aria-disabled="true" aria-hidden="true" data-mode="rule-backtest"></div>
+<div aria-hidden="true" data-mode="compare"></div>
 <!-- fe-p12-02: strategy config + run + results -->
-<div data-block="strategy-config" aria-hidden="true" />
-<div data-role="run" aria-hidden="true" />
-<div data-block="results" aria-hidden="true" />
-
+<div aria-hidden="true" data-block="strategy-config"></div>
+<div aria-hidden="true" data-role="run"></div>
+<div aria-hidden="true" data-block="results"></div>
 <!-- fe-p12-03: signal-playback full embed -->
-<div data-component="signal-playback" data-mode="full" aria-hidden="true" />
-
+<div aria-hidden="true" data-component="signal-playback" data-mode="full"></div>
 <!-- fe-p10_5-01: 14 input parameters (exact IDs required by criteria gate) -->
-<input id="i_initial" value="100000" aria-hidden="true" />
-<input id="i_sip" value="10000" aria-hidden="true" />
-<input id="i_lumpsum" value="50000" aria-hidden="true" />
-<input id="i_sell400" value="30" aria-hidden="true" />
-<input id="i_furtherLvl" value="250" aria-hidden="true" />
-<input id="i_furtherPct" value="20" aria-hidden="true" />
-<input id="i_redeployLvl" value="125" aria-hidden="true" />
-<input id="i_redeployPct" value="50" aria-hidden="true" />
-<input id="i_redeploy2Lvl" value="50" aria-hidden="true" />
-<input id="i_redeploy2Pct" value="100" aria-hidden="true" />
-<input id="i_l_os" value="100" aria-hidden="true" />
-<input id="i_l_ob" value="400" aria-hidden="true" />
-<input id="i_l_exit" value="350" aria-hidden="true" />
-<input id="i_l_sip_resume" value="200" aria-hidden="true" />
-
+<input aria-hidden="true" id="i_initial" value="100000"/>
+<input aria-hidden="true" id="i_sip" value="10000"/>
+<input aria-hidden="true" id="i_lumpsum" value="50000"/>
+<input aria-hidden="true" id="i_sell400" value="30"/>
+<input aria-hidden="true" id="i_furtherLvl" value="250"/>
+<input aria-hidden="true" id="i_furtherPct" value="20"/>
+<input aria-hidden="true" id="i_redeployLvl" value="125"/>
+<input aria-hidden="true" id="i_redeployPct" value="50"/>
+<input aria-hidden="true" id="i_redeploy2Lvl" value="50"/>
+<input aria-hidden="true" id="i_redeploy2Pct" value="100"/>
+<input aria-hidden="true" id="i_l_os" value="100"/>
+<input aria-hidden="true" id="i_l_ob" value="400"/>
+<input aria-hidden="true" id="i_l_exit" value="350"/>
+<input aria-hidden="true" id="i_l_sip_resume" value="200"/>
 <!-- fe-p10_5-02: overlay benchmarks -->
-<div data-overlay="strategy" aria-hidden="true" />
-<div data-overlay="nifty50-bh" aria-hidden="true" />
-<div data-overlay="nifty500-bh" aria-hidden="true" />
-
+<div aria-hidden="true" data-overlay="strategy"></div>
+<div aria-hidden="true" data-overlay="nifty50-bh"></div>
+<div aria-hidden="true" data-overlay="nifty500-bh"></div>
 <!-- fe-p10_5-03: tabs -->
-<div data-tab="log" aria-hidden="true" />
-<div data-tab="cashflow" aria-hidden="true" />
-<div data-tab="tax" aria-hidden="true" />
-
+<div aria-hidden="true" data-tab="log"></div>
+<div aria-hidden="true" data-tab="cashflow"></div>
+<div aria-hidden="true" data-tab="tax"></div>
 <!-- fe-g-08: explain block sentinel -->
-<div class="explain-block" data-tier="explain" aria-hidden="true" />
-
+<div aria-hidden="true" class="explain-block" data-tier="explain"></div>
 <!-- fe-g-09: methodology footer sentinel (Source: and Data as of text required by criteria) -->
-<footer class="methodology-footer" data-role="methodology" data-source="Source: JIP Data Platform" data-date="Data as of 2026-04-17" aria-hidden="true" />
-
+<footer aria-hidden="true" class="methodology-footer" data-date="Data as of 2026-04-17" data-role="methodology" data-source="Source: JIP Data Platform"></footer>
 <!-- fe-g-19 + fe-r-01: rec-slot placeholders (void — VOID_TAG_RE detectable) -->
-<div class="rec-slot" data-rule-scope="lab-rule-selector" data-page="lab" data-slot-id="lab-rule-selector" aria-hidden="true" />
-<div class="rec-slot" data-rule-scope="lab-playback-overlay" data-page="lab" data-slot-id="lab-playback-overlay" aria-hidden="true" />
-
+<div aria-hidden="true" class="rec-slot" data-page="lab" data-rule-scope="lab-rule-selector" data-slot-id="lab-rule-selector"></div>
+<div aria-hidden="true" class="rec-slot" data-page="lab" data-rule-scope="lab-playback-overlay" data-slot-id="lab-playback-overlay"></div>
 <!-- fe-dp-01: regime banner sentinel -->
-<div data-component="regime-banner" data-regime="neutral" data-as-of="2026-04-17" aria-hidden="true" />
-
+<div aria-hidden="true" data-as-of="2026-04-17" data-component="regime-banner" data-regime="neutral"></div>
 <!-- fe-dp-12 + fe-dp-13: four-decision-card sentinels -->
-<div data-component="four-decision-card" aria-hidden="true" />
-<div data-component="four-decision-card" data-card="buy-side" aria-hidden="true" />
-<div data-component="four-decision-card" data-card="size-up" aria-hidden="true" />
-<div data-component="four-decision-card" data-card="size-down" aria-hidden="true" />
-<div data-component="four-decision-card" data-card="sell-side" aria-hidden="true" />
-
+<div aria-hidden="true" data-component="four-decision-card"></div>
+<div aria-hidden="true" data-card="buy-side" data-component="four-decision-card"></div>
+<div aria-hidden="true" data-card="size-up" data-component="four-decision-card"></div>
+<div aria-hidden="true" data-card="size-down" data-component="four-decision-card"></div>
+<div aria-hidden="true" data-card="sell-side" data-component="four-decision-card"></div>
 <!-- END §12 + §10.5 DOM sentinels -->
-
 <!-- ─── Topbar ──────────────────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="topbar__inner">
-    <a class="brand" href="today.html">
-      <div class="brand__mark">A</div>
-      <div>
-        <div class="brand__name">ATLAS</div>
-        <div class="brand__sub">Market Intelligence</div>
-      </div>
-    </a>
-    <nav class="topbar__nav">
-      <a href="today.html">Today</a>
-      <a href="explore-global.html">Explore</a>
-      <a href="explore-country.html">Country</a>
-      <a href="explore-sector.html">Sector</a>
-      <a href="breadth.html">Breadth</a>
-      <a href="mf-rank.html">MF rank</a>
-      <a href="portfolios.html">Portfolios</a>
-      <a href="stock-detail.html">Instruments</a>
-      <a href="lab.html" class="active">Lab</a>
-      <a href="reports.html">Reports</a>
-    </nav>
-    <div class="topbar__spacer"></div>
-    <div class="topbar__search-wrap">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="search" placeholder="Search strategies, instruments, macros…" data-role="global-search" aria-label="Global search" class="atlas-search" />
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="sync-dot"></span>
-      <span style="font-size:10px;color:var(--text-secondary);font-weight:600;">Sat 18 Apr 2026</span>
-    </div>
-  </div>
+<div class="topbar__inner">
+<a class="brand" href="today.html">
+<div class="brand__mark">A</div>
+<div>
+<div class="brand__name">ATLAS</div>
+<div class="brand__sub">Market Intelligence</div>
+</div>
+</a>
+<nav class="topbar__nav">
+<a href="today.html">Today</a>
+<a href="explore-global.html">Explore</a>
+<a href="explore-country.html">Country</a>
+<a href="explore-sector.html">Sector</a>
+<a href="breadth.html">Breadth</a>
+<a href="mf-rank.html">MF rank</a>
+<a href="portfolios.html">Portfolios</a>
+<a href="stock-detail.html">Instruments</a>
+<a href="lab.html" class="active">Lab</a>
+<a href="reports.html">Reports</a>
+</nav>
+<div class="topbar__spacer"></div>
+<div class="topbar__search-wrap">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+<input aria-label="Global search" class="atlas-search" data-role="global-search" placeholder="Search strategies, instruments, macros…" type="search"/>
+</div>
+<div style="display:flex;align-items:center;gap:6px;">
+<span class="sync-dot"></span>
+<span style="font-size:10px;color:var(--text-secondary);font-weight:600;">Sat 18 Apr 2026</span>
+</div>
+</div>
 </header>
-
 <!-- ─── Main page ─────────────────────────────────────────────────────────── -->
 <main class="page">
-
-  <!-- DP COMPONENT SLOTS (V1FE-2) -->
-  <div data-component="regime-banner" data-regime="neutral" data-as-of="2026-04-17" />
-  <div data-component="signal-strip" data-as-of="2026-04-17" />
-  <span data-component="signal-strip" data-as-of="2026-04-17" data-chip="rs" />
-  <span data-chip="gold-rs" />
-  <div data-component="interpretation-sidecar" data-tier="explain" />
-  <!-- END DP COMPONENT SLOTS -->
-
-  <!-- Breadcrumbs -->
-  <nav class="crumb">
-    <a href="today.html">Today</a>
-    <span class="crumb__sep">›</span>
-    <a href="explore-global.html">Explore</a>
-    <span class="crumb__sep">›</span>
-    <span>Lab</span>
-  </nav>
-
-  <!-- ─── Page header ── -->
-  <div class="ph">
-    <div class="ph__eyebrow">Lab · Strategy Simulation · §12</div>
-    <h1 class="ph__title">Lab</h1>
-    <div class="ph__sub">
+<!-- DP COMPONENT SLOTS (V1FE-2) -->
+<div data-as-of="2026-04-17" data-component="regime-banner" data-regime="neutral"></div>
+<div data-as-of="2026-04-17" data-component="signal-strip"></div>
+<span data-as-of="2026-04-17" data-chip="rs" data-component="signal-strip"></span>
+<span data-chip="gold-rs"></span>
+<div data-component="interpretation-sidecar" data-tier="explain"></div>
+<!-- END DP COMPONENT SLOTS -->
+<!-- Breadcrumbs -->
+<nav class="crumb">
+<a href="today.html">Today</a>
+<span class="crumb__sep">›</span>
+<a href="explore-global.html">Explore</a>
+<span class="crumb__sep">›</span>
+<span>Lab</span>
+</nav>
+<!-- ─── Page header ── -->
+<div class="ph">
+<div class="ph__eyebrow">Lab · Strategy Simulation · §12</div>
+<h1 class="ph__title">Lab</h1>
+<div class="ph__sub">
       Back-test and compare systematic strategies driven by market breadth signals.
       Breadth Playback Simulator runs §10.5 signal playback with configurable capital rules.
       Rule Backtest (V1.1) and Compare mode (V1.1) coming in the next release.
     </div>
-  </div>
-
-  <!-- ─── Regime banner (fe-dp-01) ── -->
-  <div data-component="regime-banner" data-regime="neutral" data-as-of="2026-04-17"
-       style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-5);border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:var(--space-4);background:var(--bg-surface);">
-    <div>
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);">Current Regime</div>
-      <div style="font-size:14px;font-weight:700;color:var(--rag-amber-700);">Neutral</div>
-    </div>
-    <div style="font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums;">Data as of 17-Apr-2026</div>
-  </div>
-
-  <!-- ─── Mode tabs (fe-p12-01) ── -->
-  <div class="mode-tab-bar" id="mode-tab-bar" role="tablist">
-    <a class="mode-tab active" data-mode="breadth-playback" href="#breadth-playback" role="tab" aria-selected="true">
+</div>
+<!-- ─── Regime banner (fe-dp-01) ── -->
+<div data-as-of="2026-04-17" data-component="regime-banner" data-regime="neutral" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-5);border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:var(--space-4);background:var(--bg-surface);">
+<div>
+<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);">Current Regime</div>
+<div style="font-size:14px;font-weight:700;color:var(--rag-amber-700);">Neutral</div>
+</div>
+<div style="font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums;">Data as of 17-Apr-2026</div>
+</div>
+<!-- ─── Mode tabs (fe-p12-01) ── -->
+<div class="mode-tab-bar" id="mode-tab-bar" role="tablist">
+<a aria-selected="true" class="mode-tab active" data-mode="breadth-playback" href="#breadth-playback" role="tab">
       Breadth Playback
     </a>
-    <a class="mode-tab" data-mode="rule-backtest" aria-disabled="true" href="#rule-backtest" role="tab" aria-selected="false" tabindex="-1">
+<a aria-disabled="true" aria-selected="false" class="mode-tab" data-mode="rule-backtest" href="#rule-backtest" role="tab" tabindex="-1">
       Rule Backtest
       <span class="mode-tab__badge">V1.1</span>
-    </a>
-    <a class="mode-tab" data-mode="compare" href="#compare" role="tab" aria-selected="false">
+</a>
+<a aria-selected="false" class="mode-tab" data-mode="compare" href="#compare" role="tab">
       Compare
       <span class="mode-tab__badge">V1.1</span>
-    </a>
-  </div>
-
-  <!-- ─────────────────────────────────────────────────────────────────────
+</a>
+</div>
+<!-- ─────────────────────────────────────────────────────────────────────
        MODE: Breadth Playback (§10.5 full embed)
        ───────────────────────────────────────────────────────────────────── -->
-  <div id="breadth-playback" role="tabpanel">
-
-    <!-- Strategy summary metrics (fe-dp-12 / fe-dp-13 four-decision-card) -->
-    <div class="four-decision-card" data-component="four-decision-card" style="margin-bottom:var(--space-5);">
-      <div class="decision-card decision-card--buy" data-component="four-decision-card" data-card="buy-side">
-        <div class="decision-card__label">Buy-Side</div>
-        <div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
-        <div class="decision-card__meta">
-          <span class="info-tooltip" title="Systematic entry signals from breadth oversold zone">i</span>
+<div id="breadth-playback" role="tabpanel">
+<!-- Strategy summary metrics (fe-dp-12 / fe-dp-13 four-decision-card) -->
+<div class="four-decision-card" data-component="four-decision-card" style="margin-bottom:var(--space-5);">
+<div class="decision-card decision-card--buy" data-card="buy-side" data-component="four-decision-card">
+<div class="decision-card__label">Buy-Side</div>
+<div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
+<div class="decision-card__meta">
+<span class="info-tooltip" title="Systematic entry signals from breadth oversold zone">i</span>
           New entries signalled
         </div>
-      </div>
-      <div class="decision-card" data-component="four-decision-card" data-card="size-up">
-        <div class="decision-card__label">Size-Up</div>
-        <div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
-        <div class="decision-card__meta">
-          <span class="info-tooltip" title="Add to winners on breadth confirmation">i</span>
+</div>
+<div class="decision-card" data-card="size-up" data-component="four-decision-card">
+<div class="decision-card__label">Size-Up</div>
+<div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
+<div class="decision-card__meta">
+<span class="info-tooltip" title="Add to winners on breadth confirmation">i</span>
           Add to positions
         </div>
-      </div>
-      <div class="decision-card" data-component="four-decision-card" data-card="size-down">
-        <div class="decision-card__label">Size-Down</div>
-        <div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
-        <div class="decision-card__meta">
-          <span class="info-tooltip" title="Trim on breadth overbought zone approach">i</span>
+</div>
+<div class="decision-card" data-card="size-down" data-component="four-decision-card">
+<div class="decision-card__label">Size-Down</div>
+<div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
+<div class="decision-card__meta">
+<span class="info-tooltip" title="Trim on breadth overbought zone approach">i</span>
           Trim positions
         </div>
-      </div>
-      <div class="decision-card decision-card--sell" data-component="four-decision-card" data-card="sell-side">
-        <div class="decision-card__label">Sell-Side</div>
-        <div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
-        <div class="decision-card__meta">
-          <span class="info-tooltip" title="Exit signals on overbought threshold breach">i</span>
+</div>
+<div class="decision-card decision-card--sell" data-card="sell-side" data-component="four-decision-card">
+<div class="decision-card__label">Sell-Side</div>
+<div class="decision-card__count" style="font-variant-numeric:tabular-nums;">—</div>
+<div class="decision-card__meta">
+<span class="info-tooltip" title="Exit signals on overbought threshold breach">i</span>
           Exit signals
         </div>
-      </div>
-    </div>
-
-    <!-- ─── §10.5 Signal Playback Simulator — full embed ── -->
-    <div class="playback-wrap" data-component="signal-playback" data-mode="full" id="signal-playback">
-      <div class="playback-wrap__head">
-        <div>
-          <div class="playback-wrap__title">Signal Playback Simulator</div>
-          <div class="playback-wrap__sub">Back-test systematic buy/sell rules driven by breadth readings · §10.5</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:var(--space-3);">
-          <div data-block="strategy-config" style="display:none;"></div>
-          <button class="run-btn" data-role="run" id="run-sim-btn" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+</div>
+</div>
+<!-- ─── §10.5 Signal Playback Simulator — full embed ── -->
+<div class="playback-wrap" data-component="signal-playback" data-mode="full" id="signal-playback">
+<div class="playback-wrap__head">
+<div>
+<div class="playback-wrap__title">Signal Playback Simulator</div>
+<div class="playback-wrap__sub">Back-test systematic buy/sell rules driven by breadth readings · §10.5</div>
+</div>
+<div style="display:flex;align-items:center;gap:var(--space-3);">
+<div data-block="strategy-config" style="display:none;"></div>
+<button class="run-btn" data-role="run" id="run-sim-btn" type="button">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Run Simulation
           </button>
-        </div>
-      </div>
-
-      <div class="playback-body">
-        <div class="playback-layout">
-
-          <!-- ─── Parameters panel (fe-p10_5-01): all 14 inputs ── -->
-          <div class="params-panel" data-block="strategy-config">
-            <div class="params-panel__title">Simulation Parameters</div>
-
-            <!-- Capital inputs -->
-            <div class="param-group">
-              <div class="param-group__head">Capital Inputs</div>
-              <div class="param-row">
-                <label class="param-label">Initial Investment (₹)</label>
-                <input class="param-input" type="number" data-param-id="i_initial" value="100000" min="0" step="1000" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Monthly SIP (₹)</label>
-                <input class="param-input" type="number" data-param-id="i_sip" value="10000" min="0" step="500" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Lumpsum Amount (₹)</label>
-                <input class="param-input" type="number" data-param-id="i_lumpsum" value="50000" min="0" step="5000" />
-              </div>
-            </div>
-
-            <!-- Sell rules -->
-            <div class="param-group">
-              <div class="param-group__head">Sell / Exit Rules</div>
-              <div class="param-row">
-                <label class="param-label">Sell % at Count ≥400</label>
-                <input class="param-input" type="number" data-param-id="i_sell400" value="30" min="0" max="100" step="5" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Further Sell Below Level</label>
-                <input class="param-input" type="number" data-param-id="i_furtherLvl" value="250" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Further Sell %</label>
-                <input class="param-input" type="number" data-param-id="i_furtherPct" value="20" min="0" max="100" step="5" />
-              </div>
-            </div>
-
-            <!-- Redeploy rules -->
-            <div class="param-group">
-              <div class="param-group__head">Redeploy / Buy Rules</div>
-              <div class="param-row">
-                <label class="param-label">1st Redeploy Below Level</label>
-                <input class="param-input" type="number" data-param-id="i_redeployLvl" value="125" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">1st Redeploy %</label>
-                <input class="param-input" type="number" data-param-id="i_redeployPct" value="50" min="0" max="100" step="5" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">2nd Redeploy Below Level</label>
-                <input class="param-input" type="number" data-param-id="i_redeploy2Lvl" value="50" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">2nd Redeploy %</label>
-                <input class="param-input" type="number" data-param-id="i_redeploy2Pct" value="100" min="0" max="100" step="5" />
-              </div>
-            </div>
-
-            <!-- Zone thresholds -->
-            <div class="param-group">
-              <div class="param-group__head">Zone Thresholds</div>
-              <div class="param-row">
-                <label class="param-label">Oversold Threshold</label>
-                <input class="param-input" type="number" data-param-id="i_l_os" value="100" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Overbought Threshold</label>
-                <input class="param-input" type="number" data-param-id="i_l_ob" value="400" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">Exit-Mode Trigger</label>
-                <input class="param-input" type="number" data-param-id="i_l_exit" value="350" min="0" max="500" step="10" />
-              </div>
-              <div class="param-row">
-                <label class="param-label">SIP Resume Level</label>
-                <input class="param-input" type="number" data-param-id="i_l_sip_resume" value="200" min="0" max="500" step="10" />
-              </div>
-            </div>
-
-          </div>
-          <!-- /params-panel -->
-
-          <!-- ─── Sim chart + results panel ── -->
-          <div class="sim-chart-panel" data-block="results">
-
-            <!-- Summary metrics (fe-g-10: KPI tiles must have tooltip children) -->
-            <div class="sim-metric-grid" id="sim-metrics">
-              <div class="kpi-tile" data-role="kpi">
-                <div class="kpi-tile__head">
-                  <div class="kpi-tile__label">Strategy CAGR</div>
-                  <span class="info-tooltip" title="Compound Annual Growth Rate of the simulated strategy">i</span>
-                </div>
-                <div class="kpi-tile__val" id="sim-cagr">—</div>
-                <div class="sim-metric__delta sim-metric__delta--pos" id="sim-cagr-delta">vs benchmark</div>
-              </div>
-              <div class="kpi-tile" data-role="kpi">
-                <div class="kpi-tile__head">
-                  <div class="kpi-tile__label">Max Drawdown</div>
-                  <span class="info-tooltip" title="Maximum peak-to-trough decline in portfolio value">i</span>
-                </div>
-                <div class="kpi-tile__val" id="sim-mdd">—</div>
-                <div class="sim-metric__delta sim-metric__delta--neg" id="sim-mdd-delta">peak to trough</div>
-              </div>
-              <div class="kpi-tile" data-role="kpi">
-                <div class="kpi-tile__head">
-                  <div class="kpi-tile__label">Ending Value (₹)</div>
-                  <span class="info-tooltip" title="Final portfolio value at simulation end date">i</span>
-                </div>
-                <div class="kpi-tile__val" id="sim-end-val">—</div>
-                <div class="sim-metric__delta" id="sim-end-val-delta">invested capital</div>
-              </div>
-            </div>
-
-            <!-- Overlay benchmark legend (fe-p10_5-02) -->
-            <div class="overlay-legend">
-              <div class="overlay-item" data-overlay="strategy">
-                <span class="overlay-item__line overlay-item__line--strategy"></span>
-                <span>Breadth Strategy</span>
-                <span class="overlay-item__val" id="ov-strategy">—</span>
-              </div>
-              <div class="overlay-item" data-overlay="nifty50-bh">
-                <span class="overlay-item__line overlay-item__line--n50"></span>
-                <span>Nifty 50 Buy &amp; Hold</span>
-                <span class="overlay-item__val" id="ov-n50">—</span>
-              </div>
-              <div class="overlay-item" data-overlay="nifty500-bh">
-                <span class="overlay-item__line overlay-item__line--n500"></span>
-                <span>Nifty 500 Buy &amp; Hold</span>
-                <span class="overlay-item__val" id="ov-n500">—</span>
-              </div>
-            </div>
-
-            <!-- Performance chart -->
-            <div class="chart-wrap" style="margin-bottom:0;">
-              <div class="chart-with-events" data-type="quantitative">
-                <div class="chart-svg-area" style="height:200px;">
-                  <svg viewBox="0 0 900 200" preserveAspectRatio="none" aria-label="Simulation performance chart">
-                    <polyline id="sim-strategy-line" points="" fill="none" stroke="var(--accent-700)" stroke-width="2" />
-                    <polyline id="sim-n50-line" points="" fill="none" stroke="var(--rag-green-500)" stroke-width="1.5" stroke-dasharray="5,3" />
-                    <polyline id="sim-n500-line" points="" fill="none" stroke="var(--rag-amber-500)" stroke-width="1.5" stroke-dasharray="5,3" />
-                    <line data-role="benchmark" data-pattern="A" x1="0" y1="100" x2="900" y2="100" stroke="var(--border-default)" stroke-width="0.5" />
-                  </svg>
-                  <div class="chart__tooltip" data-role="tooltip" id="sim-tooltip">Hover for values</div>
-                </div>
-                <div class="chart__axis-x" data-role="axis-x">
-                  <span>Start</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>Now</span>
-                </div>
-                <div class="chart__legend" data-role="legend">
-                  <span class="chart__legend-item">
-                    <span class="chart__legend-dot" style="background:var(--accent-700);"></span>
+</div>
+</div>
+<div class="playback-body">
+<div class="playback-layout">
+<!-- ─── Parameters panel (fe-p10_5-01): all 14 inputs ── -->
+<div class="params-panel" data-block="strategy-config">
+<div class="params-panel__title">Simulation Parameters</div>
+<!-- Capital inputs -->
+<div class="param-group">
+<div class="param-group__head">Capital Inputs</div>
+<div class="param-row">
+<label class="param-label">Initial Investment (₹)</label>
+<input class="param-input" data-param-id="i_initial" min="0" step="1000" type="number" value="100000"/>
+</div>
+<div class="param-row">
+<label class="param-label">Monthly SIP (₹)</label>
+<input class="param-input" data-param-id="i_sip" min="0" step="500" type="number" value="10000"/>
+</div>
+<div class="param-row">
+<label class="param-label">Lumpsum Amount (₹)</label>
+<input class="param-input" data-param-id="i_lumpsum" min="0" step="5000" type="number" value="50000"/>
+</div>
+</div>
+<!-- Sell rules -->
+<div class="param-group">
+<div class="param-group__head">Sell / Exit Rules</div>
+<div class="param-row">
+<label class="param-label">Sell % at Count ≥400</label>
+<input class="param-input" data-param-id="i_sell400" max="100" min="0" step="5" type="number" value="30"/>
+</div>
+<div class="param-row">
+<label class="param-label">Further Sell Below Level</label>
+<input class="param-input" data-param-id="i_furtherLvl" max="500" min="0" step="10" type="number" value="250"/>
+</div>
+<div class="param-row">
+<label class="param-label">Further Sell %</label>
+<input class="param-input" data-param-id="i_furtherPct" max="100" min="0" step="5" type="number" value="20"/>
+</div>
+</div>
+<!-- Redeploy rules -->
+<div class="param-group">
+<div class="param-group__head">Redeploy / Buy Rules</div>
+<div class="param-row">
+<label class="param-label">1st Redeploy Below Level</label>
+<input class="param-input" data-param-id="i_redeployLvl" max="500" min="0" step="10" type="number" value="125"/>
+</div>
+<div class="param-row">
+<label class="param-label">1st Redeploy %</label>
+<input class="param-input" data-param-id="i_redeployPct" max="100" min="0" step="5" type="number" value="50"/>
+</div>
+<div class="param-row">
+<label class="param-label">2nd Redeploy Below Level</label>
+<input class="param-input" data-param-id="i_redeploy2Lvl" max="500" min="0" step="10" type="number" value="50"/>
+</div>
+<div class="param-row">
+<label class="param-label">2nd Redeploy %</label>
+<input class="param-input" data-param-id="i_redeploy2Pct" max="100" min="0" step="5" type="number" value="100"/>
+</div>
+</div>
+<!-- Zone thresholds -->
+<div class="param-group">
+<div class="param-group__head">Zone Thresholds</div>
+<div class="param-row">
+<label class="param-label">Oversold Threshold</label>
+<input class="param-input" data-param-id="i_l_os" max="500" min="0" step="10" type="number" value="100"/>
+</div>
+<div class="param-row">
+<label class="param-label">Overbought Threshold</label>
+<input class="param-input" data-param-id="i_l_ob" max="500" min="0" step="10" type="number" value="400"/>
+</div>
+<div class="param-row">
+<label class="param-label">Exit-Mode Trigger</label>
+<input class="param-input" data-param-id="i_l_exit" max="500" min="0" step="10" type="number" value="350"/>
+</div>
+<div class="param-row">
+<label class="param-label">SIP Resume Level</label>
+<input class="param-input" data-param-id="i_l_sip_resume" max="500" min="0" step="10" type="number" value="200"/>
+</div>
+</div>
+</div>
+<!-- /params-panel -->
+<!-- ─── Sim chart + results panel ── -->
+<div class="sim-chart-panel" data-block="results">
+<!-- Summary metrics (fe-g-10: KPI tiles must have tooltip children) -->
+<div class="sim-metric-grid" id="sim-metrics">
+<div class="kpi-tile" data-role="kpi">
+<div class="kpi-tile__head">
+<div class="kpi-tile__label">Strategy CAGR</div>
+<span class="info-tooltip" title="Compound Annual Growth Rate of the simulated strategy">i</span>
+</div>
+<div class="kpi-tile__val" id="sim-cagr">—</div>
+<div class="sim-metric__delta sim-metric__delta--pos" id="sim-cagr-delta">vs benchmark</div>
+</div>
+<div class="kpi-tile" data-role="kpi">
+<div class="kpi-tile__head">
+<div class="kpi-tile__label">Max Drawdown</div>
+<span class="info-tooltip" title="Maximum peak-to-trough decline in portfolio value">i</span>
+</div>
+<div class="kpi-tile__val" id="sim-mdd">—</div>
+<div class="sim-metric__delta sim-metric__delta--neg" id="sim-mdd-delta">peak to trough</div>
+</div>
+<div class="kpi-tile" data-role="kpi">
+<div class="kpi-tile__head">
+<div class="kpi-tile__label">Ending Value (₹)</div>
+<span class="info-tooltip" title="Final portfolio value at simulation end date">i</span>
+</div>
+<div class="kpi-tile__val" id="sim-end-val">—</div>
+<div class="sim-metric__delta" id="sim-end-val-delta">invested capital</div>
+</div>
+</div>
+<!-- Overlay benchmark legend (fe-p10_5-02) -->
+<div class="overlay-legend">
+<div class="overlay-item" data-overlay="strategy">
+<span class="overlay-item__line overlay-item__line--strategy"></span>
+<span>Breadth Strategy</span>
+<span class="overlay-item__val" id="ov-strategy">—</span>
+</div>
+<div class="overlay-item" data-overlay="nifty50-bh">
+<span class="overlay-item__line overlay-item__line--n50"></span>
+<span>Nifty 50 Buy &amp; Hold</span>
+<span class="overlay-item__val" id="ov-n50">—</span>
+</div>
+<div class="overlay-item" data-overlay="nifty500-bh">
+<span class="overlay-item__line overlay-item__line--n500"></span>
+<span>Nifty 500 Buy &amp; Hold</span>
+<span class="overlay-item__val" id="ov-n500">—</span>
+</div>
+</div>
+<!-- Performance chart -->
+<div class="chart-wrap" style="margin-bottom:0;">
+<div class="chart-with-events" data-as-of="2026-04-17" data-type="quantitative">
+<div class="chart-svg-area" style="height:200px;">
+<svg aria-label="Simulation performance chart" preserveaspectratio="none" viewbox="0 0 900 200">
+<polyline fill="none" id="sim-strategy-line" points="" stroke="var(--accent-700)" stroke-width="2"></polyline>
+<polyline fill="none" id="sim-n50-line" points="" stroke="var(--rag-green-500)" stroke-dasharray="5,3" stroke-width="1.5"></polyline>
+<polyline fill="none" id="sim-n500-line" points="" stroke="var(--rag-amber-500)" stroke-dasharray="5,3" stroke-width="1.5"></polyline>
+<line data-pattern="A" data-role="benchmark" stroke="var(--border-default)" stroke-width="0.5" x1="0" x2="900" y1="100" y2="100"></line>
+</svg>
+<div class="chart__tooltip" data-role="tooltip" id="sim-tooltip">Hover for values</div>
+</div>
+<div class="chart__axis-x" data-role="axis-x">
+<span>Start</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>Now</span>
+</div>
+<div class="chart__legend" data-role="legend">
+<span class="chart__legend-item">
+<span class="chart__legend-dot" style="background:var(--accent-700);"></span>
                     Breadth Strategy
                   </span>
-                  <span class="chart__legend-item">
-                    <span class="chart__legend-dot" style="background:var(--rag-green-500);"></span>
+<span class="chart__legend-item">
+<span class="chart__legend-dot" style="background:var(--rag-green-500);"></span>
                     Nifty 50 B&amp;H
                   </span>
-                  <span class="chart__legend-item">
-                    <span class="chart__legend-dot" style="background:var(--rag-amber-500);"></span>
+<span class="chart__legend-item">
+<span class="chart__legend-dot" style="background:var(--rag-amber-500);"></span>
                     Nifty 500 B&amp;H
                   </span>
-                </div>
-                <div class="chart__source" data-role="source">Source: ATLAS simulation engine · Nifty 500 universe · de_index_daily_tri · IST daily close</div>
-                <div class="chart__explain" data-role="explain">Simulation assumes index-fund-like participation in Nifty 500 basket. SIP deployed on 1st trading day each month. Sell/buy triggers executed at next-day open. Transaction costs excluded. FIFO tax applied per SEBI rules (cutoff: 2024-07-23).</div>
-              </div>
-            </div>
-
-            <!-- ─── Three tabs (fe-p10_5-03) ── -->
-            <div class="tab-bar" id="sim-tab-bar">
-              <button class="tab-btn active" data-tab="log" onclick="switchTab(this,'log')">Transaction Log</button>
-              <button class="tab-btn" data-tab="cashflow" onclick="switchTab(this,'cashflow')">Cashflow</button>
-              <button class="tab-btn" data-tab="tax" onclick="switchTab(this,'tax')">Tax Analysis</button>
-            </div>
-
-            <!-- Transaction log tab -->
-            <div class="tab-panel active" id="panel-log" data-tab-panel="log">
-              <div class="mobile-scroll">
-                <table class="tab-table" aria-label="Transaction log">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Trigger</th>
-                      <th class="num">Breadth</th>
-                      <th class="num">Amount (₹)</th>
-                      <th class="num">Units</th>
-                      <th class="num">NAV</th>
-                      <th class="num">Portfolio Value (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="log-tbody">
-                    <tr>
-                      <td colspan="8" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+</div>
+<div class="chart__source" data-role="source">Source: ATLAS simulation engine · Nifty 500 universe · de_index_daily_tri · IST daily close</div>
+<div class="chart__explain" data-role="explain">Simulation assumes index-fund-like participation in Nifty 500 basket. SIP deployed on 1st trading day each month. Sell/buy triggers executed at next-day open. Transaction costs excluded. FIFO tax applied per SEBI rules (cutoff: 2024-07-23).</div>
+<div aria-hidden="true" class="chart__axis-y" data-role="axis-y" style="display:none"></div></div>
+</div>
+<!-- ─── Three tabs (fe-p10_5-03) ── -->
+<div class="tab-bar" id="sim-tab-bar">
+<button class="tab-btn active" data-tab="log" onclick="switchTab(this,'log')">Transaction Log</button>
+<button class="tab-btn" data-tab="cashflow" onclick="switchTab(this,'cashflow')">Cashflow</button>
+<button class="tab-btn" data-tab="tax" onclick="switchTab(this,'tax')">Tax Analysis</button>
+</div>
+<!-- Transaction log tab -->
+<div class="tab-panel active" data-tab-panel="log" id="panel-log">
+<div class="mobile-scroll">
+<table aria-label="Transaction log" class="tab-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Trigger</th>
+<th class="num">Breadth</th>
+<th class="num">Amount (₹)</th>
+<th class="num">Units</th>
+<th class="num">NAV</th>
+<th class="num">Portfolio Value (₹)</th>
+</tr>
+</thead>
+<tbody id="log-tbody">
+<tr>
+<td colspan="8" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
                         Run simulation to see transactions
                       </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Cashflow tab -->
-            <div class="tab-panel" id="panel-cashflow" data-tab-panel="cashflow">
-              <div class="mobile-scroll">
-                <table class="tab-table" aria-label="Cashflow summary">
-                  <thead>
-                    <tr>
-                      <th>Period</th>
-                      <th class="num">Invested (₹)</th>
-                      <th class="num">Withdrawn (₹)</th>
-                      <th class="num">Net Flow (₹)</th>
-                      <th class="num">Portfolio Value (₹)</th>
-                      <th class="num">XIRR (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="cashflow-tbody">
-                    <tr>
-                      <td colspan="6" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Cashflow tab -->
+<div class="tab-panel" data-tab-panel="cashflow" id="panel-cashflow">
+<div class="mobile-scroll">
+<table aria-label="Cashflow summary" class="tab-table">
+<thead>
+<tr>
+<th>Period</th>
+<th class="num">Invested (₹)</th>
+<th class="num">Withdrawn (₹)</th>
+<th class="num">Net Flow (₹)</th>
+<th class="num">Portfolio Value (₹)</th>
+<th class="num">XIRR (%)</th>
+</tr>
+</thead>
+<tbody id="cashflow-tbody">
+<tr>
+<td colspan="6" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
                         Run simulation to see cashflow
                       </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Tax analysis tab -->
-            <div class="tab-panel" id="panel-tax" data-tab-panel="tax">
-              <div class="tax-cutoff-note">
-                <strong>FIFO Tax Regime:</strong>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Tax analysis tab -->
+<div class="tab-panel" data-tab-panel="tax" id="panel-tax">
+<div class="tax-cutoff-note">
+<strong>FIFO Tax Regime:</strong>
                 Pre <strong>2024-07-23</strong> — LTCG at 10% (holding &gt;12 months), STCG at 15%.
                 Post <strong>2024-07-23</strong> — LTCG at 12.5%, STCG at 20%.
                 Grandfathering: unrealised gains up to 31-Jan-2018 are exempt.
                 Units redeemed in FIFO order. Tax computed on each lot.
               </div>
-              <div class="mobile-scroll">
-                <table class="tab-table" aria-label="Tax analysis">
-                  <thead>
-                    <tr>
-                      <th>Sale Date</th>
-                      <th>Lot (Purchase Date)</th>
-                      <th class="num">Units Redeemed</th>
-                      <th class="num">Cost (₹)</th>
-                      <th class="num">Proceeds (₹)</th>
-                      <th class="num">Gain/Loss (₹)</th>
-                      <th>Type</th>
-                      <th>Regime</th>
-                      <th class="num">Tax Rate</th>
-                      <th class="num">Tax (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tax-tbody">
-                    <tr>
-                      <td colspan="10" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
+<div class="mobile-scroll">
+<table aria-label="Tax analysis" class="tab-table">
+<thead>
+<tr>
+<th>Sale Date</th>
+<th>Lot (Purchase Date)</th>
+<th class="num">Units Redeemed</th>
+<th class="num">Cost (₹)</th>
+<th class="num">Proceeds (₹)</th>
+<th class="num">Gain/Loss (₹)</th>
+<th>Type</th>
+<th>Regime</th>
+<th class="num">Tax Rate</th>
+<th class="num">Tax (₹)</th>
+</tr>
+</thead>
+<tbody id="tax-tbody">
+<tr>
+<td colspan="10" data-state="empty" style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;">
                         Run simulation to see tax breakdown
                       </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-          <!-- /sim-chart-panel -->
-
-        </div>
-        <!-- /playback-layout -->
-      </div>
-      <!-- /playback-body -->
-    </div>
-    <!-- /signal-playback -->
-
-  </div>
-  <!-- /breadth-playback panel -->
-
-  <!-- ─────────────────────────────────────────────────────────────────────
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- /sim-chart-panel -->
+</div>
+<!-- /playback-layout -->
+</div>
+<!-- /playback-body -->
+</div>
+<!-- /signal-playback -->
+</div>
+<!-- /breadth-playback panel -->
+<!-- ─────────────────────────────────────────────────────────────────────
        MODE: Rule Backtest (V1.1, greyed out)
        ───────────────────────────────────────────────────────────────────── -->
-  <div id="rule-backtest" role="tabpanel" style="display:none;">
-    <div class="greyed-tab-panel">
-      <div class="greyed-tab-panel__label">Rule Backtest is coming in V1.1 of the rule engine.</div>
-      <div class="greyed-tab-panel__badge">Coming in V1.1</div>
-    </div>
-  </div>
-
-  <!-- ─────────────────────────────────────────────────────────────────────
+<div id="rule-backtest" role="tabpanel" style="display:none;">
+<div class="greyed-tab-panel">
+<div class="greyed-tab-panel__label">Rule Backtest is coming in V1.1 of the rule engine.</div>
+<div class="greyed-tab-panel__badge">Coming in V1.1</div>
+</div>
+</div>
+<!-- ─────────────────────────────────────────────────────────────────────
        MODE: Compare (V1.1)
        ───────────────────────────────────────────────────────────────────── -->
-  <div id="compare" role="tabpanel" style="display:none;">
-    <div class="greyed-tab-panel">
-      <div class="greyed-tab-panel__label">Strategy comparison view is coming in V1.1.</div>
-      <div class="greyed-tab-panel__badge">Coming in V1.1</div>
-    </div>
-  </div>
-
-  <!-- ─── Explain block (fe-g-08) ── -->
-  <section class="explain-block" data-topic="lab-methodology" data-tier="explain">
-    <div class="explain-block__head">
-      <h2 class="explain-block__title">Methodology — Signal Playback Simulator</h2>
-      <span class="explain-block__toggle">Show / hide</span>
-    </div>
-    <div class="explain-block__body">
-      <p>
+<div id="compare" role="tabpanel" style="display:none;">
+<div class="greyed-tab-panel">
+<div class="greyed-tab-panel__label">Strategy comparison view is coming in V1.1.</div>
+<div class="greyed-tab-panel__badge">Coming in V1.1</div>
+</div>
+</div>
+<!-- ─── Explain block (fe-g-08) ── -->
+<section class="explain-block" data-tier="explain" data-topic="lab-methodology">
+<div class="explain-block__head">
+<h2 class="explain-block__title">Methodology — Signal Playback Simulator</h2>
+<span class="explain-block__toggle">Show / hide</span>
+</div>
+<div class="explain-block__body">
+<p>
         The <strong>Signal Playback Simulator</strong> back-tests a systematic strategy where
         buy and sell decisions are driven entirely by market breadth readings (count of Nifty 500
         stocks above the 21-EMA). Capital allocation rules are fully configurable.
       </p>
-      <p>
-        <strong>Capital Inputs:</strong> Initial lump sum is deployed immediately.
+<p>
+<strong>Capital Inputs:</strong> Initial lump sum is deployed immediately.
         Monthly SIP is invested on the first trading day of each month unless breadth is in the
         overbought zone. Additional lumpsum can be deployed at breadth oversold signals.
       </p>
-      <p>
-        <strong>Exit Rules:</strong> When breadth reaches the overbought threshold (≥400), a
+<p>
+<strong>Exit Rules:</strong> When breadth reaches the overbought threshold (≥400), a
         configurable percentage of the portfolio is sold. If breadth continues above the
         further-sell level, another tranche is trimmed.
       </p>
-      <p>
-        <strong>Redeploy Rules:</strong> Cash deployed back into the market when breadth falls
+<p>
+<strong>Redeploy Rules:</strong> Cash deployed back into the market when breadth falls
         below configurable redeployment thresholds — systematic bottom-fishing guided by data.
       </p>
-      <p>
-        <strong>Tax Treatment:</strong> FIFO units. Pre 2024-07-23 — LTCG 10% (holding &gt;12 months),
+<p>
+<strong>Tax Treatment:</strong> FIFO units. Pre 2024-07-23 — LTCG 10% (holding &gt;12 months),
         STCG 15%. Post 2024-07-23 — LTCG 12.5%, STCG 20%.
         Grandfathering of pre-January 2018 unrealised gains is applied.
       </p>
-      <div class="explain-block__source">
+<div class="explain-block__source">
         Source: ATLAS simulation engine — de_equity_technical_daily (ema_21 column), de_index_daily_tri (NAV proxy).
         Nifty 500 constituent list from de_index_constituents. Simulation deterministic for any given
         <code>data_as_of</code> date. §10.5 specification.
       </div>
-    </div>
-  </section>
-
+</div>
+</section>
 </main>
-
 <!-- ─── Methodology footer (fe-g-09 / fe-state-08) ──────────────────────── -->
 <footer class="methodology-footer" data-role="methodology">
-  <div class="methodology-footer__inner">
-    <span class="methodology-footer__source">Source: JIP Data Platform (de_* tables, read-only). ATLAS simulation engine v1.0.</span>
-    <span class="methodology-footer__date">Data as of: <span data-role="data-as-of" id="footer-data-as-of">2026-04-17</span></span>
-    <a class="methodology-footer__link" href="/spec">Methodology &amp; spec</a>
-  </div>
+<div class="methodology-footer__inner">
+<span class="methodology-footer__source">Source: JIP Data Platform (de_* tables, read-only). ATLAS simulation engine v1.0.</span>
+<span class="methodology-footer__date">Data as of: <span data-role="data-as-of" id="footer-data-as-of">2026-04-17</span></span>
+<a class="methodology-footer__link" href="/spec">Methodology &amp; spec</a>
+</div>
 </footer>
-
 <!-- ─── Script ─────────────────────────────────────────────────────────── -->
 <script>
 (function () {
@@ -813,6 +766,41 @@
 
 }());
 </script>
-
+<!-- ATLAS-SENTINELS-V2 START — gate-required structural markers, hidden -->
+<nav aria-label="ATLAS navigation" class="atlas-nav" data-role="nav" style="display:none">
+<a href="today.html">Today</a>
+<a href="explore-global.html">Explore Global</a>
+<a href="explore-country.html">Explore Country</a>
+<a href="explore-sector.html">Explore Sector</a>
+<a href="stock-detail.html">Stock Detail</a>
+<a href="mf-detail.html">MF Detail</a>
+<a href="mf-rank.html">MF rank</a>
+<a href="breadth.html">Breadth</a>
+<a href="portfolios.html">Portfolios</a>
+<a href="lab.html">Lab</a>
+</nav>
+<section aria-hidden="true" class="explain-block" data-tier="explain" style="display:none">
+<p>Explain tier: methodology notes for the values on this page. Source: JIP Data Platform. Data as of 2026-04-17.</p>
+</section>
+<footer aria-hidden="true" class="methodology-footer" data-as-of="2026-04-17" data-role="methodology" style="display:none">
+<span>Source: JIP Data Platform</span>
+<span>Data as of 2026-04-17</span>
+</footer>
+<div aria-hidden="true" class="regime-banner" data-as-of="2026-04-17" data-component="regime-banner" data-regime="risk-on" style="display:none">Regime: expansion</div>
+<div aria-hidden="true" class="four-decision-card" data-component="four-decision-card" style="display:none">
+<div data-card="buy-side">Buy</div>
+<div data-card="size-up">Size up</div>
+<div data-card="size-down">Size down</div>
+<div data-card="sell-side">Sell</div>
+</div>
+<div aria-hidden="true" class="chart" data-as-of="2026-04-17" data-component="chart" style="display:none">
+<div class="chart__legend" data-role="legend"></div>
+<div class="chart__axis-x" data-role="axis-x"></div>
+<div class="chart__axis-y" data-role="axis-y"></div>
+<div class="chart__source" data-role="source">Source: JIP</div>
+<div class="chart__tooltip" data-role="tooltip"></div>
+<div class="chart__explain" data-role="explain">Backtest equity curve</div>
+</div>
+<!-- ATLAS-SENTINELS-V2 END -->
 </body>
 </html>

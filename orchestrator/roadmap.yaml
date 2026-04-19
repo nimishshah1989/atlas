@@ -83,6 +83,26 @@ versions:
         title: "lab.html — 3 mode tabs, full §10.5 Breadth Playback, greyed V1.1 rule backtest"
       - id: V1FE-14
         title: "QA sweep — Playwright baselines + a11y + full gate + smoke probe"
+      - id: V2FE-0
+        title: "Criteria YAML + loader skeleton + §6 states contract"
+      - id: V2FE-1
+        title: "Backend gaps: zone-events + global-events + divergences + flows + UQL templates"
+      - id: V2FE-2
+        title: "Today / Pulse page data wiring"
+      - id: V2FE-3
+        title: "Explore · Country page data wiring"
+      - id: V2FE-4
+        title: "Explore · Sector page data wiring"
+      - id: V2FE-5
+        title: "Stock Detail page data wiring"
+      - id: V2FE-6
+        title: "MF Detail page data wiring"
+      - id: V2FE-7
+        title: "Explore · Global page data wiring"
+      - id: V2FE-8
+        title: "States rollout: all 6 pages switch to atlas-states.js renderers"
+      - id: V2FE-9
+        title: "Integration gate: all V2FE checks pass + smoke probe"
 
   - id: V2
     title: "MF slice"

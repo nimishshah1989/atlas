@@ -1,0 +1,815 @@
+{
+  "generated_at": "2026-04-19T08:20:10.996974+05:30",
+  "files_checked": 19,
+  "pass_count": 19,
+  "fail_count": 0,
+  "warning_count": 127,
+  "critical_count": 0,
+  "results": [
+    {
+      "file": "breadth-simulator-v8.html",
+      "lenient": true,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_initial')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_sip')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_lumpsum')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_sell400')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_furtherLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_furtherPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_redeployLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_redeployPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_redeploy2Lvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='i_redeploy2Pct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='chk_n50')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='chk_n500')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='chk_breadth')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='chk_invested')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 15
+    },
+    {
+      "file": "breadth.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_initial')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_sip')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_lumpsum')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_sell400')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_furtherLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_furtherPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeployLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeployPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeploy2Lvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeploy2Pct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_os')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_ob')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_exit')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_sip_resume')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 30
+    },
+    {
+      "file": "components.html",
+      "lenient": true,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 1
+    },
+    {
+      "file": "explore-country.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "explore-country.html: table missing <th> or aria-label"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "explore-country.html: table missing <th> or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 4
+    },
+    {
+      "file": "explore-global.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 1
+    },
+    {
+      "file": "explore-sector.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "explore-sector.html: table missing <th> or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 15
+    },
+    {
+      "file": "explorer.html",
+      "lenient": true,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='checkbox'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 9
+    },
+    {
+      "file": "frontend-v1-spec.html",
+      "lenient": true,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 1
+    },
+    {
+      "file": "index.html",
+      "lenient": false,
+      "issues": [],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 0
+    },
+    {
+      "file": "lab.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_initial')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_sip')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_lumpsum')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_sell400')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_furtherLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_furtherPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeployLvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeployPct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeploy2Lvl')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_redeploy2Pct')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_os')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_ob')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_exit')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='text'> lacks label association (id='i_l_sip_resume')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        },
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='number'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 29
+    },
+    {
+      "file": "mf-detail.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 2
+    },
+    {
+      "file": "mf-rank.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "mf-rank.html: table missing <th> or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 3
+    },
+    {
+      "file": "portfolio-detail.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 1
+    },
+    {
+      "file": "portfolios.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h1 \u2192 h3 in portfolios.html"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "portfolios.html: table missing <th> or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 3
+    },
+    {
+      "file": "pulse-breadth.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 1
+    },
+    {
+      "file": "pulse-sectors.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h1 \u2192 h3 in pulse-sectors.html"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 2
+    },
+    {
+      "file": "stock-detail.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "anchor_text",
+          "severity": "warning",
+          "message": "<a href='lab.html'> has no text or aria-label"
+        },
+        {
+          "check": "table_headers",
+          "severity": "warning",
+          "message": "stock-detail.html: table missing <th> or aria-label"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 3
+    },
+    {
+      "file": "styleguide.html",
+      "lenient": true,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h2 \u2192 h6 in styleguide.html"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h2 \u2192 h6 in styleguide.html"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h2 \u2192 h6 in styleguide.html"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h2 \u2192 h6 in styleguide.html"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 5
+    },
+    {
+      "file": "today.html",
+      "lenient": false,
+      "issues": [
+        {
+          "check": "input_label",
+          "severity": "warning",
+          "message": "<input type='search'> lacks label association (id='')"
+        },
+        {
+          "check": "heading_hierarchy",
+          "severity": "warning",
+          "message": "Heading level skipped: h1 \u2192 h3 in today.html"
+        }
+      ],
+      "pass": true,
+      "critical_count": 0,
+      "warning_count": 2
+    }
+  ]
+}

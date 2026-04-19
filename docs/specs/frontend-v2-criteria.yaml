@@ -1,0 +1,345 @@
+version: "1"
+slice: "V2-Frontend-Stage0"
+source: "docs/specs/chunks/V2FE-0.md"
+locked_at: "2026-04-19"
+
+# ============================================================================
+# ATLAS Frontend V2 — Stage 0 machine-readable criteria
+# ============================================================================
+#
+# This YAML gates the entire V2FE slice. It is checked by:
+#   scripts/check-frontend-v2.py
+#
+# §8.1  Backend connectivity checks (v2fe-be-*)
+#   check_type: backend_probe
+#   Tries a live HTTP GET; gracefully SKIPs if backend is unreachable.
+#
+# §8.2  Per-page binding checks (v2fe-pg-*)
+#   check_type: file_contains (regex pattern present in HTML file)
+#
+# §8.3  States contract checks (v2fe-sc-*)
+#   check_type: file_contains or file_exists
+#
+# §8.4  Integration / smoke checks (v2fe-sm-*)
+#   check_type: file_exists
+#
+# §8.5  Regression checks (v2fe-rg-*)
+#   check_type: runner_exits_zero
+#
+# severity: critical | high | medium
+#   critical — blocks ship
+#   high     — blocks ship unless exception approved
+#   medium   — recorded in quality score, does not block
+# ============================================================================
+
+settings:
+  backend_base: "http://localhost:8000"
+  mockups_root: "frontend/mockups"
+  assets_root: "frontend/mockups/assets"
+
+# ============================================================================
+# §8.1 Backend connectivity checks (9 checks — one per key V2FE endpoint)
+# ============================================================================
+
+criteria:
+
+  - id: v2fe-be-01
+    title: "Backend: /api/v1/breadth/global returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: global
+    endpoint: "/api/v1/breadth/global"
+    timeout_seconds: 3
+
+  - id: v2fe-be-02
+    title: "Backend: /api/v1/sectors returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: global
+    endpoint: "/api/v1/sectors"
+    timeout_seconds: 3
+
+  - id: v2fe-be-03
+    title: "Backend: /api/v1/stocks/{symbol} returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: stock-detail
+    endpoint: "/api/v1/stocks/RELIANCE.NS"
+    timeout_seconds: 3
+
+  - id: v2fe-be-04
+    title: "Backend: /api/v1/funds/{isin} returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: mf-detail
+    endpoint: "/api/v1/funds/INF846K01EW2"
+    timeout_seconds: 3
+
+  - id: v2fe-be-05
+    title: "Backend: /api/v1/breadth/country returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: explore-country
+    endpoint: "/api/v1/breadth/country"
+    timeout_seconds: 3
+
+  - id: v2fe-be-06
+    title: "Backend: /api/v1/breadth/sector returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: explore-sector
+    endpoint: "/api/v1/breadth/sector"
+    timeout_seconds: 3
+
+  - id: v2fe-be-07
+    title: "Backend: /api/v1/today/pulse returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: today
+    endpoint: "/api/v1/today/pulse"
+    timeout_seconds: 3
+
+  - id: v2fe-be-08
+    title: "Backend: /api/v1/global/indices returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: high
+    page: explore-global
+    endpoint: "/api/v1/global/indices"
+    timeout_seconds: 3
+
+  - id: v2fe-be-09
+    title: "Backend: /health returns 200 or is unreachable"
+    check_type: backend_probe
+    severity: medium
+    page: global
+    endpoint: "/health"
+    timeout_seconds: 3
+
+# ============================================================================
+# §8.2 Per-page binding checks (2 checks per page × 6 pages = 12)
+# ============================================================================
+
+  - id: v2fe-pg-01
+    title: "today.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: today
+    file: "frontend/mockups/today.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-02
+    title: "today.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: today
+    file: "frontend/mockups/today.html"
+    pattern: "atlas-states\\.js"
+
+  - id: v2fe-pg-03
+    title: "explore-country.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-country
+    file: "frontend/mockups/explore-country.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-04
+    title: "explore-country.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-country
+    file: "frontend/mockups/explore-country.html"
+    pattern: "atlas-states\\.js"
+
+  - id: v2fe-pg-05
+    title: "explore-sector.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-sector
+    file: "frontend/mockups/explore-sector.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-06
+    title: "explore-sector.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-sector
+    file: "frontend/mockups/explore-sector.html"
+    pattern: "atlas-states\\.js"
+
+  - id: v2fe-pg-07
+    title: "stock-detail.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: stock-detail
+    file: "frontend/mockups/stock-detail.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-08
+    title: "stock-detail.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: stock-detail
+    file: "frontend/mockups/stock-detail.html"
+    pattern: "atlas-states\\.js"
+
+  - id: v2fe-pg-09
+    title: "mf-detail.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: mf-detail
+    file: "frontend/mockups/mf-detail.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-10
+    title: "mf-detail.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: mf-detail
+    file: "frontend/mockups/mf-detail.html"
+    pattern: "atlas-states\\.js"
+
+  - id: v2fe-pg-11
+    title: "explore-global.html: atlas-data.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-global
+    file: "frontend/mockups/explore-global.html"
+    pattern: "atlas-data\\.js"
+
+  - id: v2fe-pg-12
+    title: "explore-global.html: atlas-states.js script tag is present"
+    check_type: file_contains
+    severity: critical
+    page: explore-global
+    file: "frontend/mockups/explore-global.html"
+    pattern: "atlas-states\\.js"
+
+# ============================================================================
+# §8.3 States contract checks (8 checks)
+# ============================================================================
+
+  - id: v2fe-sc-01
+    title: "atlas-data.js: data-state attribute transitions are present (loading/ready/stale/empty/error)"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "data-state"
+
+  - id: v2fe-sc-02
+    title: "atlas-states.js: STALENESS_THRESHOLDS constant is present"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "STALENESS_THRESHOLDS"
+
+  - id: v2fe-sc-03
+    title: "atlas-states.js: STALENESS_THRESHOLDS has intraday key (3600)"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "intraday"
+
+  - id: v2fe-sc-04
+    title: "atlas-states.js: renderSkeleton function is exported"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "function renderSkeleton"
+
+  - id: v2fe-sc-05
+    title: "atlas-states.js: renderEmpty function is exported"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "function renderEmpty"
+
+  - id: v2fe-sc-06
+    title: "atlas-states.js: renderStaleBanner function is exported"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "function renderStaleBanner"
+
+  - id: v2fe-sc-07
+    title: "atlas-states.js: renderError function is exported"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: "function renderError"
+
+  - id: v2fe-sc-08
+    title: "atlas-data.js: insufficient_data guard is present"
+    check_type: file_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "insufficient_data"
+
+# ============================================================================
+# §8.4 Integration / smoke checks (4 checks)
+# ============================================================================
+
+  - id: v2fe-sm-01
+    title: "assets/atlas-data.js file exists and is non-empty"
+    check_type: file_exists
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+
+  - id: v2fe-sm-02
+    title: "assets/atlas-states.js file exists and is non-empty"
+    check_type: file_exists
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+
+  - id: v2fe-sm-03
+    title: "atlas-data.js: loadBlock function is defined"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "function loadBlock"
+
+  - id: v2fe-sm-04
+    title: "atlas-data.js: fetchWithTimeout function is defined"
+    check_type: file_contains
+    severity: critical
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: "function fetchWithTimeout"
+
+# ============================================================================
+# §8.5 Regression checks (3 checks)
+# ============================================================================
+
+  - id: v2fe-rg-01
+    title: "V1FE gate: scripts/check-frontend-criteria.py exits 0 (no regressions)"
+    check_type: runner_exits_zero
+    severity: critical
+    page: global
+    command: "python3 scripts/check-frontend-criteria.py --report-only"
+
+  - id: v2fe-rg-02
+    title: "atlas-data.js: no TypeScript syntax (must be plain ES2020)"
+    check_type: file_not_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-data.js"
+    pattern: ": string|: number|: boolean|interface |<T>"
+
+  - id: v2fe-rg-03
+    title: "atlas-states.js: no TypeScript syntax (must be plain ES2020)"
+    check_type: file_not_contains
+    severity: high
+    page: global
+    file: "frontend/mockups/assets/atlas-states.js"
+    pattern: ": string|: number|: boolean|interface |<T>"
