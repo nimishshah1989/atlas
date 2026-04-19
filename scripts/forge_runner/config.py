@@ -17,7 +17,7 @@ from typing import Optional
 _DURATION_PATTERN = re.compile(r"^(\d+)(m|s|h)$")
 
 _DEFAULT_TIMEOUT = "45m"
-_DEFAULT_MAX_TURNS = 300
+_DEFAULT_MAX_TURNS = 120
 _DEFAULT_FILTER = ".*"
 _DEFAULT_LOG_DIR = ".forge/logs"
 

@@ -65,7 +65,7 @@ class TestParseArgsDefaults:
 
     def test_default_max_turns(self) -> None:
         cfg = parse_args([])
-        assert cfg.max_turns == 300
+        assert cfg.max_turns == 120
 
     def test_default_repo_is_cwd(self) -> None:
         cfg = parse_args([])
@@ -188,5 +188,5 @@ class TestRunConfigDataclass:
     def test_run_config_default_construction(self) -> None:
         cfg = RunConfig()
         assert cfg.filter_regex == ".*"
-        assert cfg.max_turns == 300
+        assert cfg.max_turns == 120
         assert cfg.once is False

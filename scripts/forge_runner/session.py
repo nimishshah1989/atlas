@@ -108,8 +108,7 @@ async def run_session(
         cwd=str(ctx.repo),
         allowed_tools=load_bearing(),
         max_turns=ctx.max_turns,
-        model="opus",
-        effort="max",
+        model="sonnet",
         system_prompt={"type": "preset", "preset": "claude_code", "append": conductor_with_chunk},
     )
 

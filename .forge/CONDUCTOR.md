@@ -107,25 +107,6 @@ Must return `DONE`.  If not, emit the hard-stop block and exit.
 
 ---
 
-## Four Laws (non-negotiable)
-
-1. **Prove, never claim** — run tests, show output, verify visually
-2. **No synthetic data** — ever.  No hardcoded mocks in production code
-3. **Backend first always** — API working before any frontend touches it
-4. **See what you build** — check the browser, confirm the output
-
-## System Guarantees (non-negotiable)
-
-1. **Deterministic** — same `data_as_of` → same outputs for core computations
-2. **Explainable** — every number traceable to source table + formula
-3. **Fault-tolerant** — partial data > no data, graceful degradation
-4. **Traceable** — full provenance on every computed value
-5. **Idempotent** — pipelines can be re-run safely without side effects
-
-If a feature violates any of these it MUST NOT deploy.
-
----
-
 ## Hard stops
 
 Halt immediately and log to `BUILD_STATUS.md` if you hit any of these:

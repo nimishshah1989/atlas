@@ -1,0 +1,12 @@
+{
+  "data_as_of": "2026-04-17",
+  "endpoints": [
+    "/api/v1/stocks/breadth",
+    "/api/v1/mf/{id}/weighted-technicals",
+    "/api/v1/mf/{id}/rs-history",
+    "/api/v1/stocks/{symbol}/rs-history",
+    "/api/v1/sectors/rrg"
+  ],
+  "note": "Stage-1 fixture endpoint-parity map for fe-s-02 (V1.1 rule preservation)",
+  "source": "JIP Data Platform (spec \u00a717 endpoint registry)"
+}
