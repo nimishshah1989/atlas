@@ -439,3 +439,7 @@ async def get_rs_history(
         points=history_points,
         meta=ResponseMeta(record_count=len(history_points), query_ms=elapsed),
     )
+
+
+# NOTE: /{symbol}/fundamentals and /{symbol}/corporate-actions live in
+# backend/routes/stock_detail.py to keep this file under 500 lines.

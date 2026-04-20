@@ -130,11 +130,15 @@ if [ -d "$REPO_ROOT/frontend" ]; then
     log "frontend build succeeded"
     if systemctl list-unit-files 2>/dev/null | grep -q '^atlas-frontend\.service'; then
       log "restarting atlas-frontend.service"
-      sudo systemctl restart atlas-frontend.service
-      sleep 2
-      fe_code=$(curl -fsS -o /dev/null -w '%{http_code}' http://localhost:3000/forge 2>/dev/null || echo "000")
+      if sudo systemctl restart atlas-frontend.service; then
+        log "atlas-frontend.service restarted OK"
+      else
+        log "WARN atlas-frontend.service restart returned non-zero — check journalctl"
+      fi
+      sleep 3
+      fe_code=$(curl -fsS -o /dev/null -w '%{http_code}' http://localhost:3000/ 2>/dev/null || echo "000")
       case "$fe_code" in
-        200|401) log "frontend local probe $fe_code" ;;
+        200|307) log "frontend local probe $fe_code ✓" ;;
         *)       log "WARN frontend local probe returned $fe_code (smoke probe will confirm)" ;;
       esac
     else

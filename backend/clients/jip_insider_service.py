@@ -28,9 +28,13 @@ class JIPInsiderService:
 
     async def check_insider_health(self) -> tuple[bool, str]:
         """Return (is_healthy, reason). reason='' if healthy."""
-        qr = await self._session.execute(
-            text("SELECT COUNT(*), MAX(txn_date) FROM de_insider_trades")
-        )
+        # Actual column name is transaction_date (not txn_date)
+        try:
+            qr = await self._session.execute(
+                text("SELECT COUNT(*), MAX(transaction_date) FROM de_insider_trades")
+            )
+        except Exception as exc:
+            return False, f"insider_trades:health_probe_failed ({exc!s:.200})"
         row = qr.fetchone()
         count: int = row[0] or 0 if row is not None else 0
         max_date: date | None = row[1] if row is not None else None
@@ -40,7 +44,9 @@ class JIPInsiderService:
             return False, "insider_trades:freshness=0 (de_insider_trades max date is NULL)"
         lag = (datetime.now(UTC).date() - max_date).days
         if lag > _STALENESS_DAYS:
-            return False, (f"insider_trades:freshness=stale (last txn_date={max_date}, lag={lag}d)")
+            return False, (
+                f"insider_trades:freshness=stale (last transaction_date={max_date}, lag={lag}d)"
+            )
         return True, ""
 
     async def get_insider_trades(
@@ -50,25 +56,29 @@ class JIPInsiderService:
         to_date: date,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        """SELECT from de_insider_trades for symbol in date range."""
+        """SELECT from de_insider_trades for symbol in date range.
+
+        Column aliases map actual DB names to the legacy API contract names
+        expected by the route layer (txn_date, filing_date, txn_type, qty).
+        """
         sym = symbol.upper()
         qr = await self._session.execute(
             text(
                 """
                 SELECT
                     symbol,
-                    filing_date,
-                    txn_date,
+                    disclosure_date   AS filing_date,
+                    transaction_date  AS txn_date,
                     person_name,
                     person_category,
-                    txn_type,
-                    qty,
+                    transaction_type  AS txn_type,
+                    quantity          AS qty,
                     value_inr,
                     post_holding_pct
                 FROM de_insider_trades
                 WHERE symbol = :sym
-                  AND txn_date BETWEEN :from_date AND :to_date
-                ORDER BY txn_date DESC
+                  AND transaction_date BETWEEN :from_date AND :to_date
+                ORDER BY transaction_date DESC
                 LIMIT :limit
                 """
             ),
@@ -83,9 +93,12 @@ class JIPInsiderService:
 
     async def check_bulk_health(self) -> tuple[bool, str]:
         """Return (is_healthy, reason). reason='' if healthy."""
-        qr = await self._session.execute(
-            text("SELECT COUNT(*), MAX(trade_date) FROM de_bulk_deals")
-        )
+        try:
+            qr = await self._session.execute(
+                text("SELECT COUNT(*), MAX(trade_date) FROM de_bulk_deals")
+            )
+        except Exception as exc:
+            return False, f"bulk_deals:table_unavailable ({exc!s:.200})"
         row = qr.fetchone()
         count: int = row[0] or 0 if row is not None else 0
         max_date: date | None = row[1] if row is not None else None
@@ -133,9 +146,12 @@ class JIPInsiderService:
 
     async def check_block_health(self) -> tuple[bool, str]:
         """Return (is_healthy, reason). reason='' if healthy."""
-        qr = await self._session.execute(
-            text("SELECT COUNT(*), MAX(trade_date) FROM de_block_deals")
-        )
+        try:
+            qr = await self._session.execute(
+                text("SELECT COUNT(*), MAX(trade_date) FROM de_block_deals")
+            )
+        except Exception as exc:
+            return False, f"block_deals:table_unavailable ({exc!s:.200})"
         row = qr.fetchone()
         count: int = row[0] or 0 if row is not None else 0
         max_date: date | None = row[1] if row is not None else None

@@ -36,11 +36,13 @@ export default function YieldCurveBlock() {
   );
 
   const points = data?.series ?? data?.records ?? [];
+  // 503 = no data in de_gsec_yield — treat as empty, not an error banner
+  const effectiveState = state === "error" ? "empty" : state;
 
   return (
     <div data-block="yield-curve-block">
       <DataBlock
-        state={state}
+        state={effectiveState}
         dataClass="daily_regime"
         dataAsOf={meta?.data_as_of ?? null}
         errorCode={error?.code}

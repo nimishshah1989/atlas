@@ -609,3 +609,140 @@ class TestBlockDealsRoute:
         assert "_meta" in body
         assert isinstance(body["data"], list)
         assert isinstance(body["_meta"], dict)
+
+
+# ===========================================================================
+# TestJIPInsiderServiceColumnNames
+# Regression tests: verify correct SQL column names after JIP schema discovery.
+# de_insider_trades uses transaction_date/disclosure_date/transaction_type/quantity
+# (not txn_date/filing_date/txn_type/qty).
+# ===========================================================================
+
+
+class TestJIPInsiderServiceColumnNames:
+    """Unit tests for JIPInsiderService SQL correctness (no route layer)."""
+
+    @pytest.mark.asyncio
+    async def test_check_insider_health_queries_transaction_date(self) -> None:
+        """check_insider_health must use transaction_date column (not txn_date)."""
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        # Simulate a healthy table: count=100, max_date=today
+        from datetime import UTC, datetime
+
+        today = datetime.now(UTC).date()
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = (100, today)
+        mock_session.execute = AsyncMock(return_value=mock_result)
+
+        svc = JIPInsiderService(mock_session)
+        healthy, reason = await svc.check_insider_health()
+
+        assert healthy is True
+        assert reason == ""
+        # Verify the SQL used transaction_date, not txn_date
+        executed_sql: str = str(mock_session.execute.call_args[0][0])
+        assert "transaction_date" in executed_sql
+        assert "txn_date" not in executed_sql
+
+    @pytest.mark.asyncio
+    async def test_check_insider_health_handles_exception_gracefully(self) -> None:
+        """check_insider_health returns (False, reason) on DB exception, does not raise."""
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(side_effect=Exception('column "txn_date" does not exist'))
+
+        svc = JIPInsiderService(mock_session)
+        healthy, reason = await svc.check_insider_health()
+
+        assert healthy is False
+        assert "insider_trades:health_probe_failed" in reason
+
+    @pytest.mark.asyncio
+    async def test_get_insider_trades_uses_column_aliases(self) -> None:
+        """get_insider_trades SQL must alias transaction_date→txn_date, disclosure_date→filing_date,
+        transaction_type→txn_type, quantity→qty."""
+        from datetime import date
+
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        mock_mappings = MagicMock()
+        mock_mappings.all.return_value = []
+        mock_result = MagicMock()
+        mock_result.mappings.return_value = mock_mappings
+        mock_session.execute = AsyncMock(return_value=mock_result)
+
+        svc = JIPInsiderService(mock_session)
+        rows = await svc.get_insider_trades(
+            symbol="RELIANCE",
+            from_date=date(2026, 1, 1),
+            to_date=date(2026, 4, 18),
+        )
+
+        assert rows == []
+        executed_sql: str = str(mock_session.execute.call_args[0][0])
+        # Verify actual column names (not legacy aliases) appear in the SELECT
+        assert "transaction_date" in executed_sql
+        assert "disclosure_date" in executed_sql
+        assert "transaction_type" in executed_sql
+        assert "quantity" in executed_sql
+        # Verify aliases to legacy contract names
+        assert "AS txn_date" in executed_sql or "txn_date" in executed_sql
+        assert "AS filing_date" in executed_sql or "filing_date" in executed_sql
+        assert "AS txn_type" in executed_sql or "txn_type" in executed_sql
+        assert "AS qty" in executed_sql or "qty" in executed_sql
+
+    @pytest.mark.asyncio
+    async def test_check_bulk_health_handles_missing_table_gracefully(self) -> None:
+        """check_bulk_health returns (False, reason) when de_bulk_deals does not exist."""
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(
+            side_effect=Exception('relation "de_bulk_deals" does not exist')
+        )
+
+        svc = JIPInsiderService(mock_session)
+        healthy, reason = await svc.check_bulk_health()
+
+        assert healthy is False
+        assert "bulk_deals:table_unavailable" in reason
+
+    @pytest.mark.asyncio
+    async def test_check_block_health_handles_missing_table_gracefully(self) -> None:
+        """check_block_health returns (False, reason) when de_block_deals does not exist."""
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(
+            side_effect=Exception('relation "de_block_deals" does not exist')
+        )
+
+        svc = JIPInsiderService(mock_session)
+        healthy, reason = await svc.check_block_health()
+
+        assert healthy is False
+        assert "block_deals:table_unavailable" in reason
+
+    @pytest.mark.asyncio
+    async def test_check_insider_health_stale_data_returns_unhealthy(self) -> None:
+        """check_insider_health returns unhealthy when max transaction_date is stale."""
+        from datetime import UTC, datetime, timedelta
+
+        from backend.clients.jip_insider_service import JIPInsiderService
+
+        mock_session = AsyncMock()
+        stale_date = datetime.now(UTC).date() - timedelta(days=10)
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = (500, stale_date)
+        mock_session.execute = AsyncMock(return_value=mock_result)
+
+        svc = JIPInsiderService(mock_session)
+        healthy, reason = await svc.check_insider_health()
+
+        assert healthy is False
+        assert "stale" in reason
+        assert "transaction_date" in reason

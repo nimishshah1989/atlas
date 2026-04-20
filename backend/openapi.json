@@ -548,6 +548,100 @@
         }
       }
     },
+    "/api/v1/stocks/{symbol}/fundamentals": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock Fundamentals",
+        "description": "Return latest fundamentals snapshot for a stock.\n\nSource: de_equity_fundamentals JOIN de_instrument.\nReturns 503 if data is unavailable.",
+        "operationId": "get_stock_fundamentals_api_v1_stocks__symbol__fundamentals_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/{symbol}/corporate-actions": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Corporate Actions",
+        "description": "Return recent corporate actions for a stock.\n\nSource: de_corporate_actions JOIN de_instrument.\nReturns empty list if no data.",
+        "operationId": "get_corporate_actions_api_v1_stocks__symbol__corporate_actions_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/stocks/{symbol}/analysis": {
       "get": {
         "tags": [

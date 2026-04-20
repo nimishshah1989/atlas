@@ -43,7 +43,21 @@ export default function StockChartBlock({ symbol }: StockChartBlockProps) {
     { dataClass: "eod_breadth" }
   );
 
-  const points = data?.series ?? data?.records ?? [];
+  // Backend returns { symbol, points: [...], meta } — normalize field names
+  const rawPoints = (data as Record<string, unknown> & { points?: ChartPoint[] })?.points
+    ?? data?.series
+    ?? data?.records
+    ?? [];
+  const points: ChartPoint[] = rawPoints.map((p: ChartPoint & Record<string, unknown>) => ({
+    ...p,
+    close: p.close != null ? parseFloat(String(p.close)) : null,
+    // backend: rsi_14, component dataKey: rsi14
+    rsi14: (p["rsi14"] as number | null) ?? (p["rsi_14"] != null ? parseFloat(String(p["rsi_14"])) : null),
+    // backend: macd_histogram, component dataKey: macd_hist
+    macd_hist: (p["macd_hist"] as number | null) ?? (p["macd_histogram"] != null ? parseFloat(String(p["macd_histogram"])) : null),
+    macd: p.macd != null ? parseFloat(String(p.macd)) : null,
+    macd_signal: p.macd_signal != null ? parseFloat(String(p.macd_signal)) : null,
+  }));
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 chart-with-events">

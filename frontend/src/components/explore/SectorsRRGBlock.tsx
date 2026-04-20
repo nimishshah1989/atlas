@@ -90,7 +90,25 @@ export default function SectorsRRGBlock() {
     { dataClass: "daily_regime" }
   );
 
-  const points = data?.series ?? data?.records ?? [];
+  // Backend returns { sectors: [...], mean_rs, stddev_rs, as_of, meta }
+  // Each sector: { sector, rs_score (str), rs_momentum (str), quadrant, ... }
+  const rawSectors = (data as Record<string, unknown> & { sectors?: SectorRRGPoint[] })?.sectors
+    ?? data?.series
+    ?? data?.records
+    ?? [];
+  const points: SectorRRGPoint[] = rawSectors.map((s: SectorRRGPoint & Record<string, unknown>) => ({
+    ...s,
+    name: (s.name as string | undefined) ?? (s["sector"] as string | undefined) ?? undefined,
+    symbol: (s.symbol as string | undefined) ?? (s["sector"] as string | undefined) ?? undefined,
+    rs: typeof s.rs === "number"
+      ? s.rs
+      : s["rs_score"] != null ? parseFloat(String(s["rs_score"])) : null,
+    momentum: typeof s.momentum === "number"
+      ? s.momentum
+      : s["rs_momentum"] != null ? parseFloat(String(s["rs_momentum"])) : null,
+    gold_rs: s.gold_rs != null ? parseFloat(String(s.gold_rs)) : null,
+    conviction: s.conviction != null ? parseFloat(String(s.conviction)) : null,
+  }));
   const effectiveState =
     state === "ready" && points.length === 0 ? "empty" : state;
   const groups = groupByQuadrant(points);

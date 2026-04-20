@@ -9,6 +9,8 @@ import SignalHistoryStockBlock from "@/components/stocks/SignalHistoryStockBlock
 import PeersBlock from "@/components/stocks/PeersBlock";
 import BenchmarkPanels from "@/components/stocks/BenchmarkPanels";
 import InsiderBlock from "@/components/stocks/InsiderBlock";
+import FundamentalsBlock from "@/components/stocks/FundamentalsBlock";
+import CorporateActionsBlock from "@/components/stocks/CorporateActionsBlock";
 import EmptyState from "@/components/ui/EmptyState";
 
 interface PageProps {
@@ -84,12 +86,32 @@ export default function StockDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Insider activity */}
+        {/* Fundamentals */}
         <div>
           <div className="sec-hd">
-            <h3>Insider &amp; Bulk / Block Activity</h3>
+            <h3>Fundamentals</h3>
+            <span className="sec-sub">Valuation · Profitability · Ownership</span>
           </div>
-          <InsiderBlock symbol={upperSymbol} />
+          <FundamentalsBlock symbol={upperSymbol} />
+        </div>
+
+        {/* Corporate Actions + Insider — 2 col */}
+        <div>
+          <div className="sec-hd"><h3>Corporate Actions &amp; Insider Activity</h3></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-5)" }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "var(--space-3)" }}>
+                Corporate Actions
+              </div>
+              <CorporateActionsBlock symbol={upperSymbol} />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "var(--space-3)" }}>
+                Insider Trades
+              </div>
+              <InsiderBlock symbol={upperSymbol} />
+            </div>
+          </div>
         </div>
 
         {/* Deferred */}

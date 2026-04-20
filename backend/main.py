@@ -37,6 +37,7 @@ from backend.routes import (
     sentiment,
     simulate,
     stock_analysis,
+    stock_detail,
     stocks,
     system,
     system_probes,
@@ -100,6 +101,7 @@ uql_errors.register(app)
 
 app.include_router(breadth.router)  # breadth sub-routes BEFORE stocks (static-before-param)
 app.include_router(stocks.router)
+app.include_router(stock_detail.router)  # fundamentals + corporate-actions sub-routes
 app.include_router(stock_analysis.router)
 app.include_router(screener.router)
 app.include_router(query.router)
