@@ -2643,3 +2643,177 @@ chunks:
       - "/funds/rank and /funds/[id] routing does not conflict"
       - "All 5+ unit tests pass"
       - "cd frontend && npm run build exits 0 (primary S1 sprint gate)"
+
+  # --- S2 Sprint: Drill-Spine v3 (PM-Decision Flow) ---------------------------
+  # Slice: docs/specs/slices/s2-drill-spine.md
+  # 4 views + 3 upgraded instrument routes + 1 conviction drawer; no new tables.
+
+  - id: S2-0
+    title: "Backend: LensService + 5-signal engine + sector aggregation + 6 endpoints"
+    status: PENDING
+    spec: docs/specs/chunks/S2-0.md
+    depends_on: []
+    estimated_hours: 6
+    model: opus
+    quality_targets:
+      code: 80
+      backend: 80
+      api: 85
+      architecture: 80
+    punch_list:
+      - "All 7 services exist under backend/services/ (lens, signal, sector, conviction, regime, book, thresholds loader)"
+      - "backend/config/signal_thresholds.yaml + mf_sector_map.yaml exist with values from slice §3.3 and §8 Q7"
+      - "All 6 new endpoints registered, each <30 lines; zero SQL in route handlers"
+      - "scripts/check-api-standard.py and scripts/check-spec-coverage.py both exit 0"
+      - "No new Alembic migrations, no new tables (git diff backend/models/ empty)"
+      - "≥30 unit tests pass; python .quality/checks.py ≥80 on code/backend/api/architecture"
+
+  - id: S2-1
+    title: "Shared frontend primitives: FourLensRRG, InstrumentTable, RegimeGauge, SignalPill, ConvictionDrawer skeleton"
+    status: PENDING
+    spec: docs/specs/chunks/S2-1.md
+    depends_on: [S2-0]
+    estimated_hours: 4
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "All 5 components live under frontend/src/components/lenses/ with .test.tsx files (≥4 assertions each)"
+      - "InstrumentTable column order matches slice §5 exactly (snapshot test)"
+      - "RRG bubble-color thresholds match §8 Q4 (green≥60, amber 40–60, red<40)"
+      - "SignalPill renders 5 distinct signal types with distinct colors"
+      - "ConvictionDrawer opens/closes without losing caller context"
+      - "npm test + npm run build both exit 0; .quality/checks.py frontend ≥80"
+
+  - id: S2-2
+    title: "View 1: Regime Cockpit (/)"
+    status: PENDING
+    spec: docs/specs/chunks/S2-2.md
+    depends_on: [S2-1]
+    estimated_hours: 5
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/page.tsx renders 3 bands (Global / India / Sector heatmap) + posture banner"
+      - "Data fetched via useAtlasData('/api/v1/regime') only — no direct fetch calls"
+      - "Sector heatmap click routes via next/router to /sector/[key]"
+      - "Methodology drawer opens/closes without page navigation"
+      - "insufficient_data renders EmptyState, not ErrorBanner (two-idiom rule)"
+      - "≥6 unit tests pass; npm run build exits 0"
+
+  - id: S2-3
+    title: "View 2: Leaders Board (/leaders)"
+    status: PENDING
+    spec: docs/specs/chunks/S2-3.md
+    depends_on: [S2-1]
+    estimated_hours: 5
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/leaders/page.tsx compiles + builds"
+      - "Initial universe gated by /api/v1/regime.posture (E2E: posture=CAUTIOUS → universe=Sectors)"
+      - "PM override of universe persists in localStorage across reload"
+      - "RRG sector-bubble click routes to /sector/[key]; other universe rows route to instrument pages"
+      - "'Aligned leaders only' pill applied server-side (not client-filtered)"
+      - "Size-it button opens ConvictionDrawer skeleton from S2-1"
+      - "≥8 unit tests pass; npm run build exits 0"
+
+  - id: S2-4
+    title: "View 3: Sector Page (/sector/[key])"
+    status: PENDING
+    spec: docs/specs/chunks/S2-4.md
+    depends_on: [S2-1]
+    estimated_hours: 4
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/sector/[key]/page.tsx compiles with 3 tabs (Stocks/MFs/ETFs)"
+      - "Universe filter changes SWR key (server-side re-aggregation, not client filter)"
+      - "All 3 tabs render identical 11-column §5 schema (snapshot test)"
+      - "MF tab uses mf_sector_map.yaml from S2-0 (regression: v2 substring mis-maps absent)"
+      - "ETF tab with zero results renders EmptyState, not ErrorBanner"
+      - "≥7 unit tests pass; npm run build exits 0"
+
+  - id: S2-5
+    title: "Instrument detail consistency: 3 routes × 6 sub-tabs"
+    status: PENDING
+    spec: docs/specs/chunks/S2-5.md
+    depends_on: [S2-1]
+    estimated_hours: 8
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "/stocks/[symbol], /etf/[ticker], /funds/[id] all render 6 sub-tabs (Overview/Selection/Weighting/Timing/Events/Backtest) in identical order"
+      - "Hero block is sticky on scroll and carries 4-lens card + composite action + conviction + weight band"
+      - "Benchmark switcher triggers SWR key change (not client recompute)"
+      - "Backtest tab uses atlas_signal_history (read-only) and renders EmptyState on insufficient_data"
+      - "Events tab renders insider + corp-action data via S1-8 adapter for stocks"
+      - "FourLens.tsx extended (not forked) per asset class"
+      - "≥12 unit tests (≥4/route); npm run build exits 0"
+
+  - id: S2-6
+    title: "Conviction Sizer drawer + POST /conviction/score wiring"
+    status: PENDING
+    spec: docs/specs/chunks/S2-6.md
+    depends_on: [S2-1, S2-3]
+    estimated_hours: 5
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+      api: 80
+    punch_list:
+      - "ConvictionDrawer fetches via POST /api/v1/conviction/score on open; loading skeleton shown"
+      - "Score + components (w1/w2/w3) + suggested weight band come from API, never computed client-side"
+      - "Portfolio impact preview reads live holdings from /api/v1/book"
+      - "Closing drawer preserves caller state (table filters, scroll position)"
+      - "Weights read from signal_thresholds.yaml via S2-0 endpoint (display only, no edit UI)"
+      - "≥8 unit tests including POST mocking + RICH-zone cap rule; npm run build exits 0"
+
+  - id: S2-7
+    title: "View 4: Book + Action Queue (/book)"
+    status: PENDING
+    spec: docs/specs/chunks/S2-7.md
+    depends_on: [S2-1, S2-6]
+    estimated_hours: 6
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+    punch_list:
+      - "frontend/src/app/book/page.tsx compiles with Holdings/Watchlist tabs + 3 stacked sections"
+      - "Action queue ordered by signal_strength × position_size (fixture unit test)"
+      - "Insider-sell + corporate-action event flags render on matching rows (uses S1-8 adapter)"
+      - "Size-it opens real ConvictionDrawer from S2-6 (not S2-1 skeleton)"
+      - "Holdings table preserves §5 canonical column order; Entry Conviction + P&L appended only"
+      - "Watchlist tab reuses same component shell with near-entry signals + signal-history view"
+      - "≥10 unit tests pass; npm run build exits 0"
+
+  - id: S2-8
+    title: "Cross-view wiring + nav cleanup + v1 shell retirement"
+    status: PENDING
+    spec: docs/specs/chunks/S2-8.md
+    depends_on: [S2-0, S2-1, S2-2, S2-3, S2-4, S2-5, S2-6, S2-7]
+    estimated_hours: 3
+    model: sonnet
+    quality_targets:
+      code: 80
+      frontend: 80
+      api: 85
+      architecture: 80
+    punch_list:
+      - "E2E: posture=BEAR → /leaders initial universe = ETFs (regime-gate verified live)"
+      - "grep '/sector?key=|/sectors/' under frontend/src/ returns 0 matches"
+      - "TopNav lists exactly Cockpit, Leaders, Book, Explore dropdown; zero links to retired shells"
+      - "/global, /india, /pulse deleted or redirect cleanly (curl -I → target 200)"
+      - "scripts/check-api-standard.py + scripts/check-spec-coverage.py both exit 0"
+      - "python .quality/checks.py ≥80 on all 7 dims; no net-new Alembic files since S2-0"

@@ -16,7 +16,7 @@ from pydantic import BaseModel, field_validator, model_validator
 # ---------------------------------------------------------------------------
 # ID format patterns
 # ---------------------------------------------------------------------------
-VERSION_ID_RE = re.compile(r"^V\d+$")
+VERSION_ID_RE = re.compile(r"^[VS]\d+$")
 CHUNK_ID_RE = re.compile(r"^[A-Z][A-Za-z0-9-]*$")
 STEP_ID_RE = re.compile(r"^C(\d+)\.(\d+)$")
 CHUNK_ID_LEGACY_RE = re.compile(r"^C\d+$")
@@ -234,8 +234,9 @@ class RoadmapFile(BaseModel):
     def validate_version_ids_v0_to_v10(self) -> "RoadmapFile":
         # V0 is the infra/retrofit bucket (C1–C11, S-blocks, L-blocks) that
         # pre-date the V1 product slice. V1–V10 are the product slices.
-        valid = {f"V{n}" for n in range(0, 12)}
+        # S-prefix sprints (S1, S2, …) are frontend/feature sprints layered on top.
+        valid = {f"V{n}" for n in range(0, 12)} | {f"S{n}" for n in range(1, 20)}
         for v in self.versions:
             if v.id not in valid:
-                raise ValueError(f"Version id {v.id!r} is out of range V0–V11")
+                raise ValueError(f"Version id {v.id!r} is out of range V0–V11 / S1–S19")
         return self

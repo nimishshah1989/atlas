@@ -358,3 +358,29 @@ versions:
       - id: V11-8
       - id: V11-9
       - id: V11-10
+
+  - id: S2
+    title: "Drill-Spine v3 (PM-Decision Flow)"
+    goal: >
+      Four views (Regime Cockpit, Leaders Board, Sector Page, Book) + upgraded
+      instrument detail routes + Conviction Sizer drawer. Organised around the
+      PM's three decisions: selection, weighting, timing.
+    chunks:
+      - id: S2-0
+        title: "Backend: LensService + 5-signal engine + sector aggregation + 6 endpoints"
+      - id: S2-1
+        title: "Shared frontend primitives: FourLensRRG, InstrumentTable, RegimeGauge, SignalPill, ConvictionDrawer skeleton"
+      - id: S2-2
+        title: "View 1: Regime Cockpit (/)"
+      - id: S2-3
+        title: "View 2: Leaders Board (/leaders)"
+      - id: S2-4
+        title: "View 3: Sector Page (/sector/[key])"
+      - id: S2-5
+        title: "Instrument detail consistency: 3 routes x 6 sub-tabs"
+      - id: S2-6
+        title: "Conviction Sizer drawer + POST /conviction/score wiring"
+      - id: S2-7
+        title: "View 4: Book + Action Queue (/book)"
+      - id: S2-8
+        title: "Cross-view wiring + nav cleanup + v1 shell retirement"
