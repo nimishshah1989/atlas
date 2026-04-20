@@ -16,6 +16,16 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class ConvictionScore(BaseModel):
+    instrument_id: str
+    scope: str
+    score: Decimal  # 0..100, 2 decimals
+    weight_band: str  # "0%" | "1%" | "3%" | "5%"
+    components: dict[str, Decimal]  # keys: "selection", "value", "regime_fit"
+    suggested_weight_pct: Decimal  # Decimal("0")|Decimal("1")|Decimal("3")|Decimal("5")
+    reason: str
+
+
 class ConvictionLevel(str, Enum):
     HIGH_PLUS = "HIGH+"
     HIGH = "HIGH"

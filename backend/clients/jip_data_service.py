@@ -189,6 +189,12 @@ class JIPDataService:
     async def get_global_rs_heatmap(self) -> list[dict[str, Any]]:
         return await self._market.get_global_rs_heatmap()
 
+    async def get_global_rs_heatmap_all(self) -> list[dict[str, Any]]:
+        return await self._market.get_global_rs_heatmap_all()
+
+    async def get_global_indices(self) -> list[dict[str, Any]]:
+        return await self._market.get_global_indices()
+
     async def get_goldilocks_stock_ideas(
         self,
         date_from: Optional[str] = None,
