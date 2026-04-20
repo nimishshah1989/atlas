@@ -78,8 +78,8 @@ class JIPGoldilocksService:
                 """)
                 params = {"limit": limit}
 
-            result = await self.session.execute(query, params)
-            rows = [dict(row) for row in result.mappings().all()]
+            query_out = await self.session.execute(query, params)
+            rows = [dict(row) for row in query_out.mappings().all()]
             log.info("goldilocks_stock_ideas_fetched", count=len(rows))
             return rows
 
@@ -106,8 +106,8 @@ class JIPGoldilocksService:
                 ORDER BY view_date DESC
                 LIMIT 1
             """)
-            result = await self.session.execute(query)
-            row = result.mappings().first()
+            query_out = await self.session.execute(query)
+            row = query_out.mappings().first()
             return dict(row) if row else None
 
         except ProgrammingError as exc:
@@ -137,8 +137,8 @@ class JIPGoldilocksService:
                 JOIN latest_date ld ON s.view_date = ld.max_date
                 ORDER BY s.ranking
             """)
-            result = await self.session.execute(query)
-            rows = [dict(row) for row in result.mappings().all()]
+            query_out = await self.session.execute(query)
+            rows = [dict(row) for row in query_out.mappings().all()]
             log.info("goldilocks_sector_view_fetched", count=len(rows))
             return rows
 

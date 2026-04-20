@@ -41,9 +41,9 @@ _VALID_UNIVERSES = frozenset(_UNIVERSE_MAP.keys())
 def _load_mf_sector_map() -> dict[str, list[str]]:
     """Load mf_sector_map.yaml once and cache. Maps atlas_sector → [category_patterns]."""
     with open(_YAML_PATH, "r") as fh:
-        data: dict[str, Any] = yaml.safe_load(fh)
+        parsed: dict[str, Any] = yaml.safe_load(fh)
     mapping: dict[str, list[str]] = {}
-    for entry in data.get("sectors", []):
+    for entry in parsed.get("sectors", []):
         key = entry.get("atlas_sector", "")
         patterns: list[str] = entry.get("mf_category_patterns", [])
         mapping[key] = patterns

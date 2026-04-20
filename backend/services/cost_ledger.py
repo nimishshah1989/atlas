@@ -89,7 +89,7 @@ async def get_rolling_window_cost(db: AsyncSession, hours: int = 24) -> Decimal:
     """
     # Use text interval to avoid Python datetime arithmetic
     interval_expr = text(f"NOW() - INTERVAL '{hours} hours'")
-    result = await db.execute(
+    sum_query = await db.execute(
         select(
             func.coalesce(
                 func.sum(AtlasCostLedger.cost_usd),
@@ -100,7 +100,7 @@ async def get_rolling_window_cost(db: AsyncSession, hours: int = 24) -> Decimal:
             AtlasCostLedger.is_deleted.is_(False),
         )
     )
-    row = result.scalar_one_or_none()
+    row = sum_query.scalar_one_or_none()
     if row is None:
         return Decimal("0")
     return Decimal(str(row))

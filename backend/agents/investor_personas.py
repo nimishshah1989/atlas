@@ -351,10 +351,10 @@ async def run(
         if persona_key not in _PERSONAS:
             log.warning("persona_unknown_key", persona_key=persona_key)
             continue
-        result = await _run_persona(db, jip, persona_key, data_as_of, top_n=top_n)
-        results[persona_key] = result
-        total_findings += result.get("findings_written", 0)
-        total_llm_calls += result.get("llm_calls", 0)
+        persona_out = await _run_persona(db, jip, persona_key, data_as_of, top_n=top_n)
+        results[persona_key] = persona_out
+        total_findings += persona_out.get("findings_written", 0)
+        total_llm_calls += persona_out.get("llm_calls", 0)
 
     summary = {
         "personas_run": len(results),

@@ -166,15 +166,15 @@ def _parse_editor_response(raw: str) -> dict[str, Any]:
         cleaned = "\n".join(lines[1:-1] if lines[-1].startswith("```") else lines[1:])
 
     try:
-        data = json.loads(cleaned)
+        parsed = json.loads(cleaned)
         return {
-            "headline": str(data.get("headline", "Indian Equity Market Morning Briefing")),
-            "narrative": str(data.get("narrative", raw)),
-            "key_signals": data.get("key_signals") or [],
-            "theses": data.get("theses") or [],
-            "patterns": data.get("patterns") or [],
-            "india_implication": data.get("india_implication"),
-            "risk_scenario": data.get("risk_scenario"),
+            "headline": str(parsed.get("headline", "Indian Equity Market Morning Briefing")),
+            "narrative": str(parsed.get("narrative", raw)),
+            "key_signals": parsed.get("key_signals") or [],
+            "theses": parsed.get("theses") or [],
+            "patterns": parsed.get("patterns") or [],
+            "india_implication": parsed.get("india_implication"),
+            "risk_scenario": parsed.get("risk_scenario"),
         }
     except (json.JSONDecodeError, ValueError):
         log.warning("briefing_writer_json_parse_failed", raw_length=len(raw))
@@ -304,8 +304,8 @@ async def _fetch_upstream_findings(
         .order_by(AtlasIntelligence.created_at.desc())
         .limit(20)
     )
-    result = await db.execute(stmt)
-    rows = list(result.scalars().all())
+    query_out = await db.execute(stmt)
+    rows = list(query_out.scalars().all())
 
     if not rows:
         log.warning("briefing_writer_no_upstream_findings", data_as_of=str(data_as_of))

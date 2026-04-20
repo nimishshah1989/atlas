@@ -15,13 +15,17 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 
 import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.clients.jip_data_service import JIPDataService
+from backend.models.regime_v2 import CompositeRegime, RegimeBand
 from backend.models.schemas import RegimeTransition
+from backend.services import signal_engine
 
 if TYPE_CHECKING:
     pass  # factory type resolved at runtime via Any
@@ -183,3 +187,170 @@ async def compute_regime_enrichment(
     days_val: Optional[int] = days_result if isinstance(days_result, int) else None
     history_val: list[Any] = history_result if isinstance(history_result, list) else []
     return days_val, history_val
+
+
+# ---------------------------------------------------------------------------
+# RegimeComposer — S2-0 composite global + India + sector regime (slice §4.2)
+# ---------------------------------------------------------------------------
+
+
+_DEC = Decimal
+
+
+def _band_confidence(score: Decimal) -> Decimal:
+    """Confidence = clamp(|score-50|/50, 0..1) — distance from neutral midpoint."""
+    delta = abs(score - _DEC("50"))
+    conf = delta / _DEC("50")
+    return min(max(conf, _DEC("0")), _DEC("1"))
+
+
+def _global_band_from_heatmap(rows: list[dict[str, Any]]) -> RegimeBand:
+    rs_vals: list[Decimal] = []
+    for r in rows:
+        raw = r.get("rs_composite")
+        if raw is None:
+            continue
+        try:
+            rs_vals.append(Decimal(str(raw)))
+        except Exception:  # noqa: BLE001
+            continue
+    if not rs_vals:
+        return RegimeBand(
+            label="UNKNOWN",
+            score=_DEC("50"),
+            confidence=_DEC("0"),
+            evidence=["no global RS rows"],
+        )
+    mean = sum(rs_vals) / Decimal(len(rs_vals))
+    if mean >= _DEC("60"):
+        label = "RISK_ON"
+    elif mean <= _DEC("40"):
+        label = "RISK_OFF"
+    else:
+        label = "NEUTRAL"
+    return RegimeBand(
+        label=label,
+        score=mean.quantize(_DEC("0.01")),
+        confidence=_band_confidence(mean),
+        evidence=[f"global mean RS={mean:.1f} over {len(rs_vals)} instruments"],
+    )
+
+
+class RegimeComposer:
+    """Compose global + India + sector bands into a single deployment posture."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._svc = JIPDataService(session)
+
+    async def compose(self) -> CompositeRegime:
+        global_band = await self._global_band()
+        india_band, india_data_as_of = await self._india_band()
+        sectors = await self._sectors_band()
+
+        posture = self._derive_posture(global_band, india_band)
+        confidence = (global_band.confidence + india_band.confidence) / _DEC("2")
+
+        reason = (
+            f"Global={global_band.label} (s={global_band.score}), "
+            f"India={india_band.label} (s={india_band.score}), posture={posture}"
+        )
+
+        return CompositeRegime(
+            posture=posture,
+            confidence=confidence.quantize(_DEC("0.01")),
+            global_band=global_band,
+            india_band=india_band,
+            sectors=sectors,
+            reason=reason,
+            data_as_of=india_data_as_of,
+        )
+
+    async def _global_band(self) -> RegimeBand:
+        try:
+            rows = await self._svc.get_global_rs_heatmap()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("regime_composer: global heatmap fetch failed", error=str(exc))
+            return RegimeBand(
+                label="UNKNOWN", score=_DEC("50"), confidence=_DEC("0"), evidence=["fetch failed"]
+            )
+        return _global_band_from_heatmap(rows or [])
+
+    async def _india_band(self) -> tuple[RegimeBand, Optional[datetime.date]]:
+        try:
+            breadth = await self._svc.get_market_breadth()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("regime_composer: breadth fetch failed", error=str(exc))
+            breadth = None
+
+        composite_breadth = _DEC("50")
+        drawdown_pct = _DEC("0")
+        data_as_of: Optional[datetime.date] = None
+        if breadth:
+            raw_b = breadth.get("breadth_score")
+            if raw_b is not None:
+                try:
+                    composite_breadth = Decimal(str(raw_b))
+                except Exception:  # noqa: BLE001
+                    pass
+            raw_dd = breadth.get("drawdown_pct")
+            if raw_dd is not None:
+                try:
+                    drawdown_pct = abs(Decimal(str(raw_dd)))
+                except Exception:  # noqa: BLE001
+                    pass
+            raw_date = breadth.get("date")
+            if raw_date is not None:
+                try:
+                    data_as_of = datetime.date.fromisoformat(str(raw_date))
+                except Exception:  # noqa: BLE001
+                    data_as_of = None
+
+        thresholds = signal_engine.load_thresholds()
+        regime_sig = signal_engine.evaluate_regime(composite_breadth, drawdown_pct, thresholds)
+        # Derive label from the REGIME signal reason (contains "Regime=X:")
+        label = "UNKNOWN"
+        if regime_sig and regime_sig.reason and "Regime=" in regime_sig.reason:
+            label = regime_sig.reason.split("Regime=")[1].split(":")[0].strip()
+
+        band = RegimeBand(
+            label=label,
+            score=composite_breadth.quantize(_DEC("0.01")),
+            confidence=_band_confidence(composite_breadth),
+            evidence=[f"breadth={composite_breadth}, drawdown={drawdown_pct}%"],
+        )
+        return band, data_as_of
+
+    async def _sectors_band(self) -> list[dict[str, Any]]:
+        try:
+            rollups = await self._svc.get_sector_rollups()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("regime_composer: sector rollups fetch failed", error=str(exc))
+            return []
+        out: list[dict[str, Any]] = []
+        for r in rollups or []:
+            sector = r.get("sector")
+            if not sector:
+                continue
+            pct_above_200 = r.get("pct_above_200dma")
+            try:
+                breadth_val = Decimal(str(pct_above_200)) if pct_above_200 is not None else None
+            except Exception:  # noqa: BLE001
+                breadth_val = None
+            if breadth_val is None:
+                state = "UNKNOWN"
+            elif breadth_val >= _DEC("60"):
+                state = "GREEN"
+            elif breadth_val <= _DEC("40"):
+                state = "RED"
+            else:
+                state = "AMBER"
+            out.append({"sector": sector, "breadth_state": state, "pct_above_200dma": breadth_val})
+        return out
+
+    @staticmethod
+    def _derive_posture(global_band: RegimeBand, india_band: RegimeBand) -> str:
+        if global_band.label == "RISK_ON" and india_band.label == "BULL":
+            return "RISK_ON"
+        if global_band.label == "RISK_OFF" or india_band.label == "BEAR":
+            return "RISK_OFF"
+        return "SELECTIVE"

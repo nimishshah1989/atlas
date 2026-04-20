@@ -78,11 +78,11 @@ def load_thresholds() -> dict[str, Any]:
 
     try:
         with open(path, "r") as fh:
-            data: dict[str, Any] = yaml.safe_load(fh)
+            parsed: dict[str, Any] = yaml.safe_load(fh)
         _cache["mtime"] = current_mtime
-        _cache["data"] = data
+        _cache["data"] = parsed
         log.debug("load_thresholds: reloaded", path=path)
-        return data
+        return parsed
     except Exception as exc:
         log.warning("load_thresholds: reload error, using last-known-good", error=str(exc))
         return _cache["data"] or {}

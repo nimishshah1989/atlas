@@ -93,11 +93,11 @@ async def complete(
         resp = await client.post(ANTHROPIC_API_URL, json=payload, headers=headers)
         resp.raise_for_status()
 
-    data = resp.json()
-    content_blocks: list[dict[str, Any]] = data.get("content", [])
+    body_json = resp.json()
+    content_blocks: list[dict[str, Any]] = body_json.get("content", [])
     text = content_blocks[0].get("text", "") if content_blocks else ""
 
-    usage: dict[str, Any] = data.get("usage", {})
+    usage: dict[str, Any] = body_json.get("usage", {})
     prompt_tokens: int = int(usage.get("input_tokens", 0))
     completion_tokens: int = int(usage.get("output_tokens", 0))
 
