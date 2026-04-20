@@ -1,0 +1,50 @@
+# Five-signal thresholds. Hot-reloadable via mtime watch in signal_engine.py.
+# Every band has a comment citing the slice s2-drill-spine.md §3.3.
+version: 1
+signals:
+  entry:
+    rs:           { cross_above: 70, sustained_days: 3 }   # RS cross above 70 sustained 3 days
+    momentum:     { cross_above: 0, slope_5d_min: 0 }      # Mom > 0 with 5d slope > 0
+    breadth:      { st_min: 60, mt_min: 50 }                # ST > 60 AND MT > 50
+    volume:       { rel_vol_min: 1.5 }                      # rel-vol > 1.5 on ENTRY day
+  exit:
+    rs:           { cross_below: 40, sustained_days: 3 }    # RS cross below 40 sustained 3 days
+    momentum:     { cross_below: 0, slope_5d_max: 0 }       # Mom < 0 with 5d slope < 0
+    breadth:      { st_max: 40, lt_max: 40 }                # ST < 40 OR LT < 40
+    volume:       { rel_vol_min: 1.5 }                      # rel-vol > 1.5 on EXIT day
+  warn:
+    proximity_points: 5                                      # within 5 points of any ENTRY/EXIT band
+  confirm:
+    min_lenses: 3                                            # >= 3 of 4 lenses ENTRY in same direction
+    within_days: 5                                           # within 5 trading days
+  regime:
+    # Composite breadth + drawdown rule (MP-compass parity). Tiers: BULL/CAUTIOUS/CORRECTION/BEAR.
+    bull:        { breadth_min: 65, drawdown_max_pct: 5 }
+    cautious:    { breadth_min: 45, drawdown_max_pct: 10 }
+    correction:  { breadth_min: 25, drawdown_max_pct: 20 }
+    bear:        { breadth_max: 25, drawdown_min_pct: 20 }
+rrg_breadth_colors:
+  green_min: 60   # Green >= 60
+  red_max: 40     # Red < 40 (Amber 40-60)
+aligned_leaders:
+  # "Aligned leaders only" filter — resolved-in-spec §8 Q5
+  rs_percentile_min: 50
+  momentum_min: 0
+  abs_return_min: 0
+conviction_weights:
+  # Conviction score 0-100 = w1*selection + w2*value + w3*regime_fit. Tunable.
+  w_selection: 0.4
+  w_value: 0.3
+  w_regime_fit: 0.3
+weight_bands:
+  # 1% / 3% / 5% buckets per slice §4.7
+  small_pct: 1
+  medium_pct: 3
+  large_pct: 5
+  rich_zone_cap_pct: 1   # "RICH zone caps at 1% even if RS top decile"
+default_universe_by_regime:
+  # View 1 -> View 2 gating per §4.3
+  BULL: stocks
+  CAUTIOUS: sectors
+  CORRECTION: etfs
+  BEAR: etfs

@@ -1,0 +1,57 @@
+# MF category -> atlas sector key mapping.
+# Fixes v2 substring-match bug (slice §6). Uses exact category_name strings from de_mf_classification.
+version: 1
+sectors:
+  - atlas_sector: banking
+    mf_category_patterns:
+      - "Sectoral-Banking & Financial Services"
+      - "Sectoral-Banking"
+  - atlas_sector: it
+    mf_category_patterns:
+      - "Sectoral-Technology"
+      - "Sectoral-Information Technology"
+  - atlas_sector: pharma
+    mf_category_patterns:
+      - "Sectoral-Pharma & Healthcare"
+      - "Sectoral-Pharma"
+  - atlas_sector: fmcg
+    mf_category_patterns:
+      - "Sectoral-FMCG"
+      - "Sectoral-Consumption"
+  - atlas_sector: auto
+    mf_category_patterns:
+      - "Sectoral-Automobile"
+  - atlas_sector: energy
+    mf_category_patterns:
+      - "Sectoral-Energy & Power"
+      - "Sectoral-Energy"
+  - atlas_sector: infrastructure
+    mf_category_patterns:
+      - "Thematic-Infrastructure"
+      - "Sectoral-Infrastructure"
+  - atlas_sector: financial_services
+    mf_category_patterns:
+      - "Sectoral-Financial Services"
+  - atlas_sector: metals
+    mf_category_patterns:
+      - "Thematic-Metal"
+  - atlas_sector: consumer_durables
+    mf_category_patterns:
+      - "Sectoral-Consumer Durables"
+  - atlas_sector: media
+    mf_category_patterns:
+      - "Sectoral-Media & Entertainment"
+  - atlas_sector: telecom
+    mf_category_patterns:
+      - "Sectoral-Telecom"
+  - atlas_sector: chemicals
+    mf_category_patterns:
+      - "Thematic-Chemicals"
+  - atlas_sector: healthcare
+    mf_category_patterns:
+      - "Sectoral-Healthcare"
+  - atlas_sector: realty
+    mf_category_patterns:
+      - "Thematic-Real Estate"
+      - "Sectoral-Realty"
+fallback: diversified
