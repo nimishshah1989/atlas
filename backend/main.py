@@ -17,7 +17,9 @@ from slowapi.util import get_remote_address
 from backend.config import get_settings
 from backend.routes import (
     alerts,
+    book,
     breadth,
+    conviction,
     decisions,
     derivatives,
     errors as uql_errors,
@@ -27,11 +29,14 @@ from backend.routes import (
     insider,
     instruments,
     intelligence,
+    leaders,
+    lens,
     macros,
     mf,
     mf_rank,
     portfolio,
     query,
+    regime,
     screener,
     sectors,
     sentiment,
@@ -126,6 +131,11 @@ app.include_router(instruments.router)
 app.include_router(derivatives.router)
 app.include_router(insider.router)
 app.include_router(macros.router)
+app.include_router(lens.router)
+app.include_router(regime.router)
+app.include_router(leaders.router)
+app.include_router(conviction.router)
+app.include_router(book.router)
 
 
 @app.get("/", include_in_schema=False)

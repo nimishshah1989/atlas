@@ -1472,7 +1472,7 @@
           "global"
         ],
         "summary": "Get Global Briefing",
-        "description": "Return the latest market briefing from atlas_briefings.\n\nFallback behaviour: when atlas_briefings is empty, synthesises a minimal\nbriefing from de_market_regime and sets ``_meta.synthesized=true``. If\nneither table has data, returns data=null with stale=True.",
+        "description": "Return the latest market briefing from atlas_briefings.\n\nIf no briefing exists, returns data=null with stale=True in _meta.",
         "operationId": "get_global_briefing_api_v1_global_briefing_get",
         "responses": {
           "200": {
@@ -2048,7 +2048,7 @@
           "mf"
         ],
         "summary": "Get Universe",
-        "description": "Get MF universe grouped by broad_category \u2192 category \u2192 funds.\n\nWires real JIP data. ETFs are always excluded (enforced by JIP service).\nPaginates via ``limit`` (default 500, max 2000) and ``offset`` (default 0)\nso the full ~3000-fund universe never ships in a single response.\nSurfaces ``total_count`` / ``returned`` / ``has_more`` / ``next_offset``\non the UniverseResponse.",
+        "description": "Get MF universe grouped by broad_category \u2192 category \u2192 funds.\n\nWires real JIP data. ETFs are always excluded (enforced by JIP service).",
         "operationId": "get_universe_api_v1_mf_universe_get",
         "parameters": [
           {
@@ -2114,43 +2114,6 @@
               ],
               "default": true,
               "title": "Active Only"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "maximum": 2000,
-                  "minimum": 1
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": 500,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": 0,
-              "title": "Offset"
             }
           }
         ],
@@ -4578,98 +4541,6 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Receive Tradingview Webhook Api Webhooks Tradingview Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sectors/": {
-      "get": {
-        "tags": [
-          "sectors"
-        ],
-        "summary": "List Sectors",
-        "description": "Return all NSE sectors with RS / Momentum / Breadth / Volume lenses.\n\nSources:\n  - de_rs_scores (entity_type='sector'): RS score + 28-day lag for momentum.\n  - de_sector_breadth_daily: latest pct_above_50dma + pct_above_200dma.\n  - de_instrument: active stock_count per sector.\n  - de_equity_fundamentals: latest market_cap_cr summed per sector.\n\nSorted by rs_composite DESC (nulls last). Sector breadth table does not\ncarry a volume column, so `volume_proxy` is currently null \u2014 this is\nsurfaced via `_meta.partial_data=true` when no volume source is wired.",
-        "operationId": "list_sectors_api_v1_sectors__get",
-        "parameters": [
-          {
-            "name": "benchmark",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "Benchmark index for RS computation. One of: NIFTY 500 (default), NIFTY 50, NIFTY MIDCAP 100, GOLD.",
-              "default": "NIFTY 500",
-              "title": "Benchmark"
-            },
-            "description": "Benchmark index for RS computation. One of: NIFTY 500 (default), NIFTY 50, NIFTY MIDCAP 100, GOLD."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SectorsListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sectors": {
-      "get": {
-        "tags": [
-          "sectors"
-        ],
-        "summary": "List Sectors",
-        "description": "Return all NSE sectors with RS / Momentum / Breadth / Volume lenses.\n\nSources:\n  - de_rs_scores (entity_type='sector'): RS score + 28-day lag for momentum.\n  - de_sector_breadth_daily: latest pct_above_50dma + pct_above_200dma.\n  - de_instrument: active stock_count per sector.\n  - de_equity_fundamentals: latest market_cap_cr summed per sector.\n\nSorted by rs_composite DESC (nulls last). Sector breadth table does not\ncarry a volume column, so `volume_proxy` is currently null \u2014 this is\nsurfaced via `_meta.partial_data=true` when no volume source is wired.",
-        "operationId": "list_sectors_api_v1_sectors_get",
-        "parameters": [
-          {
-            "name": "benchmark",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "Benchmark index for RS computation. One of: NIFTY 500 (default), NIFTY 50, NIFTY MIDCAP 100, GOLD.",
-              "default": "NIFTY 500",
-              "title": "Benchmark"
-            },
-            "description": "Benchmark index for RS computation. One of: NIFTY 500 (default), NIFTY 50, NIFTY MIDCAP 100, GOLD."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SectorsListResponse"
                 }
               }
             }
@@ -13519,11 +13390,6 @@
             "type": "boolean",
             "title": "Partial Data",
             "default": false
-          },
-          "synthesized": {
-            "type": "boolean",
-            "title": "Synthesized",
-            "default": false
           }
         },
         "type": "object",
@@ -14103,142 +13969,6 @@
         ],
         "title": "SectorGroup"
       },
-      "SectorLensItem": {
-        "properties": {
-          "sector_id": {
-            "type": "string",
-            "title": "Sector Id"
-          },
-          "sector_name": {
-            "type": "string",
-            "title": "Sector Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "rs_score": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rs Score"
-          },
-          "rs_momentum": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rs Momentum"
-          },
-          "breadth_pct_above_50dma": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Breadth Pct Above 50Dma"
-          },
-          "breadth_pct_above_200dma": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Breadth Pct Above 200Dma"
-          },
-          "adv_decl_ratio": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Adv Decl Ratio"
-          },
-          "volume_proxy": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Volume Proxy"
-          },
-          "stock_count": {
-            "type": "integer",
-            "title": "Stock Count",
-            "default": 0
-          },
-          "mcap_cr": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mcap Cr"
-          },
-          "breadth_regime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Breadth Regime"
-          },
-          "as_of_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "As Of Date"
-          }
-        },
-        "type": "object",
-        "required": [
-          "sector_id",
-          "sector_name",
-          "slug"
-        ],
-        "title": "SectorLensItem",
-        "description": "A single sector row with the 4 lens metrics (RS / Momentum / Breadth / Volume)."
-      },
       "SectorListResponse": {
         "properties": {
           "sectors": {
@@ -14526,32 +14256,6 @@
           "stock_count"
         ],
         "title": "SectorMetrics"
-      },
-      "SectorsListResponse": {
-        "properties": {
-          "sectors": {
-            "items": {
-              "$ref": "#/components/schemas/SectorLensItem"
-            },
-            "type": "array",
-            "title": "Sectors",
-            "default": []
-          },
-          "benchmark": {
-            "type": "string",
-            "title": "Benchmark"
-          },
-          "meta": {
-            "$ref": "#/components/schemas/ResponseMeta"
-          }
-        },
-        "type": "object",
-        "required": [
-          "benchmark",
-          "meta"
-        ],
-        "title": "SectorsListResponse",
-        "description": "Response for GET /api/v1/sectors."
       },
       "SentimentComponent": {
         "properties": {
@@ -17043,72 +16747,6 @@
           },
           "staleness": {
             "$ref": "#/components/schemas/Staleness"
-          },
-          "total_count": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Count"
-          },
-          "returned": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Returned"
-          },
-          "offset": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Offset"
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Limit"
-          },
-          "has_more": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Has More"
-          },
-          "next_offset": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Offset"
           }
         },
         "type": "object",
